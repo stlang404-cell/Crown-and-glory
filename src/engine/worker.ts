@@ -9,7 +9,7 @@ import { moveToCcn, parseLegalCcn, moveToSan, ccnLineToSan } from '../rules/nota
 import { Searcher } from './search';
 import { DEFAULT_WEIGHTS } from './evaluate';
 import { playStyle } from './styles';
-import { automaticOutcome, claimableDraws } from '../rules/adjudication';
+import { playSelfplay } from './selfplay';
 import { chooseMove, getLevel } from './levels';
 import { analyzeGame, typedScore, ENGINE_BUILD } from '../analysis/analyzer';
 import type { WorkerReply, WorkerRequest } from './protocol';
@@ -41,27 +41,8 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
       return;
     }
     if (req.type === 'selfplay') {
-      const pos = Position.fromFen(req.initialFen);
-      const sw = new Searcher(16), sb = new Searcher(16);
-      const moves: { ccn: string; san: string; fen: string; score: ReturnType<typeof typedScore>; depth: number; nodes: number; ms: number }[] = [];
-      let result: '1-0' | '0-1' | '1/2-1/2' = '1/2-1/2', termination = 'playing-limit';
-      for (let ply = 0; ply < req.maxPlies; ply++) {
-        const o = automaticOutcome(pos);
-        if (o) { result = o.result; termination = o.termination; break; }
-        const c = claimableDraws(pos);
-        if (c.threefold || c.fiftyMove) { result = '1/2-1/2'; termination = c.threefold ? 'threefold-claim' : 'fifty-move-claim'; break; }
-        const side = pos.side === 0 ? req.white : req.black;
-        const r = chooseMove(pos.side === 0 ? sw : sb, pos, side.profile, (req.seed + ply * 7919) >>> 0, undefined, undefined, playStyle(side.style ?? 'universal'));
-        if (!pos.legalMoves().includes(r.move)) throw new Error('Engine produced an illegal move');
-        const san = moveToSan(pos, r.move);
-        const score = typedScore(r.search.score, pos.side === 0 ? 'white' : 'black');
-        pos.makeMove(r.move);
-        const mv = { ccn: moveToCcn(r.move), san, fen: pos.toFen(), score, depth: r.search.depth, nodes: r.search.nodes, ms: Math.round(r.search.timeMs) };
-        moves.push(mv);
-        post({ type: 'selfplay-move', ...base, ply: ply + 1, ...mv });
-      }
-      if (termination === 'playing-limit') { const o = automaticOutcome(pos); if (o) { result = o.result; termination = o.termination; } }
-      post({ type: 'selfplay-result', ...base, moves, result, termination });
+      const r = playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, (mv, ply) => post({ type: 'selfplay-move', ...base, ply, ...mv }));
+      post({ type: 'selfplay-result', ...base, ...r });
       return;
     }
     if (req.type === 'assist') {

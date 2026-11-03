@@ -36,7 +36,7 @@ export interface ParticipantSnapshot {
   rating: number | null;
   rd: number | null;
   /** Engine opponents only. */
-  engine?: { profileId: string; level: number; levelsId: string; searchId: string; evalId: string; calibrationId: string; style: string };
+  engine?: { profileId: string; level: number; levelsId: string; searchId: string; evalId: string; calibrationId: string; style: string; profile?: import('../engine/levels').StrengthProfile; styleId?: import('../federation/model').StyleId };
 }
 
 export interface MoveRecord {
@@ -98,7 +98,7 @@ export interface GameRecord {
   termination: Termination | null;
   /** Remaining clocks at the end/last save. */
   clocks: { whiteMs: number; blackMs: number } | null;
-  context: { kind: 'quick-match' | 'training-retry' | 'imported'; sourceGameId?: string; sourcePly?: number; tournamentId?: string };
+  context: { kind: 'quick-match' | 'training-retry' | 'imported' | 'federation'; sourceGameId?: string; sourcePly?: number; tournamentId?: string; fixtureId?: string; eventName?: string };
   opening: { name: string; classifierVersion: string } | null;
   /** Finalization key: guarantees exactly-once result/rating commit. */
   finalizationKey: string | null;
