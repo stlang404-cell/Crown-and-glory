@@ -192,7 +192,11 @@ export function clubUpgradeRefundJournal(escrow: number, season: number, at: str
 /** Sponsorship contracts (talent recruitment): a season stipend paid to the competitor in exchange for a share of
  *  every prize they win while the contract is active. Contracts have no book value (they are an expense). */
 export const CONTRACT_SHARE = 0.25;
-export const stipendFor = (division: number) => C(Math.max(25, Math.round((leaguePool(division) / MICRO) * 0.08)));
+/** Stipend priced off the competitor's own record: at least 30% of their average prize earnings per season (so a 25%
+ *  share pays back only if they outperform their history) and 10% of their division's prize pool; repriced at
+ *  every renewal. A scouting edge (spotting improving players) is the intended route to profit — not a sure thing. */
+export const stipendFor = (division: number, avgSeasonEarnings = 0) => Math.max(C(25), Math.round(leaguePool(division) * 0.10), Math.round(avgSeasonEarnings * 0.30));
+export const avgSeasonEarnings = (c: { earnings: number; history: unknown[] }) => c.earnings / Math.max(1, c.history.length);
 export function stipendJournal(contractId: string, competitorId: string, amount: number, season: number, at: string): Journal {
   return j(`stipend:${contractId}:${season}`, 'contract-stipend', `Sponsorship stipend, season ${season}`, [{ account: 'player:cash', amount: -amount }, { account: `comp:${competitorId}`, amount }], season, undefined, at);
 }

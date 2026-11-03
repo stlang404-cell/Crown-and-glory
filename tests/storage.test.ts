@@ -122,3 +122,22 @@ describe('schema migration v2 → v3 (federation)', () => {
     expect(await v3.loadAll('world')).toHaveLength(0); // no federation until the player founds one
   });
 });
+
+describe('schema migration v3 → v4 (live games, contracts)', () => {
+  it('adds liveGames and contracts without touching games, ratings or federation stores', async () => {
+    const f = new IDBFactory();
+    const v3 = await CrownDB.open(f, 'crown-calculation', 3);
+    const g = finishedGame('m3');
+    await v3.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
+    await v3.commit([{ store: 'journal', put: [{ id: 'j1', at: 'T', kind: 'mint', memo: '', lines: [] }] }, { store: 'world', put: [{ key: 'world', season: 2, round: 7 }] }]);
+    const before = await v3.ratingState('rapid');
+    v3.close();
+    const v4 = await CrownDB.open(f, 'crown-calculation', 4);
+    expect([...v4.db.objectStoreNames]).toEqual(expect.arrayContaining(['liveGames', 'contracts', 'journal', 'world', 'games']));
+    expect((await v4.getGame('m3'))?.moves).toHaveLength(4);
+    expect((await v4.ratingState('rapid')).rating).toBe(before.rating);
+    expect(await v4.loadAll('journal')).toHaveLength(1);
+    expect((await v4.loadAll<{ round: number }>('world'))[0].round).toBe(7);
+    expect(await v4.loadAll('liveGames')).toHaveLength(0);
+  });
+});

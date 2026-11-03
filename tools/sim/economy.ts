@@ -18,13 +18,15 @@ import { wdl } from '../../src/federation/resultModel';
 import { PLAYER_ID, ROUNDS_PER_SEASON } from '../../src/federation/model';
 import { MICRO } from '../../src/exchange/ledger';
 import { prices, cost } from '../../src/exchange/lmsr';
+import { claimPrices, claimsOf } from '../../src/exchange/market';
+import { CLUB_LEVELS } from '../../src/economy/economy';
 import { rng01, hashSeed } from '../../src/federation/generator';
 import type { GameRecord } from '../../src/games/types';
 
 const SEASONS = +(process.argv[2] ?? 4);
 const OUT = process.argv[3] ?? 'docs/sim/economy-results.json';
 
-interface Strategy { id: string; label: string; strength: number; trade: 'none' | 'conservative' | 'aggressive'; assets: string[]; challenger: boolean }
+interface Strategy { id: string; label: string; strength: number; trade: 'none' | 'conservative' | 'aggressive'; assets: string[]; challenger: boolean; families?: boolean; magnate?: boolean }
 const STRATEGIES: Strategy[] = [
   { id: 'chess-only', label: 'Chess only (1600-strength player, no trading, no assets)', strength: 1600, trade: 'none', assets: [], challenger: true },
   { id: 'successful', label: 'Successful competitor (2100 strength)', strength: 2100, trade: 'none', assets: [], challenger: true },
@@ -33,6 +35,8 @@ const STRATEGIES: Strategy[] = [
   { id: 'aggressive-trader', label: 'Aggressive trader (1300 strength; 60 shares on the largest model edge, every market)', strength: 1300, trade: 'aggressive', assets: [], challenger: false },
   { id: 'hybrid', label: 'Hybrid (1700 strength, conservative trading, Analyst Office)', strength: 1700, trade: 'conservative', assets: ['analyst'], challenger: true },
   { id: 'business', label: 'Business owner (1500 strength; club + scouting + analyst)', strength: 1500, trade: 'none', assets: ['club', 'scouting', 'analyst'], challenger: true },
+  { id: 'market-specialist', label: 'Market specialist (1300 strength; conservative match trading + 10 shares on the largest model edge in every season/tournament family market)', strength: 1300, trade: 'conservative', assets: ['analyst'], challenger: false, families: true },
+  { id: 'magnate', label: 'Business magnate (1500 strength; club upgraded when affordable, sponsorship contracts on the strongest affordable Crown Division players)', strength: 1500, trade: 'none', assets: ['club'], challenger: true, magnate: true },
 ];
 
 let clock = 0;
@@ -75,6 +79,27 @@ async function run(s: Strategy, seed: number) {
           try { await svc.trade(m.id, i, shares, 'buy'); trades++; tradeSpent += cashBefore - svc.balance('player:cash'); } catch { /* insufficient cash */ }
         }
       }
+      if (s.families) {
+        for (const m of [...svc.state!.markets.values()]) {
+          if (m.status !== 'open' || !m.kind || m.kind === 'match' || m.kind === 'sandbox' || !m.model) continue;
+          const pr = claimPrices(m), claims = claimsOf(m);
+          const model = claims.map(c => c.states.reduce((a, x) => a + m.model![x], 0));
+          let best = -1, edge = 0.04;
+          claims.forEach((_, i) => { if (model[i] - pr[i] > edge) { edge = model[i] - pr[i]; best = i; } });
+          if (best < 0) continue;
+          const cashBefore = svc.balance('player:cash');
+          try { await svc.trade(m.id, best, 10, 'buy'); trades++; tradeSpent += cashBefore - svc.balance('player:cash'); } catch { /* conflict, cash */ }
+        }
+      }
+      if (s.magnate && r === 2) {
+        const lv = svc.clubLevelOf();
+        if (lv > 0 && lv < 3) { const cost = CLUB_LEVELS[lv].cost; if (svc.balance('player:cash') > cost + 300 * MICRO) await svc.upgradeClub().catch(() => {}); }
+        const slots = lv ? CLUB_LEVELS[Math.min(3, svc.clubLevelOf()) - 1].contractSlots : 0;
+        if (svc.activeContracts().length < slots) {
+          const cands = [...svc.state!.competitors.values()].filter(c => c.status === 'active' && c.division === 1).sort((a, b) => b.rating - a.rating);
+          for (const c of cands) { if (svc.activeContracts().length >= slots || svc.balance('player:cash') < 400 * MICRO) break; await svc.signContract(c.id).catch(() => {}); }
+        }
+      }
       for (let f = svc.playerFixtures()[0]; f; f = svc.playerFixtures()[0]) { // knockout follow-up games appear after each result
         const g = await svc.playerGameFor(f.id, { rating: s.strength, rd: 120 });
         const opp = f.white === PLAYER_ID ? f.black : f.white;
@@ -103,10 +128,16 @@ async function run(s: Strategy, seed: number) {
     const earn = [...st.competitors.values()].map(c => c.earnings).sort((a, b) => a - b);
     const gini = (() => { const n = earn.length, sum = earn.reduce((a, b) => a + b, 0); if (!sum) return 0; let acc = 0; earn.forEach((x, i) => { acc += (2 * (i + 1) - n - 1) * x; }); return acc / (n * sum); })();
     const top1 = earn.slice(-Math.ceil(earn.length / 100)).reduce((a, b) => a + b, 0) / Math.max(1, earn.reduce((a, b) => a + b, 0));
-    const settled = [...st.markets.values()].filter(m => m.status === 'settled');
-    const makerPnl = settled.reduce((a, m) => a + (cost(m.q, m.b) - cost([0, 0, 0], m.b)) - m.q[m.result!], 0);
-    const worstMaker = settled.reduce((a, m) => Math.min(a, (cost(m.q, m.b) - cost([0, 0, 0], m.b)) - m.q[m.result!]), 0);
+    const settled = [...st.markets.values()].filter(m => m.status === 'settled' && !m.sandbox);
+    // maker P&L per market (crowns, before fees): collected C(q) − C(0) minus the payout-weighted issued shares
+    const makerOf = (m: typeof settled[number]) => { const pay = m.payout ?? m.q.map((_, i) => (i === m.result ? 1 : 0)); return cost(m.q, m.b) - cost(m.q.map(() => 0), m.b) - m.q.reduce((a, x, i) => a + x * pay[i], 0); };
+    const makerPnl = settled.reduce((a, m) => a + makerOf(m), 0);
+    const worstMaker = settled.reduce((a, m) => Math.min(a, makerOf(m)), 0);
+    const byKind: Record<string, number> = {};
+    for (const m of settled) byKind[m.kind ?? 'match'] = (byKind[m.kind ?? 'match'] ?? 0) + 1;
+    const contracts = [...st.contracts.values()];
     seasons.push({
+      clubLevel: svc.clubLevelOf(), contractsPaid: contracts.reduce((a, c) => a + c.paid, 0) / MICRO, contractsEarned: contracts.reduce((a, c) => a + c.earned, 0) / MICRO, settledByKind: byKind,
       earningsGini: +gini.toFixed(3), top1pctEarningsShare: +top1.toFixed(3), settledMarkets: settled.length, makerPnlTotal: +makerPnl.toFixed(1), makerWorstMarket: +worstMaker.toFixed(1),
       season, playerDivision: st.world.player.division, cash: fin.cash / MICRO, netWorth: fin.netWorth / MICRO, assets: fin.owned.map(a => a.typeId + (a.suspended ? '(suspended)' : '')),
       titles: st.world.player.titles.filter(t => t.season === season).map(t => t.title),
@@ -124,7 +155,8 @@ async function run(s: Strategy, seed: number) {
 const results = [];
 const t0 = Date.now();
 const only = process.argv[4]?.split(',');
-for (const [i, s] of STRATEGIES.entries()) if (!only || only.includes(s.id)) results.push(await run(s, 1000 + i * 17));
+const SEEDS = (process.argv[5] ?? '1000').split(',').map(Number);
+for (const [i, s] of STRATEGIES.entries()) if (!only || only.includes(s.id)) for (const sd of SEEDS) results.push({ seed: sd + i * 17, ...(await run(s, sd + i * 17)) });
 mkdirSync('docs/sim', { recursive: true });
-writeFileSync(OUT, JSON.stringify({ id: 'crown-sim-1', seasons: SEASONS, generatedAt: new Date().toISOString(), seconds: Math.round((Date.now() - t0) / 1000), results }, null, 1));
+writeFileSync(OUT, JSON.stringify({ id: 'crown-sim-2', seasons: SEASONS, seeds: SEEDS, generatedAt: new Date().toISOString(), seconds: Math.round((Date.now() - t0) / 1000), results }, null, 1));
 console.log('wrote', OUT, Math.round((Date.now() - t0) / 1000), 's');

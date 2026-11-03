@@ -23,7 +23,7 @@ import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import type { GameRecord } from '../games/types';
@@ -847,8 +847,10 @@ export class FederationService {
           const cash = st.balances.get('player:cash') ?? 0;
           const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
           if (!comp || comp.status !== 'active' || !club || cash < ct.stipend) { const e = { ...ct, status: 'ended' as const, endedSeason: season }; st.contracts.set(ct.id, e); changedContracts.push(e); continue; }
-          this.post(st, [stipendJournal(ct.id, ct.competitorId, ct.stipend, season + 1, this.now())], posted);
-          const n = { ...ct, paid: ct.paid + ct.stipend }; st.contracts.set(ct.id, n); changedContracts.push(n);
+          const stipend = stipendFor(comp.division, avgSeasonEarnings(comp)); // repriced at renewal
+          if (cash < stipend) { const e = { ...ct, status: 'ended' as const, endedSeason: season }; st.contracts.set(ct.id, e); changedContracts.push(e); continue; }
+          this.post(st, [stipendJournal(ct.id, ct.competitorId, stipend, season + 1, this.now())], posted);
+          const n = { ...ct, stipend, paid: ct.paid + stipend }; st.contracts.set(ct.id, n); changedContracts.push(n);
         }
       }
       // Grand Exchange: settle from recorded results, list new markets, refresh models, NPC re-trading
@@ -947,7 +949,7 @@ export class FederationService {
       // conflict rule: no new contract while you hold a position in an open market involving them
       const conflict = [...st.positions.values()].some(p => p.holder === 'player:cash' && p.shares.some(x => x) && ['open', 'closed'].includes(st.markets.get(p.marketId)?.status ?? '') && marketInvolves(st.markets.get(p.marketId)!, competitorId));
       if (conflict) throw new Error('You hold a position in a market involving this competitor; settle or sell it first');
-      const stipend = stipendFor(c.division);
+      const stipend = stipendFor(c.division, avgSeasonEarnings(c));
       const ct: Contract = { id: `ct:${competitorId}:${st.world.season}`, competitorId, signedSeason: st.world.season, stipend, share: CONTRACT_SHARE, status: 'active', earned: 0, paid: stipend, endedSeason: null };
       const posted: Journal[] = [];
       this.post(st, [stipendJournal(ct.id, competitorId, stipend, st.world.season, this.now())], posted);

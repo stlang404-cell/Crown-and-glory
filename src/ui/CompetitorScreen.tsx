@@ -8,7 +8,7 @@ import { ageOf } from '../federation/generator';
 import { eventName, WorldGame } from '../app/federation';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
 import { fmtCrowns } from '../exchange/ledger';
-import { stipendFor } from '../economy/economy';
+import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
 
 /** All results of a competitor across stored rounds (summary results included), newest first. */
@@ -112,7 +112,7 @@ export function CompetitorScreen({ id }: { id: string }) {
         <span className="spacer" />
         <button className="btn small" data-testid="watch-toggle" disabled={services.readOnly} onClick={toggleWatch}>{watched ? '★ On watchlist' : '☆ Add to watchlist'}</button>
         {fed.clubLevelOf() > 0 && c && c.status === 'active' && !fed.activeContracts().some(x => x.competitorId === c.id) && (
-          <button className="btn small" data-testid="offer-contract" disabled={services.readOnly} title={`Season stipend ${fmtCrowns(stipendFor(c.division), 0)}; you receive 25% of their prizes`} onClick={async () => { setMsg(null); try { await fed.signContract(c.id); setMsg(`Signed ${c.name}: stipend ${fmtCrowns(stipendFor(c.division), 0)} per season.`); } catch (e) { setMsg((e as Error).message); } }}>Offer contract ({fmtCrowns(stipendFor(c.division), 0)}/season)</button>
+          <button className="btn small" data-testid="offer-contract" disabled={services.readOnly} title={`Season stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)}; you receive 25% of their prizes`} onClick={async () => { setMsg(null); try { await fed.signContract(c.id); setMsg(`Signed ${c.name}: stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)} per season.`); } catch (e) { setMsg((e as Error).message); } }}>Offer contract ({fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)}/season)</button>
         )}
         {fed.activeContracts().some(x => x.competitorId === id) && <span className="chip gold">Sponsored by you</span>}
       </div>
