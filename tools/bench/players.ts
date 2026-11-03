@@ -1,9 +1,9 @@
 /** Benchmark participants: Crown engine configurations and the Fairy-Stockfish reference. */
 import { Position } from '../../src/rules/position';
 import { moveToCcn, parseLegalCcn } from '../../src/rules/notation';
-import { Searcher, SearchFeatures } from '../../src/engine/search';
+import { Searcher, SearchFeatures, PLAY_FEATURES } from '../../src/engine/search';
 import { chooseMove, getLevel } from '../../src/engine/levels';
-import { DEFAULT_WEIGHTS, EvalWeights } from '../../src/engine/evaluate';
+import { PLAY_WEIGHTS, EvalWeights } from '../../src/engine/evaluate';
 import { UciEngine } from './uci';
 import { Searcher as BaseSearcher } from './baseline/search1';
 import { DEFAULT_WEIGHTS as BASE_WEIGHTS } from './baseline/eval3';
@@ -22,7 +22,7 @@ export const FAIRY_PATH = process.env.FAIRY_STOCKFISH ?? '';
  * crown-search-1 + crown-eval-3) so later versions can always be measured against it.
  * `timeMs` (instead of nodes) gives an equal-time player.
  */
-export function crownConfig(id: string, nodes: number, features: Partial<SearchFeatures> = {}, weights: EvalWeights = DEFAULT_WEIGHTS, engine: 'current' | 'base' = 'current', timeMs?: number, ttBits = 18): Player {
+export function crownConfig(id: string, nodes: number, features: Partial<SearchFeatures> = {}, weights: EvalWeights = PLAY_WEIGHTS, engine: 'current' | 'base' = 'current', timeMs?: number, ttBits = 18): Player {
   const s: { newGame(): void; search(p: Position, o: object): { bestMove: number; nodes: number; depth: number; timeMs: number } } =
     engine === 'base' ? new BaseSearcher(ttBits) : new Searcher(ttBits);
   if (engine === 'base') weights = { ...BASE_WEIGHTS, ...weights } as EvalWeights;
@@ -32,7 +32,8 @@ export function crownConfig(id: string, nodes: number, features: Partial<SearchF
     async move(startFen, moves) {
       const p = Position.fromFen(startFen);
       for (const m of moves) p.makeMove(parseLegalCcn(p, m));
-      const r = s.search(p, { limits: timeMs ? { timeMs } : { nodes }, features, weights });
+      // the current engine plays with the play profile (PLAY_FEATURES) unless a spec overrides features
+      const r = s.search(p, { limits: timeMs ? { timeMs } : { nodes }, features: engine === 'base' ? features : { ...PLAY_FEATURES, ...features }, weights });
       return { move: moveToCcn(r.bestMove), nodes: r.nodes, depth: r.depth, ms: r.timeMs };
     },
     close() {},

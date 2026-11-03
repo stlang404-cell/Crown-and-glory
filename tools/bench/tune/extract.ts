@@ -1,6 +1,7 @@
 /**
  * Tuning corpus, step 1 (crown-tune-corpus-1): positions from the recorded benchmark games of M2/M3
- * (tools/bench/results/*-games.json: self-play at many strengths, levels L1–L8, Fairy-Stockfish matches).
+ * (tools/bench/results/*-games.json: self-play at many strengths, levels L1–L8, Fairy-Stockfish matches)
+ * plus round-2 self-play games (tools/bench/tune/games-*.json from selfplay_gen.ts).
  * For every position from ply 6 on, the capture/promotion sequence of a small quiescence search is played
  * out to a QUIET leaf (no capture improves the static score, side to move not in check); leaves are
  * de-duplicated by Zobrist key. Output: tools/bench/tune/positions.json (fen, game result for White, game id).
@@ -15,7 +16,12 @@ import { evaluate, EVAL3_WEIGHTS } from '../../../src/engine/evaluate';
 
 const START = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 const dir = new URL('../results/', import.meta.url);
-const files = readdirSync(dir).filter(f => f.endsWith('-games.json')).sort();
+const tuneDir = new URL('./', import.meta.url);
+// recorded benchmark games, then round-2 self-play games (selfplay_gen.ts) if present
+const files = [
+  ...readdirSync(dir).filter(f => f.endsWith('-games.json')).sort().map(f => new URL(f, dir)),
+  ...readdirSync(tuneDir).filter(f => /^games-.*\.json$/.test(f)).sort().map(f => new URL(f, tuneDir)),
+];
 
 /** Tiny captures-only quiescence returning the principal capture line. */
 function qs(p: Position, alpha: number, beta: number, depth: number, pv: Move[]): number {
@@ -45,7 +51,7 @@ const seen = new Set<string>();
 const out: { fen: string; result: number; game: string }[] = [];
 let games = 0;
 for (const f of files) {
-  const data = JSON.parse(readFileSync(new URL(f, dir), 'utf8')) as Record<string, { moves: string[]; result: string }[]>;
+  const data = JSON.parse(readFileSync(f, 'utf8')) as Record<string, { moves: string[]; result: string }[]>;
   for (const [match, list] of Object.entries(data)) {
     list.forEach((g, gi) => {
       if (g.result === '*') return;
@@ -66,10 +72,10 @@ for (const f of files) {
         const key = q.hashKey();
         if (seen.has(key)) continue;
         seen.add(key);
-        out.push({ fen: q.toFen(), result, game: `${f}:${match}:${gi}` });
+        out.push({ fen: q.toFen(), result, game: `${f.pathname.split('/').pop()}:${match}:${gi}` });
       }
     });
   }
 }
-writeFileSync(new URL('./positions.json', import.meta.url), JSON.stringify({ id: 'crown-tune-corpus-1', games, sources: files, count: out.length, positions: out }));
+writeFileSync(new URL('./positions.json', import.meta.url), JSON.stringify({ id: 'crown-tune-corpus-1', games, sources: files.map(f => f.pathname.split('/').pop()), count: out.length, positions: out }));
 console.log('games', games, 'positions', out.length);

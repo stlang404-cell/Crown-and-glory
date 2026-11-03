@@ -1,5 +1,5 @@
 /**
- * Crown search (engine id crown-search-2): iterative-deepening PVS negamax with aspiration windows,
+ * Crown search (profiles crown-search-1 = defaults, crown-search-2 = PLAY_FEATURES): iterative-deepening PVS negamax with aspiration windows,
  * transposition table, check-aware quiescence, killer/history ordering, SEE capture pruning in
  * quiescence, null-move pruning, late-move reductions, mate-distance pruning and repetition-aware
  * draw detection. Every technique can be toggled for ablation benchmarks (tools/bench); the M4
@@ -16,7 +16,12 @@ import { Move, Color, WHITE } from '../rules/types';
 import { KING_TARGETS, KNIGHT_TARGETS, PAWN_ATTACKERS, RAYS } from '../rules/tables';
 import { DEFAULT_WEIGHTS, EvalWeights, evaluate } from './evaluate';
 
-export const SEARCH_ID = 'crown-search-2';
+/**
+ * Identifier of the DEFAULT search profile: with DEFAULT_FEATURES this code reproduces crown-search-1 node for
+ * node (analysis, puzzle verification and assistance rely on that). Play uses PLAY_FEATURES = crown-search-2.
+ */
+export const SEARCH_ID = 'crown-search-1';
+export const PLAY_SEARCH_ID = 'crown-search-2';
 export const MATE = 30000;
 export const MATE_BOUND = MATE - 1000;
 export const INF = 32000;
@@ -105,6 +110,8 @@ export const DEFAULT_FEATURES: SearchFeatures = {
 
 /** The crown-search-1 feature set (all M4 additions off): reproduces the M3 engine node for node. */
 export const SEARCH1_FEATURES: SearchFeatures = { ...DEFAULT_FEATURES };
+/** crown-search-2: the play profile (M4 additions accepted by paired matches; docs/M4_ENGINE_STRENGTH.md). */
+export const PLAY_FEATURES: SearchFeatures = { ...DEFAULT_FEATURES };
 
 export interface SearchLimits {
   depth?: number;

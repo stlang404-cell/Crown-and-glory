@@ -7,7 +7,7 @@
 import { Position } from '../rules/position';
 import { moveToCcn, parseLegalCcn, moveToSan, ccnLineToSan } from '../rules/notation';
 import { Searcher } from './search';
-import { DEFAULT_WEIGHTS, mergeWeights } from './evaluate';
+import { PLAY_WEIGHTS, mergeWeights } from './evaluate';
 import { playStyle } from './styles';
 import { playSelfplay } from './selfplay';
 import { chooseMove, getLevel } from './levels';
@@ -31,7 +31,7 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
       }
       if (req.newGame) searcher.newGame();
       const pov = pos.side === 0 ? 'white' : 'black';
-      const r = chooseMove(searcher, pos, req.profile ?? getLevel(req.level), req.seed, req.clock, req.weights ? mergeWeights(DEFAULT_WEIGHTS, req.weights) : undefined, playStyle(req.style ?? 'universal'));
+      const r = chooseMove(searcher, pos, req.profile ?? getLevel(req.level), req.seed, req.clock, req.weights ? mergeWeights(PLAY_WEIGHTS, req.weights) : undefined, playStyle(req.style ?? 'universal'));
       // Defence in depth: the engine may never play an illegal move.
       if (!pos.legalMoves().includes(r.move)) throw new Error('Engine produced an illegal move');
       post({

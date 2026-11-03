@@ -12,7 +12,13 @@ import { KING_TARGETS, KNIGHT_TARGETS, RAYS } from '../rules/tables';
 import { Eval4Weights, evaluate4 } from './eval4';
 import { EVAL4_PARAMS } from './eval4-params';
 
+/**
+ * Identifier of the DEFAULT evaluator (crown-eval-3). Analysis, puzzle verification and assistance use the
+ * defaults, because their calibration (crown-outcome-map-v1) and regression fixtures were measured with it.
+ * Play (levels, federation games) uses PLAY_WEIGHTS = crown-eval-4.
+ */
 export const EVAL_ID = 'crown-eval-3';
+export const PLAY_EVAL_ID = 'crown-eval-4';
 
 export interface Eval3Weights {
   version?: 3;
@@ -138,7 +144,10 @@ const kingZoneBuf = new Int32Array(2);
 /** crown-eval-4 weights (fitted parameters in eval4-params.ts). */
 export const EVAL4_WEIGHTS: Eval4Weights = { version: 4, p: Int32Array.from(EVAL4_PARAMS) };
 
+/** Default (analysis) evaluator: crown-eval-3. */
 export const DEFAULT_WEIGHTS: EvalWeights = EVAL3_WEIGHTS;
+/** Play evaluator: crown-eval-4 (M4: +255/+170 Elo over crown-eval-3 at equal nodes on two opening halves, +229 at equal time; docs/M4_ENGINE_STRENGTH.md). */
+export const PLAY_WEIGHTS: EvalWeights = EVAL4_WEIGHTS;
 
 /** Overlay partial weights on a base set (fields of the base's own evaluator version). */
 export function mergeWeights(base: EvalWeights, partial?: Partial<Eval3Weights> | Partial<Eval4Weights>): EvalWeights {

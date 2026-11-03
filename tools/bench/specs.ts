@@ -1,7 +1,7 @@
 import { crownConfig, crownLevel, fairy, Player } from './players';
 import { SearchFeatures } from '../../src/engine/search';
 import { readFileSync } from 'node:fs';
-import { DEFAULT_WEIGHTS, EvalWeights, Eval3Weights, mergeWeights, EVAL3_WEIGHTS, EVAL4_WEIGHTS } from '../../src/engine/evaluate';
+import { PLAY_WEIGHTS, EvalWeights, Eval3Weights, mergeWeights, EVAL3_WEIGHTS, EVAL4_WEIGHTS } from '../../src/engine/evaluate';
 import type { Eval4Weights } from '../../src/engine/eval4';
 
 export type Spec =
@@ -19,7 +19,7 @@ export async function makePlayer(s: Spec): Promise<Player> {
     return crownConfig(s.id, s.nodes, s.features, { version: 4, p: Int32Array.from(params) }, s.engine ?? 'current', s.timeMs, s.ttBits);
   }
   if (s.kind === 'config' && s.eval) return crownConfig(s.id, s.nodes, s.features, s.eval === 'eval4' ? EVAL4_WEIGHTS : EVAL3_WEIGHTS, s.engine ?? 'current', s.timeMs, s.ttBits);
-  if (s.kind === 'config') return crownConfig(s.id, s.nodes, s.features, s.engine === 'base' ? (s.weights ?? {}) as EvalWeights : mergeWeights(DEFAULT_WEIGHTS, s.weights), s.engine ?? 'current', s.timeMs, s.ttBits);
+  if (s.kind === 'config') return crownConfig(s.id, s.nodes, s.features, s.engine === 'base' ? (s.weights ?? {}) as EvalWeights : mergeWeights(PLAY_WEIGHTS, s.weights), s.engine ?? 'current', s.timeMs, s.ttBits);
   if (s.kind === 'level') return crownLevel(s.level, s.timeCapMs);
   return fairy(s.id, s.limit);
 }
