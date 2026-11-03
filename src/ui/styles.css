@@ -34,6 +34,7 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+html { background: var(--bg-2); }
 body {
   margin: 0;
   background: radial-gradient(1200px 700px at 70% -10%, #1d2840 0%, var(--bg) 55%, var(--bg-2) 100%) fixed;
@@ -184,7 +185,7 @@ tr.clickable:hover td { background: rgba(255, 255, 255, .025); }
 .cand { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .02); cursor: pointer; text-align: left; width: 100%; }
 .cand:hover { border-color: var(--accent-2); }
 .cand .line { font-family: var(--mono); font-size: .85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.navbar { display: flex; gap: 6px; justify-content: center; }
+.navbar { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .navbar .btn { min-width: 52px; }
 .coach { border-left: 3px solid var(--accent); padding: 8px 12px; background: rgba(216, 181, 108, .06); border-radius: 0 10px 10px 0; font-size: .95rem; }
 .bar-row { display: grid; grid-template-columns: 110px 1fr 46px; gap: 8px; align-items: center; font-size: .88rem; }
@@ -216,6 +217,8 @@ tr.clickable:hover td { background: rgba(255, 255, 255, .025); }
   .moves { max-height: 180px; }
   th, td { padding: 6px; }
   .hide-sm { display: none; }
+  .navbar .btn { min-width: 44px; padding: 6px 8px; }
+  .navbar { gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .piece.moving { animation: none; }

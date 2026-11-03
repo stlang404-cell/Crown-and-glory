@@ -1,0 +1,35 @@
+/** Offline check (Chromium): service worker installs, then with the network disabled the app reloads,
+ *  opens its database and the local engine still plays a move. Not a substitute for iPhone testing. */
+import { createRequire } from 'node:module';
+import { writeFileSync, mkdirSync } from 'node:fs';
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const url = process.argv[2] ?? 'http://127.0.0.1:4173/';
+const OUT = new URL('../docs/evidence/', import.meta.url).pathname;
+mkdirSync(OUT, { recursive: true });
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+const p = await ctx.newPage();
+const log = [];
+await p.goto(url);
+await p.evaluate(() => navigator.serviceWorker.ready);
+await p.reload();
+await p.waitForFunction(() => !!navigator.serviceWorker.controller);
+log.push('service worker active: ' + await p.evaluate(() => navigator.serviceWorker.controller?.scriptURL));
+await ctx.setOffline(true);
+await p.reload();
+await p.getByRole('button', { name: /Start match/ }).waitFor();
+log.push('reloaded while offline: app shell served from cache');
+await p.getByRole('button', { name: 'Black', exact: true }).click();
+await p.getByRole('button', { name: /Start match/ }).click();
+await p.waitForSelector('[data-testid="match"]');
+await p.waitForFunction(() => document.querySelector('[data-testid="match"]')?.getAttribute('data-turn') === 'human', null, { timeout: 20000 });
+const fen = await p.getAttribute('[data-testid="match"]', 'data-fen');
+log.push('offline engine (worker) played White\'s first move; FEN now ' + fen);
+await p.screenshot({ path: OUT + '11-offline-mobile-match.png' });
+const ok = !fen.startsWith('rnqknr/pppppp/6/6/PPPPPP/RNQKNR');
+log.push(ok ? 'PASS: offline play works in Chromium' : 'FAIL');
+writeFileSync(OUT + 'offline-log.txt', log.join('\n') + '\n');
+console.log(log.join('\n'));
+await b.close();
+process.exit(ok ? 0 : 1);

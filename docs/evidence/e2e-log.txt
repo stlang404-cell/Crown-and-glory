@@ -1,0 +1,16 @@
+[2026-11-03T02:43:11.027Z] Launched Crown & Calculation
+[2026-11-03T02:43:11.344Z] DRY RUN: calibration pending, playing casual
+[2026-11-03T02:43:11.719Z] Rated match started vs Mira Vell (L1), rapid 5+3, human = White
+[2026-11-03T02:43:45.865Z] Game over: Victory; rating delta null
+[2026-11-03T02:43:45.976Z] DB after game: {"games":[{"id":"g-20261103024311-t9w5ca","status":"finalized","result":"1-0","termination":"checkmate","moves":31,"rated":false}],"events":[]}
+[2026-11-03T02:43:46.103Z] Postgame analysis complete
+[2026-11-03T02:43:46.197Z] Ply 5 selected: ply 5/31; grade "Best"; 3 engine candidates
+[2026-11-03T02:43:46.864Z] Variation explored and returned; accuracy shown: 97.3
+[2026-11-03T02:43:46.932Z] Career shows rating 1500 and 0 rating event(s)
+[2026-11-03T02:43:47.149Z] Browser closed
+[2026-11-03T02:43:47.416Z] Reopened Crown & Calculation with the same profile
+[2026-11-03T02:43:47.701Z] Library after restart: 1 game(s): 11/3/2026 Mira Vell Victory unrated 97.3 0/0 King's pawn advance (d3), b4 reply 16 Rapid 5+3 complete
+[2026-11-03T02:43:48.106Z] Recovered report; ply 3 grade "Best"
+[2026-11-03T02:43:48.123Z] DB after restart: {"games":1,"events":0,"reports":1,"rapid":1500}
+[2026-11-03T02:43:48.850Z] Mobile 390px analysis: horizontal overflow = false
+[2026-11-03T02:43:48.999Z] PASS: M1 acceptance journey completed

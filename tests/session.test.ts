@@ -82,3 +82,32 @@ describe('game session', () => {
     expect(s.record.moves.map(m => m.fenAfter).at(-1)).toBe(s.pos.toFen());
   });
 });
+
+describe('acceptance game types', () => {
+  it('draw by agreement after each side made ten moves', () => {
+    const s = mk(TIME_CONTROLS.untimed, 'casual');
+    s.start(0);
+    // 20 plies without reaching fivefold: knights shuffle, then pawns advance.
+    const seq = ['b1c3', 'b6c4', 'c3b1', 'c4b6', 'a2a3', 'a5a4', 'e1f3', 'e6f4', 'f3e1', 'f4e6', 'f2f3', 'f5f4', 'b1c3', 'b6c4', 'c3b1', 'c4b6', 'e1f3'.replace('f3', 'd3'), 'e6d4', 'd3e1', 'd4e6'];
+    for (let i = 0; i < 20; i++) expect(s.applyMove(seq[i], 0, 'T').ok).toBe(true);
+    expect(s.canAgreeDraw()).toBe(true);
+    expect(s.agreeDraw(0, 'T')?.termination).toBe('agreement');
+    expect(s.record.result).toBe('1/2-1/2');
+  });
+  it('fivefold repetition ends the game automatically even without a claim', () => {
+    const s = mk(TIME_CONTROLS.untimed, 'casual');
+    s.start(0);
+    const cycle = ['b1c3', 'b6c4', 'c3b1', 'c4b6'];
+    let last;
+    for (let i = 0; i < 16 && !s.isOver; i++) last = s.applyMove(cycle[i % 4], 0, 'T');
+    expect(last && last.ok && last.outcome?.termination).toBe('fivefold-repetition');
+  });
+  it('promotion game: underpromotion is recorded in CCN and SAN', () => {
+    const s = mk(TIME_CONTROLS.rapid, 'rated', '3k2/P5/6/6/6/3K2 w - - 0 1');
+    s.start(0);
+    const r = s.applyMove('a5a6n', 10, 'T');
+    expect(r.ok && r.record.ccn).toBe('a5a6n');
+    expect(r.ok && r.record.san).toBe('a6=N');
+    expect(s.pos.toFen().startsWith('N2k2')).toBe(true);
+  });
+});

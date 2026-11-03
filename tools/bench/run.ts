@@ -189,16 +189,16 @@ async function main() {
     } else if (cmd === 'suite') {
       const [name, pairsArg] = args;
       const pairs = +(pairsArg ?? 20);
-      const plan: [string, string][] =
+      const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]
-        : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6'], ['L8', 'L7'], ['L3', 'L1'], ['L5', 'L3'], ['L7', 'L5'], ['L6', 'fairy16k'], ['L7', 'fairy64k']]
+        : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L3', 'L1'], ['L4', 'L2'], ['L5', 'L3'], ['L6', 'L4'], ['L7', 'L6', 12], ['L7', 'L5', 8], ['L8', 'L7', 8], ['L8', 'L6', 6]]
         : [];
       if (!plan.length) throw new Error('unknown suite');
       const summaries: MatchSummary[] = [];
       const allGames: Record<string, GameRecord[]> = {};
-      for (const [A, B] of plan) {
-        const r = await match(p, REGISTRY[A], REGISTRY[B], openings, pairs);
+      for (const [A, B, np] of plan) {
+        const r = await match(p, REGISTRY[A], REGISTRY[B], openings, np ?? pairs);
         summaries.push(r.summary);
         allGames[`${A}-vs-${B}`] = r.games;
         writeFileSync(new URL(`suite-${name}.json`, RESULTS), JSON.stringify({ env: env(), pairsPerMatch: pairs, openings: 'tools/bench/openings.json', summaries }, null, 1));

@@ -7,10 +7,10 @@ const P: Record<string, string> = {
   flip: 'M7 7h11l-3-3M17 17H6l3 3',
   flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
   handshake: 'M3 12l4-4 5 3 5-3 4 4-9 8z',
-  first: 'M6 5v14M18 5l-9 7 9 7z',
+  first: 'M5 5h2.6v14H5zM19 5l-10 7 10 7z',
   prev: 'M16 5l-9 7 9 7z',
   next: 'M8 5l9 7-9 7z',
-  last: 'M18 5v14M6 5l9 7-9 7z',
+  last: 'M16.4 5H19v14h-2.6zM5 5l10 7-10 7z',
 };
 export function Icon({ name }: { name: keyof typeof P | string }) {
   const filled = ['play', 'first', 'prev', 'next', 'last', 'profile'].includes(name);

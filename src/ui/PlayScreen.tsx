@@ -351,7 +351,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   });
 
   return (
-    <div className="match">
+    <div className="match" data-testid="match" data-fen={fen} data-turn={session.isOver ? 'over' : humanToMove ? (session.paused ? 'paused' : 'human') : 'engine'} data-human={humanColor === 0 ? 'w' : 'b'}>
       <div className="board-col">
         {bar(top as 0 | 1)}
         <Board fen={fen} orientation={orientation} legal={legal} onMove={onMove} lastMove={last} checkSquare={check} label={`Game against ${opp.name}`} />
