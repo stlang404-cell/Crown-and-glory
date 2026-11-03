@@ -832,6 +832,12 @@ export class FederationService {
         }
         // treasury replenishment toward its target (explicit, capped issuance)
         { const rj = treasuryReplenishJournal(season + 1, st.balances.get('treasury') ?? 0, this.now()); if (rj) this.post(st, [rj], posted); }
+        // NPC profit sweep: wallet balances above the cap return to the treasury, so trading profits funded by market
+        // subsidies do not accumulate as new money (the treasury is the subsidy source and is replenished by capped mint)
+        for (const t of NPC_TRADERS) {
+          const bal = st.balances.get(t.id) ?? 0;
+          if (bal > NPC_WALLET_CAP) this.post(st, [{ id: `npc-sweep:${season}:${t.id}`, at: this.now(), kind: 'transfer', memo: `${t.name}: balance above the wallet cap returned to the treasury`, lines: [{ account: t.id, amount: -(bal - NPC_WALLET_CAP) }, { account: 'treasury', amount: bal - NPC_WALLET_CAP }], season }], posted);
+        }
         // NPC wallet top-up (bounded by cap and treasury)
         for (const t of NPC_TRADERS) {
           const need = NPC_WALLET_CAP - (st.balances.get(t.id) ?? 0);
