@@ -80,5 +80,5 @@ for (const pz of puzzles) {
 const forcedFen = 'k1Q3/6/6/6/6/5K b - - 0 1';
 const fp = Position.fromFen(forcedFen);
 if (fp.legalMoves().length === 1) { const mv = moveToCcn(fp.legalMoves()[0]); const pl = analyse(forcedFen, mv); negForced = true; out.push({ fen: forcedFen, move: mv, grade: pl.grade, kind: 'forced', note: 'single legal move' }); }
-writeFileSync(new URL('../../tests/fixtures/grades.json', import.meta.url), JSON.stringify({ id: 'crown-grade-corpus-2', engine: 'crown-search-2+crown-eval-4', grading: 'crown-grade-v2-experimental', settings: settings.id, missing: Object.entries(want).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`), negatives: { recapture: negRecapture, unsound: negUnsound, forced: negForced }, fixtures: out }, null, 1));
+writeFileSync(new URL('../../tests/fixtures/grades.json', import.meta.url), JSON.stringify({ id: 'crown-grade-corpus-3', engine: 'crown-search-2+crown-eval-4', grading: 'crown-grade-v3-experimental', settings: settings.id, missing: Object.entries(want).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`), negatives: { recapture: negRecapture, unsound: negUnsound, forced: negForced }, fixtures: out }, null, 1));
 console.log('fixtures', out.length, 'missing', JSON.stringify(want), { negRecapture, negUnsound, negForced });

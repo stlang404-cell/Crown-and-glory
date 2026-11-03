@@ -13,11 +13,12 @@ import { logisticU, mapV1, mapV2 } from './outcomeMap';
  * isotonic expected-score map validated on held-out opening families (docs/M2_ANALYSIS_CALIBRATION.md).
  * Grade bins and accuracy k are unchanged and remain experimental.
  */
-export const GRADING_ID = 'crown-grade-v2-experimental';
+export const GRADING_ID = 'crown-grade-v3-experimental';
 export const ACCURACY_ID = 'crown-accuracy-v2';
 /** Earlier methodologies, kept so historical reports display with their own map and are reproducible. */
 export const LEGACY_IDS = {
   grading: 'crown-grade-v0-experimental', accuracy: 'crown-accuracy-v0-experimental',
+  v2: { grading: 'crown-grade-v2-experimental' },
   v1: { grading: 'crown-grade-v1-experimental', accuracy: 'crown-accuracy-v1', calibration: 'expected-score map crown-outcome-map-v1 (isotonic, held-out validated on engine games); grade bins and k=4 are uncalibrated placeholders' },
 };
 export const PHASE_ID = 'crown-phase-1';

@@ -1,0 +1,200 @@
+{
+ "id": "crown-grade-corpus-2",
+ "engine": "crown-search-2+crown-eval-4",
+ "grading": "crown-grade-v2-experimental",
+ "settings": "quick-d5",
+ "missing": [
+  "brilliant:1"
+ ],
+ "negatives": {
+  "recapture": true,
+  "unsound": true,
+  "forced": true
+ },
+ "fixtures": [
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "c1d3",
+   "grade": "great",
+   "kind": "label",
+   "note": "Only strong move: next alternative is 27 expected-score points worse, stable at two depths."
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "b1a1",
+   "grade": "blunder",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "b1b2",
+   "grade": "blunder",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "b1b2",
+   "grade": "blunder",
+   "kind": "unsound-sacrifice",
+   "note": "invests ~480 cp, not best"
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "c1e2",
+   "grade": "blunder",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16",
+   "move": "c5d4",
+   "grade": "best",
+   "kind": "label",
+   "note": "Engine best; an immediately winning capture, so no special Great credit."
+  },
+  {
+   "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+   "move": "e5e1",
+   "grade": "best",
+   "kind": "label",
+   "note": "Engine best; an immediately winning capture, so no special Great credit."
+  },
+  {
+   "fen": "1nk1n1/r2pp1/6/Np1NP1/3P1K/R5 w - - 2 15",
+   "move": "d3e5",
+   "grade": "best",
+   "kind": "label",
+   "note": "Engine best; an immediately winning capture, so no special Great credit."
+  },
+  {
+   "fen": "rnk2r/pNnq1p/2p3/2PpQ1/PP2PP/R2K1R w - - 3 11",
+   "move": "b5d4",
+   "grade": "great",
+   "kind": "label",
+   "note": "Only strong move: next alternative is 49 expected-score points worse, stable at two depths."
+  },
+  {
+   "fen": "rn4/2kp1r/pp4/1PPq1p/1Q1N1P/R2K1R w - - 0 13",
+   "move": "c3b4",
+   "grade": "great",
+   "kind": "label",
+   "note": "Only strong move: next alternative is 24 expected-score points worse, stable at two depths."
+  },
+  {
+   "fen": "r1qk1r/1p4/pPp2P/1nNP2/1P4/R1QK1R w - - 1 14",
+   "move": "c1e3",
+   "grade": "mistake",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
+   "move": "a4a3",
+   "grade": "mistake",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
+   "move": "d4e6",
+   "grade": "mistake",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "r3n1/1qpk2/p1n2r/2p3/PP3P/RNK1NR w - - 0 11",
+   "move": "b1d2",
+   "grade": "inaccuracy",
+   "kind": "label",
+   "note": "Engine mate score (stable at two depths, not a proof)."
+  },
+  {
+   "fen": "r3n1/1qpk2/p1n2r/2p3/PP3P/RNK1NR w - - 0 11",
+   "move": "b1a3",
+   "grade": "inaccuracy",
+   "kind": "label",
+   "note": "Engine mate score (stable at two depths, not a proof)."
+  },
+  {
+   "fen": "r3n1/1qpk2/p1n2r/2p3/PP3P/RNK1NR w - - 0 11",
+   "move": "e1f3",
+   "grade": "inaccuracy",
+   "kind": "label",
+   "note": "Engine mate score (stable at two depths, not a proof)."
+  },
+  {
+   "fen": "6/2n3/p4P/3pk1/1r4/3KNR w - - 0 22",
+   "move": "e1d3",
+   "grade": "good",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "2qk2/1p1n1p/r1pQrn/P1P3/P1N2P/RN1K1R w - - 3 13",
+   "move": "f1e1",
+   "grade": "good",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "rn4/1p1q1k/5p/PP1n1P/1Q1p1R/1R1K2 w - - 1 17",
+   "move": "b1c1",
+   "grade": "good",
+   "kind": "label",
+   "note": "Engine mate score (stable at two depths, not a proof)."
+  },
+  {
+   "fen": "r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9",
+   "move": "b5d6",
+   "grade": "excellent",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9",
+   "move": "b5d4",
+   "grade": "excellent",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9",
+   "move": "b5a3",
+   "grade": "excellent",
+   "kind": "label",
+   "note": ""
+  },
+  {
+   "fen": "rn1k2/p2p1r/1p1qp1/1P4/R1P1QP/2K1NR b - - 1 14",
+   "move": "b6c4",
+   "grade": "brilliant",
+   "kind": "label",
+   "note": "Only strong move: next alternative is 28 expected-score points worse, stable at two depths. Sound sacrifice of ~220 cp confirmed by a deeper verification search (heuristic, not a proof)."
+  },
+  {
+   "fen": "6/6/1P2k1/2r3/K1N3/6 w - - 0 39",
+   "move": "b4b5",
+   "grade": "brilliant",
+   "kind": "label",
+   "note": "Only strong move: next alternative is 37 expected-score points worse, stable at two depths. Sound sacrifice of ~320 cp confirmed by a deeper verification search (heuristic, not a proof)."
+  },
+  {
+   "fen": "4kr/p1Q2p/2NrpP/Pq4/4P1/R1K2R b - - 0 16",
+   "move": "d4c4",
+   "grade": "best",
+   "kind": "recapture",
+   "note": "recapture on c4 after e3c4",
+   "prior": "e3c4",
+   "priorFen": "4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16"
+  },
+  {
+   "fen": "k1Q3/6/6/6/6/5K b - - 0 1",
+   "move": "a6a5",
+   "grade": "best",
+   "kind": "forced",
+   "note": "single legal move"
+  }
+ ]
+}

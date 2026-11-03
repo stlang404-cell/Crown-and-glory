@@ -1,7 +1,7 @@
 {
- "id": "crown-grade-corpus-2",
+ "id": "crown-grade-corpus-3",
  "engine": "crown-search-2+crown-eval-4",
- "grading": "crown-grade-v2-experimental",
+ "grading": "crown-grade-v3-experimental",
  "settings": "quick-d5",
  "missing": [
   "brilliant:1"
@@ -22,16 +22,16 @@
   {
    "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
    "move": "b1a1",
-   "grade": "blunder",
+   "grade": "mistake",
    "kind": "label",
-   "note": ""
+   "note": "A deeper check (depth 7) found this move less costly than first measured; labelled mistake."
   },
   {
    "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
    "move": "b1b2",
    "grade": "blunder",
    "kind": "label",
-   "note": ""
+   "note": "Confirmed by a deeper check (depth 7)."
   },
   {
    "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
@@ -45,7 +45,21 @@
    "move": "c1e2",
    "grade": "blunder",
    "kind": "label",
-   "note": ""
+   "note": "Confirmed by a deeper check (depth 7)."
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "d2c2",
+   "grade": "mistake",
+   "kind": "label",
+   "note": "A deeper check (depth 7) found this move less costly than first measured; labelled mistake."
+  },
+  {
+   "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+   "move": "d2d1",
+   "grade": "blunder",
+   "kind": "label",
+   "note": "Confirmed by a deeper check (depth 7)."
   },
   {
    "fen": "4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16",
@@ -83,25 +97,11 @@
    "note": "Only strong move: next alternative is 24 expected-score points worse, stable at two depths."
   },
   {
-   "fen": "r1qk1r/1p4/pPp2P/1nNP2/1P4/R1QK1R w - - 1 14",
-   "move": "c1e3",
-   "grade": "mistake",
-   "kind": "label",
-   "note": ""
-  },
-  {
    "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
    "move": "a4a3",
    "grade": "mistake",
    "kind": "label",
-   "note": ""
-  },
-  {
-   "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
-   "move": "d4e6",
-   "grade": "mistake",
-   "kind": "label",
-   "note": ""
+   "note": "Confirmed by a deeper check (depth 7)."
   },
   {
    "fen": "r3n1/1qpk2/p1n2r/2p3/PP3P/RNK1NR w - - 0 11",

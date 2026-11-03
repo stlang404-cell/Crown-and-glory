@@ -9,7 +9,7 @@ const load = (name: string) => { const f = new URL(`./fixtures/${name}`, import.
 
 /** v2 = canonical engine + grading v2 (new reports); v1 = the frozen pre-v0.5 corpus, reproduced in legacy mode so
  *  historical reports stay explainable and reproducible. */
-for (const [name, engine] of [['grades.json', 'canonical'], ['grades-v1.json', 'legacy-v1']] as const) {
+for (const [name, engine] of [['grades.json', 'canonical'], ['grades-v2.json', 'canonical-v2'], ['grades-v1.json', 'legacy-v1']] as const) {
 const corpus = load(name);
 describe.skipIf(!corpus)(`grade regression corpus (${engine})`, () => {
   const settings = ANALYSIS_PRESETS.find(p => p.id === corpus!.settings)!;

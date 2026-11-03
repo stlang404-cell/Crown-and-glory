@@ -14,7 +14,7 @@ import { Color, KING, PAWN, QUEEN, RULES_VERSION, VARIANT_ID, WHITE, moveTo } fr
 import { Searcher, isMateScore, mateInPlies, see } from '../engine/search';
 import { CANON_BUILD, CANON_EVAL_ID, CANON_OPTS, CANON_SEARCH_ID } from '../engine/canonical';
 import {
-  ACCURACY_ID, CALIBRATION, CRITICAL_GAP, CRITICAL_ID, GRADING_ID, LEGACY_IDS, PHASE_ID, accuracyFromLosses, expectedU, gradeMove, nextPhase, toPov,
+  ACCURACY_ID, CALIBRATION, CRITICAL_GAP, CRITICAL_ID, GRADING_ID, LEGACY_IDS, PHASE_ID, accuracyFromLosses, expectedU, gradeForLoss, gradeMove, nextPhase, toPov,
 } from './methodology';
 import { COACH_ID, TOPICS, coachNotes, sacrificedMaterial } from '../academy/coach';
 import type {
@@ -25,13 +25,15 @@ import { GRADES } from './types';
 /** Analysis runs on the canonical foundation (crown-intel-1); historical reports keep their own build id. */
 export const ENGINE_BUILD = CANON_BUILD;
 /** 'legacy-v1' reproduces pre-v0.5 reports exactly (crown-search-1 + crown-eval-3, grading v1); never used for new reports. */
-export type AnalysisEngine = 'canonical' | 'legacy-v1';
+export type AnalysisEngine = 'canonical' | 'canonical-v2' | 'legacy-v1';
 const LEGACY_BUILD = 'crown-search-1+crown-eval-3';
-interface Profile { opts: typeof CANON_OPTS | Record<string, never>; build: string; searchId: string; evalId: string; gradingId: string; accuracyId: string; calibration: string; v2: boolean }
+interface Profile { opts: typeof CANON_OPTS | Record<string, never>; build: string; searchId: string; evalId: string; gradingId: string; accuracyId: string; calibration: string; v2: boolean; verifyErrors: boolean }
 function profileOf(e: AnalysisEngine): Profile {
   return e === 'legacy-v1'
-    ? { opts: {}, build: LEGACY_BUILD, searchId: 'crown-search-1', evalId: 'crown-eval-3', gradingId: LEGACY_IDS.v1.grading, accuracyId: LEGACY_IDS.v1.accuracy, calibration: LEGACY_IDS.v1.calibration, v2: false }
-    : { opts: CANON_OPTS, build: CANON_BUILD, searchId: CANON_SEARCH_ID, evalId: CANON_EVAL_ID, gradingId: GRADING_ID, accuracyId: ACCURACY_ID, calibration: CALIBRATION, v2: true };
+    ? { opts: {}, build: LEGACY_BUILD, searchId: 'crown-search-1', evalId: 'crown-eval-3', gradingId: LEGACY_IDS.v1.grading, accuracyId: LEGACY_IDS.v1.accuracy, calibration: LEGACY_IDS.v1.calibration, v2: false, verifyErrors: false }
+    : e === 'canonical-v2'
+      ? { opts: CANON_OPTS, build: CANON_BUILD, searchId: CANON_SEARCH_ID, evalId: CANON_EVAL_ID, gradingId: LEGACY_IDS.v2.grading, accuracyId: ACCURACY_ID, calibration: CALIBRATION, v2: true, verifyErrors: false }
+      : { opts: CANON_OPTS, build: CANON_BUILD, searchId: CANON_SEARCH_ID, evalId: CANON_EVAL_ID, gradingId: GRADING_ID, accuracyId: ACCURACY_ID, calibration: CALIBRATION, v2: true, verifyErrors: true };
 }
 
 export const ANALYSIS_PRESETS: AnalysisSettings[] = [
@@ -178,6 +180,20 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
         g = gradeMove({ ...baseInput, sacrifice: { material: invested, verified, recapture } });
         if (!verified) g.reasons.push(`Material investment of ~${invested} cp was not confirmed at depth ${D + settings.verifyExtra}; Brilliant withheld.`);
       }
+    }
+    // v3: a Mistake or Blunder is confirmed by a deeper search of the played and the best move before it is shown;
+    // if the deeper search finds the move less costly, the milder label is used (a shallow search may have missed
+    // the move's purpose). Errors are never made harsher by this check.
+    if (PR.verifyErrors && (g.grade === 'mistake' || g.grade === 'blunder') && legal.length > 1 && best.ccn !== ccn) {
+      const bestMv = parseLegalCcn(pos, best.ccn);
+      const ver = searcher.scoreRootMoves(pos, [playedMove, bestMv], D + settings.verifyExtra, O);
+      const uP = eu(typedScore(ver[0].score, pov)), uB = eu(typedScore(ver[1].score, pov));
+      const lv = Math.min(1, Math.max(0, uB - uP));
+      const milder = gradeForLoss(lv);
+      const rank = (x: string) => GRADES.indexOf(x as typeof GRADES[number]);
+      if (Number.isFinite(lv) && rank(milder) < rank(g.grade)) {
+        g = { ...g, grade: milder, loss: lv, provisional: true, reasons: [...g.reasons, `A deeper check (depth ${D + settings.verifyExtra}) found this move less costly than first measured; labelled ${milder}.`] };
+      } else g.reasons.push(`Confirmed by a deeper check (depth ${D + settings.verifyExtra}).`);
     }
     const critical = legal.length >= 2 && second !== null && (best.u - second.u >= CRITICAL_GAP || (best.score.kind === 'mate' && best.score.plies > 0 && second.score.kind !== 'mate'));
     let cpLoss: number | null = null;
