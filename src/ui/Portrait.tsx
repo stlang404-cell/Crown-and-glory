@@ -42,7 +42,8 @@ export const Portrait = memo(function Portrait({ seed, size = 56, crown = false 
 
 export function BrandMark({ size = 38 }: { size?: number }) {
   // 12x12 pixel crown over a 6x6 board motif
-  const gold = '#d8b56c', ink = '#10151e', ivory = '#e9dcc0', slate = '#6f8296';
+  // Theme tokens, so the mark follows the colour theme (crimson crown in Obsidian, gold in Midnight).
+  const gold = 'var(--brand-crown)', ink = 'var(--brand-ink)', ivory = 'var(--brand-light)', slate = 'var(--brand-dark)';
   const px: [number, number, string][] = [];
   [[1, 1], [4, 1], [7, 1], [10, 1]].forEach(([x, y]) => px.push([x, y, gold]));
   for (let x = 1; x <= 10; x++) { px.push([x, 2, gold]); px.push([x, 3, gold]); }
@@ -50,8 +51,8 @@ export function BrandMark({ size = 38 }: { size?: number }) {
   for (let y = 5; y <= 10; y++) for (let x = 3; x <= 8; x++) px.push([x, y, (x + y) % 2 ? ivory : slate]);
   return (
     <svg className="brand-mark" width={size} height={size} viewBox="0 0 12 12" shapeRendering="crispEdges" aria-hidden>
-      <rect width="12" height="12" rx="2" fill={ink} />
-      {px.map(([x, y, c], i) => <rect key={i} x={x} y={y} width="1" height="1" fill={c} />)}
+      <rect width="12" height="12" rx="2" style={{ fill: ink }} />
+      {px.map(([x, y, c], i) => <rect key={i} x={x} y={y} width="1" height="1" style={{ fill: c }} />)}
     </svg>
   );
 }

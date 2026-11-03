@@ -1,0 +1,260 @@
+/* Crown & Calculation colour themes and board palettes (M4, docs/M4_THEMES.md).
+   Themes are keyed on `data-theme` and boards on `data-board`, normally on <html> (set by src/ui/theme.ts
+   and the inline pre-paint script in index.html). Any element may carry them too: the Settings previews do.
+   Hex tokens are audited by `node tools/contrast/check-themes.mjs`; keep them as plain hex. */
+
+/* ---------- Obsidian & Crimson (default) ---------- */
+:root,
+[data-theme="obsidian"] {
+  --bg: #111318;
+  --bg-2: #0b0c10;
+  --bg-glow: #2a1a21;
+  --panel: #1a1d24;
+  --panel-2: #252932;
+  --panel-3: #16181e;
+  --line: #2f333d;
+  --line-strong: #6a707e;
+  --text: #f2ede3;
+  --muted: #aeb3bd;
+  --accent: #ea8592;
+  --accent-strong: #b23c4b;
+  --accent-strong-2: #9c3140;
+  --accent-ink: #fff8f2;
+  --accent-2: #8ea7c1;
+  --positive: #7fd3a6;
+  --negative: #f4a173;
+  --info: #93bde6;
+  --warn: #e8c477;
+  --focus: #f09aa6;
+  --danger-fill: #b8323f;
+  --clock-run: #f2ede3;
+  --clock-run-ink: #111318;
+  --danger-ink: #ffffff;
+  --chart-bg: #15171d;
+  --chart-grid: #2b2f39;
+  --eval-white: #e9e2d4;
+  --eval-black: #23262e;
+  --brand-crown: #d4566a;
+  --brand-ink: #0b0c10;
+  --brand-light: #f2ede3;
+  --brand-dark: #6c7382;
+  --grade-ink: #10121a;
+  --ins-1: #ea8592;
+  --ins-2: #e4dccd;
+  --ins-3: #d49a6a;
+  --ins-4: #93bde6;
+  --ins-5: #7fd3a6;
+  --ins-6: #b6bbc6;
+  --ins-7: #ab9ce0;
+  --ins-8: #8a93a3;
+  --ins-ink: #111318;
+  --piece-b-stroke: #d9c6a4;
+  --piece-gild: #d9b98a;
+  --rail-bg: rgba(10, 11, 14, 0.72);
+  --tabbar-bg: rgba(12, 13, 17, 0.97);
+  --overlay: rgba(6, 7, 9, 0.68);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.38);
+  --hover: rgba(242, 237, 227, 0.05);
+  /* theme-matched board: ivory and graphite, crimson move highlight */
+  --sq-light: #e8e1d4;
+  --sq-dark: #696f7d;
+  --sq-hl: #d9566a;
+  --sq-check: #ff6a3d;
+  --coord-light: #40444d;
+  --coord-dark: #ffffff;
+  --frame-a: #2b2e36;
+  --frame-b: #121318;
+  --frame-rim: #4c515d;
+  --frame-rim-2: #191b21;
+  color-scheme: dark;
+}
+
+/* ---------- Midnight & Gold (the original v0.3 look) ---------- */
+[data-theme="midnight"] {
+  --bg: #10151e;
+  --bg-2: #0b0f16;
+  --bg-glow: #1d2840;
+  --panel: #1b2431;
+  --panel-2: #222d3d;
+  --panel-3: #18202c;
+  --line: #2e3a4d;
+  --line-strong: #6a7a90;
+  --text: #f1ebdd;
+  --muted: #b3bfcd;
+  --accent: #d8b56c;
+  --accent-strong: #e3c37f;
+  --accent-strong-2: #c79f55;
+  --accent-ink: #1a1408;
+  --accent-2: #b8924a;
+  --positive: #83d6b0;
+  --negative: #ed9b9b;
+  --info: #8fc3ee;
+  --warn: #f0c96a;
+  --focus: #d8b56c;
+  --danger-fill: #a43d3d;
+  --clock-run: #d8b56c;
+  --clock-run-ink: #1a1408;
+  --danger-ink: #ffffff;
+  --chart-bg: #1d2532;
+  --chart-grid: #2e3a4d;
+  --eval-white: #e9dcc0;
+  --eval-black: #1d2532;
+  --brand-crown: #d8b56c;
+  --brand-ink: #10151e;
+  --brand-light: #e9dcc0;
+  --brand-dark: #6f8296;
+  --grade-ink: #10151e;
+  --ins-1: #d8b56c;
+  --ins-2: #c9c2b0;
+  --ins-3: #c58b52;
+  --ins-4: #8fc3ee;
+  --ins-5: #83d6b0;
+  --ins-6: #b3bfcd;
+  --ins-7: #9a8cc9;
+  --ins-8: #7d90a5;
+  --ins-ink: #10151e;
+  --piece-b-stroke: #d8b56c;
+  --piece-gild: #d8b56c;
+  --rail-bg: rgba(11, 15, 22, 0.6);
+  --tabbar-bg: rgba(11, 15, 22, 0.96);
+  --overlay: rgba(5, 7, 10, 0.65);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --hover: rgba(255, 255, 255, 0.04);
+  --sq-light: #e9dcc0;
+  --sq-dark: #5f7187;
+  --sq-hl: #d8b56c;
+  --sq-check: #ed7878;
+  --coord-light: #3d4b5a;
+  --coord-dark: #ffffff;
+  --frame-a: #3a2f1f;
+  --frame-b: #1d170e;
+  --frame-rim: #6a5530;
+  --frame-rim-2: #2a2114;
+  color-scheme: dark;
+}
+
+/* ---------- Ivory & Slate (light) ---------- */
+[data-theme="ivory"] {
+  --bg: #f2efe8;
+  --bg-2: #e7e2d7;
+  --bg-glow: #fbfaf6;
+  --panel: #fcfbf8;
+  --panel-2: #f0ece4;
+  --panel-3: #f7f5f0;
+  --line: #dcd5c8;
+  --line-strong: #8a8578;
+  --text: #1c2129;
+  --muted: #535a66;
+  --accent: #34567c;
+  --accent-strong: #3b5f88;
+  --accent-strong-2: #2e4d70;
+  --accent-ink: #ffffff;
+  --accent-2: #8c3445;
+  --positive: #1b6e45;
+  --negative: #b0352b;
+  --info: #5a45a8;
+  --warn: #855600;
+  --focus: #2e5f9a;
+  --danger-fill: #b0352b;
+  --clock-run: #d3e0ee;
+  --clock-run-ink: #1c2129;
+  --danger-ink: #ffffff;
+  --chart-bg: #f4f2ed;
+  --chart-grid: #ddd7cb;
+  --eval-white: #fbf8f1;
+  --eval-black: #48505e;
+  --brand-crown: #8c3445;
+  --brand-ink: #1c2129;
+  --brand-light: #f2ede3;
+  --brand-dark: #6c7f94;
+  --grade-ink: #10121a;
+  --ins-1: #8c3445;
+  --ins-2: #6c7280;
+  --ins-3: #95582a;
+  --ins-4: #2e5f9a;
+  --ins-5: #1b6e45;
+  --ins-6: #535a66;
+  --ins-7: #5a45a8;
+  --ins-8: #7a7f89;
+  --ins-ink: #fcfbf8;
+  --piece-b-stroke: #d6c19b;
+  --piece-gild: #c9a66a;
+  --rail-bg: rgba(250, 248, 243, 0.82);
+  --tabbar-bg: rgba(250, 248, 243, 0.97);
+  --overlay: rgba(28, 33, 41, 0.45);
+  --shadow: 0 1px 2px rgba(28, 33, 41, 0.06), 0 8px 24px rgba(28, 33, 41, 0.08);
+  --hover: rgba(28, 33, 41, 0.045);
+  --sq-light: #ede7db;
+  --sq-dark: #627489;
+  --sq-hl: #e0a43a;
+  --sq-check: #e5482f;
+  --coord-light: #3e4a58;
+  --coord-dark: #ffffff;
+  --frame-a: #4a5566;
+  --frame-b: #2b323d;
+  --frame-rim: #7b8798;
+  --frame-rim-2: #252b34;
+  color-scheme: light;
+}
+
+/* ---------- Board palettes (override the theme-matched board; declared after the themes) ---------- */
+[data-board="walnut"] {
+  --sq-light: #eed8b4;
+  --sq-dark: #94694a;
+  --sq-hl: #f2cc55;
+  --sq-check: #ff5a3a;
+  --coord-light: #5a3c22;
+  --coord-dark: #fff7ea;
+  --frame-a: #4d3420;
+  --frame-b: #23170d;
+  --frame-rim: #7a5634;
+  --frame-rim-2: #2c1d10;
+}
+[data-board="slate"] {
+  --sq-light: #dfe5ec;
+  --sq-dark: #5f7288;
+  --sq-hl: #f0c45a;
+  --sq-check: #ff6040;
+  --coord-light: #36475a;
+  --coord-dark: #ffffff;
+  --frame-a: #2d3644;
+  --frame-b: #141a22;
+  --frame-rim: #56657a;
+  --frame-rim-2: #1a212b;
+}
+[data-board="green"] {
+  --sq-light: #ecedd3;
+  --sq-dark: #587f41;
+  --sq-hl: #f3e15a;
+  --sq-check: #ff5a3a;
+  --coord-light: #3f5c2e;
+  --coord-dark: #ffffff;
+  --frame-a: #2f3d26;
+  --frame-b: #141b10;
+  --frame-rim: #587048;
+  --frame-rim-2: #1a2314;
+}
+[data-board="mono"] {
+  --sq-light: #e6e6e6;
+  --sq-dark: #6e6e6e;
+  --sq-hl: #4f95e0;
+  --sq-check: #ff4f4f;
+  --coord-light: #3a3a3a;
+  --coord-dark: #ffffff;
+  --frame-a: #333333;
+  --frame-b: #141414;
+  --frame-rim: #5c5c5c;
+  --frame-rim-2: #1c1c1c;
+}
+
+/* Analysis grade colours: identical in every theme (grades also carry symbols and labels). */
+:root {
+  --g-brilliant: #5fd3d9;
+  --g-great: #7aa8ff;
+  --g-best: #83d6b0;
+  --g-excellent: #a9d98a;
+  --g-good: #c9cfa0;
+  --g-inaccuracy: #f0c96a;
+  --g-mistake: #f2a65a;
+  --g-blunder: #ef7d7d;
+}

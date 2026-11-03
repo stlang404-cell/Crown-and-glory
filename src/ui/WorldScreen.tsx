@@ -10,13 +10,13 @@ import { fmtCrowns, MICRO } from '../exchange/ledger';
 import { CHALLENGER_FEE, RECOVERY_THRESHOLD } from '../economy/economy';
 
 export function Insignia({ division, size = 28 }: { division: number; size?: number }) {
-  const colors = ['#d8b56c', '#c9c2b0', '#c58b52', '#8fc3ee', '#83d6b0', '#b3bfcd', '#9a8cc9', '#6f8296'];
-  const c = colors[(division - 1) % 8];
+  // Division colours are theme tokens (--ins-1 … --ins-8 in themes.css).
+  const c = { fill: `var(--ins-${((division - 1) % 8) + 1})` };
   return (
     <svg width={size} height={size} viewBox="0 0 12 12" shapeRendering="crispEdges" aria-label={divisionLabel(division)}>
-      <rect x="2" y="1" width="8" height="8" fill={c} /><rect x="3" y="9" width="6" height="1" fill={c} /><rect x="4" y="10" width="4" height="1" fill={c} />
-      <rect x="3" y="2" width="6" height="6" fill="#10151e" />
-      {Array.from({ length: Math.max(1, 9 - division) }).map((_, i) => <rect key={i} x={3 + (i % 3) * 2} y={3 + Math.floor(i / 3) * 2} width="1" height="1" fill={c} />)}
+      <rect x="2" y="1" width="8" height="8" style={c} /><rect x="3" y="9" width="6" height="1" style={c} /><rect x="4" y="10" width="4" height="1" style={c} />
+      <rect x="3" y="2" width="6" height="6" style={{ fill: 'var(--ins-ink)' }} />
+      {Array.from({ length: Math.max(1, 9 - division) }).map((_, i) => <rect key={i} x={3 + (i % 3) * 2} y={3 + Math.floor(i / 3) * 2} width="1" height="1" style={c} />)}
     </svg>
   );
 }
@@ -175,7 +175,7 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
             const promo = division > 1 && i < 2, releg = division < DIVISIONS && i >= rows.length - 2;
             const c = fed.state!.competitors.get(r.id);
             return (
-              <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'rgba(216,181,108,.12)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
+              <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
                 <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}-{r.d}-{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td>{r.id === PLAYER_ID ? '—' : Math.round(c!.rating)}</td>
               </tr>
             );
@@ -241,7 +241,7 @@ export function TournamentsScreen() {
               <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · top 8 qualify for the Crown Championship · prizes 1,500 ₵' : 'Divisions 5–8 (+ you if registered) · prizes 600 ₵'} · Swiss pairing without repeats, byes to the lowest player without one · order: points, Buchholz Cut-1, Buchholz, SB, seed.</div>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th></tr></thead>
-                  <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'rgba(216,181,108,.12)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td></tr>)}</tbody></table>
+                  <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td></tr>)}</tbody></table>
               </div>
               {sw.rounds.some(r => r.repeats > 0) && <div className="small notice warn">A pairing round required a rematch (no repeat-free pairing existed).</div>}
             </div>

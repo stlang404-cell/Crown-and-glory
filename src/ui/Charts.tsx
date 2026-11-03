@@ -41,17 +41,17 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
     <svg ref={ref} className="graph" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img"
       aria-label={`Evaluation graph over ${plies.length} analysed plies, white advantage upward`}
       onPointerDown={e => pick(e.clientX)} onPointerMove={e => e.buttons && pick(e.clientX)}>
-      <rect width={W} height={H} fill="#1d2532" />
-      <path d={area} fill="rgba(233,220,192,.88)" />
-      <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="rgba(216,181,108,.5)" strokeDasharray="4 4" />
+      <rect width={W} height={H} style={{ fill: 'var(--eval-black)' }} />
+      <path d={area} style={{ fill: 'var(--eval-white)', opacity: 0.92 }} />
+      <line x1="0" x2={W} y1={H / 2} y2={H / 2} style={{ stroke: 'var(--accent)', opacity: 0.6 }} strokeDasharray="4 4" />
       {plies.filter(p => p.grade && GRADE_COLOR[p.grade]).map(p => (
-        <circle key={p.ply} cx={x(p.ply)} cy={y(whiteU(p.evalAfter, accuracyId))} r={4} fill={GRADE_COLOR[p.grade!]} stroke="#10151e" strokeWidth={1.5} />
+        <circle key={p.ply} cx={x(p.ply)} cy={y(whiteU(p.evalAfter, accuracyId))} r={4} style={{ fill: GRADE_COLOR[p.grade!], stroke: 'var(--grade-ink)' }} strokeWidth={1.5} />
       ))}
       {plies.length < total && <rect x={x(plies.length)} y="0" width={W - x(plies.length)} height={H} fill="url(#pending-hatch)" opacity={0.5} />}
       <defs>
-        <pattern id="pending-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="8" fill="#2e3a4d" /></pattern>
+        <pattern id="pending-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="8" style={{ fill: 'var(--line-strong)' }} /></pattern>
       </defs>
-      <line x1={x(selected)} x2={x(selected)} y1="0" y2={H} stroke="var(--accent)" strokeWidth="2" />
+      <line x1={x(selected)} x2={x(selected)} y1="0" y2={H} style={{ stroke: 'var(--accent)' }} strokeWidth="2" />
     </svg>
   );
 }
@@ -76,14 +76,14 @@ export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; h
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Rating history with uncertainty band, ${points.length} points, latest ${Math.round(points[points.length - 1].rating)}`}>
       {ticks.map(t => (
         <g key={t}>
-          <line x1={pad} x2={W - 10} y1={y(t)} y2={y(t)} stroke="#2e3a4d" />
-          <text x={pad - 6} y={y(t) + 4} fill="#b3bfcd" fontSize="11" textAnchor="end">{t}</text>
+          <line x1={pad} x2={W - 10} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--chart-grid)' }} />
+          <text x={pad - 6} y={y(t) + 4} style={{ fill: 'var(--muted)' }} fontSize="11" textAnchor="end">{t}</text>
         </g>
       ))}
-      <path d={band} fill="rgba(143,195,238,.14)" />
-      <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2.5" />
-      {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.rating)} r="3.5" fill="#10151e" stroke="var(--accent)" strokeWidth="2"><title>{p.label}</title></circle>)}
-      <text x={pad} y={H - 6} fill="#b3bfcd" fontSize="11">Band = ±1 RD (model uncertainty, not a guarantee)</text>
+      <path d={band} style={{ fill: 'color-mix(in srgb, var(--info) 16%, transparent)' }} />
+      <path d={line} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth="2.5" />
+      {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.rating)} r="3.5" style={{ fill: 'var(--panel)', stroke: 'var(--accent)' }} strokeWidth="2"><title>{p.label}</title></circle>)}
+      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">Band = ±1 RD (model uncertainty, not a guarantee)</text>
     </svg>
   );
 }

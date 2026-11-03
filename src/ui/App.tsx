@@ -15,6 +15,7 @@ import { FinanceScreen } from './FinanceScreen';
 import { APP_VERSION } from '../app/services';
 import { AcademyScreen } from './AcademyScreen';
 import { Icon } from './Icons';
+import { SettingsScreen } from './SettingsScreen';
 
 export type View =
   | { name: 'play' }
@@ -31,7 +32,8 @@ export type View =
   | { name: 'competitor'; id: string }
   | { name: 'watch'; id: string }
   | { name: 'exchange'; id?: string }
-  | { name: 'finance' };
+  | { name: 'finance' }
+  | { name: 'settings' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
 export const useApp = () => useContext(Ctx)!;
@@ -52,7 +54,7 @@ function parseHash(): View {
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
-  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance'].includes(name)) return { name } as View;
+  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'settings'].includes(name)) return { name } as View;
   return { name: 'play' };
 }
 function toHash(v: View): string {
@@ -72,9 +74,10 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'academy', label: 'Academy', icon: 'academy' },
   { id: 'profile', label: 'Passport', icon: 'profile' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
+  { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
-/** The phone tab bar keeps the five most-used sections; the rest live in the World/Passport screens and the side rail. */
-const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile'];
+/** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the World/Passport screens and the side rail. */
+const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile', 'settings'];
 const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world' };
 
 export function App({ services }: { services: AppServices }) {
@@ -124,6 +127,7 @@ export function App({ services }: { services: AppServices }) {
           {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
           {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
           {view.name === 'finance' && <FinanceScreen />}
+          {view.name === 'settings' && <SettingsScreen />}
         </main>
         <nav className="tabbar" aria-label="Main">
           {NAV.filter(n => TABS.includes(n.id)).map(n => (

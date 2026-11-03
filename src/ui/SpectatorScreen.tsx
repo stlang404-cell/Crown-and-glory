@@ -19,10 +19,10 @@ function ScoreTrack({ moves, shown, onSelect }: { moves: SelfplayMove[]; shown: 
   const n = Math.max(moves.length, 20);
   const pts = moves.slice(0, shown).map((m, i) => [((i + 1) / n) * W, H - whiteU(m.score) * H] as const);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Engine expected score for White, move by move" style={{ background: 'rgba(255,255,255,.02)', borderRadius: 8, cursor: 'pointer' }}
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Engine expected score for White, move by move" style={{ background: 'var(--chart-bg)', borderRadius: 8, cursor: 'pointer' }}
       onClick={e => { const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect(); onSelect(Math.max(0, Math.min(shown, Math.round(((e.clientX - r.left) / r.width) * n)))); }}>
-      <line x1={0} x2={W} y1={H / 2} y2={H / 2} stroke="var(--line)" />
-      {pts.length > 1 && <polyline points={`0,${H / 2} ${pts.map(p => p.join(',')).join(' ')}`} fill="none" stroke="var(--accent)" strokeWidth={2} />}
+      <line x1={0} x2={W} y1={H / 2} y2={H / 2} style={{ stroke: 'var(--chart-grid)' }} />
+      {pts.length > 1 && <polyline points={`0,${H / 2} ${pts.map(p => p.join(',')).join(' ')}`} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth={2} />}
     </svg>
   );
 }

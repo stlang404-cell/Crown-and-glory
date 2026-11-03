@@ -17,12 +17,15 @@ function PriceChart({ m }: { m: Market }) {
   const W = 520, H = 120;
   const h = m.history;
   if (h.length < 2) return <div className="small muted">Not enough trades for a chart yet.</div>;
-  const colors = ['var(--text)', 'var(--muted)', 'var(--accent)'];
+  const colors = ['var(--text)', 'var(--accent-2)', 'var(--accent)'];
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Price history">
-      {[0.25, 0.5, 0.75].map(y => <line key={y} x1={0} x2={W} y1={H - y * H} y2={H - y * H} stroke="var(--line)" />)}
-      {[0, 1, 2].map(i => <polyline key={i} fill="none" stroke={colors[i]} strokeWidth={2} points={h.map((p, k) => `${(k / (h.length - 1)) * W},${H - p.prices[i] * H}`).join(' ')} />)}
-    </svg>
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Price history">
+        {[0.25, 0.5, 0.75].map(y => <line key={y} x1={0} x2={W} y1={H - y * H} y2={H - y * H} style={{ stroke: 'var(--chart-grid)' }} />)}
+        {[0, 1, 2].map(i => <polyline key={i} fill="none" style={{ stroke: colors[i] }} strokeWidth={2} strokeDasharray={i === 1 ? '6 4' : undefined} points={h.map((p, k) => `${(k / (h.length - 1)) * W},${H - p.prices[i] * H}`).join(' ')} />)}
+      </svg>
+      <div className="legend" aria-hidden>{OUTCOMES.map((o, i) => <span key={o}><i style={{ background: colors[i] }} />{o}</span>)}</div>
+    </>
   );
 }
 

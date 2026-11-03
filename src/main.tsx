@@ -2,7 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
 import { AppServices } from './app/services';
+import { applyPrefs } from './ui/theme';
+import './ui/themes.css';
 import './ui/styles.css';
+
+applyPrefs(); // idempotent with the inline pre-paint script in index.html
 
 const root = createRoot(document.getElementById('root')!);
 
