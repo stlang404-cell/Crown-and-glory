@@ -1,16 +1,21 @@
 /**
- * Crown Exchange markets (crown-exchange-1). Pure functions: each returns the journal entry to post and
+ * Crown Exchange markets (crown-exchange-2). Pure functions: each returns the journal entry to post and
  * the updated market/position objects; the caller posts the journal and saves the objects in ONE
  * transaction. States: open → closed → settled | cancelled (terminal; never reopened).
  *
- * Contract: categorical match market over {White wins, Draw, Black wins}; exactly one outcome pays
- * 1 crown per share. Inventory q changes only through paid trades (no external re-centring). Retail
- * holdings are long-only (no naked shorts). Cancellation pays 1/n per share (fixed, published vector).
+ * A market is one fixed-b LMSR over n exhaustive, mutually exclusive STATES (research doc 09). Traders buy
+ * and sell CLAIMS: a claim pays 1 crown per share in every state of its subset S (a categorical outcome is
+ * the singleton S = {i}). All claims of a market share one inventory q, one collateral account and one
+ * funded subsidy b·ln n (uniform q0 = 0), so prices of all claims are coherent and the maker's worst-case
+ * loss is bounded by the funded subsidy. Inventory changes only through paid trades (no re-centring).
+ * Retail holdings are long-only (no naked shorts).
+ * Resolution pays a published PAYOUT VECTOR over states (a single winning state is the unit vector; joint
+ * champions split equally; cancellation is the uniform vector 1/n). A claim pays Σ_{s∈S} payout[s] per share.
  */
 import { Journal, MICRO } from './ledger';
-import { buyCostMicro, feeMicro, prices, sellProceedsMicro, subsidyMicro } from './lmsr';
+import { buyClaimMicro, feeMicro, prices, sellClaimMicro, subsidyMicro } from './lmsr';
 
-export const EXCHANGE_ID = 'crown-exchange-1';
+export const EXCHANGE_ID = 'crown-exchange-2';
 export const OUTCOMES = ['White wins', 'Draw', 'Black wins'] as const;
 
 export interface Market {
@@ -33,7 +38,33 @@ export interface Market {
   closedAt: string | null;
   settledAt: string | null;
   gameId: string | null;
+  /** v0.4.0: market family; absent on v0.3 match markets. */
+  kind?: MarketKind;
+  /** State labels (absent → W/D/B). */
+  outcomes?: string[];
+  /** Tradable claims as state subsets (absent → one singleton claim per state). */
+  claims?: { id: string; label: string; states: number[] }[];
+  /** Published model probability per state (information only; never moves q). */
+  model?: number[];
+  /** Resolution payout vector over states (sums to 1). */
+  payout?: number[] | null;
+  /** Human-readable trading, closure, settlement and cancellation rules shown before trading. */
+  rules?: string;
+  /** Live in-play state for match markets traded during the game. */
+  live?: { plies: number; lastEval: number | null } | null;
+  /** Ids this market depends on (fixture, event, competitor, …) for idempotent resolution. */
+  ref?: Record<string, string | number>;
 }
+
+export type MarketKind = 'match' | 'winner' | 'promotion' | 'qualification' | 'season' | 'bracket' | 'sandbox';
+
+export const statesOf = (m: Market): string[] => m.outcomes ?? [...OUTCOMES];
+export const claimsOf = (m: Market): { id: string; label: string; states: number[] }[] =>
+  m.claims ?? statesOf(m).map((label, i) => ({ id: `s${i}`, label, states: [i] }));
+export const claimPrice = (m: Market, c: number): number => { const p = prices(m.q, m.b); return claimsOf(m)[c].states.reduce((a, s) => a + p[s], 0); };
+export const claimPrices = (m: Market): number[] => claimsOf(m).map((_, i) => claimPrice(m, i));
+/** Payout per share (crowns) of claim c under a payout vector. */
+export const claimPayout = (m: Market, c: number, payout: number[]): number => claimsOf(m)[c].states.reduce((a, s) => a + payout[s], 0);
 
 export interface Position {
   id: string; // `${marketId}|${holder}`
@@ -63,17 +94,42 @@ export function openMarket(p: { id: string; sandbox: boolean; fixtureId: string;
   return { market, journal };
 }
 
+/** Open any market family with uniform q0 and its funded subsidy b·ln n. */
+export function openGenericMarket(p: { id: string; kind: MarketKind; sandbox: boolean; title: string; outcomes: string[]; claims?: Market['claims']; model: number[]; rules: string;
+  fixtureId?: string; white?: string; black?: string; season: number; round: number; b: number; at: string; ref?: Market['ref']; forecast?: Market['forecast'] }): { market: Market; journal: Journal } {
+  const n = p.outcomes.length;
+  if (n < 2) throw new MarketError('A market needs at least two states');
+  if (p.model.length !== n || Math.abs(p.model.reduce((a, x) => a + x, 0) - 1) > 1e-6) throw new MarketError('Model must be a probability vector over the states');
+  for (const c of p.claims ?? []) if (!c.states.length || c.states.some(s => s < 0 || s >= n) || new Set(c.states).size !== c.states.length) throw new MarketError(`Bad claim ${c.id}`);
+  const market: Market = {
+    id: p.id, sandbox: p.sandbox, fixtureId: p.fixtureId ?? '', title: p.title, white: p.white ?? '', black: p.black ?? '', season: p.season, round: p.round, b: p.b,
+    q: new Array(n).fill(0), status: 'open', subsidy: subsidyMicro(p.b, n), result: null,
+    forecast: p.forecast ?? { w: p.model[0], d: n > 1 ? p.model[1] : 0, l: n > 2 ? p.model[2] : 0, source: 'model' },
+    history: [{ at: p.at, seq: 0, prices: new Array(n).fill(1 / n), by: 'open' }], openedAt: p.at, closedAt: null, settledAt: null, gameId: null,
+    kind: p.kind, outcomes: p.outcomes, claims: p.claims, model: p.model, payout: null, rules: p.rules, live: null, ref: p.ref,
+  };
+  const journal: Journal = {
+    id: `market-open:${p.id}`, at: p.at, kind: 'market-subsidy', memo: `Fund worst-case maker subsidy b·ln ${n} for ${p.title}`,
+    lines: [{ account: treasuryAccount(market), amount: -market.subsidy }, { account: acct(market, 'subsidy'), amount: market.subsidy }], season: p.season, round: p.round,
+  };
+  return { market, journal };
+}
+
 export interface Quote { outcome: number; shares: number; side: 'buy' | 'sell'; amount: number; fee: number; total: number; priceBefore: number; priceAfter: number; avgPrice: number; maxPayout: number; maxLoss: number }
 
 export function quote(m: Market, outcome: number, shares: number, side: 'buy' | 'sell'): Quote {
   if (!Number.isInteger(shares) || shares <= 0) throw new MarketError('Shares must be a positive whole number');
-  const amount = side === 'buy' ? buyCostMicro(m.q, m.b, outcome, shares) : sellProceedsMicro(m.q, m.b, outcome, shares);
+  const claims = claimsOf(m);
+  if (!Number.isInteger(outcome) || outcome < 0 || outcome >= claims.length) throw new MarketError('Unknown outcome');
+  const S = claims[outcome].states;
+  const amount = side === 'buy' ? buyClaimMicro(m.q, m.b, S, shares) : sellClaimMicro(m.q, m.b, S, shares);
   const fee = feeMicro(amount);
-  const q2 = [...m.q]; q2[outcome] += side === 'buy' ? shares : -shares;
+  const q2 = [...m.q]; for (const st of S) q2[st] += side === 'buy' ? shares : -shares;
   const total = side === 'buy' ? amount + fee : amount - fee;
+  const sum = (q: number[]) => { const p = prices(q, m.b); return S.reduce((a, st) => a + p[st], 0); };
   return {
     outcome, shares, side, amount, fee, total,
-    priceBefore: prices(m.q, m.b)[outcome], priceAfter: prices(q2, m.b)[outcome], avgPrice: amount / shares / MICRO,
+    priceBefore: sum(m.q), priceAfter: sum(q2), avgPrice: amount / shares / MICRO,
     maxPayout: side === 'buy' ? shares * MICRO : 0, maxLoss: side === 'buy' ? total : 0,
   };
 }
@@ -82,21 +138,23 @@ export function quote(m: Market, outcome: number, shares: number, side: 'buy' | 
 export function trade(m: Market, pos: Position | null, holder: string, outcome: number, shares: number, side: 'buy' | 'sell', at: string, seq: number):
   { market: Market; position: Position; journal: Journal; quote: Quote } {
   if (m.status !== 'open') throw new MarketError('Market is not open');
-  if (outcome < 0 || outcome > 2) throw new MarketError('Unknown outcome');
-  const position: Position = pos ? structuredClone(pos) : { id: `${m.id}|${holder}`, marketId: m.id, holder, shares: [0, 0, 0], spent: 0, received: 0, fees: 0 };
+  const claims = claimsOf(m);
+  if (!Number.isInteger(outcome) || outcome < 0 || outcome >= claims.length) throw new MarketError('Unknown outcome');
+  const position: Position = pos ? structuredClone(pos) : { id: `${m.id}|${holder}`, marketId: m.id, holder, shares: new Array(claims.length).fill(0), spent: 0, received: 0, fees: 0 };
+  while (position.shares.length < claims.length) position.shares.push(0);
   if (side === 'sell' && position.shares[outcome] < shares) throw new MarketError('Cannot sell more shares than held (no short selling)');
   const qt = quote(m, outcome, shares, side);
   if (side === 'sell' && qt.total < 0) throw new MarketError('Sale proceeds do not cover the fee');
   const market = structuredClone(m);
-  market.q[outcome] += side === 'buy' ? shares : -shares;
+  for (const st of claims[outcome].states) market.q[st] += side === 'buy' ? shares : -shares;
   market.history.push({ at, seq, prices: prices(market.q, market.b), by: holder });
   position.shares[outcome] += side === 'buy' ? shares : -shares;
   position.fees += qt.fee;
   if (side === 'buy') position.spent += qt.total; else position.received += qt.total;
   const journal: Journal = side === 'buy'
-    ? { id: `trade:${m.id}:${seq}`, at, kind: 'trade-buy', memo: `Buy ${shares} × ${OUTCOMES[outcome]} — ${m.title}`, season: m.season, round: m.round,
+    ? { id: `trade:${m.id}:${seq}`, at, kind: 'trade-buy', memo: `Buy ${shares} × ${claims[outcome].label} — ${m.title}`, season: m.season, round: m.round,
       lines: [{ account: holder, amount: -qt.total }, { account: acct(m, 'collateral'), amount: qt.amount }, { account: feeAccount(m), amount: qt.fee }] }
-    : { id: `trade:${m.id}:${seq}`, at, kind: 'trade-sell', memo: `Sell ${shares} × ${OUTCOMES[outcome]} — ${m.title}`, season: m.season, round: m.round,
+    : { id: `trade:${m.id}:${seq}`, at, kind: 'trade-sell', memo: `Sell ${shares} × ${claims[outcome].label} — ${m.title}`, season: m.season, round: m.round,
       lines: [{ account: acct(m, 'collateral'), amount: -qt.amount }, { account: holder, amount: qt.total }, { account: feeAccount(m), amount: qt.fee }] };
   return { market, position, journal, quote: qt };
 }
@@ -108,65 +166,68 @@ export function closeMarket(m: Market, at: string): Market {
 }
 
 /** Required collateral: the maximum possible payout. */
-export const maxLiability = (m: Market) => Math.max(...m.q) * MICRO;
+export const maxLiability = (m: Market) => Math.max(...m.q) * MICRO; // q = issued shares per state (uniform q0 = 0)
 
-/**
- * Settle on the winning outcome: pay holders from collateral (then subsidy), return the rest to the
- * treasury. One balanced journal with a unique id (`settle:<market>`), so a retry is a no-op.
- */
-export function settleMarket(m: Market, positions: Position[], result: number, at: string, collateral: number, gameId: string | null): { market: Market; positions: Position[]; journal: Journal } {
+/** Resolve by a payout vector over states: pay holders from collateral (then subsidy), return the rest to
+ *  the treasury. One balanced journal with a unique id (`settle:<market>`), so a retry is rejected. */
+export function resolveMarket(m: Market, positions: Position[], payout: number[], kind: 'settle' | 'cancel', at: string, collateral: number, gameId: string | null, memo: string): { market: Market; positions: Position[]; journal: Journal } {
   if (m.status === 'settled' || m.status === 'cancelled') throw new MarketError('Market already resolved');
-  if (m.status === 'open') throw new MarketError('Close the market before settling');
-  const payouts = positions.map(p => ({ p, amount: p.shares[result] * MICRO }));
-  const due = payouts.reduce((s, x) => s + x.amount, 0);
+  if (kind === 'settle' && m.status === 'open') throw new MarketError('Close the market before settling');
+  const n = statesOf(m).length;
+  if (payout.length !== n || payout.some(x => x < 0) || Math.abs(payout.reduce((a, x) => a + x, 0) - 1) > 1e-9) throw new MarketError('Payout must be a probability vector over the states');
+  const claims = claimsOf(m);
+  const per = claims.map(c => c.states.reduce((a, st) => a + payout[st], 0));
+  const payouts = positions.map(p => ({ p, amount: Math.floor(p.shares.reduce((a, x, c) => a + x * (per[c] ?? 0), 0) * MICRO + 1e-6) }));
+  const due = payouts.reduce((a, x) => a + x.amount, 0);
   const funds = collateral + m.subsidy;
   if (due > funds) throw new MarketError(`Insolvent market: due ${due} > funds ${funds}`);
   const lines = [{ account: acct(m, 'collateral'), amount: -collateral }, { account: acct(m, 'subsidy'), amount: -m.subsidy }];
   for (const x of payouts) if (x.amount) lines.push({ account: x.p.holder, amount: x.amount });
   lines.push({ account: treasuryAccount(m), amount: funds - due });
-  const newPositions = payouts.map(x => ({ ...x.p, received: x.p.received + x.amount }));
+  const win = payout.findIndex(x => x === 1);
   return {
-    market: { ...m, status: 'settled', result, settledAt: at, gameId },
-    positions: newPositions,
-    journal: { id: `settle:${m.id}`, at, kind: 'market-settle', memo: `Settle ${m.title}: ${OUTCOMES[result]}`, lines: lines.filter(l => l.amount !== 0), season: m.season, round: m.round },
+    market: { ...m, status: kind === 'settle' ? 'settled' : 'cancelled', result: kind === 'settle' && win >= 0 ? win : kind === 'settle' ? -1 : null, payout, settledAt: at, closedAt: m.closedAt ?? at, gameId },
+    positions: payouts.map(x => ({ ...x.p, received: x.p.received + x.amount })),
+    journal: { id: `settle:${m.id}`, at, kind: kind === 'settle' ? 'market-settle' : 'market-cancel', memo, lines: lines.filter(l => l.amount !== 0), season: m.season, round: m.round },
   };
 }
+export const unitPayout = (n: number, w: number) => Array.from({ length: n }, (_, i) => (i === w ? 1 : 0));
+export const uniformPayout = (n: number) => new Array(n).fill(1 / n);
 
-/** Cancellation: every share pays 1/3 crown (rounded down per holding); residue to the treasury. */
+/** Settle on a single winning state. */
+export function settleMarket(m: Market, positions: Position[], result: number, at: string, collateral: number, gameId: string | null): { market: Market; positions: Position[]; journal: Journal } {
+  const n = statesOf(m).length;
+  if (!Number.isInteger(result) || result < 0 || result >= n) throw new MarketError('Unknown result');
+  return resolveMarket(m, positions, unitPayout(n, result), 'settle', at, collateral, gameId, `Settle ${m.title}: ${statesOf(m)[result]}`);
+}
+
+/** Cancellation: the published uniform vector — each share pays |S|/n crowns (rounded down per holding). */
 export function cancelMarket(m: Market, positions: Position[], at: string, collateral: number): { market: Market; positions: Position[]; journal: Journal } {
-  if (m.status === 'settled' || m.status === 'cancelled') throw new MarketError('Market already resolved');
-  const funds = collateral + m.subsidy;
-  const payouts = positions.map(p => ({ p, amount: Math.floor((p.shares.reduce((s, x) => s + x, 0) * MICRO) / 3) }));
-  const due = payouts.reduce((s, x) => s + x.amount, 0);
-  const lines = [{ account: acct(m, 'collateral'), amount: -collateral }, { account: acct(m, 'subsidy'), amount: -m.subsidy }];
-  for (const x of payouts) if (x.amount) lines.push({ account: x.p.holder, amount: x.amount });
-  lines.push({ account: treasuryAccount(m), amount: funds - due });
-  return {
-    market: { ...m, status: 'cancelled', settledAt: at, closedAt: m.closedAt ?? at },
-    positions: payouts.map(x => ({ ...x.p, received: x.p.received + x.amount })),
-    journal: { id: `settle:${m.id}`, at, kind: 'market-cancel', memo: `Cancel ${m.title}: 1/3 per share`, lines: lines.filter(l => l.amount !== 0), season: m.season, round: m.round },
-  };
+  const n = statesOf(m).length;
+  return resolveMarket(m, positions, uniformPayout(n), 'cancel', at, collateral, null, `Cancel ${m.title}: 1/${n} per state`);
 }
 
 /** Executable liquidation value of a position (sell everything now, after fees), µ. */
 export function liquidationValue(m: Market, p: Position): number {
   if (m.status === 'settled' || m.status === 'cancelled') return 0;
+  const claims = claimsOf(m);
   if (m.status === 'closed') {
-    // not tradeable: value at the 1/3 cancellation floor is the only executable guarantee
-    return Math.floor((p.shares.reduce((s, x) => s + x, 0) * MICRO) / 3);
+    // not tradeable: the published cancellation vector is the only executable guarantee
+    const n = statesOf(m).length;
+    return Math.floor(p.shares.reduce((a, x, c) => a + x * ((claims[c]?.states.length ?? 0) / n), 0) * MICRO);
   }
   let q = [...m.q], total = 0;
-  for (let i = 0; i < 3; i++) {
-    if (!p.shares[i]) continue;
-    const proceeds = sellProceedsMicro(q, m.b, i, p.shares[i]);
+  for (let c = 0; c < claims.length; c++) {
+    if (!p.shares[c]) continue;
+    const proceeds = sellClaimMicro(q, m.b, claims[c].states, p.shares[c]);
     total += proceeds - feeMicro(proceeds);
-    q = [...q]; q[i] -= p.shares[i];
+    q = [...q]; for (const st of claims[c].states) q[st] -= p.shares[c];
   }
   return Math.max(0, total);
 }
 /** Marginal-price mark (informational, not executable), µ. */
 export function markValue(m: Market, p: Position): number {
   if (m.status !== 'open' && m.status !== 'closed') return 0;
-  const pr = prices(m.q, m.b);
-  return Math.round(p.shares.reduce((s, x, i) => s + x * pr[i] * MICRO, 0));
+  const pr = claimPrices(m);
+  return Math.round(p.shares.reduce((s, x, i) => s + x * (pr[i] ?? 0) * MICRO, 0));
 }

@@ -12,7 +12,7 @@ import type { PoolId } from '../games/types';
 import type { AnalysisReport } from '../analysis/types';
 
 export const DB_NAME = 'crown-calculation';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 export const APP_SCHEMA = 'crown-save-1';
 
 export interface AnalysisJob {
@@ -74,10 +74,17 @@ export const MIGRATIONS: Migration[] = [
       for (const s of FEDERATION_STORES) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: s === 'world' || s === 'finance' ? 'key' : s === 'accounts' ? 'account' : 'id' });
     },
   },
+  {
+    to: 4,
+    description: 'v0.4.0: live in-play featured games and sponsorship contracts — additive; v1–v3 data untouched',
+    upgrade(db) {
+      for (const s of ['liveGames', 'contracts']) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+    },
+  },
 ];
 
 /** Stores written by the federation/economy commit protocol (one transaction per command). */
-export const FEDERATION_STORES = ['world', 'seasons', 'competitors', 'rounds', 'worldGames', 'journal', 'accounts', 'markets', 'positions', 'assets', 'finance'] as const;
+export const FEDERATION_STORES = ['world', 'seasons', 'competitors', 'rounds', 'worldGames', 'journal', 'accounts', 'markets', 'positions', 'assets', 'finance', 'liveGames', 'contracts'] as const;
 export type FederationStore = typeof FEDERATION_STORES[number];
 
 const req = <T>(r: IDBRequest<T>): Promise<T> => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });

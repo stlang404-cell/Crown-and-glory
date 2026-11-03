@@ -15,9 +15,10 @@ import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSH
 import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
-import { Market, Position, openMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue } from '../exchange/market';
+import { Market, Position, openMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices } from '../exchange/market';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
+import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
   CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
@@ -34,6 +35,15 @@ export interface WorldGame {
   createdAt: string; mode: 'watched-live' | 'background'; seed: number; profiles: string[];
 }
 export interface FinanceHistory { key: 'history'; points: { season: number; round: number; at: string; cash: number; assets: number; positions: number; netWorth: number }[]; peak: number }
+/** A featured game played move by move with in-play trading windows (persisted after every move). */
+export interface LiveGame {
+  id: string; fixtureId: string; season: number; round: number; seed: number; moves: SelfplayMove[];
+  status: 'live' | 'done'; startedAt: string; marketId: string | null;
+  /** Public information published after each move: market prices and the live model (for charts). */
+  points: { ply: number; prices: number[]; model: number[]; at: string }[];
+}
+/** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
+export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null }[] }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
@@ -55,6 +65,8 @@ export interface FedState {
   assets: Map<string, OwnedAsset>;
   finance: FinanceHistory;
   extra: PlayerExtra;
+  liveGames: Map<string, LiveGame>;
+  contracts: Map<string, Contract>;
 }
 
 type Writes = { store: FederationStore | 'games'; put?: unknown[]; del?: string[] }[];
@@ -73,10 +85,11 @@ export class FederationService {
   get ready(): boolean { return this.state !== null; }
 
   async load(): Promise<void> {
-    const [worlds, seasons, comps, rounds, markets, positions, accounts, journal, assets, finance] = await Promise.all([
+    const [worlds, seasons, comps, rounds, markets, positions, accounts, journal, assets, finance, liveGames, contracts] = await Promise.all([
       this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<Competitor>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
       this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<{ account: string; balance: number }>('accounts'),
       this.db.loadAll<Journal>('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
+      this.db.loadAll<LiveGame>('liveGames'), this.db.loadAll<Contract>('contracts'),
     ]);
     const world = worlds.find(w => w.key === 'world');
     if (!world) { this.state = null; return; }
@@ -89,6 +102,7 @@ export class FederationService {
       assets: new Map(assets.map(a => [a.id, a])),
       finance: (finance.find(f => f.key === 'history') as FinanceHistory) ?? { key: 'history', points: [], peak: 0 },
       extra: (finance.find(f => f.key === 'player') as PlayerExtra) ?? { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
+      liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
   }
 
@@ -101,6 +115,7 @@ export class FederationService {
       rounds: new Map(s.rounds), markets: new Map(s.markets), positions: new Map(s.positions),
       balances: new Map(s.balances), journalIds: new Set(s.journalIds), assets: new Map(s.assets),
       finance: structuredClone(s.finance), extra: structuredClone(s.extra),
+      liveGames: new Map(s.liveGames), contracts: new Map(s.contracts),
     };
   }
   balance(account: string): number { return this.state?.balances.get(account) ?? 0; }
@@ -116,6 +131,26 @@ export class FederationService {
     }
   }
 
+  /** Market lifecycle operations bound to a working state (see src/app/markets.ts). */
+  private opsOf(st: FedState, posted: Journal[]): MarketOps {
+    return { st, post: js => this.post(st, js, posted), now: () => this.now(), markets: new Map(), positions: new Map() };
+  }
+
+  /** Close family markets whose closing round has started, committed before any game of that round runs. */
+  private async closeDueMarkets(): Promise<void> {
+    if (!this.state) return;
+    const st0 = this.state;
+    const due = [...st0.markets.values()].some(m => m.status === 'open' && m.ref?.closeRound !== undefined && m.ref.season === st0.world.season && st0.world.round >= Number(m.ref.closeRound));
+    if (!due) return;
+    await this.run(async () => {
+      const st = this.clone();
+      const posted: Journal[] = [];
+      const ops = this.opsOf(st, posted);
+      closeDue(ops, st.world.round);
+      await this.commit(st, posted, { markets: [...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
   private ctxOf(st: FedState, player: { rating: number; rd: number }): Ctx {
     const seasonRounds = [...st.rounds.values()].filter(r => r.season === st.world.season);
     const swissHistory = gamesOf(seasonRounds).filter(g => g.event === 'open' || g.event === 'challenger');
@@ -129,7 +164,7 @@ export class FederationService {
     try { return await fn(); } finally { this.busy = false; }
   }
 
-  private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[] }, expect: { season: number; round: number } | null): Promise<void> {
+  private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[]; liveGames?: LiveGame[]; contracts?: Contract[] }, expect: { season: number; round: number } | null): Promise<void> {
     const accounts = new Set(posted.flatMap(j => j.lines.map(l => l.account)));
     const writes: Writes = [
       { store: 'world', put: [next.world] },
@@ -144,6 +179,8 @@ export class FederationService {
     if (changed.positions?.length) writes.push({ store: 'positions', put: changed.positions });
     if (changed.assets?.length || changed.delAssets?.length) writes.push({ store: 'assets', put: changed.assets ?? [], del: changed.delAssets ?? [] });
     if (changed.worldGames?.length) writes.push({ store: 'worldGames', put: changed.worldGames });
+    if (changed.liveGames?.length) writes.push({ store: 'liveGames', put: changed.liveGames });
+    if (changed.contracts?.length) writes.push({ store: 'contracts', put: changed.contracts });
     await this.db.commit(writes, async get => {
       const w = (await get('world', 'world')) as WorldState | undefined;
       if (expect && (!w || w.season !== expect.season || w.round !== expect.round)) throw new Error('World changed underneath this command (stale or duplicate); reload');
@@ -174,6 +211,7 @@ export class FederationService {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
         extra: { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
+        liveGames: new Map(), contracts: new Map(),
       };
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
@@ -183,8 +221,10 @@ export class FederationService {
       this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits), this.now()), posted);
       const opened = this.openRoundWithMarkets(st, ctx, posted);
       st.rounds.set(opened.rec.id, opened.rec);
+      const ops = this.opsOf(st, posted);
+      openSeasonMarkets(ops);
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [opened.rec], markets: opened.markets, positions: opened.positions }, null);
+      await this.commit(st, posted, { competitors: true, rounds: [opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()] }, null);
     });
   }
 
@@ -395,7 +435,13 @@ export class FederationService {
     const f0 = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
     if (!f0 || f0.tier !== 2) throw new Error('Not a featured fixture');
     if (f0.result !== null) throw new Error('Already played');
-    // 1) close the market (commit) before any move exists
+    // a game already running live is finished move by move (same committed timeline)
+    if (this.state.liveGames.get(fixtureId)?.status === 'live') {
+      for (let guard = 0; guard < 500; guard++) { const r = await this.liveStep(fixtureId); if (r.done) return r.game!; }
+      throw new Error('Live game did not finish');
+    }
+    // 1) close the market (commit) before any move exists — and any family market whose closing round started
+    await this.closeDueMarkets();
     const mk = this.marketFor(fixtureId);
     if (mk && mk.status === 'open') {
       await this.run(async () => {
@@ -416,36 +462,154 @@ export class FederationService {
     // 3) commit game + fixture result + settlement atomically
     return this.run(async () => {
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
-      const f = rec.fixtures.find(x => x.id === fixtureId)!;
-      if (f.result !== null) throw new Error('Already recorded');
-      const game: WorldGame = {
-        id: `wg:${fixtureId}`, fixtureId, season: f.season, round: f.round, event: f.event, stage: f.stage, white: f.white, black: f.black, whiteName: w.name, blackName: b.name,
-        whiteRating: Math.round(w.rating), blackRating: Math.round(b.rating), initialFen: START_FEN, moves: r.moves, result: r.result, termination: r.termination,
-        createdAt: this.now(), mode, seed, profiles: [pw.id, pb.id],
-      };
-      f.result = r.result === '1-0' ? 1 : r.result === '0-1' ? 0 : 0.5;
-      f.gameId = game.id;
-      st.rounds.set(rec.id, rec);
       const posted: Journal[] = [];
-      const changedMarkets: Market[] = [], changedPositions: Position[] = [];
-      const m = st.markets.get(`mk:${fixtureId}`);
-      if (m && (m.status === 'closed' || m.status === 'open')) {
-        const closed = m.status === 'open' ? closeMarket(m, this.now()) : m;
-        const ps = [...st.positions.values()].filter(p => p.marketId === m.id);
-        const outcome = f.result === 1 ? 0 : f.result === 0.5 ? 1 : 2;
-        const s2 = settleMarket(closed, ps, outcome, this.now(), st.balances.get(acct(m, 'collateral')) ?? 0, game.id);
-        this.post(st, [s2.journal], posted);
-        st.markets.set(m.id, s2.market); changedMarkets.push(s2.market);
-        for (const p of s2.positions) { st.positions.set(p.id, p); changedPositions.push(p); }
-        const fc = st.extra.forecasts.find(x => x.marketId === m.id);
-        if (fc) fc.outcome = outcome;
-      }
-      settleRound(this.ctxOf(st, await this.playerRating()), rec);
+      const fin = await this.finishFeaturedIn(st, posted, fixtureId, r.moves, r.result, r.termination, mode, seed, [pw.id, pb.id]);
       this.snapshotFinance(st);
-      await this.commit(st, posted, { rounds: [rec], markets: changedMarkets, positions: changedPositions, worldGames: [game], plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      await this.commit(st, posted, { rounds: [fin.rec], markets: fin.markets, positions: fin.positions, worldGames: [fin.game], plans: [st.plan] }, { season: st.world.season, round: st.world.round });
       this.live.delete(fixtureId);
-      return game;
+      return fin.game;
+    });
+  }
+
+  /** Record a finished featured game in a working state: game record, fixture result, market settlement
+   *  (or cancellation when the playing-length limit censored the game). */
+  private async finishFeaturedIn(st: FedState, posted: Journal[], fixtureId: string, moves: SelfplayMove[], result: '1-0' | '0-1' | '1/2-1/2', termination: string, mode: WorldGame['mode'], seed: number, profiles: string[]) {
+    const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+    const f = rec.fixtures.find(x => x.id === fixtureId)!;
+    if (f.result !== null) throw new Error('Already recorded');
+    const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
+    const game: WorldGame = {
+      id: `wg:${fixtureId}`, fixtureId, season: f.season, round: f.round, event: f.event, stage: f.stage, white: f.white, black: f.black, whiteName: w.name, blackName: b.name,
+      whiteRating: Math.round(w.rating), blackRating: Math.round(b.rating), initialFen: START_FEN, moves, result, termination,
+      createdAt: this.now(), mode, seed, profiles,
+    };
+    f.result = result === '1-0' ? 1 : result === '0-1' ? 0 : 0.5;
+    f.gameId = game.id;
+    st.rounds.set(rec.id, rec);
+    const markets: Market[] = [], positions: Position[] = [];
+    const m = st.markets.get(`mk:${fixtureId}`);
+    if (m && (m.status === 'closed' || m.status === 'open')) {
+      const closed = m.status === 'open' ? closeMarket(m, this.now()) : m;
+      const ps = [...st.positions.values()].filter(p => p.marketId === m.id);
+      const outcome = f.result === 1 ? 0 : f.result === 0.5 ? 1 : 2;
+      // a game stopped by the playing-length limit is censored, not a result: the market is cancelled with
+      // its published 1/n vector (research doc 09); standings record the adjudicated draw, labelled as such
+      const s2 = termination === 'playing-limit'
+        ? cancelMarket(closed, ps, this.now(), st.balances.get(acct(m, 'collateral')) ?? 0)
+        : settleMarket(closed, ps, outcome, this.now(), st.balances.get(acct(m, 'collateral')) ?? 0, game.id);
+      this.post(st, [s2.journal], posted);
+      st.markets.set(m.id, s2.market); markets.push(s2.market);
+      for (const p of s2.positions) { st.positions.set(p.id, p); positions.push(p); }
+      const fc = st.extra.forecasts.find(x => x.marketId === m.id);
+      if (fc) fc.outcome = termination === 'playing-limit' ? null : outcome;
+    }
+    settleRound(this.ctxOf(st, await this.playerRating()), rec);
+    return { rec, game, markets, positions };
+  }
+
+  // ------------------------------------------------------------------ live in-play featured games
+  /** Single-move engine hook (fresh, seeded search → a reload resumes the same timeline). The app plugs in a worker. */
+  computeMove: (req: { moves: string[]; profile: ReturnType<typeof profileForStrength>; style: StyleId; seed: number }) => Promise<{ ccn: string; score: SelfplayMove['score']; depth: number; nodes: number; ms: number }>
+    = async req => {
+      const [{ Position }, { parseLegalCcn, moveToCcn }, { Searcher }, { chooseMove }, { typedScore }] = await Promise.all([import('../rules/position'), import('../rules/notation'), import('../engine/search'), import('../engine/levels'), import('../analysis/analyzer')]);
+      const pos = Position.fromFen(START_FEN);
+      for (const c of req.moves) pos.makeMove(parseLegalCcn(pos, c));
+      const t0 = Date.now();
+      const r = chooseMove(new Searcher(16), pos, req.profile, req.seed, undefined, undefined, req.style);
+      return { ccn: moveToCcn(r.move), score: typedScore(r.search.score, pos.side === 0 ? 'white' : 'black'), depth: r.search.depth, nodes: r.search.nodes, ms: Date.now() - t0 };
+    };
+
+  liveGame(fixtureId: string): LiveGame | undefined { return this.state?.liveGames.get(fixtureId); }
+
+  /** Start a featured game in live mode: its market (if any) stays open for in-play trading between moves. */
+  async startLive(fixtureId: string): Promise<LiveGame> {
+    if (!this.state) throw new Error('No federation');
+    await this.closeDueMarkets();
+    return this.run(async () => {
+      const st = this.clone();
+      const f = st.rounds.get(`${st.world.season}:${st.world.round}`)!.fixtures.find(x => x.id === fixtureId);
+      if (!f || f.tier !== 2) throw new Error('Not a featured fixture of the current round');
+      if (f.result !== null || st.liveGames.has(fixtureId)) throw new Error('This match has already started');
+      const m = st.markets.get(`mk:${fixtureId}`);
+      if (m && m.status !== 'open') throw new Error('This market has already closed');
+      const lg: LiveGame = {
+        id: fixtureId, fixtureId, season: f.season, round: f.round, seed: hashSeed(st.world.seed, 'featured', fixtureId), moves: [], status: 'live', startedAt: this.now(),
+        marketId: m ? m.id : null, points: m ? [{ ply: 0, prices: claimPrices(m), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l], at: this.now() }] : [],
+      };
+      st.liveGames.set(fixtureId, lg);
+      if (m) { const lm = { ...m, live: { plies: 0, lastEval: null } }; st.markets.set(m.id, lm); }
+      await this.commit(st, [], { liveGames: [lg], markets: m ? [st.markets.get(m.id)!] : [] }, { season: st.world.season, round: st.world.round });
+      return lg;
+    });
+  }
+
+  /** Play the next move of a live game, publish it, let NPC traders react, and settle at the end.
+   *  Trading is suspended while the move is computed (commands are serialized); it reopens once the move and
+   *  the new public information are committed. Returns the new move, or null when the game was already over. */
+  async liveStep(fixtureId: string): Promise<{ move: SelfplayMove | null; done: boolean; game?: WorldGame }> {
+    return this.run(async () => {
+      const st = this.clone();
+      const lg0 = st.liveGames.get(fixtureId);
+      if (!lg0 || lg0.status !== 'live') throw new Error('No live game for this fixture');
+      const lg: LiveGame = structuredClone(lg0);
+      const f = st.rounds.get(`${st.world.season}:${st.world.round}`)!.fixtures.find(x => x.id === fixtureId)!;
+      const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
+      const [{ Position }, { parseLegalCcn, moveToCcn, moveToSan }, { automaticOutcome, claimableDraws }, { playStyle }, { expectedU, toPov }] = await Promise.all([
+        import('../rules/position'), import('../rules/notation'), import('../rules/adjudication'), import('../engine/styles'), import('../analysis/methodology')]);
+      const pos = Position.fromFen(START_FEN);
+      for (const mv of lg.moves) pos.makeMove(parseLegalCcn(pos, mv.ccn));
+      const terminal = (): { result: '1-0' | '0-1' | '1/2-1/2'; termination: string } | null => {
+        const o = automaticOutcome(pos);
+        if (o) return { result: o.result, termination: o.termination };
+        const c = claimableDraws(pos);
+        if (c.threefold || c.fiftyMove) return { result: '1/2-1/2', termination: c.threefold ? 'threefold-claim' : 'fifty-move-claim' };
+        if (lg.moves.length >= 400) return { result: '1/2-1/2', termination: 'playing-limit' };
+        return null;
+      };
+      let move: SelfplayMove | null = null;
+      let end = terminal();
+      if (!end) {
+        const side = pos.side === 0 ? w : b;
+        const profile = profileForStrength(side.latent, FEATURED_NODE_CAP);
+        const r = await this.computeMove({ moves: lg.moves.map(x => x.ccn), profile, style: playStyle(side.style), seed: (lg.seed + lg.moves.length * 7919) >>> 0 });
+        const mv = parseLegalCcn(pos, r.ccn);
+        if (!pos.legalMoves().includes(mv)) throw new Error('Engine produced an illegal move');
+        const san = moveToSan(pos, mv);
+        pos.makeMove(mv);
+        move = { ccn: moveToCcn(mv), san, fen: pos.toFen(), score: r.score, depth: r.depth, nodes: r.nodes, ms: r.ms };
+        lg.moves.push(move);
+        end = terminal();
+      }
+      const posted: Journal[] = [];
+      const markets: Market[] = [], positions: Position[] = [];
+      let m = lg.marketId ? st.markets.get(lg.marketId) : undefined;
+      if (m && m.status === 'open' && move && !end) {
+        // public information after the move: the engine's evaluation → live model (a forecast, never the price)
+        const u = expectedU(toPov(move.score, 'white'));
+        const d0 = m.forecast.d;
+        const d = Math.max(0.01, d0 * (1 - Math.abs(2 * u - 1)));
+        const live = [Math.max(0.005, u - d / 2), d, Math.max(0.005, 1 - u - d / 2)];
+        const sum = live.reduce((a, x) => a + x, 0);
+        const model = live.map(x => x / sum);
+        const prev = lg.points.length ? lg.points[lg.points.length - 1].prices : undefined;
+        const ops = this.opsOf(st, posted);
+        m = npcBatch(ops, { ...m, live: { plies: lg.moves.length, lastEval: u } }, 'live', model, prev);
+        for (const x of ops.markets.values()) markets.push(x);
+        for (const x of ops.positions.values()) positions.push(x);
+        if (!ops.markets.size) { st.markets.set(m.id, m); markets.push(m); }
+        lg.points.push({ ply: lg.moves.length, prices: claimPrices(m), model, at: this.now() });
+      }
+      let game: WorldGame | undefined;
+      const rounds: RoundRecord[] = [];
+      if (end) {
+        lg.status = 'done';
+        const fin = await this.finishFeaturedIn(st, posted, fixtureId, lg.moves, end.result, end.termination, 'watched-live', lg.seed, [profileForStrength(w.latent, FEATURED_NODE_CAP).id, profileForStrength(b.latent, FEATURED_NODE_CAP).id]);
+        game = fin.game; rounds.push(fin.rec); markets.push(...fin.markets); positions.push(...fin.positions);
+        this.snapshotFinance(st);
+      }
+      st.liveGames.set(fixtureId, lg);
+      await this.commit(st, posted, { liveGames: [lg], markets, positions, rounds, worldGames: game ? [game] : [], plans: end ? [st.plan] : undefined }, { season: st.world.season, round: st.world.round });
+      return { move, done: !!end, game };
     });
   }
 
@@ -454,6 +618,7 @@ export class FederationService {
   async advanceRound(): Promise<ProcessedRound> {
     if (!this.state) throw new Error('No federation');
     if (this.playerFixtures().length) throw new Error('Play or forfeit your fixtures first');
+    await this.closeDueMarkets();
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
     if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready — play it first');
     return this.run(async () => {
@@ -561,14 +726,18 @@ export class FederationService {
         if (gain > 0) c.earnings += gain;
         c.balanceSeen = bal;
       }
+      // Grand Exchange: settle from recorded results, list new markets, refresh models, NPC re-trading
+      const ops = this.opsOf(st, posted);
+      afterRound(ops, season, round, rec, games, oldPlan, res.seasonEnd);
       st.world = ctx.world;
       st.plan = ctx.plan;
       st.plans.set(st.plan.id, st.plan);
       plansChanged.push(st.plan);
       const opened = this.openRoundWithMarkets(st, this.ctxOf(st, player), posted);
       st.rounds.set(opened.rec.id, opened.rec);
+      if (res.seasonEnd) openSeasonMarkets(ops);
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: opened.markets, positions: opened.positions, plans: plansChanged }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged }, expect);
       return res;
     });
   }
@@ -608,15 +777,19 @@ export class FederationService {
   }
 
   // ------------------------------------------------------------------ exchange
-  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell'): Promise<void> {
+  /** Execute a player trade. `opts.expectVersion` (the market history length the quote was computed on) rejects
+   *  stale quotes; `opts.maxTotal` caps what a buy may cost (slippage guard). */
+  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; maxTotal?: number } = {}): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
       const m = st.markets.get(marketId);
       if (!m || m.sandbox) throw new Error('Unknown market');
       if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games');
       const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
-      const seq = m.history.length + 1000 * (1 + (pos ? 1 : 0)) + Math.floor(Math.random() * 1e6);
+      if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since this quote — review the new quote');
+      const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
       const t = trade(m, pos, 'player:cash', outcome, shares, side, this.now(), seq);
+      if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('Cost exceeds your limit — review the new quote');
       const posted: Journal[] = [];
       this.post(st, [t.journal], posted);
       st.markets.set(m.id, t.market);

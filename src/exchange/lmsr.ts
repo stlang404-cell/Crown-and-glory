@@ -22,19 +22,23 @@ export function prices(q: number[], b: number): number[] {
 /** Funded worst-case subsidy b·ln n in microcrowns (rounded up). */
 export const subsidyMicro = (b: number, n: number) => Math.ceil(b * Math.log(n) * MICRO);
 
-/** Exact (float) crown cost of changing outcome i by `shares` (negative = sell). */
-export function tradeCost(q: number[], b: number, i: number, shares: number): number {
-  const q2 = [...q]; q2[i] += shares;
+/** Exact (float) crown cost of adding `shares` to every state in S (negative = sell). A categorical outcome is S = [i]. */
+export function claimCost(q: number[], b: number, S: readonly number[], shares: number): number {
+  const q2 = [...q];
+  for (const s of S) q2[s] += shares;
   return cost(q2, b) - cost(q, b);
 }
-/** Integer microcrown cost to buy (rounded up, with a 1µ guard against float error). */
-export function buyCostMicro(q: number[], b: number, i: number, shares: number): number {
-  return Math.ceil(tradeCost(q, b, i, shares) * MICRO + 1e-6) ;
+export const tradeCost = (q: number[], b: number, i: number, shares: number): number => claimCost(q, b, [i], shares);
+/** Integer microcrown cost to buy claim S (rounded up, with a guard against float error). */
+export function buyClaimMicro(q: number[], b: number, S: readonly number[], shares: number): number {
+  return Math.ceil(claimCost(q, b, S, shares) * MICRO + 1e-6);
 }
-/** Integer microcrown proceeds of selling (rounded down, with a 1µ guard). */
-export function sellProceedsMicro(q: number[], b: number, i: number, shares: number): number {
-  return Math.max(0, Math.floor(-tradeCost(q, b, i, -shares) * MICRO - 1e-6));
+/** Integer microcrown proceeds of selling claim S (rounded down, with a guard). */
+export function sellClaimMicro(q: number[], b: number, S: readonly number[], shares: number): number {
+  return Math.max(0, Math.floor(-claimCost(q, b, S, -shares) * MICRO - 1e-6));
 }
+export const buyCostMicro = (q: number[], b: number, i: number, shares: number) => buyClaimMicro(q, b, [i], shares);
+export const sellProceedsMicro = (q: number[], b: number, i: number, shares: number) => sellClaimMicro(q, b, [i], shares);
 /** Fee: 1% of executed cash amount, rounded up. */
 export const FEE_BPS = 100;
 export const feeMicro = (amount: number) => Math.ceil((amount * FEE_BPS) / 10_000);
