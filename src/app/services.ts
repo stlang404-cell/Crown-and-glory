@@ -4,14 +4,16 @@
  */
 import { CrownDB, AnalysisJob } from '../storage/db';
 import { gameChecksum } from '../storage/checksum';
-import { EngineChannel } from '../engine/client';
-import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor } from '../analysis/analyzer';
+import { EngineChannel, ENGINE_EVENTS } from '../engine/client';
+import { CANON_BUILD } from '../engine/canonical';
+import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor, ENGINE_BUILD } from '../analysis/analyzer';
+import { GRADING_ID } from '../analysis/methodology';
 import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/types';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 
-export const APP_VERSION = '0.4.0';
+export const APP_VERSION = '0.5.0';
 
 type Listener = () => void;
 
@@ -38,6 +40,8 @@ export class AppServices {
   revision = 0;
 
   constructor(readonly db: CrownDB) {}
+  /** Engine job log (diagnostics, e2e inspection). */
+  engineEvents() { return [...ENGINE_EVENTS]; }
 
   static async boot(): Promise<AppServices> {
     const db = await CrownDB.open();
@@ -52,6 +56,7 @@ export class AppServices {
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));
     if (!s.readOnly) await s.fed.ensureHeraldry().catch(e => console.error('heraldry', e));
+    if (!s.readOnly) await s.fed.ensureEngineCommitment(CANON_BUILD).catch(e => console.error('engine commitment', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
     return s;
@@ -87,7 +92,7 @@ export class AppServices {
     const checksum = await gameChecksum(g);
     const human = g.humanColor;
     const score = g.result === '1/2-1/2' ? 0.5 : g.result === '1-0' ? (human === 'white' ? 1 : 0) : g.result === '0-1' ? (human === 'black' ? 1 : 0) : null;
-    const r = await this.db.finalizeGame(g, { checksum, nowIso: new Date().toISOString(), analysisSettingsId: DEFAULT_ANALYSIS.id, humanScore: score });
+    const r = await this.db.finalizeGame(g, { checksum, nowIso: new Date().toISOString(), analysisSettingsId: DEFAULT_ANALYSIS.id, analysisJobId: AppServices.jobId(g.id, DEFAULT_ANALYSIS.id), humanScore: score });
     // federation fixtures learn their result from the finalized (rated) game; idempotent
     if (r.game.context.kind === 'federation' && this.fed?.ready) { try { await this.fed.recordPlayerGame(r.game); } catch (e) { console.error('federation result', e); } }
     // sandbox markets on own casual games settle (or cancel) from the finalized record; idempotent
@@ -97,8 +102,14 @@ export class AppServices {
     return r;
   }
 
+  /** Job ids include the engine build and grading version, so a game analysed by an older engine can always be
+   *  re-analysed by the current one (both reports are kept). */
+  static jobId(gameId: string, settingsId: string): string { return `job:${gameId}:${settingsId}:${ENGINE_BUILD}:${GRADING_ID}`; }
+  /** Is there a complete report for this game from the CURRENT engine and grading with these settings? */
+  static isCurrent(r: AnalysisReport, settingsId: string): boolean { return r.settings.id === settingsId && r.status === 'complete' && r.engine.buildId === ENGINE_BUILD && r.methodology.gradingId === GRADING_ID; }
+
   async requestAnalysis(gameId: string, settings: AnalysisSettings): Promise<void> {
-    const id = `job:${gameId}:${settings.id}`;
+    const id = AppServices.jobId(gameId, settings.id);
     const existing = await this.db.getJob(id);
     if (existing && (existing.status === 'complete' || existing.status === 'running' || existing.status === 'queued')) return;
     const g = await this.db.getGame(gameId);
@@ -112,10 +123,10 @@ export class AppServices {
   /** Queue re-analysis of every finalized game lacking a complete report with these settings. */
   async batchReanalyze(settings: AnalysisSettings): Promise<number> {
     const [games, reports] = await Promise.all([this.db.allGames(), this.db.allReports()]);
-    const have = new Set(reports.filter(r => r.settings.id === settings.id && r.status === 'complete').map(r => r.gameId));
+    const have = new Set(reports.filter(r => AppServices.isCurrent(r, settings.id)).map(r => r.gameId));
     let n = 0;
     for (const g of games) if (g.status === 'finalized' && !have.has(g.id)) {
-      const id = `job:${g.id}:${settings.id}`;
+      const id = AppServices.jobId(g.id, settings.id);
       const ex = await this.db.getJob(id);
       if (ex && (ex.status === 'queued' || ex.status === 'running')) continue;
       const now = new Date().toISOString();

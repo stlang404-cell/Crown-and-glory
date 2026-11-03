@@ -91,6 +91,32 @@ It is restored **only into an empty career** (the federation is one consistent w
 only after validation: every journal must balance, and every account balance must equal the replay of
 the journals (a tampered balance is rejected — tested). Older backups without `federation` still import.
 
+### v0.5.0 (no schema change, IndexedDB v4)
+
+v0.5.0 adds **no object store and no version bump**. New data is carried in optional fields of existing records,
+written lazily, and older builds ignore it:
+
+| Where | Field | Meaning |
+|---|---|---|
+| federation `world` | `engineCommitments[]` | `{season, round, build, at, liveGamesInProgress}` — engine build in force from that round (appended on the first load of a build) |
+| federation `world` | `featured[]` (M5 addendum) | the 28 featured rivals |
+| federation `extra` | `cosmetics` | `{owned[], equipped{frame,banner,board,avatar}, avatarSeed}`; purchases are journals `cosmetic:<id>` (player cash → sink) |
+| federation `extra` | `ceremonies[]`, `favorites[]` (M5 addendum) | ceremonies to present; followed careers |
+| game `white/black.engine` | `config` | exact engine configuration used (rules, backend, build, table size, time cap, node cap, selection) |
+| game `moves[].engine` | `score`, `stopReason`, `build` | provenance of each engine move |
+| analysis job | id `job:<game>:<preset>:<build>:<grading>` | jobs keyed by engine and grading version (old `job:<game>:<preset>` jobs stay as they are) |
+| analysis report | unchanged schema | new reports: build `crown-search-2+crown-eval-4`, grading `crown-grade-v2-experimental`, accuracy `crown-accuracy-v2`; old reports untouched |
+| bundled puzzle data | `canonical`, `retired`, `revisedFrom` | v0.5 re-verification; attempts on retired puzzles keep pointing at a real puzzle |
+
+Verified in Chromium by `e2e/v5-journey.mjs`: the real v0.4.0 build (commit `d4dbbe6`) creates a career (federation,
+club, trade, rated game with its v0.4 analysis report, Academy attempt); the v0.5.0 build on the same origin finds
+every game, rating event, rating state, report, attempt, journal and balance byte-identical, keeps the historical
+report, and can re-analyse the game with the current engine as a second report. Backups (`crown-backup-1`) are
+unchanged; the same journey exports a backup and restores it into an empty profile with identical data.
+
+Rollback: because nothing is rewritten, the v0.4.0 build still opens a career touched by v0.5.0 (it ignores the
+extra fields). Export a backup before upgrading regardless.
+
 ## Durability limits
 
 Browser storage is best-effort unless the browser grants persistence (the Library shows the status).

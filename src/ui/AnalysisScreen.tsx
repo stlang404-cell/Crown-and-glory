@@ -1,3 +1,4 @@
+import { AppServices } from '../app/services';
 import { useEffect, useMemo, useState, KeyboardEvent } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
@@ -295,7 +296,7 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
           <select value={preset} onChange={e => setPreset(e.target.value)} aria-label="Analysis depth">
             {ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
-          <button className="btn small" disabled={reports.some(r => r.settings.id === preset && r.status === 'complete')} onClick={() => void services.requestAnalysis(game.id, ANALYSIS_PRESETS.find(p => p.id === preset)!)}>
+          <button className="btn small" disabled={reports.some(r => AppServices.isCurrent(r, preset))} onClick={() => void services.requestAnalysis(game.id, ANALYSIS_PRESETS.find(p => p.id === preset)!)}>
             {reports.length ? 'Analyse with these settings (new version)' : status === 'cancelled' || status === 'failed' ? 'Retry analysis' : 'Analyse'}
           </button>
         </div>

@@ -175,7 +175,7 @@ export class CrownDB {
    */
   async finalizeGame(
     g: GameRecord,
-    opts: { checksum: string; nowIso: string; analysisSettingsId: string; humanScore: number | null },
+    opts: { checksum: string; nowIso: string; analysisSettingsId: string; humanScore: number | null; analysisJobId?: string },
   ): Promise<{ game: GameRecord; event: RatingEvent | null; alreadyFinalized: boolean }> {
     if (g.status !== 'terminal' || !g.result) throw new StorageError('Only terminal games can be finalized');
     const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'analysisJobs'], 'readwrite');
@@ -210,7 +210,7 @@ export class CrownDB {
       final.ratingEventId = e.id;
     }
     games.put(final);
-    const jobId = `job:${g.id}:${opts.analysisSettingsId}`;
+    const jobId = opts.analysisJobId ?? `job:${g.id}:${opts.analysisSettingsId}`;
     const job: AnalysisJob = {
       id: jobId, gameId: g.id, settingsId: opts.analysisSettingsId, status: 'queued', createdAt: opts.nowIso, updatedAt: opts.nowIso,
       progress: 0, total: g.moves.length, generation: 0,

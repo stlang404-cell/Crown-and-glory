@@ -41,6 +41,8 @@ export interface WorldState {
     norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number };
   /** v0.5: featured rivals, chosen once and persisted (src/heraldry/rivals.ts). */
   featured?: import('../heraldry/rivals').FeaturedRival[];
+  /** v0.5: engine build in force from (season, round); appended when a new app version changes it. */
+  engineCommitments?: { season: number; round: number; build: string; at: string; liveGamesInProgress: number }[];
   createdAt: string;
 }
 

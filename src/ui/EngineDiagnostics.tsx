@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useServices } from './App';
 import { CANON_BUILD, CANON_FEATURES_KEY, INTEL_ID, RULES_FINGERPRINT, CANON_BACKEND } from '../engine/canonical';
 import { ENGINE_EVENTS, type EngineEvent } from '../engine/client';
 import { LEVELS_ID, MAX_BUDGETS_S, MAX_RATED_BUDGET_S } from '../engine/levels';
@@ -8,6 +9,8 @@ import { VERIFY_ID } from '../academy/verify';
 /** Which engine every intelligence system runs, and the most recent engine jobs (crown-engine-events-1). */
 export function EngineDiagnostics() {
   const [events, setEvents] = useState<EngineEvent[]>([]);
+  const fed = useServices().fed;
+  const commitments = fed?.state?.world.engineCommitments ?? [];
   useEffect(() => { const t = setInterval(() => setEvents([...ENGINE_EVENTS].slice(-12).reverse()), 1000); setEvents([...ENGINE_EVENTS].slice(-12).reverse()); return () => clearInterval(t); }, []);
   const rows: [string, string][] = [
     ['Rated and casual play (L1–L8)', `${LEVELS_ID}, node/time budgets per level`],
@@ -24,6 +27,11 @@ export function EngineDiagnostics() {
       <p className="small" style={{ marginTop: 0 }}>Every system below runs the same engine — <span className="mono">{CANON_BUILD}</span> ({CANON_BACKEND}, rules <span className="mono">{RULES_FINGERPRINT}</span>) — and differs only in how long it may think. Reports made by older engines keep their original engine and grading labels and are never relabelled.</p>
       <table className="small"><thead><tr><th>System</th><th>Budget / method</th></tr></thead><tbody>{rows.map(([a, b]) => <tr key={a}><td>{a}</td><td className="mono">{b}</td></tr>)}</tbody></table>
       <details className="small" style={{ marginTop: 8 }}><summary>Search features</summary><span className="mono">{CANON_FEATURES_KEY}</span></details>
+      {commitments.length > 0 && (<>
+        <h3 style={{ marginBottom: 4 }}>Federation engine commitments</h3>
+        <ul className="small" data-testid="engine-commitments" style={{ margin: 0 }}>{commitments.map((c, i) => <li key={i}>From season {c.season}, round {c.round}: <span className="mono">{c.build}</span>{c.liveGamesInProgress ? ` (${c.liveGamesInProgress} live game(s) were in progress; they finish on this build, which both sides share)` : ''}</li>)}</ul>
+        <p className="small muted" style={{ marginTop: 4 }}>Every game records the build that produced it; recorded results are never regenerated. Market prices use public ratings only, so a build change gives no one an information advantage.</p>
+      </>)}
       <h3 style={{ marginBottom: 4 }}>Recent engine jobs</h3>
       {events.length === 0 ? <p className="small muted">No engine work since this page was opened.</p> : (
         <table className="small" data-testid="engine-events"><thead><tr><th>Worker</th><th>Job</th><th>Event</th><th>Time</th></tr></thead>

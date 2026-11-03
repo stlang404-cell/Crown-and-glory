@@ -177,6 +177,25 @@ export class FederationService {
     });
   }
 
+  /**
+   * v0.5 engine-commitment record (transition policy, docs/V5_ENGINE.md): the canonical build used for federation,
+   * spectator and in-play games is recorded per (season, round). A build can only change with an app update; the
+   * change is appended here (never silently), every game keeps the build that produced it, no recorded result is
+   * regenerated, and both sides of every later game use the same build. Idempotent.
+   */
+  async ensureEngineCommitment(build: string): Promise<boolean> {
+    const last = this.state?.world.engineCommitments?.at(-1);
+    if (!this.state || last?.build === build) return false;
+    return this.run(async () => {
+      const st = this.clone();
+      st.world = structuredClone(st.world);
+      const live = [...st.liveGames.values()].filter(g => g.status === 'live').length;
+      st.world.engineCommitments = [...(st.world.engineCommitments ?? []), { season: st.world.season, round: st.world.round, build, at: this.now(), liveGamesInProgress: live }];
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
+      return true;
+    });
+  }
+
   /** Save the player club's identity (validated; persisted with the club asset). */
   async setClubIdentity(identity: ClubIdentity): Promise<void> {
     const err = validateIdentity(identity);
