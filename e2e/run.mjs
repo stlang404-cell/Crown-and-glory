@@ -155,7 +155,7 @@ if (Math.abs(after.rapid - dbState.events[0].after) > 1e-9) fail('Rating changed
 await page.screenshot({ path: OUT + '08-analysis-after-restart.png' });
 
 // assisted casual game stays unrated
-await page.getByRole('button', { name: 'Play' }).first().click();
+await page.locator('nav.rail').getByRole('button', { name: 'Play', exact: true }).click();
 await page.getByRole('button', { name: /Mira Vell/ }).click();
 await page.getByRole('button', { name: 'Blitz 3+2' }).click();
 await page.getByRole('button', { name: 'Casual', exact: true }).click();
