@@ -244,6 +244,13 @@ export class Searcher {
   /** Best root move found so far in the current (possibly unfinished) iteration (partialRoot). */
   private rootBest: Move = 0;
   private rootBestScore = 0;
+  /** Evaluation cache (v0.8): static evaluations keyed by the full position hash, for the current weights only.
+   *  The evaluation is a pure function of the position, so this changes no result — it only skips recomputation. */
+  private evLo = new Int32Array(1 << 16);
+  private evHi = new Int32Array(1 << 16);
+  private evVal = new Int32Array(1 << 16);
+  private evUsed = new Uint8Array(1 << 16);
+  private evWeights: EvalWeights | null = null;
 
   constructor(ttBits = 18) {
     this.tt = new TranspositionTable(ttBits);
@@ -270,6 +277,16 @@ export class Searcher {
     // asymmetric (styled) evaluation: the root side is the styled side
     if (this.weights.version === 4 && (this.weights.own || this.weights.opp || this.weights.simplify)) this.weights = { ...this.weights, styleColor: position.side };
     this.contempt = contempt ?? 0;
+    if (this.weights !== this.evWeights) { this.evUsed.fill(0); this.evWeights = this.weights; }
+  }
+
+  private evalCached(): number {
+    const pos = this.pos;
+    const i = pos.hashLo & 0xffff;
+    if (this.evUsed[i] && this.evLo[i] === pos.hashLo && this.evHi[i] === pos.hashHi) return this.evVal[i];
+    const v = evaluate(pos, this.weights);
+    this.evLo[i] = pos.hashLo; this.evHi[i] = pos.hashHi; this.evVal[i] = v; this.evUsed[i] = 1;
+    return v;
   }
 
   search(position: Position, opts: SearchOptions): SearchResult {
@@ -501,10 +518,10 @@ export class Searcher {
       if (mAlpha >= mBeta) return mAlpha;
       alpha = mAlpha; beta = mBeta;
     }
-    if (ply >= MAX_PLY - 2) return evaluate(pos, this.weights);
+    if (ply >= MAX_PLY - 2) return this.evalCached();
     const inCheck = inCheckIn >= 0 ? inCheckIn === 1 : pos.inCheck();
     if (inCheck && F.checkExtension && ply < MAX_PLY / 2) depth++;
-    if (depth <= 0) return F.quiescence ? this.qsearch(alpha, beta, ply, inCheck) : evaluate(pos, this.weights);
+    if (depth <= 0) return F.quiescence ? this.qsearch(alpha, beta, ply, inCheck) : this.evalCached();
 
     this.nodes++;
     this.checkLimits();
@@ -525,7 +542,7 @@ export class Searcher {
       }
     }
 
-    const staticEval = inCheck ? -INF : evaluate(pos, this.weights);
+    const staticEval = inCheck ? -INF : this.evalCached();
     this.evalStack[ply] = staticEval;
     const improving = !inCheck && ply >= 2 && this.evalStack[ply - 2] !== -INF && staticEval > this.evalStack[ply - 2];
 
@@ -709,7 +726,7 @@ export class Searcher {
     this.checkLimits();
     this.pvLen[ply] = ply;
     if (ply > this.seldepth) this.seldepth = ply;
-    if (ply >= MAX_PLY - 2) return evaluate(pos, this.weights);
+    if (ply >= MAX_PLY - 2) return this.evalCached();
     let ttMove = 0;
     if (F.qsTT) {
       const slot = this.ttProbe();
@@ -727,7 +744,7 @@ export class Searcher {
       // No stand-pat while in check: every legal evasion is examined.
       bestScore = -MATE + ply;
     } else {
-      stand = evaluate(pos, this.weights);
+      stand = this.evalCached();
       if (stand >= beta) {
         if (F.qsTT) this.ttStore(0, TT_LOWER, stand, 0, ply);
         return stand;
