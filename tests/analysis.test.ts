@@ -140,3 +140,18 @@ function toCcn(m: number): string {
   const promo = (m >> 12) & 7;
   return sq(m & 63) + sq((m >> 6) & 63) + (promo ? ' pnrqk'[promo] : '');
 }
+
+describe('sacrifice detection', () => {
+  it('an even exchange is not a sacrifice; a real investment is', async () => {
+    const { sacrificedMaterial } = await import('../src/academy/coach');
+    const { Position, parseLegalCcn } = await import('../src/rules');
+    // White rook d2 takes nothing; Rd4 offers a rook trade on d4 (Rxd4 Qxd4): even exchange
+    const p = Position.fromFen('3k2/3r2/6/6/3R2/3QK1 w - - 0 1');
+    const m = parseLegalCcn(p, 'd2d4');
+    expect(sacrificedMaterial(p, m, ['d2d4', 'd5d4', 'd1d4'])).toBe(0);
+    // queen left en prise with no recapture: investment persists
+    const q = Position.fromFen('3k2/3r2/6/6/6/2Q1K1 w - - 0 1');
+    const mq = parseLegalCcn(q, 'c1d1');
+    expect(sacrificedMaterial(q, mq, ['c1d1', 'd5d1', 'e1d1'])).toBeGreaterThanOrEqual(400);
+  });
+});

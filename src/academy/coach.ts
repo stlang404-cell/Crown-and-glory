@@ -169,18 +169,27 @@ export function coachNotes(i: CoachInput): CoachNote[] {
   return notes;
 }
 
-/** Material invested by a move: how much the mover can lose on the destination square (SEE-like, via replies). */
+/**
+ * Material invested by a move according to the engine line: the material deficit must persist both after
+ * the opponent's reply AND after the mover's own next move, so an ordinary exchange (capture, recapture)
+ * is not a sacrifice.
+ */
 export function sacrificedMaterial(pre: Position, m: Move, pv: string[]): number {
-  // Evidence from the engine line itself: material balance after the opponent's best reply vs before the move.
   const mover = pre.side;
+  const bal = (p: Position) => material(p, mover) - material(p, (mover ^ 1) as Color);
   const p = pre.clone();
-  const before = material(p, mover) - material(p, (mover ^ 1) as Color);
+  const before = bal(p);
   p.makeMove(m);
   if (pv.length < 2) return 0;
   const r = parseLegalCcn(p, pv[1]);
   if (r < 0) return 0;
   p.makeMove(r);
-  const after = material(p, mover) - material(p, (mover ^ 1) as Color);
-  return Math.max(0, before - after);
+  const d1 = before - bal(p);
+  if (pv.length < 3) return Math.max(0, d1);
+  const f = parseLegalCcn(p, pv[2]);
+  if (f < 0) return Math.max(0, d1);
+  p.makeMove(f);
+  const d2 = before - bal(p);
+  return Math.max(0, Math.min(d1, d2));
 }
 

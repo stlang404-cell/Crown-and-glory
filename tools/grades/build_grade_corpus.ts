@@ -38,6 +38,28 @@ for (const pz of puzzles) {
     if (!negUnsound && invested >= 300 && pl.best.ccn !== mv && pl.loss !== null && pl.loss > 0.12) { negUnsound = true; out.push({ fen: pz.fen, move: mv, grade: pl.grade, kind: 'unsound-sacrifice', note: `invests ~${invested} cp, not best` }); }
   }
 }
+// quieter positions from recorded benchmark games fill the remaining labels (Excellent/Good are rare in puzzles)
+{
+  const { readdirSync } = await import('node:fs');
+  const RES = new URL('../bench/results/', import.meta.url);
+  outer: for (const f of readdirSync(RES).filter(x => x.endsWith('-games.json'))) {
+    const all = JSON.parse(readFileSync(new URL(f, RES), 'utf8')) as Record<string, { moves: string[] }[]>;
+    for (const gs of Object.values(all)) for (const g of gs) {
+      if (Object.values(want).every(v => v <= 0)) break outer;
+      const p = Position.fromFen('rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1');
+      for (let i = 0; i < g.moves.length; i++) {
+        if (i >= 8 && i % 9 === 0 && !p.inCheck()) {
+          const fen = p.toFen();
+          for (const mv of p.legalMoves().map(moveToCcn).slice(0, 8)) {
+            const pl = analyse(fen, mv);
+            if (pl.grade && want[pl.grade] > 0 && !pl.uncertainGrades && (pl.grade === 'excellent' || pl.grade === 'good' || pl.grade === 'inaccuracy')) { want[pl.grade]--; out.push({ fen, move: mv, grade: pl.grade, kind: 'label', note: pl.gradeReasons.join(' ') }); }
+          }
+        }
+        p.makeMove(parseLegalCcn(p, g.moves[i]));
+      }
+    }
+  }
+}
 // recapture fixture: play a capture, then analyse the best recapture
 for (const pz of puzzles) {
   if (negRecapture) break;

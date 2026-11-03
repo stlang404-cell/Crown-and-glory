@@ -40,7 +40,7 @@ move, material investment, engine effort) and is not calibrated on human solvers
 | --- | --- | --- |
 | Tactical Academy | all training puzzles, optional theme filter, difficulty adapts ±⅓ per clean/failed solve | Playable |
 | Puzzle Rush | 3 minutes, 3 strikes, ascending difficulty, runs stored | Playable |
-| Calculation Chamber | 108 training puzzles with ≥ 2 player moves; engine plays the verified reply | Playable |
+| Calculation Chamber | 94 training puzzles with ≥ 2 player moves; engine plays the verified reply | Playable |
 | Defensive Survival | defensive-resource / only-move puzzles | Playable |
 | Endgame Workshop | endgame puzzles + “Play it out vs the engine” (untimed training game from the position vs L6) | Playable |
 | Replay Your Mistakes | positions from the player's own analysed games with loss ≥ 0.12; moves within 0.02 of the best are accepted | Playable once games are analysed |
