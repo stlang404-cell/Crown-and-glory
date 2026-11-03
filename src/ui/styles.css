@@ -74,7 +74,7 @@ h3 { font-size: 1.05rem; }
 
 .panel { background: linear-gradient(180deg, var(--panel), #18202c); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .panel + .panel { margin-top: 14px; }
-.panel-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.panel-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -218,6 +218,10 @@ tr.clickable:hover td { background: rgba(255, 255, 255, .025); }
   th, td { padding: 6px; }
   .hide-sm { display: none; }
   .navbar .btn { min-width: 44px; padding: 6px 8px; }
+  .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  select, input[type="search"], input[type="text"], input[type="date"] { max-width: 100%; min-width: 0; }
+  .panel { min-width: 0; }
+  .main { overflow-x: hidden; }
   .navbar { gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
