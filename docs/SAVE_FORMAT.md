@@ -1,7 +1,7 @@
 # Save, export and import formats
 
 All data lives in the browser's IndexedDB database `crown-calculation` (schema `crown-save-1`,
-IndexedDB version **3** since v0.3.0) on the device. Nothing is sent anywhere.
+IndexedDB version **4** since v0.4.0) on the device. Nothing is sent anywhere.
 
 ## Object stores
 
@@ -23,7 +23,11 @@ IndexedDB version **3** since v0.3.0) on the device. Nothing is sent anywhere.
 | `accounts` | `account` | Account balances (must equal the journal replay). |
 | `markets`, `positions` | `id` | Exchange markets (LMSR state, history, status) and holdings. |
 | `assets` | `id` | Owned assets (acquired season, upkeep, suspension). |
-| `finance` | `key` | Net-worth history and player extras (watchlist, sponsors paid, vouchers, paper forecasts). |
+| `finance` | `key` | Net-worth history and player extras (watchlist, sponsors paid, vouchers, paper forecasts with price/model snapshots, sandbox refill marker). |
+| `liveGames` | `id` = fixture id | v0.4.0: in-play featured game — moves so far, seed, status, published price/model points. |
+| `contracts` | `id` | v0.4.0: sponsorship contracts (stipend, share, paid, earned, status). |
+
+Markets gained optional fields in v0.4.0 (`kind`, `outcomes`, `claims`, `model`, `payout`, `rules`, `live`, `q0`, `cancelVector`, `ref`); v0.3.0 match markets without them are read as W/D/B categorical markets, so no record is rewritten. Display preferences (theme, board) live in localStorage, not IndexedDB.
 
 Every federation/economy command writes all changed records in **one** transaction guarded by the
 committed (season, round) cursor (docs/V3_FEDERATION.md §4).
@@ -70,9 +74,10 @@ is the checksummed rules content (`id, variantId, rulesVersion, initialFen, setu
 | 1 | v0.1.0 | Initial schema |
 | 2 | v0.2.0 | Adds `attempts`, `trainingRuns`, `bookmarks` (additive) |
 | 3 | v0.3.0 | Adds the 11 federation/economy stores (additive) |
+| 4 | v0.4.0 | Adds `liveGames` (in-play featured games, persisted after every move) and `contracts` (sponsorship contracts) (additive) |
 
 Both upgrades are **additive**: no existing record is read, rewritten or deleted, so a v0.2.0 career opens
-unchanged in v0.3.0 (verified: `tests/storage.test.ts` v1→v2 and v2→v3, and in Chromium by
+unchanged in v0.3.0 (verified: `tests/storage.test.ts` v1→v2, v2→v3 and v3→v4, and in Chromium by
 `e2e/federation.mjs`, which plays a rated game in the real v0.2.0 build, then serves the v0.3.0 build on
 the same origin and checks the games, rating events and rating are identical). The federation is empty
 until the player founds it. Future data-transforming migrations must follow research doc 12: export a

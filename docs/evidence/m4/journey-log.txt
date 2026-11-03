@@ -1,8 +1,12 @@
-[2026-11-03T13:49:56.017Z] v0.3.0 build served from /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/dist-v030
-[2026-11-03T13:49:56.663Z] v0.3.0 save: {"seed":564950886,"round":1,"cash":919460146,"journals":22,"markets":2,"positions":11,"assets":"brass-clock","balances":"4291 chars"}
-[2026-11-03T13:49:58.742Z] v0.4.0 build served on the same origin
-[2026-11-03T13:49:58.747Z] PASS: 1. M3 (v0.3.0) save migrated to DB v4: federation, ledger (22 journals), markets, positions and assets identical
-[2026-11-03T13:49:58.967Z] PASS: 2. Obsidian & Crimson theme selected
-[2026-11-03T13:49:59.115Z] PASS: 3. Board colours customised (Walnut)
-[2026-11-03T13:50:00.396Z] PASS: 4. Federation of 2048 competitors inspected
-[2026-11-03T13:50:01.327Z] PASS: 5. Challenged the strongest engine (L8, The Crown Engine) in a rated rapid game
+[2026-11-03T13:54:17.943Z] v0.3.0 build served from /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/dist-v030
+[2026-11-03T13:54:18.650Z] v0.3.0 save: {"seed":565212895,"round":1,"cash":914959805,"journals":21,"markets":2,"positions":10,"assets":"brass-clock","balances":"4291 chars"}
+[2026-11-03T13:54:20.522Z] v0.4.0 build served on the same origin
+[2026-11-03T13:54:20.526Z] PASS: 1. M3 (v0.3.0) save migrated to DB v4: federation, ledger (21 journals), markets, positions and assets identical
+[2026-11-03T13:54:20.707Z] PASS: 2. Obsidian & Crimson theme selected
+[2026-11-03T13:54:20.806Z] PASS: 3. Board colours customised (Walnut)
+[2026-11-03T13:54:21.740Z] PASS: 4. Federation of 2048 competitors inspected
+[2026-11-03T13:54:22.446Z] PASS: 5. Challenged the strongest engine (L8, The Crown Engine) in a rated rapid game
+[2026-11-03T13:55:47.833Z] PASS: 6. Rated game completed (Defeat); rapid rating 1500 → 1500, one rating event
+[2026-11-03T13:55:56.973Z] PASS: 7. Engine-backed analysis complete; 3 engine candidate line(s) at ply 3
+[2026-11-03T13:55:59.605Z] PASS: 8. Adaptive Academy practice (targets weak themes): puzzle solved
+[2026-11-03T13:55:59.976Z] PASS: 9. Entered the Challenger Open (Swiss tournament)

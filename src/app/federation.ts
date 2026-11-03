@@ -139,6 +139,23 @@ export class FederationService {
     return { st, post: js => this.post(st, js, posted), now: () => this.now(), markets: new Map(), positions: new Map() };
   }
 
+  /** List any season-family market missing for the current season while its trading window is open
+   *  (saves migrated from v0.3.0 mid-season). Idempotent. */
+  async ensureSeasonMarkets(): Promise<number> {
+    if (!this.state) return 0;
+    const S = this.state.world.season;
+    if (['open-winner', 'promo', 'qual', 'season'].every(k => this.state!.markets.has(`mk:${k}:${S}`))) return 0;
+    return this.run(async () => {
+      const st = this.clone();
+      const posted: Journal[] = [];
+      const ops = this.opsOf(st, posted);
+      openSeasonMarkets(ops);
+      if (!ops.markets.size) return 0;
+      await this.commit(st, posted, { markets: [...ops.markets.values()], positions: [...ops.positions.values()] }, { season: st.world.season, round: st.world.round });
+      return ops.markets.size;
+    });
+  }
+
   /** Close family markets whose closing round has started, committed before any game of that round runs. */
   private async closeDueMarkets(): Promise<void> {
     if (!this.state) return;
@@ -862,7 +879,7 @@ export class FederationService {
       plansChanged.push(st.plan);
       const opened = this.openRoundWithMarkets(st, this.ctxOf(st, player), posted);
       st.rounds.set(opened.rec.id, opened.rec);
-      if (res.seasonEnd) openSeasonMarkets(ops);
+      openSeasonMarkets(ops); // new season: lists all families; otherwise only fills gaps within their windows
       this.snapshotFinance(st);
       await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts }, expect);
       return res;

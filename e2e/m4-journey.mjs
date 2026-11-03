@@ -48,7 +48,8 @@ const nav = (page, name) => page.locator('nav.rail').getByRole('button', { name,
 const robot = new Searcher(18);
 async function playOut(page, nodes = 8000) {
   await page.waitForSelector('[data-testid="match"]');
-  for (let guard = 0; guard < 700; guard++) {
+  const deadline = Date.now() + 40 * 60_000; // time budget, not a poll count (strong engines think for seconds)
+  while (Date.now() < deadline) {
     const turn = await page.getAttribute('[data-testid="match"]', 'data-turn');
     if (turn === 'over') break;
     if (turn !== 'human') { await page.waitForTimeout(120); continue; }

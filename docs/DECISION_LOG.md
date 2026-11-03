@@ -32,6 +32,15 @@ entries below record implementation decisions and conflicts resolved during M0/M
 | I25 | Training Hall gives only unrated sparring against the next opponent's exact profile. | Directive §9: functional purchases must not buy rating points or rated-game advantages; practice is legitimate preparation. |
 | I26 | Spectator shows each side's actual engine thinking time instead of a game clock. | Featured games are node-limited (deterministic, crash-replayable); a running game clock would be decorative. |
 | I27 | No tournament-winner markets and no in-match trading in M3. | Directive §6/§7 make both conditional on correct settlement and legitimate timing; designs are in docs/M4_PLAN.md. |
+| I28 | One generalized LMSR (n states, subset claims, payout vectors) for every market family; no separate pricing engines. | Research doc 09: one ledger per event cluster, coherent claim prices, a single solvency proof. |
+| I29 | Market families are listed on four distinct regions (never the player's), and overlapping event clusters are never open at the same time (champion market closes before the final-four market opens). | Doc 09 forbids duplicated deterministic payoffs across concurrently listed contracts. |
+| I30 | Joint champions settle by a ½/½ payout vector on the 8-state final-four model instead of a 12-state model. | Keeps the researched 8-state reference; a split vector lies in the simplex, so the funded bound still holds (tested). |
+| I31 | In-play trading only when the player watches a featured match live; each move is computed after the previous trading window and committed with its NPC reactions. Background matches close at the first move. | Doc 09 live-move sequence; no precomputed outcome while trading. |
+| I32 | Censored featured games (400-ply limit) cancel their market on the published vector instead of settling a draw. | Reconciliation finding; a censored game is not a result. |
+| I33 | Sandbox markets open at a funded rating prior and cancel at that same prior; the player may only back themselves. | Removes the forced-void and deliberate-loss exploits (doc 09 initial-prior bound b·ln(1/min p0)). |
+| I34 | Sponsorship stipends are priced at ≥ 30% of the competitor's average season prize earnings (and ≥ 10% of their division pool), repriced at renewal; share 25%. | First sim showed contracts on top players were a passive-profit machine; now profit requires outperforming history. |
+| I35 | Club upgrades escrow half their cost (refundable, counted in book value) and spend half. | Upgrades must be real choices with costs; book value never counts spent money. |
+| I36 | Theme system: Obsidian & Crimson default, Midnight & Gold, Ivory & Slate; independent board palettes; preferences in localStorage (per-device convenience, not game state). | Directive Part VI; preferences are not career data and need no migration. |
 
 ## Conflicts noted
 

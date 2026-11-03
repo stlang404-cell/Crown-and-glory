@@ -221,3 +221,18 @@ describe('institutions: club levels and sponsorship contracts', () => {
     for (const [a, v] of svc.state!.balances) if (a !== 'mint') expect(v, a).toBeGreaterThanOrEqual(0);
   }, 300_000);
 });
+
+describe('v0.3.0 saves migrated mid-season', () => {
+  it('lists the missing season families only while their trading windows are open', async () => {
+    const svc = await make();
+    await svc.create(2, 5150);
+    // simulate a v0.3.0 world: no family markets (journals of the removed listings remain, so funding of the new
+    // listings is verified end-to-end by e2e/m4-journey.mjs on a real v0.3.0 save, not here)
+    for (const id of [...svc.state!.markets.keys()]) if (!id.startsWith('mk:1:')) svc.state!.markets.delete(id);
+    expect(svc.state!.markets.has('mk:open-winner:1')).toBe(false);
+    const n = await svc.ensureSeasonMarkets();
+    expect(n).toBe(4);
+    expect(await svc.ensureSeasonMarkets()).toBe(0); // idempotent
+    expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
+  }, 60_000);
+});

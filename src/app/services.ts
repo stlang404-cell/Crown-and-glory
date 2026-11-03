@@ -11,7 +11,7 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 
-export const APP_VERSION = '0.3.0';
+export const APP_VERSION = '0.4.0';
 
 type Listener = () => void;
 
@@ -50,6 +50,7 @@ export class AppServices {
     s.fed.onChange = () => s.notify();
     await s.fed.load();
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
+    if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
     return s;
