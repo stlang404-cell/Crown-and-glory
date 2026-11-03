@@ -13,6 +13,8 @@ const C = (crowns: number) => Math.round(crowns * MICRO);
 export const GENESIS_TREASURY = C(25_000); // standing float for market subsidies and NPC wallets
 export const STARTING_GRANT = C(1_000);
 export const SPONSOR_BUDGET = C(1_200);
+/** v0.8: part of the season sponsor budget that local sponsors give a player club, scaled by its appeal share. */
+export const CLUB_SPONSOR_POOL = C(600);
 /** The treasury funds market subsidies and NPC wallets. At each season start it is replenished toward the
  *  target by an explicit, capped mint entry — the only issuance besides prize pools, sponsors and grants. */
 export const TREASURY_TARGET = C(25_000);
@@ -40,7 +42,7 @@ export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number 
 export interface AssetType { id: string; name: string; kind: 'club' | 'analyst' | 'scouting' | 'training' | 'trophy'; price: number; bond: number; resale: number; upkeep: number; effect: string; unique: boolean }
 export const ASSETS: AssetType[] = [
   { id: 'club', name: 'Starter Chess Club', kind: 'club', price: C(500), bond: C(300), resale: 0, upkeep: C(40), unique: true,
-    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club. Income comes mainly from membership dues: your club attracts a share of your region\'s players, larger when you upgrade it, complete the Club Weekend, sponsor players and win titles. Members pay 5% of what they hold at season end, so income rises and falls with their prize money. An idle club loses money.' },
+    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club. Income comes from membership dues and local sponsors: your club attracts a share of your region\'s players and sponsorship, larger when you upgrade it, complete the Club Weekend, sponsor players and win titles. Members pay 5% of what they hold at season end, so income rises and falls with their prize money. An idle club loses money.' },
   { id: 'analyst', name: 'Analyst Office', kind: 'analyst', price: C(300), bond: 0, resale: C(150), upkeep: C(20), unique: true,
     effect: 'Exchange research desk: full forecast breakdown (expected score, rating uncertainty, draw model), price history charts and your forecast track record. Uses public information only.' },
   { id: 'scouting', name: 'Scouting Department', kind: 'scouting', price: C(200), bond: 0, resale: C(100), upkeep: C(15), unique: true,

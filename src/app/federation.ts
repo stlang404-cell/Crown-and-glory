@@ -23,11 +23,12 @@ import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
 import { cosmetic, cosmeticJournal, earned, emptyCosmetics, AVATAR_SEEDS, type CosmeticKind, type CosmeticState } from '../economy/cosmetics';
 import { FED_TITLES } from '../heraldry/catalog';
+import { playerClubAppeal } from './heraldry';
 import { ensureFeatured, trackPeaks, awardNorms, eventGames, NORM_EVENTS, clubFinances, seasonCeremonies } from './heraldry';
 import { validateIdentity, type ClubIdentity } from '../heraldry/clubs';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import type { GameRecord } from '../games/types';
@@ -889,6 +890,15 @@ export class FederationService {
           this.post(st, [payPool(`prize-pay:${season}:champ`, pool, st.balances.get(pool) ?? 0, recips, 'Crown Championship prizes', season, round, this.now())], posted);
         }
         if (res.seasonEnd.promotions.some(p => p.id === PLAYER_ID)) this.sponsor(st, 'promotion', posted, season);
+        // v0.8 club sponsorship (crown-club-appeal-1): local sponsors back a well-run player club from the season's
+        // existing sponsor budget, in proportion to the club's appeal share (max 45% of 600 ₵). No new money: it is
+        // paid from a pool that otherwise returns to the treasury.
+        {
+          const { share } = playerClubAppeal(st, season);
+          const avail = st.balances.get(`sponsor:${season}`) ?? 0;
+          const amt = Math.min(avail, Math.floor(CLUB_SPONSOR_POOL * share));
+          if (amt > 0) this.post(st, [{ id: `club-season-sponsor:${season}`, at: this.now(), kind: 'sponsor', memo: `Club sponsorship (appeal ${(share * 100).toFixed(0)}%)`, lines: [{ account: `sponsor:${season}`, amount: -amt }, { account: 'player:cash', amount: amt }], season }], posted);
+        }
         // unspent sponsor budget and fee income return to the treasury
         const sp = st.balances.get(`sponsor:${season}`) ?? 0;
         if (sp) this.post(st, [{ id: `sponsor-return:${season}`, at: this.now(), kind: 'transfer', memo: 'Unspent sponsor budget returns to the treasury', lines: [{ account: `sponsor:${season}`, amount: -sp }, { account: 'treasury', amount: sp }], season }], posted);
