@@ -36,9 +36,9 @@ export const LEVELS: StrengthProfile[] = [
   { level: 2, id: 'L2', name: 'Apprentice', depth: 1, nodes: 2_000, maxTimeMs: 400, selection: { marginCp: 200, temperatureCp: 110 }, description: '1-ply search with quiescence; picks among moves within 2 pawns of its best.' },
   { level: 3, id: 'L3', name: 'Club', depth: 2, nodes: 6_000, maxTimeMs: 500, selection: { marginCp: 130, temperatureCp: 70 }, description: '2-ply search; picks among moves within 1.3 pawns of its best.' },
   { level: 4, id: 'L4', name: 'District', depth: 2, nodes: 8_000, maxTimeMs: 600, selection: { marginCp: 70, temperatureCp: 35 }, description: '2-ply search; picks among moves within 0.7 pawns of its best.' },
-  { level: 5, id: 'L5', name: 'Regional', depth: 64, nodes: 2_500, maxTimeMs: 600, selection: null, description: 'Full search, 2.5k nodes per move.' },
-  { level: 6, id: 'L6', name: 'National', depth: 64, nodes: 12_000, maxTimeMs: 1_000, selection: null, description: 'Full search, 12k nodes per move.' },
-  { level: 7, id: 'L7', name: 'Master', depth: 64, nodes: 60_000, maxTimeMs: 2_000, selection: null, description: 'Full search, 60k nodes per move.' },
+  { level: 5, id: 'L5', name: 'Regional', depth: 64, nodes: 600, maxTimeMs: 400, selection: null, description: 'Full search, 600 nodes per move.' },
+  { level: 6, id: 'L6', name: 'National', depth: 64, nodes: 4_000, maxTimeMs: 800, selection: null, description: 'Full search, 4k nodes per move.' },
+  { level: 7, id: 'L7', name: 'Master', depth: 64, nodes: 30_000, maxTimeMs: 2_000, selection: null, description: 'Full search, 30k nodes per move.' },
   { level: 8, id: 'L8', name: 'Crown', depth: 64, nodes: Infinity, maxTimeMs: 6_000, selection: null, description: 'Strongest configuration: full search limited only by the clock (up to 6 s per move).' },
 ];
 
