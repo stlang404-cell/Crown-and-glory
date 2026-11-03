@@ -50,7 +50,7 @@ export const PieceSvg = memo(function PieceSvg({ kind, color, className, style, 
   const fill = white ? 'url(#crown-ivory)' : 'url(#crown-ink)';
   const stroke = white ? '#26211a' : 'var(--piece-b-stroke, #d8b56c)';
   return (
-    <svg viewBox="0 0 100 100" className={className} style={style} role="img" aria-label={title}>
+    <svg viewBox="0 0 100 100" className={className} style={style} {...(title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true, focusable: 'false' })}>
       {SHAPES[kind].map((d, i) => (
         <path key={i} d={d} style={{ fill, stroke }} strokeWidth={3.2} strokeLinejoin="round" />
       ))}

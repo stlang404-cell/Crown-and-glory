@@ -12,8 +12,8 @@ The target of this release is therefore **0.5.0**.
   research package (01–18, reviews, `requirements/INTELLIGENCE_EXPANSION.md`); that is what this release
   follows. The J1–J6 journeys and the package's registered improvement-badge protocol could therefore **not
   be executed as written**; the nearest repository equivalents are used and named where they apply.
-* No `AGENTS.md` exists in the repository. No `IMPLEMENTATION_STATUS.md` existed before this release
-  (status was spread across README, TESTING and the milestone documents); this release creates one.
+* No `AGENTS.md` exists in the repository. `IMPLEMENTATION_STATUS.md` (repository root) describes v0.4.0; this
+  release adds the v0.5.0 status above it and keeps the v0.4.0 text unchanged below.
 
 ## Baseline commands (executed)
 

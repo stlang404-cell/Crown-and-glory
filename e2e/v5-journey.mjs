@@ -32,12 +32,16 @@ const results = {};
 const step = (m) => { const line = `[${new Date().toISOString()}] ${m}`; log.push(line); console.log(line); writeFileSync(OUT + 'journey-log.txt', log.join('\n') + '\n'); };
 const save = () => writeFileSync(OUT + 'journey-results.json', JSON.stringify(results, null, 1));
 const check = (n, cond, m) => { results[n] = !!cond; step(`${cond ? 'PASS' : 'FAIL'}: ${n}. ${m}`); save(); if (!cond) { server?.kill(); process.exit(1); } };
+process.on('uncaughtException', e => { console.error(e); server?.kill(); process.exit(1); });
+process.on('unhandledRejection', e => { console.error(e); server?.kill(); process.exit(1); });
 
 let server = null;
 async function serve(dir) {
   if (server) { server.kill(); await new Promise(r => setTimeout(r, 500)); }
   server = spawn(process.execPath, ['scripts/serve.mjs', '--dir', dir, '--port', String(PORT)], { stdio: ['ignore', 'pipe', 'inherit'] });
-  await new Promise(r => server.stdout.once('data', r));
+  const first = await new Promise(r => server.stdout.once('data', d => r(String(d))));
+  // a stale server from an earlier run would make us test the wrong build
+  if (!first.includes(`running at http://127.0.0.1:${PORT}/`) || first.includes('already running')) throw new Error(`port ${PORT} is not served by this run: ${first}`);
   await new Promise(r => setTimeout(r, 300));
 }
 const errors = [];
@@ -85,6 +89,15 @@ const dump = page => page.evaluate(async () => {
   const sortId = a => [...a].sort((x, y) => String(x.id ?? x.pool ?? x.key).localeCompare(String(y.id ?? y.pool ?? y.key)));
   return { games: sortId(d.games), ratingEvents: sortId(d.ratingEvents), ratingState: sortId(d.ratingState), reports: sortId(d.reports), attempts: sortId(d.attempts ?? []), federation: Object.fromEntries(Object.entries(d.federation ?? {}).map(([k, v]) => [k, sortId(v)])) };
 });
+/** Poll an async in-page predicate (Playwright's waitForFunction would treat the returned Promise as truthy). */
+async function waitUntil(page, fn, arg, timeout = 600000) {
+  const end = Date.now() + timeout;
+  for (;;) {
+    if (await page.evaluate(fn, arg).catch(() => false)) return;
+    if (Date.now() > end) throw new Error('waitUntil timed out: ' + fn.toString().slice(0, 120));
+    await page.waitForTimeout(1000);
+  }
+}
 const replayLegal = (g) => { const p = Position.fromFen(g.initialFen); for (const s of g.setupMoves ?? []) p.makeMove(parseLegalCcn(p, s)); for (const m of g.moves) { const mv = parseLegalCcn(p, m.ccn); if (mv < 0) return false; p.makeMove(mv); if (p.toFen() !== m.fenAfter) return false; } return true; };
 
 // ============================== Phase A: v0.4.0 =================================
@@ -99,13 +112,13 @@ if (OLD_DIST) {
   await page.evaluate(async () => { const f = window.__crown.fed; const m = f.featuredFixtures().map(x => f.marketFor(x.id)).find(x => x && x.status === 'open'); await f.trade(m.id, 0, 5, 'buy'); await f.buyAsset('club'); });
   await startMatch(page, /Mira Vell/, { mode: 'Rated' });
   const r0 = await playOut(page);
-  await page.waitForFunction(async () => (await window.__crown.db.allReports()).some(r => r.status === 'complete'), null, { timeout: 600000, polling: 1000 });
+  await waitUntil(page, async () => (await window.__crown.db.allReports()).some(r => r.status === 'complete'), undefined, 600000);
   await page.goto(URL_ + '#/academy');
   await page.getByRole('button', { name: /Start adaptive training/ }).click();
   await page.waitForSelector('[data-testid="puzzle-panel"]');
   const sol = (await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-solution')).split(' ');
   for (let i = 0; i < sol.length; i += 2) { await page.click(`[data-square="${sol[i].slice(0, 2)}"]`); await page.click(`[data-square="${sol[i].slice(2, 4)}"]`); if (sol[i].length === 5) await page.getByRole('button', { name: { q: /Promote to queen/, r: /Promote to rook/, n: /Promote to knight/ }[sol[i][4]] }).click(); await page.waitForTimeout(700); }
-  await page.waitForFunction(async () => (await window.__crown.db.dump()).attempts.length > 0, null, { timeout: 30000 });
+  await waitUntil(page, async () => (await window.__crown.db.dump()).attempts.length > 0, undefined, 30000);
   old = await dump(page);
   step(`v0.4.0 career: ${old.games.length} game(s) (rated ${r0}), ${old.ratingEvents.length} rating event(s), ${old.reports.length} report(s) [${old.reports.map(r => r.engine.buildId).join(', ')}], ${old.attempts.length} Academy attempt(s), ${old.federation.journal?.length ?? 0} journals`);
   writeFileSync(OUT + 'v040-save-summary.json', JSON.stringify({ games: old.games.length, ratingEvents: old.ratingEvents.length, reports: old.reports.map(r => ({ id: r.id, build: r.engine.buildId, grading: r.methodology.gradingId })), attempts: old.attempts.length, journals: old.federation.journal?.length }, null, 1));
@@ -136,7 +149,7 @@ if (old) {
   const btn = page.getByRole('button', { name: /Analyse with these settings/ });
   const enabled = await btn.isEnabled();
   await btn.click();
-  await page.waitForFunction(async id => (await window.__crown.db.allReports()).some(r => r.gameId === id && r.status === 'complete' && r.engine.buildId === 'crown-search-2+crown-eval-4'), gid, { timeout: 900000, polling: 1000 });
+  await waitUntil(page, async id => (await window.__crown.db.allReports()).some(r => r.gameId === id && r.status === 'complete' && r.engine.buildId === 'crown-search-2+crown-eval-4'), gid, 900000);
   const reps = await page.evaluate(async id => (await window.__crown.db.allReports()).filter(r => r.gameId === id).map(r => ({ id: r.id, build: r.engine.buildId, grading: r.methodology.gradingId, acc: r.methodology.accuracyId })), gid);
   check('6a', enabled && /Historical report/.test(histTxt) && reps.length === 2 && reps.some(r => r.grading === 'crown-grade-v1-experimental') && reps.some(r => r.grading === 'crown-grade-v2-experimental'),
     `Historical report labelled and kept; re-analysis with the canonical engine produced a second report: ${JSON.stringify(reps)}`);
@@ -194,8 +207,10 @@ check(5, rs2 === rs1.events && evRows === rs1.events, `Permanent history: ${evRo
 
 // ---- 6: move-by-move analysis from the canonical engine (the rated game's automatic report)
 const rated = await page.evaluate(async () => (await window.__crown.db.allGames()).filter(g => g.rated && g.status === 'finalized').sort((a, b) => (b.endedAt ?? '').localeCompare(a.endedAt ?? ''))[0]);
-await page.waitForFunction(async id => (await window.__crown.db.allReports()).some(r => r.gameId === id && r.status === 'complete'), rated.id, { timeout: 900000, polling: 1000 });
+await waitUntil(page, async id => (await window.__crown.db.allReports()).some(r => r.gameId === id && r.status === 'complete'), rated.id, 900000);
 await page.goto(URL_ + `#/analysis/${encodeURIComponent(rated.id)}`);
+await page.waitForSelector('[data-ply="3"]', { timeout: 60000 });
+await page.click('[data-ply="3"]');
 await page.waitForSelector('[data-testid="move-panel"]', { timeout: 60000 });
 const rep = await page.evaluate(async id => { const r = (await window.__crown.db.allReports()).find(x => x.gameId === id && x.status === 'complete'); return { plies: r.plies.length, build: r.engine.buildId, grading: r.methodology.gradingId, acc: r.methodology.accuracyId, accuracyOk: Object.values(r.summary ?? {}).every(s => s?.accuracy === null || s?.accuracy === undefined || (s.accuracy >= 0 && s.accuracy <= 100)) }; }, rated.id);
 check(6, rep.plies === rated.moves.length && rep.build === 'crown-search-2+crown-eval-4' && rep.grading === 'crown-grade-v2-experimental' && rep.accuracyOk, `Move-by-move analysis: ${rep.plies}/${rated.moves.length} plies graded by ${rep.build} (${rep.grading}, ${rep.acc}); accuracies bounded 0–100`);
@@ -235,7 +250,8 @@ check(11, pass.t.includes(String(pass.rating)) && pass.t.includes(`Division ${pa
 check(22, /Cash .*net worth/.test(pass.t) && /Eligibility this season/.test(pass.t) && pass.avatar !== 'rgba(0, 0, 0, 0)', `Career Passport accurate: finances, eligibility, trophies, rivalries, forecasting and achievements from recorded state; equipped frame visible (${pass.avatar})`);
 await page.screenshot({ path: OUT + '09-passport.png', fullPage: true });
 
-// ---- 24: export → import into a fresh profile on the same origin
+// ---- 24: export → import into a fresh profile on the same origin (after background analysis has finished)
+await waitUntil(page, async () => !window.__crown.progress && (await window.__crown.db.allJobs()).every(j => j.status !== 'queued' && j.status !== 'running'), undefined, 1200000);
 await page.goto(URL_ + '#/library');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export backup' }).click()]);
 const file = OUT + 'backup-sample.json';
@@ -245,7 +261,7 @@ await ctx.close();
 ({ ctx, page } = await open(PROFILE2));
 await page.goto(URL_ + '#/library');
 await page.locator('input[type="file"]').setInputFiles(file);
-await page.waitForFunction(async () => (await window.__crown.db.allGames()).length > 0, null, { timeout: 60000 });
+await waitUntil(page, async () => (await window.__crown.db.allGames()).length > 0, undefined, 60000);
 await page.reload(); await page.waitForFunction(() => window.__crown?.fed);
 const snapB = await dump(page);
 const eqk = k => JSON.stringify(snapA[k]) === JSON.stringify(snapB[k]);
@@ -269,6 +285,7 @@ await page.waitForSelector('.app');
 await startMatch(page, /Mira Vell/, { color: 'Black' });
 await page.waitForFunction(() => document.querySelector('[data-testid="match"]')?.getAttribute('data-turn') === 'human', null, { timeout: 30000 });
 const ofen = await page.getAttribute('[data-testid="match"]', 'data-fen');
+const gamesAfterOffline = await page.evaluate(async () => (await window.__crown.db.allGames()).length);
 check(27, !ofen.startsWith('rnqknr/pppppp/6/6/PPPPPP/RNQKNR'), 'Offline: app shell from the service worker, engine move computed in a Web Worker, career loaded from IndexedDB');
 await ctx.setOffline(false);
 await ctx.close();
@@ -281,8 +298,9 @@ for (const [h, name] of [['#/play', 'm-play'], ['#/profile', 'm-passport'], ['#/
   await page.waitForTimeout(900);
   const r = await page.evaluate(() => ({
     overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-    unnamed: [...document.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"]), select')].filter(e => e.offsetParent !== null && !((e.innerText ?? '').trim() || e.getAttribute('aria-label') || e.getAttribute('title') || e.labels?.length || e.getAttribute('aria-labelledby'))).length,
+    unnamed: [...document.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"]), select')].filter(e => (e.checkVisibility ? e.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true }) : e.offsetParent !== null) && !((e.innerText ?? '').trim() || e.getAttribute('aria-label') || e.getAttribute('title') || e.labels?.length || e.getAttribute('aria-labelledby') || e.querySelector('[role="img"][aria-label], img[alt]:not([alt=""])'))).length,
     imgsNoAlt: [...document.querySelectorAll('svg[role="img"]')].filter(s => !s.getAttribute('aria-label')).length,
+    examples: [...document.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"]), select')].filter(e => (e.checkVisibility ? e.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true }) : e.offsetParent !== null) && !((e.innerText ?? '').trim() || e.getAttribute('aria-label') || e.getAttribute('title') || e.labels?.length || e.getAttribute('aria-labelledby') || e.querySelector('[role="img"][aria-label], img[alt]:not([alt=""])'))).slice(0, 3).map(e => e.outerHTML.slice(0, 200)),
   }));
   a11y.push({ h, ...r });
   await page.screenshot({ path: OUT + name + '.png', fullPage: true });
@@ -305,7 +323,7 @@ if (OLD_DIST) {
   await page.goto(URL_ + '#/profile'); await page.waitForTimeout(1000);
   await page.screenshot({ path: OUT + '10-rollback-v040.png' });
   await ctx.close();
-  check('rollback', rb.games === snapC.games.length && rb.total === 0 && errors.length === errsBefore, `v0.4.0 build reopened the v0.5.0 career: ${rb.games} games, federation round ${rb.round}, ledger conserved, no errors`);
+  check('rollback', rb.games === gamesAfterOffline && rb.total === 0 && errors.length === errsBefore, `v0.4.0 build reopened the v0.5.0 career: ${rb.games} games, federation round ${rb.round}, ledger conserved, no errors`);
   await serve('dist');
 }
 

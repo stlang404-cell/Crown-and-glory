@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board, capturedFrom } from './Board';
-import { PieceSvg, PieceKind } from './Pieces';
+import { PieceSvg, PieceKind, PIECE_NAMES } from './Pieces';
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
 import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
@@ -402,7 +402,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
             {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · unassisted</span> : <span className="chip">Casual</span>}</>}
           </div>
           <div className="captured" aria-label={`Captured by ${p.name}`}>
-            {caps.map((k, i) => <PieceSvg key={i} kind={k.toLowerCase() as PieceKind} color={k === k.toUpperCase() ? 'w' : 'b'} />)}
+            {caps.map((k, i) => <PieceSvg key={i} kind={k.toLowerCase() as PieceKind} color={k === k.toUpperCase() ? 'w' : 'b'} title={`${k === k.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[k.toLowerCase() as PieceKind]}`} />)}
             {adv > 0 && <span className="adv">+{adv}</span>}
           </div>
         </div>

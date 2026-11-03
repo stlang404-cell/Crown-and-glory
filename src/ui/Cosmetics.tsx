@@ -23,7 +23,7 @@ export function PlayerAvatar({ size = 72 }: { size?: number }) {
   const seed = cs?.avatarSeed !== undefined && fed.hasCosmetic('avatar-portraits') ? cs.avatarSeed : null;
   return (
     <span data-testid="player-avatar" style={{ display: 'inline-grid', placeItems: 'center', width: size + 8, height: size + 8, borderRadius: 10, border: frame ? `3px solid ${frame.border}` : '1px solid var(--line)', boxShadow: frame?.shadow, background: 'var(--panel-2, transparent)' }}>
-      {seed !== null ? <Portrait seed={seed} size={size} crown={cs?.equipped.frame === 'frame-crown'} /> : <span style={{ width: size * 0.7, height: size * 0.7, display: 'block' }}><PieceSvg kind="k" color="w" /></span>}
+      {seed !== null ? <Portrait seed={seed} size={size} crown={cs?.equipped.frame === 'frame-crown'} /> : <span style={{ width: size * 0.7, height: size * 0.7, display: 'block' }}><PieceSvg kind="k" color="w" title="Your avatar: the white king" /></span>}
     </span>
   );
 }
@@ -75,7 +75,7 @@ export function CosmeticsShop() {
           </div>
           {k === 'avatar' && fed.hasCosmetic('avatar-portraits') && (
             <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginTop: 6 }} role="radiogroup" aria-label="Choose your portrait">
-              {AVATAR_SEEDS.map(sd => <button key={sd} className="btn ghost small" aria-pressed={cs.avatarSeed === sd} style={{ padding: 2, outline: cs.avatarSeed === sd ? '2px solid var(--accent)' : undefined }} onClick={() => act(() => fed.equipCosmetic('avatar', 'avatar-portraits', sd), 'Portrait chosen.')}><Portrait seed={sd} size={40} /></button>)}
+              {AVATAR_SEEDS.map(sd => <button key={sd} className="btn ghost small" aria-label={`Portrait ${AVATAR_SEEDS.indexOf(sd) + 1}`} aria-pressed={cs.avatarSeed === sd} style={{ padding: 2, outline: cs.avatarSeed === sd ? '2px solid var(--accent)' : undefined }} onClick={() => act(() => fed.equipCosmetic('avatar', 'avatar-portraits', sd), 'Portrait chosen.')}><Portrait seed={sd} size={40} /></button>)}
             </div>
           )}
         </div>

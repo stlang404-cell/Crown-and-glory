@@ -1,4 +1,75 @@
-# Implementation status
+# Implementation status — v0.5.0 "Sovereign Intelligence"
+
+Labels: **V** verified complete (automated test or executed browser journey on the final build) ·
+**U** implemented but unverified · **P** partial · **N** not implemented. Physical iPhone and Windows were
+**NOT RUN** (no hardware in the build environment); "Chromium" means desktop Chromium, including 390 px phone
+emulation, which is not a device test.
+
+Input note: the directive's "Sovereign research package" (documents 00–17, J1–J6 journeys, registered statistical
+protocol) was not provided to this environment. The repository's earlier research package (docs/research) was
+used; J1–J6 could not be executed as written (see docs/V5_BASELINE_AUDIT.md).
+
+## Chess and engine
+
+| Feature | State | Evidence |
+|---|---|---|
+| crown-la6-v1 rules, adjudication, clocks | V | `tests/rules*.ts`, `tests/session.test.ts`, independent perft oracle |
+| One intelligence foundation (crown-search-2 + crown-eval-4) for play, Max, federation, assistant, analysis, puzzles, Academy, Lab | V | `tests/engine.canonical.test.ts`; docs/V5_ENGINE.md |
+| Sovereign Max (L9): no handicap, 2^20 table, 5/10/20/40 s budgets, recorded configuration | V | +112 Elo [60, 163] vs L8 (64 games, time-scaled); `e2e/v5-journey.mjs` step 2 |
+| Engine provenance on every move/assist result and in game records | V | `tests/engine.canonical.test.ts`; journey step 2 |
+| Scheduling: foreground priority, cancellation, stale-result discard, event log | V | journey step 26; `src/engine/client.ts` |
+| Engine-commitment record for federation events | V | journey step 25 (`world.engineCommitments`) |
+| Fairy-Stockfish as a shipped backend | N (by decision) | GPL-3.0, threads/COOP-COEP, memory — docs/V5_ENGINE.md |
+| Full-game AI personalities | N (failed validation in M4) | docs/M4_ENGINE_STRENGTH.md §8; opening-repertoire styles only where validated |
+
+## Analysis, Academy, Lab
+
+| Feature | State | Evidence |
+|---|---|---|
+| Outcome map v2 refitted for the canonical engine, held-out validated | V | docs/V5_ANALYSIS_CALIBRATION.md |
+| Grading v2 (Great/Brilliant guards), accuracy bounded 0–100, not presented as IQ | V | `tests/grades.corpus.test.ts` (v2 + legacy v1 corpora); journey step 6 |
+| Historical reports preserved and labelled; re-analysis adds a new report | V | journey step 6a; v0.4 defect fixed (jobs keyed by engine version) |
+| Puzzle library re-verified (405 active, 79 retired, 12 shortened; best-defence check) | V | `tools/academy/reverify_canonical.ts`; `tests/academy.test.ts`; journey step 9 |
+| Lab never mixes methodologies; no confirmed-improvement badge without evidence | V | `tests/history100.test.ts`; journey step 10 |
+| Grade bins and k calibrated on human outcomes | N | no human data; labelled experimental |
+
+## Ratings, federation, career
+
+| Feature | State | Evidence |
+|---|---|---|
+| Glicko-2, exactly-once updates, permanent history | V | `tests/ratings.test.ts`, `tests/storage.test.ts`; journey steps 4–5 |
+| 2,048 competitors, leagues, Swiss, knockout championship, promotion/relegation | V | `tests/federation*.ts`; `e2e/m4-journey.mjs` |
+| Featured rivals, rivalries from events, fictional norm-based titles, ceremonies, Hall of Fame | V | M5 addendum; `e2e/m5-heraldry.mjs` 11/11 |
+| Career Passport: six separate records, eligibility, requirements, rivalries, finances, forecasting | V | journey steps 11, 22 |
+| Spectator: move-by-move, pause, speed, review, live evaluation, replays | V | `e2e/m4-journey.mjs` steps 11–17 |
+| Spectator browsing/filtering of many simultaneous live matches | P | three featured engine games per round; other results are summary results by design |
+
+## Exchange and economy
+
+| Feature | State | Evidence |
+|---|---|---|
+| LMSR match, champion, promotion, qualification, season, conditional final-four markets | V | `tests/exchange*.ts`, `tests/markets.test.ts`; `e2e/m4-journey.mjs` |
+| Live in-play trading windows; settlement; sandbox separation | V | `tests/markets.test.ts`; m4 journey steps 11–21 |
+| Funded worst-case subsidy holds in long simulations | V | `subsidyBoundViolations` in the sweep (docs/V5_INTEGRITY_REPORT.md) |
+| Cosmetic unlockables (bought → sink, or earned; never strength/titles) | V | `tests/cosmetics.test.ts`; journey step 21 |
+| Institutions (club levels, venue, contracts), recovery voucher | V | `tests/markets.test.ts`, `tests/federationService.test.ts` |
+| Multi-seed 20-season economy sweep | see docs/V5_INTEGRITY_REPORT.md for the scale actually run | |
+
+## Platform and data
+
+| Feature | State | Evidence |
+|---|---|---|
+| Save migration v0.4.0 → v0.5.0 without loss; rollback to v0.4.0 opens the career | V (Chromium) | journey step 25 and rollback step |
+| Export/import continuity | V (Chromium) | journey step 24 |
+| Offline restart and offline engine move | V (Chromium) | journey step 27 |
+| Windows launcher keeps one origin (reuses a running game; loud warning if it must change port) | U on Windows / V on Linux | `scripts/serve.mjs` tested here; PowerShell path not executed |
+| Accessibility: named controls, labelled SVGs, keyboard focus, no overflow at 390 px | V (automated checks) | journey step 28; screen-reader pass NOT RUN |
+| Physical iPhone (install, offline cold start, suspend/resume, memory pressure) | NOT RUN | no device |
+| Windows 10/11 launcher on real hardware | NOT RUN | no device |
+
+---
+
+# Previous status (v0.4.0, kept unchanged for history)
 
 Last updated: 2026-11-03 · app **0.4.0 (“The Grand Exchange”)** · rules crown-la6-v1 1.0.0 · engine crown-search-1 + crown-eval-3 ·
 levels crown-levels-2 · analysis crown-grade-v1-experimental / crown-accuracy-v1 · federation crown-federation-1 ·
@@ -7,13 +78,13 @@ exchange crown-exchange-2 · markets crown-markets-2 · forecasts crown-forecast
 Legend: **Complete** = implemented and verified by the named evidence. **Partial** = works with stated gaps.
 **Not started** = planned only. Nothing is marked complete because it compiles or because a button exists.
 
-## Correction to the v0.1.0 status
+### Correction to the v0.1.0 status
 
 v0.1.0 marked M1 complete, but its level calibration had never been run, so Rated mode was disabled and no
 rated game had ever been verified (docs/M2_BASELINE_AUDIT.md). M2 fixed this: levels were redesigned and
 calibrated (500 games) and a strict rated browser journey now passes.
 
-## M2 gates
+### M2 gates
 
 | Gate | Verdict | Evidence |
 | --- | --- | --- |
@@ -25,7 +96,7 @@ calibrated (500 games) and a strict rated browser journey now passes.
 | F — coach | **Passed with limits**: notes cite engine lines and positions; recurring patterns need ≥ 5 occurrences in ≥ 3 games; casual assistant (hint, candidates, threat check, evaluation, explanation) is refused by the game state in rated games and makes casual games permanently assisted. Explanations are template + motif based, not natural-language coaching. | src/academy/coach.ts, src/academy/lab.ts, tests/session.test.ts, e2e/run.mjs |
 | G — rated integrity | **Passed in Chromium**: eligible rated start, assistant locked, legal finish, single Glicko-2 update, duplicate finalization rejected, pool isolation, restart persistence, assisted game unrated. | e2e/run.mjs, docs/evidence/e2e-log.txt |
 
-## v0.4.0 — The Grand Exchange
+### v0.4.0 — The Grand Exchange
 
 Status vocabulary (directive Part XI): **Verified complete** = implemented and verified by the named executed
 evidence · **Implemented, unverified** = code exists, not exercised end-to-end · **Partial** · **Not implemented**.
@@ -56,7 +127,7 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 | Tournament-winner in-event trading, forecast league with funded prizes | Not implemented | docs/M5_ROADMAP.md |
 | Windows launchers on Windows; physical iPhone | Not verified (no devices) | — |
 
-## v0.3.0 phases
+### v0.3.0 phases
 
 | Phase | Verdict | Evidence |
 | --- | --- | --- |
@@ -74,7 +145,7 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 **Player acceptance journey (directive §21): all 18 steps passed in Chromium** — docs/evidence/v3/journey-log.txt
 (the save was created by the real v0.2.0 build and opened by v0.3.0 on the same origin).
 
-## Feature status
+### Feature status
 
 | Area | Status | Notes |
 | --- | --- | --- |
@@ -96,7 +167,7 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 | Exchange / economy (M4 scope) | Complete except Sandbox Exchange | See phase table above |
 | M5 release polish | Not started | |
 
-## Known limitations
+### Known limitations
 
 - No human playing data: level ratings, puzzle difficulty and grade thresholds are not calibrated on humans.
 - The engine remains roughly an order of magnitude less efficient per node than Fairy-Stockfish.
