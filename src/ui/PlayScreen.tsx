@@ -74,6 +74,20 @@ export function PlayScreen() {
           <p className="muted" style={{ margin: 0 }}>Play the crown-la6-v1 variant against a genuine local engine. Every game is saved, rated games update your Glicko-2 rating once, and each finished game gets a full engine report.</p>
         </div>
       </section>
+      <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
+        {[
+          { k: '1 · Play', t: 'A rated or casual game against a calibrated engine opponent.', a: null },
+          { k: '2 · Analyse', t: recent ? `Review every move of your last game vs ${recent.humanColor === 'white' ? recent.black.name : recent.white.name}.` : 'Every finished game gets an engine report.', a: recent ? () => go({ name: 'analysis', gameId: recent.id }) : null },
+          { k: '3 · Train', t: 'Verified puzzles, Puzzle Rush and your own mistakes in the Academy.', a: () => go({ name: 'academy' }) },
+          { k: '4 · Improve', t: 'Track measured skills with honest uncertainty in the Lab.', a: () => go({ name: 'lab' }) },
+        ].map(x => (
+          <div key={x.k} className="panel" style={{ padding: 12 }}>
+            <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{x.k}</div>
+            <div className="small muted">{x.t}</div>
+            {x.a && <button className="btn ghost small" style={{ marginTop: 4 }} onClick={x.a}>Open</button>}
+          </div>
+        ))}
+      </div>
       {unfinished.length > 0 && (
         <div className="panel" style={{ marginBottom: 14 }}>
           <div className="panel-title"><h2>Resume</h2></div>

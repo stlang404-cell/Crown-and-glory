@@ -3,6 +3,8 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const R = (f: string) => { const u = new URL(`./results/${f}`, import.meta.url); return existsSync(u) ? JSON.parse(readFileSync(u, 'utf8')) : null; };
 const speed = R('speed.json'), tactics = R('tactics.json'), abl = R('suite-ablation.json'), vsf = R('suite-vsfairy.json'), cal = R('suite-calibrate.json');
+const extra = (f: string) => R(`suite-${f}.json`)?.summaries as S[] | undefined;
+const browser = R('browser-speed.json');
 const calib = JSON.parse(readFileSync(new URL('../../src/engine/calibration.json', import.meta.url), 'utf8'));
 const tsuite = JSON.parse(readFileSync(new URL('./tactics.json', import.meta.url), 'utf8'));
 const pct = (x: number) => (x * 100).toFixed(1) + '%';
@@ -55,8 +57,44 @@ variant), 1 thread, 16 MB hash, \`go nodes N\`.
 
 ${vsf ? table(vsf.summaries) : '_not run_'}
 
-Fairy-Stockfish is far more efficient per node; the Crown engine at 40k nodes scores between Fairy at
-1k and 4k nodes. This is the honest measure of the gap and the main target for future engine work.
+These matches used crown-eval-2. Fairy-Stockfish is far more efficient per node; the Crown engine at
+40k nodes scored between Fairy at 1k and 4k nodes. This is the honest measure of the gap.
+
+## M2 engine experiments (40,000 nodes per move, 32 opening pairs unless noted)
+
+Search experiments (crown-eval-2 baseline):
+
+${extra('experiments') ? table(extra('experiments')!) : '_not run_'}
+
+Held-out replication of the combined LMR-log + LMP result (openings 33–64, never used before):
+
+${R('suite-confirm-lmr-lmp.json') ? table(R('suite-confirm-lmr-lmp.json').summaries) : '_not run_'}
+
+The first-half +83 Elo did **not** replicate (0 Elo on held-out openings); neither feature was adopted.
+
+Evaluation experiments (crown-eval-2 baseline):
+
+${extra('evalexp') ? table(extra('evalexp')!) : '_not run_'}
+
+Held-out replication of higher mobility weights (openings 33–64):
+
+${extra('confirmmob') ? table(extra('confirmmob')!) : '_not run_'}
+
+Adopted as **crown-eval-3** (mobility 6/5/3 instead of 4/3/2). Further step and second batch (crown-eval-3 baseline):
+
+${extra('mobstep') ? table(extra('mobstep')!) : '_not run_'}
+
+${extra('evalexp2') ? table(extra('evalexp2')!) : '_not run_'}
+
+None of the second-batch changes was significant; they were not adopted.
+
+### crown-eval-3 against the Fairy-Stockfish reference (re-run)
+
+${extra('vsfairy3') ? table(extra('vsfairy3')!) : '_not run_'}
+
+## Browser speed (production build, Chromium Web Worker)
+
+${browser ? `${browser.browser}; ${browser.budget}.\n\n| Position | Plies played | Depth | Nodes | Engine ms | Nodes/s |\n| --- | --- | --- | --- | --- | --- |\n` + browser.results.map((r: { fen: string; plies: number; depth: number; nodes: number; engineMs: number; nps: number }) => `| \`${r.fen}\` | ${r.plies} | ${r.depth} | ${r.nodes.toLocaleString('en')} | ${r.engineMs} | ${r.nps.toLocaleString('en')} |`).join('\n') : '_not run_'}
 
 ## Strength levels and calibration
 

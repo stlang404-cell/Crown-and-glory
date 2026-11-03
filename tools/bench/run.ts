@@ -209,6 +209,7 @@ async function main() {
         : name === 'confirmmob' ? [['mobHi40k', 'full40k']]
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
         : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
+        : name === 'vsfairy3' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]
         : name === 'pilot' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5']]
         : name === 'pilot3' ? [['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
