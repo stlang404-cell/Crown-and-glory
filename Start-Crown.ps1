@@ -32,16 +32,32 @@ if (-not (Test-Path (Join-Path $dist 'index.html'))) {
 $types = @{ '.html'='text/html; charset=utf-8'; '.js'='text/javascript; charset=utf-8'; '.css'='text/css; charset=utf-8';
   '.json'='application/json'; '.webmanifest'='application/manifest+json'; '.png'='image/png'; '.svg'='image/svg+xml'; '.map'='application/json'; '.wasm'='application/wasm' }
 $listener = $null
+$preferred = $Port
+try {
+  $probe = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "http://127.0.0.1:$Port/__crown-health"
+  if ($probe.Content -match 'crown-and-calculation') {
+    Write-Host "Crown & Calculation is already running at http://127.0.0.1:$Port/ - opening it (your saves are there)."
+    if (-not $NoBrowser) { Start-Process "http://127.0.0.1:$Port/" }
+    exit 0
+  }
+} catch { }
 for ($p = $Port; $p -lt $Port + 50; $p++) {
   try { $l = New-Object System.Net.HttpListener; $l.Prefixes.Add("http://127.0.0.1:$p/"); $l.Start(); $listener = $l; $Port = $p; break } catch { }
 }
 if (-not $listener) { throw 'No free port found.' }
 $url = "http://127.0.0.1:$Port/"
 Write-Host "Crown & Calculation is running at $url  (Ctrl+C to stop)"
+if ($Port -ne $preferred) {
+  Write-Host "WARNING: port $preferred is used by another program. Browsers keep saves per address, so saves made at http://127.0.0.1:$preferred/ are NOT visible here. Close the other program and restart, or use Settings > Backup to export there and import here." -ForegroundColor Yellow
+}
 if (-not $NoBrowser) { Start-Process $url }
 try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()
+    if ($ctx.Request.Url.AbsolutePath -eq '/__crown-health') {
+      $hb = [Text.Encoding]::UTF8.GetBytes('{"app":"crown-and-calculation"}'); $ctx.Response.ContentType = 'application/json'
+      $ctx.Response.ContentLength64 = $hb.Length; $ctx.Response.OutputStream.Write($hb, 0, $hb.Length); $ctx.Response.OutputStream.Close(); continue
+    }
     $rel = [Uri]::UnescapeDataString($ctx.Request.Url.AbsolutePath.TrimStart('/'))
     $file = [IO.Path]::GetFullPath((Join-Path $dist $rel))
     if (-not $file.StartsWith([IO.Path]::GetFullPath($dist)) -or -not (Test-Path $file -PathType Leaf)) { $file = Join-Path $dist 'index.html' }
