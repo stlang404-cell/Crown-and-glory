@@ -36,7 +36,11 @@ export interface WorldState {
   season: number;
   round: number; // the currently open round (1..ROUNDS_PER_SEASON)
   nextIndex: number; // next competitor index for entrants
-  player: { joined: boolean; region: number; division: number; swissRegistered: boolean; titles: { season: number; title: string }[]; history: { season: number; division: number; rank: number; points: number }[]; displaced: string | null };
+  player: { joined: boolean; region: number; division: number; swissRegistered: boolean; titles: { season: number; title: string }[]; history: { season: number; division: number; rank: number; points: number }[]; displaced: string | null;
+    /** v0.5: federation-title record (src/heraldry/titles.ts). */
+    norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number };
+  /** v0.5: featured rivals, chosen once and persisted (src/heraldry/rivals.ts). */
+  featured?: import('../heraldry/rivals').FeaturedRival[];
   createdAt: string;
 }
 

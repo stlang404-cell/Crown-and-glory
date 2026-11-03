@@ -51,6 +51,7 @@ export class AppServices {
     await s.fed.load();
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));
+    if (!s.readOnly) await s.fed.ensureHeraldry().catch(e => console.error('heraldry', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
     return s;

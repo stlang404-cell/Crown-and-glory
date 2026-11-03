@@ -52,7 +52,7 @@ export const ASSETS: AssetType[] = [
 ];
 export const assetType = (id: string) => ASSETS.find(a => a.id === id)!;
 
-export interface OwnedAsset { id: string; typeId: string; acquiredSeason: number; suspended: boolean; upkeepPaidSeason: number; level?: number }
+export interface OwnedAsset { id: string; typeId: string; acquiredSeason: number; suspended: boolean; upkeepPaidSeason: number; level?: number; identity?: import('../heraldry/clubs').ClubIdentity }
 
 const j = (id: string, kind: string, memo: string, lines: { account: string; amount: number }[], season?: number, round?: number, at = ''): Journal => ({ id, at, kind, memo, lines: lines.filter(l => l.amount !== 0), season, round });
 

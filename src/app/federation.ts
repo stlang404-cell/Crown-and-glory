@@ -21,6 +21,8 @@ import { normaliseModel } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
+import { ensureFeatured, trackPeaks, awardNorms, eventGames, NORM_EVENTS, clubFinances, seasonCeremonies } from './heraldry';
+import { validateIdentity, type ClubIdentity } from '../heraldry/clubs';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
   CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
@@ -47,7 +49,10 @@ export interface LiveGame {
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
-  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[] }
+  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[];
+  /** v0.5: ceremonies to present (titles, promotions, championships); `seen` once dismissed. */
+  ceremonies?: Ceremony[]; favorites?: string[] }
+export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 const FEATURED_NODE_CAP = 30_000;
@@ -156,6 +161,48 @@ export class FederationService {
     });
   }
 
+  /** v0.5: choose and persist featured rivals for saves that predate them. Idempotent. */
+  async ensureHeraldry(): Promise<boolean> {
+    if (!this.state || this.state.world.featured?.length) return false;
+    return this.run(async () => {
+      const st = this.clone();
+      st.world = structuredClone(st.world);
+      if (!ensureFeatured(st)) return false;
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
+      return true;
+    });
+  }
+
+  /** Save the player club's identity (validated; persisted with the club asset). */
+  async setClubIdentity(identity: ClubIdentity): Promise<void> {
+    const err = validateIdentity(identity);
+    if (err) throw new Error(err);
+    return this.run(async () => {
+      const st = this.clone();
+      const club = [...st.assets.values()].find(a => a.typeId === 'club');
+      if (!club) throw new Error('You need a club first');
+      const next = { ...club, identity: { ...identity, name: identity.name.trim(), motto: identity.motto.trim() } };
+      st.assets.set(club.id, next);
+      await this.commit(st, [], { assets: [next] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+  clubIdentity(): ClubIdentity | null { const c = [...(this.state?.assets.values() ?? [])].find(a => a.typeId === 'club'); return c?.identity ?? null; }
+
+  async markCeremonySeen(id: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      st.extra.ceremonies = (st.extra.ceremonies ?? []).map(c => (c.id === id ? { ...c, seen: true } : c));
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+  async setFavorites(ids: string[]): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      st.extra.favorites = [...new Set(ids)].slice(0, 32);
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+
   /** Close family markets whose closing round has started, committed before any game of that round runs. */
   private async closeDueMarkets(): Promise<void> {
     if (!this.state) return;
@@ -236,6 +283,7 @@ export class FederationService {
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       joinPlayer(ctx, region);
+      ensureFeatured(st);
       const posted: Journal[] = [];
       this.post(st, genesisJournals(this.now(), NPC_TRADERS.map(t => t.id), NPC_FUND), posted);
       this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits), this.now()), posted);
@@ -767,6 +815,7 @@ export class FederationService {
       const posted: Journal[] = [];
       const plansChanged: SeasonPlan[] = [];
       const oldPlan = ctx.plan;
+      const titlesBefore = st.world.player.titles.length, divisionBefore = st.world.player.division;
       const res = processRound(ctx, rec, seasonRounds, this.now());
       const expensesPaid = new Map<string, number>();
       st.rounds.set(rec.id, rec);
@@ -847,6 +896,8 @@ export class FederationService {
         }
         // leftover prize escrow (e.g. rounding) returns to the treasury
         for (const [acc, bal] of st.balances) if (acc.startsWith(`prize:${season}:`) && bal > 0) this.post(st, [{ id: `prize-return:${acc}`, at: this.now(), kind: 'transfer', memo: `Unpaid remainder of ${acc}`, lines: [{ account: acc, amount: -bal }, { account: 'treasury', amount: bal }], season }], posted);
+        // AI club finances (dues from members' balances, operating costs) before competitor expenses
+        clubFinances(st, season, js => this.post(st, js, posted), this.now());
         // competitor career expenses (coaching, travel, living costs): 75% of each competitor's balance, all of a
         // retired competitor's, leaves circulation into the sink. With fixed issuance per season this bounds the
         // circulating supply (steady state ≈ issuance / 3 held by competitors) instead of growing forever.
@@ -871,6 +922,19 @@ export class FederationService {
         const gain = bal + (expensesPaid.get(c.id) ?? 0) - (c.balanceSeen ?? 0);
         if (gain > 0) c.earnings += gain;
         c.balanceSeen = bal;
+      }
+      // honours: peaks, norms at each event's end, permanent federation titles, ceremonies (recorded results only)
+      {
+        const ceremonies: Ceremony[] = [];
+        trackPeaks(st, player);
+        if (round === NORM_EVENTS.swissRound) for (const ev of ['open', 'challenger'] as const) awardNorms(st, season, round, `${ev === 'open' ? 'Federation Open' : 'Challenger Open'} S${season}`, eventGames(games, ev), player.rating, ceremonies);
+        if (round === NORM_EVENTS.leagueRound) awardNorms(st, season, round, `League season S${season}`, eventGames(games, 'league'), player.rating, ceremonies);
+        if (res.seasonEnd && oldPlan.champ) {
+          const fin = oldPlan.champ.stages[oldPlan.champ.stages.length - 1].matches[0];
+          awardNorms(st, season, round, `Crown Championship S${season}`, eventGames(games, 'champ'), player.rating, ceremonies, fin ? [fin.a, fin.b] : []);
+        }
+        if (res.seasonEnd) seasonCeremonies(st, season, round, oldPlan.champ, titlesBefore, divisionBefore, ceremonies);
+        if (ceremonies.length) st.extra.ceremonies = [...(st.extra.ceremonies ?? []).filter(c => !ceremonies.some(n => n.id === c.id)), ...ceremonies].slice(-60);
       }
       // sponsorship contracts: share of prizes paid this round; next season's stipends at season end
       const changedContracts: Contract[] = [];

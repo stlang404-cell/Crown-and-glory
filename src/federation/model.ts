@@ -40,6 +40,11 @@ export interface Competitor {
   status: 'active' | 'reserve' | 'retired';
   joinedSeason: number;
   retiredSeason: number | null;
+  /** v0.5 federation-title record (computed from recorded events; src/heraldry/titles.ts). */
+  norms?: import('../heraldry/titles').Norm[];
+  fedTitle?: import('../heraldry/catalog').FedTitle | null;
+  peakRating?: number;
+  establishedPeak?: number;
 }
 
 /** A pairing in a world round. result: 1 white win, 0.5 draw, 0 black win, null pending. */
