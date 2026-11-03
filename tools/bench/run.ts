@@ -92,7 +92,8 @@ interface MatchSummary {
 
 async function match(p: ReturnType<typeof pool>, A: Spec, B: Spec, openings: string[][], pairs: number, seed = 1): Promise<{ summary: MatchSummary; games: GameRecord[] }> {
   const a = specId(A), b = specId(B);
-  const chosen = openings.slice(0, pairs);
+  const offset = +(process.env.OPENING_OFFSET ?? 0);
+  const chosen = openings.slice(offset, offset + pairs);
   const jobs = chosen.flatMap((op, i) => [
     p.run({ white: A, black: B, opening: op, seed: seed * 7919 + i * 2 }),
     p.run({ white: B, black: A, opening: op, seed: seed * 7919 + i * 2 + 1 }),
@@ -197,6 +198,7 @@ async function main() {
       const pairs = +(pairsArg ?? 20);
       const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
+        : name === 'confirm' ? [['both40k', 'full40k']]
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
         : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]
