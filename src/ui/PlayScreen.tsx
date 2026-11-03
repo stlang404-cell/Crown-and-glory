@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
-import { Board, capturedFrom } from './Board';
-import { PieceSvg, PieceKind, PIECE_NAMES } from './Pieces';
+import { Board } from './Board';
+import { Captured, Clock, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar, moveKeys } from './MatchCenter';
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
 import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
@@ -227,6 +227,9 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const [assistBusy, setAssistBusy] = useState(false);
   const engineScore = useRef<EngineScore | null>(null);
   const finalizing = useRef(false);
+  // history browsing (Match Center): null follows the game; a number shows that earlier position read-only
+  const [viewPly, setViewPly] = useState<number | null>(null);
+  const [tab, setTab] = useState<'moves' | 'assistant'>('moves');
 
   useEffect(() => {
     let alive = true;
@@ -325,7 +328,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     });
   }, [session, session?.plies, session?.paused, thinking, engineColor, services, finalize]);
 
-  useEffect(() => { setAssist(null); }, [session?.plies]);
+  useEffect(() => { setAssist(null); setViewPly(null); }, [session?.plies]);
 
   const askAssist = async (kind: 'hint' | 'candidates' | 'threat' | 'evaluation' | 'explanation') => {
     if (!session || !session.assistanceAllowed || session.sideToMove !== session.humanColor) return;
@@ -384,128 +387,137 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const top = orientation === 'white' ? 1 : 0;
   const bottom = (top ^ 1) as 0 | 1;
   const fen = session.pos.toFen();
-  const last = rec.moves.at(-1)?.ccn ?? null;
-  const check = session.pos.inCheck() ? squareName(session.pos.kingSq[session.pos.side]) : null;
-  const cap = capturedFrom(fen);
   const claims = session.claims();
   const humanToMove = session.sideToMove === humanColor && !session.isOver;
   const opp = rec.humanColor === 'white' ? rec.black : rec.white;
   const oppMeta = getOpponent(opp.id);
+  const plies = rec.moves.length;
+
+  // the shown position: the live game, or an earlier position while browsing (no moves can be made there)
+  const shownPly = viewPly ?? plies;
+  const browsing = shownPly !== plies;
+  const startFen = () => { const p = Position.fromFen(rec.initialFen); for (const m of rec.setupMoves ?? []) p.makeMove(parseLegalCcn(p, m)); return p.toFen(); };
+  const shownFen = !browsing ? fen : shownPly === 0 ? startFen() : rec.moves[shownPly - 1].fenAfter;
+  const shownPos = browsing ? Position.fromFen(shownFen) : session.pos;
+  const last = shownPly > 0 ? rec.moves[shownPly - 1].ccn : null;
+  const check = shownPos.inCheck() ? squareName(shownPos.kingSq[shownPos.side]) : null;
+  const goPly = (k: number) => { const t = Math.max(0, Math.min(plies, k)); setViewPly(t === plies ? null : t); };
+  const nav = { first: () => goPly(0), prev: () => goPly(shownPly - 1), next: () => goPly(shownPly + 1), last: () => setViewPly(null) };
 
   const bar = (c: 0 | 1) => {
     const p = c === 0 ? rec.white : rec.black;
+    const color = c === 0 ? 'white' : 'black';
     const isHuman = c === humanColor;
     const ms = session.remaining(c, now);
     const running = session.timed && session.sideToMove === c && !session.isOver && !session.paused;
-    const caps = c === 0 ? cap.byWhite : cap.byBlack;
-    const adv = c === 0 ? cap.advantage : -cap.advantage;
     return (
-      <div className={`player-bar${session.sideToMove === c && !session.isOver ? ' to-move' : ''}`} data-testid={isHuman ? 'human-bar' : 'engine-bar'}>
-        {isHuman ? <div className="portrait" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center' }}><PieceSvg kind="k" color={c === 0 ? 'w' : 'b'} /></div> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
-        <div style={{ minWidth: 0 }}>
-          <div className="player-name">{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</div>
-          <div className="player-meta">
-            {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
-            {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
-            {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
-          </div>
-          <div className="captured" aria-label={`Captured by ${p.name}`}>
-            {caps.map((k, i) => <PieceSvg key={i} kind={k.toLowerCase() as PieceKind} color={k === k.toUpperCase() ? 'w' : 'b'} title={`${k === k.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[k.toLowerCase() as PieceKind]}`} />)}
-            {adv > 0 && <span className="adv">+{adv}</span>}
-          </div>
-        </div>
-        {session.timed && <div className={`clock${running ? ' running' : ''}${ms < 20000 ? ' low' : ''}`} role="timer" aria-label={`${p.name} clock`}>{fmtClock(ms)}</div>}
-      </div>
+      <PlayerBar color={color} active={session.sideToMove === c && !session.isOver} testId={isHuman ? 'human-bar' : 'engine-bar'}
+        avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
+        name={<>{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</>}
+        meta={<>
+          {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+          {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
+          {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
+        </>}
+        aside={session.timed ? <Clock live text={fmtClock(ms)} label={`${p.name} clock`} running={running} low={ms < 20000} /> : undefined}>
+        <Captured fen={shownFen} color={color} name={p.name} />
+      </PlayerBar>
     );
   };
 
-  const pairs: { n: number; w?: GameRecord['moves'][number]; b?: GameRecord['moves'][number] }[] = [];
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
-  rec.moves.forEach((m, i) => {
-    const idx = startBlack ? i + 1 : i;
-    const n = Math.floor(idx / 2);
-    pairs[n] ??= { n: n + 1 };
-    if (idx % 2 === 0) pairs[n].w = m; else pairs[n].b = m;
-  });
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+  const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move' : 'Opponent to Move';
 
-  return (
-    <div className="match" data-testid="match" data-fen={fen} data-turn={session.isOver ? 'over' : humanToMove ? (session.paused ? 'paused' : 'human') : 'engine'} data-human={humanColor === 0 ? 'w' : 'b'}>
-      <div className="board-col">
-        {bar(top as 0 | 1)}
-        <Board fen={fen} orientation={orientation} legal={legal} onMove={onMove} lastMove={last} checkSquare={check} label={`Game against ${opp.name}`} highlights={assist?.hint ? [assist.hint] : []} />
-        {bar(bottom)}
-        <div className="sr-only" aria-live="polite">{last ? `Last move ${rec.moves.at(-1)!.san}` : 'Game started'}{session.isOver && rec.termination ? `. ${TERMINATION_LABEL[rec.termination]}` : ''}</div>
+  const board = (
+    <>
+      {bar(top as 0 | 1)}
+      <Board fen={shownFen} orientation={orientation} legal={browsing ? [] : legal} onMove={onMove} lastMove={last} checkSquare={check} label={browsing ? `Game against ${opp.name}, earlier position after ${shownPly} moves` : `Game against ${opp.name}`} highlights={!browsing && assist?.hint ? [assist.hint] : []} />
+      {bar(bottom)}
+      <MoveNav onFirst={nav.first} onPrev={nav.prev} onNext={nav.next} onLast={nav.last} lastLabel="Current Position" onFlip={() => setFlipped(f => !f)}
+        indicator={browsing ? <span className="chip gold" data-testid="viewing-earlier">Move {Math.ceil(shownPly / 2)} · Earlier Position</span> : undefined} />
+      <div className="sr-only" aria-live="polite">{rec.moves.length ? `Last move ${rec.moves.at(-1)!.san}` : 'Game started'}{session.isOver && rec.termination ? `. ${TERMINATION_LABEL[rec.termination]}` : ''}</div>
+    </>
+  );
+
+  const movesPanel = (
+    <>
+      <div className="panel stack">
+        <div className="panel-title"><h3>Moves</h3>{rec.opening && <span className="small muted">{rec.opening.name}</span>}</div>
+        <NotationList label="Move list" startsWithBlack={startBlack} current={shownPly} onSelect={goPly} moves={rec.moves.map(m => ({ san: m.san }))} empty="Moves appear here as they are played." />
+        {browsing && <div className="small muted">You are looking at an earlier position. Use Current Position to return to the game.</div>}
       </div>
-      <div className="side-col">
-        <div className="panel">
-          <div className="panel-title">
-            <h3>{rec.timeControl.label} · {rec.rated ? 'Rated' : 'Casual'}</h3>
-            <span className="chip">{session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move' : 'Opponent to Move'}</span>
-          </div>
-          {rec.opening && <div className="small muted" style={{ marginBottom: 8 }}>{rec.opening.name}</div>}
-          <div className="moves" aria-label="Move list">
-            {pairs.map(p => (
-              <div key={p.n} style={{ display: 'contents' }}>
-                <span className="n">{p.n}.</span>
-                <button tabIndex={-1}>{p.w?.san ?? '…'}</button>
-                <button tabIndex={-1}>{p.b?.san ?? ''}</button>
-              </div>
+      <div className="panel stack">
+        <div className="row">
+          <button className="btn" disabled={!session.canAgreeDraw() || !humanToMove} onClick={() => {
+            const yes = engineDrawDecision(engineScore.current, session.plies);
+            if (yes) { session.agreeDraw(Date.now(), new Date().toISOString()); void finalize(session); force(); }
+            else setToast(`${opp.name} declines the draw offer.`);
+          }} title={session.canAgreeDraw() ? 'Offer a draw' : 'You can offer a draw after each side has made ten moves'}><Icon name="handshake" /> Offer Draw</button>
+          {(claims.threefold || claims.fiftyMove) && humanToMove && (
+            <button className="btn" onClick={() => { session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', Date.now(), new Date().toISOString()); void finalize(session); force(); }}>
+              Claim Draw ({claims.threefold ? 'Threefold Repetition' : '50-Move Rule'})
+            </button>
+          )}
+          {!confirmResign
+            ? <button className="btn danger" disabled={session.isOver} onClick={() => setConfirmResign(true)}><Icon name="flag" /> Resign</button>
+            : <span className="row"><span className="small">Resign this game?</span>
+              <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, Date.now(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, Resign</button>
+              <button className="btn" onClick={() => setConfirmResign(false)}>No</button></span>}
+        </div>
+        {toast && <div className="notice" role="status" onClick={() => setToast(null)}>{toast}</div>}
+        {session.paused && <div className="notice warn">Clocks are paused while the app is in the background.</div>}
+      </div>
+    </>
+  );
+
+  const assistantPanel = (
+    <div className="panel stack">
+      {rec.rated ? (
+        <div className="small" data-testid="assist-locked">Engine help is off in rated games.</div>
+      ) : (
+        <SandboxPanel rec={rec} />
+      )}
+      {rec.rated ? null : (
+        <div className="stack" data-testid="assist-panel">
+          <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">Casual game, never rated</span></div>
+          <div className="row">
+            {(['hint', 'candidates', 'threat', 'evaluation', 'explanation'] as const).map(k => (
+              <button key={k} className="btn small" disabled={!humanToMove || assistBusy || session.paused} onClick={() => void askAssist(k)}>
+                {{ hint: 'Hint', candidates: 'Candidate Moves', threat: 'Threat Check', evaluation: 'Evaluation', explanation: 'Explain Best Move' }[k]}
+              </button>
             ))}
           </div>
-        </div>
-        <div className="panel stack">
-          <div className="row">
-            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip Board"><Icon name="flip" /> Flip</button>
-            <button className="btn" disabled={!session.canAgreeDraw() || !humanToMove} onClick={() => {
-              const yes = engineDrawDecision(engineScore.current, session.plies);
-              if (yes) { session.agreeDraw(Date.now(), new Date().toISOString()); void finalize(session); force(); }
-              else setToast(`${opp.name} declines the draw offer.`);
-            }} title={session.canAgreeDraw() ? 'Offer a draw' : 'You can offer a draw after each side has made ten moves'}><Icon name="handshake" /> Offer Draw</button>
-            {(claims.threefold || claims.fiftyMove) && humanToMove && (
-              <button className="btn" onClick={() => { session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', Date.now(), new Date().toISOString()); void finalize(session); force(); }}>
-                Claim Draw ({claims.threefold ? 'Threefold Repetition' : '50-Move Rule'})
-              </button>
-            )}
-            {!confirmResign
-              ? <button className="btn danger" disabled={session.isOver} onClick={() => setConfirmResign(true)}><Icon name="flag" /> Resign</button>
-              : <span className="row"><span className="small">Resign this game?</span>
-                <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, Date.now(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, Resign</button>
-                <button className="btn" onClick={() => setConfirmResign(false)}>No</button></span>}
-          </div>
-          {toast && <div className="notice" role="status" onClick={() => setToast(null)}>{toast}</div>}
-          {session.paused && <div className="notice warn">Clocks are paused while the app is in the background.</div>}
-          {rec.rated ? (
-            <div className="small" data-testid="assist-locked">Engine help is off in rated games.</div>
-          ) : (
-            <SandboxPanel rec={rec} />
-          )}
-          {rec.rated ? null : (
-            <div className="stack" data-testid="assist-panel">
-              <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">Casual game, never rated</span></div>
-              <div className="row">
-                {(['hint', 'candidates', 'threat', 'evaluation', 'explanation'] as const).map(k => (
-                  <button key={k} className="btn small" disabled={!humanToMove || assistBusy || session.paused} onClick={() => void askAssist(k)}>
-                    {{ hint: 'Hint', candidates: 'Candidate Moves', threat: 'Threat Check', evaluation: 'Evaluation', explanation: 'Explain Best Move' }[k]}
-                  </button>
-                ))}
-              </div>
-              {assistBusy && <div className="small muted">Thinking…</div>}
-              {assist && (
-                <div className="coach" role="status">
-                  <div>{assist.text}</div>
-                  {assist.candidates && <ul className="small" style={{ margin: '4px 0 0' }}>{assist.candidates.map(c => <li key={c.ccn}><strong>{c.san}</strong> {formatScore(c.score, rec.humanColor)} · <span className="mono">{c.pvSan.slice(1, 6).join(' ')}</span></li>)}</ul>}
-                </div>
-              )}
+          {assistBusy && <div className="small muted">Thinking…</div>}
+          {assist && (
+            <div className="coach" role="status">
+              <div>{assist.text}</div>
+              {assist.candidates && <ul className="small" style={{ margin: '4px 0 0' }}>{assist.candidates.map(c => <li key={c.ccn}><strong>{c.san}</strong> {formatScore(c.score, rec.humanColor)} · <span className="mono">{c.pvSan.slice(1, 6).join(' ')}</span></li>)}</ul>}
             </div>
           )}
-          <div className="small muted" data-testid="engine-config">Full analysis opens after the game.
-            <details className="small">
-              <summary>Details</summary>
-              Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}{opp.engine?.config ? ` · ${opp.engine.config.selection === 'best' ? 'best move only' : 'bounded selection'} · up to ${opp.engine.config.maxTimeMs / 1000} s per move · ${Math.round((1 << opp.engine.config.ttBits) * 11 / 1048576)} MB table · ${opp.engine.config.backend}` : ''}
-            </details>
-          </div>
         </div>
+      )}
+      <div className="small muted" data-testid="engine-config">Full analysis opens after the game.
+        <details className="small">
+          <summary>Details</summary>
+          Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}{opp.engine?.config ? ` · ${opp.engine.config.selection === 'best' ? 'best move only' : 'bounded selection'} · up to ${opp.engine.config.maxTimeMs / 1000} s per move · ${Math.round((1 << opp.engine.config.ttBits) * 11 / 1048576)} MB table · ${opp.engine.config.backend}` : ''}
+        </details>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="mc match-play" data-testid="match" data-fen={fen} data-turn={session.isOver ? 'over' : humanToMove ? (session.paused ? 'paused' : 'human') : 'engine'} data-human={humanColor === 0 ? 'w' : 'b'} onKeyDown={moveKeys(nav)}>
+      <MatchHeader
+        kicker={rec.mode === 'training' ? 'Training' : 'Match'}
+        title={rec.context.eventName ?? `${rec.timeControl.label} · ${rec.rated ? 'Rated' : 'Casual'}`}
+        subtitle={rec.opening?.name}
+        status={<span className={`chip ${humanToMove && !session.paused ? 'gold' : ''}`} data-testid="match-status">{statusText}</span>}
+        white={{ name: rec.white.name, rating: rating(rec.white) }}
+        black={{ name: rec.black.name, rating: rating(rec.black) }}
+        result={session.isOver ? rec.result ?? null : null} />
+      <MatchLayout board={board} active={tab} onActive={t => setTab(t as typeof tab)} tabsLabel="Match Panels"
+        panels={[{ id: 'moves', label: 'Moves', content: movesPanel }, { id: 'assistant', label: rec.rated ? 'Game Info' : 'Assistant', content: assistantPanel }]} />
       {final && <ResultOverlay final={final} onClose={() => setFinal(null)} />}
     </div>
   );

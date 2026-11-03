@@ -4,8 +4,8 @@
 .arena.mc { max-width: none; }
 .arena .mc-layout { gap: 14px; grid-template-columns: minmax(360px, 1.25fr) minmax(600px, 2fr); }
 @media (max-width: 1180px) { .arena .mc-layout { grid-template-columns: minmax(320px, 1.1fr) minmax(300px, 1fr); } }
-@media (max-width: 980px) { .arena .mc-board { max-width: none; margin: 0; } }
-@media (max-width: 760px) { .arena .mc-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 980px) { .arena .mc-board { max-width: none; margin: 0; } .arena .mc-side { grid-column: 2; } }
+@media (max-width: 760px) { .arena .mc-layout { grid-template-columns: minmax(0, 1fr); } .arena .mc-side { grid-column: 1; } }
 
 .arena-status.is-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: arena-pulse 1.6s ease-in-out infinite; }
 @keyframes arena-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }

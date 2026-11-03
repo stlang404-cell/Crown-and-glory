@@ -225,7 +225,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
 
   const summaryPanel = (
     <>
-          {report && mine && theirs && (
+      {report && mine && theirs && (
         <div className="panel">
           <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
           <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
@@ -301,8 +301,9 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     <div className="mc analysis-screen" onKeyDown={onKey} tabIndex={-1} style={{ outline: 'none' }}>
       <MatchHeader
         back={{ label: '← Library', onClick: () => go({ name: 'library' }) }}
-        kicker={game.context.eventName ?? 'Game Review'}
+        kicker="Game Review"
         title={`${resultText(game)} vs ${opp.name}`}
+        subtitle={game.context.eventName}
         status={<>
           <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'Unfinished'}</span>
           <span className="chip">{game.timeControl.label}</span>
