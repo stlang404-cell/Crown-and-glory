@@ -19,7 +19,7 @@ import { PLAYER_ID, ROUNDS_PER_SEASON } from '../../src/federation/model';
 import { MICRO } from '../../src/exchange/ledger';
 import { prices, cost } from '../../src/exchange/lmsr';
 import { claimPrices, claimsOf } from '../../src/exchange/market';
-import { CLUB_LEVELS } from '../../src/economy/economy';
+import { CLUB_LEVELS, RECOVERY_THRESHOLD } from '../../src/economy/economy';
 import { rng01, hashSeed } from '../../src/federation/generator';
 import type { GameRecord } from '../../src/games/types';
 
@@ -36,6 +36,7 @@ const STRATEGIES: Strategy[] = [
   { id: 'hybrid', label: 'Hybrid (1700 strength, conservative trading, Analyst Office)', strength: 1700, trade: 'conservative', assets: ['analyst'], challenger: true },
   { id: 'business', label: 'Business owner (1500 strength; club + scouting + analyst)', strength: 1500, trade: 'none', assets: ['club', 'scouting', 'analyst'], challenger: true },
   { id: 'market-specialist', label: 'Market specialist (1300 strength; conservative match trading + 10 shares on the largest model edge in every season/tournament family market)', strength: 1300, trade: 'conservative', assets: ['analyst'], challenger: false, families: true },
+  { id: 'reckless', label: 'Reckless spender (1000 strength; aggressive trading on every market, buys club + scouting + analyst) — bankruptcy and recovery test', strength: 1000, trade: 'aggressive', assets: ['club', 'scouting', 'analyst'], challenger: true },
   { id: 'magnate', label: 'Business magnate (1500 strength; club upgraded when affordable, sponsorship contracts on the strongest affordable Crown Division players)', strength: 1500, trade: 'none', assets: ['club'], challenger: true, magnate: true },
 ];
 
@@ -56,8 +57,11 @@ async function run(s: Strategy, seed: number) {
   await svc.create(seed % 16, seed);
   const seasons: unknown[] = [];
   let trades = 0, tradeSpent = 0, tradeReceived = 0, gamesW = 0, gamesD = 0, gamesL = 0;
+  let firstBroke: number | null = null, recoveredAt: number | null = null;
   for (let season = 1; season <= SEASONS; season++) {
     const supply0 = -svc.balance('mint');
+    let minCash = Infinity, roundsBelow = 0;
+    const vouchers0 = svc.state!.extra.vouchers.length;
     for (let r = 1; r <= ROUNDS_PER_SEASON; r++) {
       const st = svc.state!;
       if (r === 1) for (const a of s.assets) if (!svc.state!.assets.has(a) && svc.balance('player:cash') >= 600 * MICRO) await svc.buyAsset(a).catch(() => {});
@@ -109,9 +113,11 @@ async function run(s: Strategy, seed: number) {
         if (mine === 1) gamesW++; else if (mine === 0) gamesL++; else gamesD++;
         await svc.recordPlayerGame({ ...g, result: res === 1 ? '1-0' : res === 0 ? '0-1' : '1/2-1/2', status: 'finalized' } as GameRecord);
       }
-      const cashPre = svc.balance('player:cash');
       await svc.advanceRound();
-      void cashPre;
+      const c = svc.balance('player:cash');
+      minCash = Math.min(minCash, c);
+      if (c < RECOVERY_THRESHOLD) { roundsBelow++; if (firstBroke === null) firstBroke = season; }
+      else if (firstBroke !== null && recoveredAt === null && c >= 2 * RECOVERY_THRESHOLD) recoveredAt = season;
     }
     const st = svc.state!;
     const fin = svc.finance();
@@ -130,7 +136,10 @@ async function run(s: Strategy, seed: number) {
     const top1 = earn.slice(-Math.ceil(earn.length / 100)).reduce((a, b) => a + b, 0) / Math.max(1, earn.reduce((a, b) => a + b, 0));
     const settled = [...st.markets.values()].filter(m => m.status === 'settled' && !m.sandbox);
     // maker P&L per market (crowns, before fees): collected C(q) − C(0) minus the payout-weighted issued shares
-    const makerOf = (m: typeof settled[number]) => { const pay = m.payout ?? m.q.map((_, i) => (i === m.result ? 1 : 0)); return cost(m.q, m.b) - cost(m.q.map(() => 0), m.b) - m.q.reduce((a, x, i) => a + x * pay[i], 0); };
+    // shares issued are q − q0 (q0 = virtual prior inventory for prior-priced markets, else 0)
+    const makerOf = (m: typeof settled[number]) => { const q0 = m.q0 ?? m.q.map(() => 0); const pay = m.payout ?? m.q.map((_, i) => (i === m.result ? 1 : 0)); return cost(m.q, m.b) - cost(q0, m.b) - m.q.reduce((a, x, i) => a + (x - q0[i]) * pay[i], 0); };
+    // funded worst-case subsidy must cover every realised maker loss (b·ln n, or b·ln(1/min p0) with a prior)
+    const boundViolations = settled.filter(m => -makerOf(m) > m.subsidy / MICRO + 1e-6).length;
     const makerPnl = settled.reduce((a, m) => a + makerOf(m), 0);
     const worstMaker = settled.reduce((a, m) => Math.min(a, makerOf(m)), 0);
     const byKind: Record<string, number> = {};
@@ -138,18 +147,19 @@ async function run(s: Strategy, seed: number) {
     const contracts = [...st.contracts.values()];
     seasons.push({
       clubLevel: svc.clubLevelOf(), contractsPaid: contracts.reduce((a, c) => a + c.paid, 0) / MICRO, contractsEarned: contracts.reduce((a, c) => a + c.earned, 0) / MICRO, settledByKind: byKind,
-      earningsGini: +gini.toFixed(3), top1pctEarningsShare: +top1.toFixed(3), settledMarkets: settled.length, makerPnlTotal: +makerPnl.toFixed(1), makerWorstMarket: +worstMaker.toFixed(1),
+      earningsGini: +gini.toFixed(3), top1pctEarningsShare: +top1.toFixed(3), settledMarkets: settled.length, makerPnlTotal: +makerPnl.toFixed(1), makerWorstMarket: +worstMaker.toFixed(1), subsidyBoundViolations: boundViolations,
       season, playerDivision: st.world.player.division, cash: fin.cash / MICRO, netWorth: fin.netWorth / MICRO, assets: fin.owned.map(a => a.typeId + (a.suspended ? '(suspended)' : '')),
       titles: st.world.player.titles.filter(t => t.season === season).map(t => t.title),
       moneySupply: -svc.balance('mint') / MICRO, circulating: (-svc.balance('mint') - svc.balance('sink')) / MICRO, sink: svc.balance('sink') / MICRO, issuedThisSeason: (-svc.balance('mint') - supply0) / MICRO, treasury: svc.balance('treasury') / MICRO, fees: svc.balance('fees') / MICRO,
       npcWallets: bal('npc:') / MICRO, competitorAccounts: bal('comp:') / MICRO, escrow: (bal('prize:') + bal('sponsor:')) / MICRO,
-      conserved: total === 0, negativeAccounts: neg, ratingMean: +mean.toFixed(1), latentRatingCorr: +corr.toFixed(3),
+      conserved: total === 0, negativeAccounts: neg, minCash: minCash / MICRO, roundsBelowRecovery: roundsBelow, vouchersUsed: svc.state!.extra.vouchers.length - vouchers0,
+      suspendedAssets: fin.owned.filter(a => a.suspended).length, clubTreasuries: bal('club:') / MICRO, ratingMean: +mean.toFixed(1), latentRatingCorr: +corr.toFixed(3),
       active: latents.length, retired: [...st.competitors.values()].filter(c => c.status === 'retired').length,
     });
     console.log(s.id, JSON.stringify(seasons[seasons.length - 1]));
   }
   db.close();
-  return { strategy: s.id, label: s.label, seasons, trades, tradeSpent: tradeSpent / MICRO, tradeReceived: tradeReceived / MICRO, record: { w: gamesW, d: gamesD, l: gamesL } };
+  return { strategy: s.id, label: s.label, seasons, bankruptcy: { firstSeasonBelowThreshold: firstBroke, recoveredSeason: recoveredAt }, trades, tradeSpent: tradeSpent / MICRO, tradeReceived: tradeReceived / MICRO, record: { w: gamesW, d: gamesD, l: gamesL } };
 }
 
 const results = [];

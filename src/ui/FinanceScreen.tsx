@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
 import { ClubEditor } from './ClubEditor';
+import { CosmeticsShop } from './Cosmetics';
 import { Emblem } from './Emblem';
 import { financialEmblem } from '../heraldry/catalog';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
@@ -110,6 +111,7 @@ export function FinanceScreen() {
         </div>
       </div>
       <Institutions />
+      <CosmeticsShop />
       <div className="panel" style={{ marginTop: 14 }} data-testid="assets">
         <h3>Assets</h3>
         <div className="grid-2">

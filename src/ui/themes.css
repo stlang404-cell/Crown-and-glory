@@ -249,23 +249,23 @@
 
 [data-board="marble"] {
   --sq-light: #f3efe6;
-  --sq-dark: #8a8f99;
+  --sq-dark: #7a808b;
   --sq-hl: #e9c46a;
   --sq-check: #ff5a3a;
   --coord-light: #4b505a;
-  --coord-dark: #ffffff;
+  --coord-dark: #101215;
   --frame-a: #d9d4c8;
   --frame-b: #6f6a60;
   --frame-rim: #b8b2a4;
   --frame-rim-2: #4d4840;
 }
 [data-board="crimson"] {
-  --sq-light: #f1d9d6;
-  --sq-dark: #8e2f3a;
+  --sq-light: #f6e3e0;
+  --sq-dark: #c45a66;
   --sq-hl: #f2c14e;
   --sq-check: #ffb03a;
   --coord-light: #6d1f29;
-  --coord-dark: #fff4f2;
+  --coord-dark: #1e0709;
   --frame-a: #4a141b;
   --frame-b: #1e0709;
   --frame-rim: #8c3a44;

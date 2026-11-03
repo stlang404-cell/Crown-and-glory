@@ -14,6 +14,7 @@ import { Emblem } from './Emblem';
 import { rankEmblem, titleEmblem } from '../heraldry/catalog';
 import { divisionLabel, REGION_NAMES } from '../federation/model';
 import { CareerStanding } from './CareerStanding';
+import { PlayerAvatar, PassportBanner } from './Cosmetics';
 import { Trophy } from './Emblem';
 import { TROPHY_FOR } from '../heraldry/catalog';
 import { titleKind } from './HallScreen';
@@ -74,7 +75,8 @@ export function ProfileScreen() {
 
   return (
     <div>
-      <h1>Chess Passport</h1>
+      <PassportBanner />
+      <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Chess Passport</h1></div>
       <div className="seg" role="group" aria-label="Rating pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
