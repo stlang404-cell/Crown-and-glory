@@ -1,0 +1,61 @@
+{
+ "env": {
+  "node": "v22.23.4",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "cores": 4,
+  "load": [
+   4.69,
+   3.93,
+   4.57
+  ],
+  "searchId": "crown-search-2",
+  "evalId": "crown-eval-4",
+  "date": "2026-11-03T15:09:55.589Z"
+ },
+ "mode": "bundle-default",
+ "profile": "default",
+ "nodesPerSearch": 300000,
+ "reps": 5,
+ "rows": [
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "baseNps": 243865,
+   "curNps": 271297,
+   "ratio": 1.11,
+   "baseDepth": 9,
+   "curDepth": 9
+  },
+  {
+   "fen": "r1qk1r/pp1ppp/2n1n1/2p3/PPPPPP/RNQKNR w - - 0 4",
+   "baseNps": 294077,
+   "curNps": 350720,
+   "ratio": 1.19,
+   "baseDepth": 10,
+   "curDepth": 10
+  },
+  {
+   "fen": "r2k1r/1p3p/2n3/3Q2/PP3P/R2K1R b - - 0 1",
+   "baseNps": 291548,
+   "curNps": 352011,
+   "ratio": 1.21,
+   "baseDepth": 10,
+   "curDepth": 10
+  },
+  {
+   "fen": "3k2/1p3p/6/1P2P1/6/3K2 w - - 0 1",
+   "baseNps": 430391,
+   "curNps": 488472,
+   "ratio": 1.13,
+   "baseDepth": 20,
+   "curDepth": 20
+  },
+  {
+   "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+   "baseNps": 360126,
+   "curNps": 379089,
+   "ratio": 1.05,
+   "baseDepth": 12,
+   "curDepth": 12
+  }
+ ]
+}

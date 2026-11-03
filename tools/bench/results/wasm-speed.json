@@ -1,0 +1,63 @@
+{
+ "env": {
+  "node": "v22.23.4",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "load": [
+   4.91,
+   4.05,
+   4.59
+  ],
+  "date": "2026-11-03T15:10:23.947Z"
+ },
+ "nodes": 1000000,
+ "out": [
+  {
+   "name": "wasm-node",
+   "startupMs": 1488,
+   "rows": [
+    {
+     "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+     "nps": 191429,
+     "depth": 18,
+     "ms": 5232
+    },
+    {
+     "fen": "r1qk1r/pp1ppp/2n1n1/2p3/PPPPPP/RNQKNR w - - 0 4",
+     "nps": 248174,
+     "depth": 19,
+     "ms": 4035
+    },
+    {
+     "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+     "nps": 348480,
+     "depth": 21,
+     "ms": 2870
+    }
+   ]
+  },
+  {
+   "name": "native",
+   "startupMs": 437,
+   "rows": [
+    {
+     "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+     "nps": 472799,
+     "depth": 17,
+     "ms": 2117
+    },
+    {
+     "fen": "r1qk1r/pp1ppp/2n1n1/2p3/PPPPPP/RNQKNR w - - 0 4",
+     "nps": 518129,
+     "depth": 20,
+     "ms": 1931
+    },
+    {
+     "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+     "nps": 669845,
+     "depth": 21,
+     "ms": 1492
+    }
+   ]
+  }
+ ]
+}

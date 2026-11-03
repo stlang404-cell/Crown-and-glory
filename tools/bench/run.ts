@@ -19,33 +19,38 @@ import { buildOpenings } from './openings';
 import { GameRecord, pairBootstrap, scoreFor, eloFromScore } from './match';
 import { Position } from '../../src/rules/position';
 import { moveToCcn } from '../../src/rules/notation';
-import { Searcher, SEARCH_ID } from '../../src/engine/search';
-import { EVAL_ID } from '../../src/engine/evaluate';
+import { Searcher, PLAY_SEARCH_ID as SEARCH_ID, PLAY_FEATURES } from '../../src/engine/search';
+import { Searcher as BaseSearcher } from './baseline/search1';
+import { paramsFrom } from '../../src/engine/eval4';
+import { PLAY_EVAL_ID as EVAL_ID, EvalWeights, PLAY_WEIGHTS } from '../../src/engine/evaluate';
 
 const RESULTS = new URL('./results/', import.meta.url);
+/** Optional suffix for result files (keeps earlier milestones' raw results intact). */
+const TAG = process.env.RESULT_TAG ? `-${process.env.RESULT_TAG}` : '';
 mkdirSync(RESULTS, { recursive: true });
 
+// M2/M3 entries run the frozen M3 engine (crown-search-1 + crown-eval-3) so their meaning is unchanged.
 export const REGISTRY: Record<string, Spec> = {
-  full40k: { kind: 'config', id: 'full40k', nodes: 40_000 },
-  noNull40k: { kind: 'config', id: 'noNull40k', nodes: 40_000, features: { nullMove: false } },
-  noLmr40k: { kind: 'config', id: 'noLmr40k', nodes: 40_000, features: { lmr: false } },
-  noFut40k: { kind: 'config', id: 'noFut40k', nodes: 40_000, features: { futility: false } },
-  noAsp40k: { kind: 'config', id: 'noAsp40k', nodes: 40_000, features: { aspiration: false } },
-  noTT40k: { kind: 'config', id: 'noTT40k', nodes: 40_000, features: { tt: false } },
-  noSee40k: { kind: 'config', id: 'noSee40k', nodes: 40_000, features: { seePruning: false } },
-  noQ40k: { kind: 'config', id: 'noQ40k', nodes: 40_000, features: { quiescence: false } },
-  full160k: { kind: 'config', id: 'full160k', nodes: 160_000 },
-  lmrLog40k: { kind: 'config', id: 'lmrLog40k', nodes: 40_000, features: { lmrLog: true } },
-  lmp40k: { kind: 'config', id: 'lmp40k', nodes: 40_000, features: { lmp: true } },
-  matAlt40k: { kind: 'config', id: 'matAlt40k', nodes: 40_000, weights: { material: [0, 100, 300, 500, 950, 0], materialEg: [0, 120, 290, 540, 1000, 0] } },
-  passedHi40k: { kind: 'config', id: 'passedHi40k', nodes: 40_000, weights: { passedMg: [0, 0, 15, 40, 80, 0], passedEg: [0, 0, 40, 85, 160, 0] } },
-  mobHi40k: { kind: 'config', id: 'mobHi40k', nodes: 40_000, weights: { mobility: [0, 0, 6, 5, 3, 0] } },
-  eval2_40k: { kind: 'config', id: 'eval2_40k', nodes: 40_000, weights: { mobility: [0, 0, 4, 3, 2, 0] } },
-  mob8_40k: { kind: 'config', id: 'mob8_40k', nodes: 40_000, weights: { mobility: [0, 0, 8, 7, 4, 0] } },
-  kingHi40k: { kind: 'config', id: 'kingHi40k', nodes: 40_000, weights: { kingAttack: 14, kingShield: 18 } },
-  rookHi40k: { kind: 'config', id: 'rookHi40k', nodes: 40_000, weights: { rookOpenFile: 30 } },
-  pawnStruct40k: { kind: 'config', id: 'pawnStruct40k', nodes: 40_000, weights: { doubledPawn: 24, isolatedPawn: 18 } },
-  both40k: { kind: 'config', id: 'both40k', nodes: 40_000, features: { lmrLog: true, lmp: true } },
+  full40k: { kind: 'config', engine: 'base', id: 'full40k', nodes: 40_000 },
+  noNull40k: { kind: 'config', engine: 'base', id: 'noNull40k', nodes: 40_000, features: { nullMove: false } },
+  noLmr40k: { kind: 'config', engine: 'base', id: 'noLmr40k', nodes: 40_000, features: { lmr: false } },
+  noFut40k: { kind: 'config', engine: 'base', id: 'noFut40k', nodes: 40_000, features: { futility: false } },
+  noAsp40k: { kind: 'config', engine: 'base', id: 'noAsp40k', nodes: 40_000, features: { aspiration: false } },
+  noTT40k: { kind: 'config', engine: 'base', id: 'noTT40k', nodes: 40_000, features: { tt: false } },
+  noSee40k: { kind: 'config', engine: 'base', id: 'noSee40k', nodes: 40_000, features: { seePruning: false } },
+  noQ40k: { kind: 'config', engine: 'base', id: 'noQ40k', nodes: 40_000, features: { quiescence: false } },
+  full160k: { kind: 'config', engine: 'base', id: 'full160k', nodes: 160_000 },
+  lmrLog40k: { kind: 'config', engine: 'base', id: 'lmrLog40k', nodes: 40_000, features: { lmrLog: true } },
+  lmp40k: { kind: 'config', engine: 'base', id: 'lmp40k', nodes: 40_000, features: { lmp: true } },
+  matAlt40k: { kind: 'config', engine: 'base', id: 'matAlt40k', nodes: 40_000, weights: { material: [0, 100, 300, 500, 950, 0], materialEg: [0, 120, 290, 540, 1000, 0] } },
+  passedHi40k: { kind: 'config', engine: 'base', id: 'passedHi40k', nodes: 40_000, weights: { passedMg: [0, 0, 15, 40, 80, 0], passedEg: [0, 0, 40, 85, 160, 0] } },
+  mobHi40k: { kind: 'config', engine: 'base', id: 'mobHi40k', nodes: 40_000, weights: { mobility: [0, 0, 6, 5, 3, 0] } },
+  eval2_40k: { kind: 'config', engine: 'base', id: 'eval2_40k', nodes: 40_000, weights: { mobility: [0, 0, 4, 3, 2, 0] } },
+  mob8_40k: { kind: 'config', engine: 'base', id: 'mob8_40k', nodes: 40_000, weights: { mobility: [0, 0, 8, 7, 4, 0] } },
+  kingHi40k: { kind: 'config', engine: 'base', id: 'kingHi40k', nodes: 40_000, weights: { kingAttack: 14, kingShield: 18 } },
+  rookHi40k: { kind: 'config', engine: 'base', id: 'rookHi40k', nodes: 40_000, weights: { rookOpenFile: 30 } },
+  pawnStruct40k: { kind: 'config', engine: 'base', id: 'pawnStruct40k', nodes: 40_000, weights: { doubledPawn: 24, isolatedPawn: 18 } },
+  both40k: { kind: 'config', engine: 'base', id: 'both40k', nodes: 40_000, features: { lmrLog: true, lmp: true } },
   fairy1k: { kind: 'fairy', id: 'fairy-n1k', limit: 'nodes 1000' },
   fairy4k: { kind: 'fairy', id: 'fairy-n4k', limit: 'nodes 4000' },
   fairy16k: { kind: 'fairy', id: 'fairy-n16k', limit: 'nodes 16000' },
@@ -53,6 +58,22 @@ export const REGISTRY: Record<string, Spec> = {
   fairy256k: { kind: 'fairy', id: 'fairy-n256k', limit: 'nodes 256000' },
   fairy1s: { kind: 'fairy', id: 'fairy-1s', limit: 'movetime 1000' },
 };
+// M4: frozen M3 engine (crown-search-1 + crown-eval-3) as the fixed baseline, at equal nodes and equal time.
+REGISTRY.base40k = { kind: 'config', id: 'base40k', nodes: 40_000, engine: 'base' };
+REGISTRY.base160k = { kind: 'config', id: 'base160k', nodes: 160_000, engine: 'base' };
+REGISTRY.baseT100 = { kind: 'config', id: 'baseT100', nodes: 0, timeMs: 100, engine: 'base' };
+REGISTRY.cur40k = { kind: 'config', id: 'cur40k', nodes: 40_000 };
+// current search with the M3 evaluator (crown-eval-3)
+REGISTRY.e3cur40k = { kind: 'config', id: 'e3cur40k', nodes: 40_000, eval: 'eval3' };
+REGISTRY.cur160k = { kind: 'config', id: 'cur160k', nodes: 160_000 };
+REGISTRY.curT100 = { kind: 'config', id: 'curT100', nodes: 0, timeMs: 100 };
+REGISTRY.fairyT100 = { kind: 'fairy', id: 'fairy-100ms', limit: 'movetime 100' };
+/** A spec named on the command line: a registry key, or inline JSON (experiments). */
+export function resolveSpec(name: string): Spec {
+  if (REGISTRY[name]) return REGISTRY[name];
+  if (name.startsWith('{')) return JSON.parse(name) as Spec;
+  throw new Error(`unknown spec ${name}`);
+}
 for (let l = 1; l <= 8; l++) REGISTRY[`L${l}`] = { kind: 'level', level: l, timeCapMs: l === 8 ? 2000 : undefined };
 
 function pool(n: number) {
@@ -142,6 +163,15 @@ function env() {
   return { node: process.version, platform: `${os.platform()} ${os.release()}`, cpu: os.cpus()[0]?.model, cores: os.cpus().length, searchId: SEARCH_ID, evalId: EVAL_ID, date: new Date().toISOString() };
 }
 
+/** Optional FEATURES (JSON) / PARAMS (eval-4 parameter JSON file) for speed and tactics runs of the current engine. */
+function envSearchOptions(): { features?: Record<string, boolean>; weights?: EvalWeights } {
+  if (process.env.ENGINE === 'base') return {};
+  const o: { features?: Record<string, boolean>; weights?: EvalWeights } = { features: { ...PLAY_FEATURES }, weights: PLAY_WEIGHTS };
+  if (process.env.FEATURES) o.features = { ...PLAY_FEATURES, ...JSON.parse(process.env.FEATURES) };
+  if (process.env.PARAMS) o.weights = { version: 4, p: paramsFrom(JSON.parse(readFileSync(process.env.PARAMS, 'utf8')).params) };
+  return o;
+}
+
 async function speed() {
   const fens = [
     'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1',
@@ -154,8 +184,8 @@ async function speed() {
   for (const fen of fens) {
     const samples: { nps: number; depth: number; ms: number }[] = [];
     for (let rep = 0; rep < 5; rep++) {
-      const s = new Searcher(18);
-      const r = s.search(Position.fromFen(fen), { limits: { timeMs: 1000 } });
+      const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
+      const r = s.search(Position.fromFen(fen), { limits: { timeMs: 1000 }, ...(envSearchOptions() as object) });
       samples.push({ nps: r.nodes / (r.timeMs / 1000), depth: r.depth, ms: r.timeMs });
     }
     const nps = samples.map(x => x.nps).sort((a, b) => a - b);
@@ -163,7 +193,7 @@ async function speed() {
     out.push({ fen, npsMedian: Math.round(nps[2]), npsMin: Math.round(nps[0]), depthMedian: depths[2], depthRange: [depths[0], depths[4]] });
     console.log(fen, Math.round(nps[2]), 'nps median, depth', depths[2]);
   }
-  writeFileSync(new URL('speed.json', RESULTS), JSON.stringify({ env: env(), budget: '1000 ms per search, 5 repetitions, fresh TT', results: out }, null, 1));
+  writeFileSync(new URL(`speed${TAG}.json`, RESULTS), JSON.stringify({ env: env(), budget: '1000 ms per search, 5 repetitions, fresh TT', results: out }, null, 1));
 }
 
 async function tactics() {
@@ -174,16 +204,16 @@ async function tactics() {
   const res: Record<string, unknown> = {};
   for (const nodes of budgets) {
     let solved = 0;
-    const s = new Searcher(18);
+    const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
     for (const it of suite.items) {
       s.newGame();
-      const r = s.search(Position.fromFen(it.fen), { limits: { nodes } });
+      const r = s.search(Position.fromFen(it.fen), { limits: { nodes }, ...(envSearchOptions() as object) });
       if (it.best.includes(moveToCcn(r.bestMove))) solved++;
     }
     res[nodes] = { solved, total: suite.items.length, rate: +(solved / suite.items.length).toFixed(3) };
     console.log(`tactics @${nodes} nodes: ${solved}/${suite.items.length}`);
   }
-  writeFileSync(new URL('tactics.json', RESULTS), JSON.stringify({ env: env(), suite: 'tools/bench/tactics.json', results: res }, null, 1));
+  writeFileSync(new URL(`tactics${TAG}.json`, RESULTS), JSON.stringify({ env: env(), suite: 'tools/bench/tactics.json', results: res }, null, 1));
 }
 
 async function main() {
@@ -191,13 +221,14 @@ async function main() {
   if (cmd === 'speed') return speed();
   if (cmd === 'tactics') return tactics();
   const openings = await buildOpenings();
-  const threads = Math.max(1, os.cpus().length);
+  const threads = +(process.env.THREADS ?? Math.max(1, os.cpus().length));
   const p = pool(threads);
   try {
     if (cmd === 'match') {
       const [A, B, pairs] = args;
-      const r = await match(p, REGISTRY[A], REGISTRY[B], openings, +(pairs ?? 20));
-      writeFileSync(new URL(`match-${A}-vs-${B}.json`, RESULTS), JSON.stringify({ env: env(), ...r }, null, 1));
+      const SA = resolveSpec(A), SB = resolveSpec(B);
+      const r = await match(p, SA, SB, openings, +(pairs ?? 20));
+      writeFileSync(new URL(`match-${specId(SA)}-vs-${specId(SB)}${TAG}.json`, RESULTS), JSON.stringify({ env: env(), offset: +(process.env.OPENING_OFFSET ?? 0), ...r }, null, 1));
     } else if (cmd === 'suite') {
       const [name, pairsArg] = args;
       const pairs = +(pairsArg ?? 20);

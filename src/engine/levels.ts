@@ -11,13 +11,17 @@
  */
 import { Position } from '../rules/position';
 import { Move } from '../rules/types';
-import { Searcher, SearchResult, isMateScore } from './search';
+import { Searcher, SearchResult, isMateScore, PLAY_FEATURES, PLAY_SEARCH_ID } from './search';
+import { PLAY_WEIGHTS, PLAY_EVAL_ID } from './evaluate';
 import type { EvalWeights } from './evaluate';
-import { repertoireChoice } from './styles';
+import { repertoireChoice, styledWeights, usesRepertoire, usesStyleEval } from './styles';
 import type { StyleId } from '../federation/model';
 import { mulberry32 } from '../rules/tables';
 
-export const LEVELS_ID = 'crown-levels-2';
+/** crown-levels-3: the crown-levels-2 ladder played by the M4 play engine (PLAY_ENGINE_ID), recalibrated. */
+export const LEVELS_ID = 'crown-levels-3';
+/** Engine used for all play through chooseMove (levels, federation games, sparring). */
+export const PLAY_ENGINE_ID = `${PLAY_SEARCH_ID}+${PLAY_EVAL_ID}`;
 
 export interface StrengthProfile {
   level: number;
@@ -74,15 +78,22 @@ export interface ChooseResult {
  * Choose a move for a strength profile. `seed` makes the bounded sampling reproducible
  * (the game stores the seed and ply so the choice can be audited).
  */
-export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, clock?: ClockContext, evalWeights?: EvalWeights, style: StyleId = 'universal'): ChooseResult {
+export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, clock?: ClockContext, evalWeights: EvalWeights = PLAY_WEIGHTS, style: StyleId = 'universal', styleEvalOverride?: boolean): ChooseResult {
   const timeMs = allocateTime(profile, clock);
+  // full-game style (validated styles only): asymmetric evaluation + contempt
+  // (styleEvalOverride is for the validation harness only: it measures a style before it is validated)
+  const styled = (styleEvalOverride ?? usesStyleEval(style)) ? styledWeights(style, evalWeights) : null;
+  if (styled) evalWeights = styled.weights;
+  const contempt = styled?.contempt ?? 0;
   const search = searcher.search(pos, {
     limits: { depth: profile.depth, nodes: profile.nodes === Infinity ? undefined : profile.nodes, timeMs },
     stopOnSingleMove: true,
     weights: evalWeights,
+    features: PLAY_FEATURES,
+    contempt,
   });
   // styled opening repertoire (src/engine/styles.ts): only book moves within 30 cp of the best at depth 7
-  if (style !== 'universal') {
+  if (usesRepertoire(style)) {
     const book = repertoireChoice(style, pos, seed);
     if (book !== null) return { move: book, search, selected: book === search.bestMove ? 'best' : 'repertoire' };
   }
@@ -90,7 +101,7 @@ export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthP
   const legal = pos.legalMoves();
   if (legal.length < 2) return { move: search.bestMove, search, selected: 'best' };
   const depth = Math.max(1, Math.min(profile.depth, search.depth || 1));
-  const scored = searcher.scoreRootMoves(pos, legal, depth, { nodeLimitPerMove: Math.max(200, Math.floor(profile.nodes / legal.length)), weights: evalWeights })
+  const scored = searcher.scoreRootMoves(pos, legal, depth, { nodeLimitPerMove: Math.max(200, Math.floor(profile.nodes / legal.length)), weights: evalWeights, features: PLAY_FEATURES, contempt })
     .filter(s => Number.isFinite(s.score));
   if (!scored.length) return { move: search.bestMove, search, selected: 'best' };
   const bestScore = Math.max(...scored.map(s => s.score));
