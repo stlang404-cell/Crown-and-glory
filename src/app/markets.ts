@@ -56,7 +56,9 @@ export function npcBatch(ops: MarketOps, m: Market, role: 'pre' | 'live' | 'roun
 function openFamily(ops: MarketOps, spec: { id: string; kind: MarketKind; title: string; outcomes: string[]; claims?: Market['claims']; model: number[]; closeRound: number; ref: Record<string, string | number> }): Market | null {
   const st = ops.st;
   if (st.markets.has(spec.id)) return null;
-  if (st.world.round >= spec.closeRound) return null; // never list a market whose trading window has already passed
+  // never list a market whose trading window has passed (closure fires when the closing round's first game starts,
+  // so listing during the closing round itself — before any of its games — is still a valid window)
+  if (st.world.round > spec.closeRound) return null;
   const b = FAMILY_B[spec.kind];
   if ((st.balances.get('treasury') ?? 0) < subsidyMicro(b, spec.outcomes.length) + 5_000_000_000) return null; // keep a 5,000 ₵ floor for match markets
   const { market, journal } = openGenericMarket({

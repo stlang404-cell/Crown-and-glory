@@ -108,7 +108,9 @@ if (OLD_DIST) {
   await page.evaluate(async () => { const f = window.__crown.fed; const m = f.featuredFixtures().map(x => f.marketFor(x.id)).find(x => x && x.status === 'open'); await f.trade(m.id, 0, 7, 'buy'); await f.buyAsset('brass-clock'); });
   v3 = await page.evaluate(async () => {
     const f = window.__crown.fed, s = f.state;
-    return { seed: s.world.seed, round: s.world.round, cash: f.balance('player:cash'), journals: s.journalIds.size, markets: s.markets.size, positions: s.positions.size, assets: [...s.assets.keys()].sort().join(','), balances: [...s.balances].map(([a, v]) => `${a}=${v}`).sort().join(';') };
+    const journals = await window.__crown.db.loadAll('journal');
+    return { seed: s.world.seed, round: s.world.round, cash: f.balance('player:cash'), journals: s.journalIds.size, markets: s.markets.size, positions: s.positions.size, assets: [...s.assets.keys()].sort().join(','), balances: [...s.balances].map(([a, v]) => `${a}=${v}`).sort().join(';'),
+      journalDump: JSON.stringify(journals.sort((a, b) => a.id.localeCompare(b.id))), marketDump: JSON.stringify([...s.markets.values()].sort((a, b) => a.id.localeCompare(b.id))), positionDump: JSON.stringify([...s.positions.values()].sort((a, b) => a.id.localeCompare(b.id))) };
   });
   step('v0.3.0 save: ' + JSON.stringify({ ...v3, balances: `${v3.balances.length} chars` }));
   await page.screenshot({ path: OUT + '00-v030-save.png' });
@@ -120,13 +122,19 @@ await serve('dist');
 let { ctx, page } = await open();
 step('v0.4.0 build served on the same origin');
 if (v3) {
-  const now = await page.evaluate(async () => {
+  const now = await page.evaluate(async (old) => {
     const f = window.__crown.fed, s = f.state;
-    return { seed: s.world.seed, round: s.world.round, cash: f.balance('player:cash'), journals: s.journalIds.size, markets: s.markets.size, positions: s.positions.size, assets: [...s.assets.keys()].sort().join(','), balances: [...s.balances].map(([a, v]) => `${a}=${v}`).sort().join(';'),
+    const oldJ = JSON.parse(old.journalDump), oldM = JSON.parse(old.marketDump), oldP = JSON.parse(old.positionDump);
+    const journals = new Map((await window.__crown.db.loadAll('journal')).map(j => [j.id, JSON.stringify(j)]));
+    const keptJ = oldJ.every(j => journals.get(j.id) === JSON.stringify(j));
+    const keptM = oldM.every(m => JSON.stringify(s.markets.get(m.id)) === JSON.stringify(m));
+    const keptP = oldP.every(p => JSON.stringify(s.positions.get(p.id)) === JSON.stringify(p));
+    const added = [...s.markets.values()].filter(m => !oldM.some(o => o.id === m.id)).map(m => m.kind);
+    return { seed: s.world.seed, round: s.world.round, cash: f.balance('player:cash'), assets: [...s.assets.keys()].sort().join(','), keptJ, keptM, keptP, added, total: [...s.balances.values()].reduce((a, b) => a + b, 0),
       stores: [...window.__crown.db.db.objectStoreNames].join(','), version: window.__crown.db.db.version };
-  });
-  check(1, now.seed === v3.seed && now.cash === v3.cash && now.journals === v3.journals && now.markets === v3.markets && now.positions === v3.positions && now.assets === v3.assets && now.balances === v3.balances && now.version === 4 && now.stores.includes('liveGames'),
-    `M3 (v0.3.0) save migrated to DB v${now.version}: federation, ledger (${now.journals} journals), markets, positions and assets identical`);
+  }, v3);
+  check(1, now.seed === v3.seed && now.round === v3.round && now.cash === v3.cash && now.assets === v3.assets && now.keptJ && now.keptM && now.keptP && now.total === 0 && now.version === 4 && now.stores.includes('liveGames'),
+    `M3 (v0.3.0) save migrated to DB v${now.version}: all ${v3.journals} journals, ${v3.markets} markets, ${v3.positions} positions, assets and cash preserved byte-for-byte; ${now.added.length} season-family markets newly listed (${now.added.join(', ')}); ledger conserved`);
 }
 
 await page.goto(URL_ + '#/settings');
@@ -332,7 +340,9 @@ for (let guard = 0; guard < 25; guard++) {
 // season end checks
 const promo = await market(page, `mk:promo:${S}`), pp = await myPos(page, `mk:promo:${S}`);
 const br = await market(page, `mk:bracket:${S}`);
-check(19, promo.status === 'settled' && pp.received === (promo.result === 0 ? 6e6 : 0) && (!bracketBought || br.status === 'settled'), `Promotion market settled (${promo.result === 0 ? 'Yes' : 'No'}; paid ${(pp.received / 1e6).toFixed(2)} ₵)${bracketBought ? `; conditional final-four market settled on path vector ${JSON.stringify(br.payout)}` : ''}`);
+const bp = await myPos(page, `mk:bracket:${S}`);
+const brPay = bp ? bp.shares.reduce((a, x, i) => a, 0) : 0; void brPay;
+check(19, promo.status === 'settled' && pp.received === (promo.result === 0 ? 6e6 : 0) && bracketBought && br.status === 'settled' && bp.shares[8] === 4, `Promotion market settled (${promo.result === 0 ? 'Yes' : 'No'}; paid ${(pp.received / 1e6).toFixed(2)} ₵)${bracketBought ? `; conditional final-four market settled on path vector ${JSON.stringify(br.payout)}` : ''}`);
 await page.goto(URL_ + '#/finance');
 await page.waitForSelector('[data-testid="networth"]');
 const fin = await fed(page);
