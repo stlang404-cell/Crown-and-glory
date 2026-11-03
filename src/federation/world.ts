@@ -15,14 +15,15 @@ import { sampleResult } from './resultModel';
 export const WORLD_ID = 'crown-world-1';
 
 export interface Circuit { region: number; division: number; members: string[] }
-export interface SwissState { entrants: string[]; seeds: Record<string, number>; byes: Record<string, number>; rounds: { round: number; pairs: [string, string][]; bye: string | null; repeats: number }[] }
+export interface SwissState { event: 'open' | 'challenger'; name: string; entrants: string[]; seeds: Record<string, number>; byes: Record<string, number>; rounds: { round: number; pairs: [string, string][]; bye: string | null; repeats: number }[] }
 export interface KoState { name: string; qualifiers: string[]; seeds: Record<string, number>; stages: { round: number; label: string; matches: KoMatch[] }[]; champions: string[] }
 
 export interface SeasonPlan {
   id: string; // `season:${n}`
   season: number;
   circuits: Circuit[];
-  swiss: SwissState;
+  /** Federation Open (divisions 2–4, top 8 qualify for the Championship) and Challenger Open (divisions 5–8, player may register). */
+  swiss: SwissState[];
   champ: KoState | null;
   club: KoState | null;
   status: 'active' | 'complete';
@@ -57,7 +58,7 @@ export interface Ctx {
   competitors: Map<string, Competitor>;
   player: { rating: number; rd: number; name: string };
   /** Swiss games of the current season (for pairings and standings). */
-  swissHistory?: { white: string; black: string; result: number | null }[];
+  swissHistory?: { event: string; white: string; black: string; result: number | null }[];
 }
 
 const isPlayer = (id: string) => id === PLAYER_ID;
@@ -80,10 +81,11 @@ export function makePlan(seed: number, season: number, competitors: Competitor[]
     if (player?.joined && player.region === region && player.division === division) members.push(PLAYER_ID);
     circuits.push({ region, division, members });
   }
-  // Federation Open (Swiss): the 32 highest-rated active competitors outside the Crown Division (seeded by rating)
-  const pool = active.filter(c => c.division > 1).sort((a, b) => b.rating - a.rating || a.id.localeCompare(b.id)).slice(0, 32).map(c => c.id);
+  // Swiss events: the 32 highest-rated active competitors of divisions 2–4 (Federation Open) and of 5–8 (Challenger Open)
+  const field = (lo: number, hi: number) => active.filter(c => c.division >= lo && c.division <= hi).sort((a, b) => b.rating - a.rating || a.id.localeCompare(b.id)).slice(0, 32).map(c => c.id);
+  const sw = (event: 'open' | 'challenger', name: string, ids: string[]): SwissState => ({ event, name, entrants: ids, seeds: Object.fromEntries(ids.map((id, i) => [id, i + 1])), byes: {}, rounds: [] });
   void seed;
-  return { id: `season:${season}`, season, circuits, swiss: { entrants: pool, seeds: Object.fromEntries(pool.map((id, i) => [id, i + 1])), byes: {}, rounds: [] }, champ: null, club: null, status: 'active' };
+  return { id: `season:${season}`, season, circuits, swiss: [sw('open', 'Federation Open', field(2, 4)), sw('challenger', 'Challenger Open', field(5, 8))], champ: null, club: null, status: 'active' };
 }
 
 /** Player joins: takes the slot of the lowest-rated competitor of the chosen bottom-division circuit (who becomes a reserve). */
@@ -98,6 +100,22 @@ export function joinPlayer(ctx: Ctx, region: number): { displaced: string } {
   c.status = 'reserve';
   world.player = { ...world.player, joined: true, region, division: DIVISIONS, displaced };
   return { displaced };
+}
+
+/** Register the player for the Challenger Open (before its first round); replaces the lowest seed. */
+export function registerChallenger(ctx: Ctx): { replaced: string } {
+  const sw = ctx.plan.swiss.find(x => x.event === 'challenger')!;
+  if (!ctx.world.player.joined) throw new Error('Join the federation first');
+  if (ctx.world.round > SWISS_ROUNDS[0] - 1 && ctx.world.round !== SWISS_ROUNDS[0]) throw new Error('Registration is closed');
+  if (sw.rounds.length) throw new Error('Registration is closed');
+  if (sw.entrants.includes(PLAYER_ID)) throw new Error('Already registered');
+  const replaced = sw.entrants[sw.entrants.length - 1];
+  sw.entrants = [...sw.entrants.slice(0, -1), PLAYER_ID];
+  // seed the player by rating
+  const order = [...sw.entrants].sort((a, b) => ratingOf(ctx, b) - ratingOf(ctx, a) || a.localeCompare(b));
+  sw.seeds = Object.fromEntries(order.map((id, i) => [id, i + 1]));
+  ctx.world.player.swissRegistered = true;
+  return { replaced };
 }
 
 /** Pairings for a round (no results). */
@@ -120,17 +138,17 @@ export function openRound(ctx: Ctx): RoundRecord {
     }
   }
   if (SWISS_ROUNDS.includes(round)) {
-    const sw = plan.swiss;
-    const entrants = sw.entrants;
-    const prevGames = swissGames(ctx, sw);
-    const rows = standings(entrants, prevGames, new Map(Object.entries(sw.seeds)), new Map(Object.entries(sw.byes)));
-    const met = new Set(prevGames.map(g => (g.white < g.black ? `${g.white}|${g.black}` : `${g.black}|${g.white}`)));
-    const whites = new Map<string, number>();
-    for (const g of prevGames) whites.set(g.white, (whites.get(g.white) ?? 0) + 1);
-    const p = swissPairing(rows.map(r => ({ id: r.id, points: r.points, seed: r.seed, whites: whites.get(r.id) ?? 0, hadBye: !!sw.byes[r.id] })), met);
-    sw.rounds.push({ round, pairs: p.pairs, bye: p.bye, repeats: p.repeats });
-    if (p.bye) sw.byes[p.bye] = (sw.byes[p.bye] ?? 0) + 1;
-    p.pairs.forEach(([w, b], i) => add('swiss', w, b, i));
+    for (const sw of plan.swiss) {
+      const prevGames = (ctx.swissHistory ?? []).filter(g => g.event === sw.event);
+      const rows = standings(sw.entrants, prevGames, new Map(Object.entries(sw.seeds)), new Map(Object.entries(sw.byes)));
+      const met = new Set(prevGames.map(g => (g.white < g.black ? `${g.white}|${g.black}` : `${g.black}|${g.white}`)));
+      const whites = new Map<string, number>();
+      for (const g of prevGames) whites.set(g.white, (whites.get(g.white) ?? 0) + 1);
+      const p = swissPairing(rows.map(r => ({ id: r.id, points: r.points, seed: r.seed, whites: whites.get(r.id) ?? 0, hadBye: !!sw.byes[r.id] })), met);
+      sw.rounds.push({ round, pairs: p.pairs, bye: p.bye, repeats: p.repeats });
+      if (p.bye) sw.byes[p.bye] = (sw.byes[p.bye] ?? 0) + 1;
+      p.pairs.forEach(([w, b], i) => add(sw.event, w, b, i));
+    }
   }
   const rec: RoundRecord = { id: `${season}:${round}`, season, round, status: 'open', fixtures, abstract, processedAt: null };
   koFill(ctx, rec);
@@ -189,10 +207,6 @@ export function settleRound(ctx: Ctx, rec: RoundRecord): { waiting: Fixture[] } 
   return { waiting: rec.fixtures.filter(f => f.result === null) };
 }
 
-export function swissGames(ctx: Ctx, sw: SwissState): { white: string; black: string; result: number | null }[] {
-  void sw;
-  return ctx.swissHistory ?? [];
-}
 
 /** Draw tier-3 results from hidden strengths (seeded per fixture). */
 export function resolveAbstract(ctx: Ctx, rec: RoundRecord): void {
@@ -246,7 +260,7 @@ export function applyRound(ctx: Ctx, rec: RoundRecord, allSeasonGames: { event: 
     if (c.milestones.length > 30) c.milestones.splice(0, c.milestones.length - 30);
   }
   // swiss history for pairings
-  ctx.swissHistory = [...(ctx.swissHistory ?? []), ...games.filter(g => g.event === 'swiss')];
+  ctx.swissHistory = [...(ctx.swissHistory ?? []), ...games.filter(g => g.event === 'open' || g.event === 'challenger')];
   const seasonComplete = rec.round === ROUNDS_PER_SEASON;
   void allSeasonGames;
   return { events, seasonComplete };
@@ -261,14 +275,14 @@ export function leagueTable(circuit: Circuit, games: { event: string; white: str
 }
 
 export function swissTable(sw: SwissState, games: { event: string; white: string; black: string; result: number | null }[]): StandingRow[] {
-  return swissOrder(standings(sw.entrants, games.filter(g => g.event === 'swiss'), new Map(Object.entries(sw.seeds)), new Map(Object.entries(sw.byes))));
+  return swissOrder(standings(sw.entrants, games.filter(g => g.event === sw.event), new Map(Object.entries(sw.seeds)), new Map(Object.entries(sw.byes))));
 }
 
 /** After the league and Swiss finish (end of round 15): build the 16-player championship. */
 export function buildChampionship(ctx: Ctx, games: { event: string; white: string; black: string; result: number | null }[]): KoState {
   const winners = ctx.plan.circuits.filter(c => c.division === 1).map(c => leagueTable(c, games)[0])
     .sort((a, b) => b.points - a.points || (ratingOf(ctx, b.id) - ratingOf(ctx, a.id)) || a.id.localeCompare(b.id)).slice(0, 8).map(r => r.id);
-  const swiss = swissTable(ctx.plan.swiss, games).map(r => r.id).filter(id => !winners.includes(id)).slice(0, 8);
+  const swiss = swissTable(ctx.plan.swiss.find(x => x.event === 'open')!, games).map(r => r.id).filter(id => !winners.includes(id)).slice(0, 8);
   const qualifiers = [...winners, ...swiss];
   const seeds = Object.fromEntries([...qualifiers].sort((a, b) => ratingOf(ctx, b) - ratingOf(ctx, a) || a.localeCompare(b)).map((id, i) => [id, i + 1]));
   const bySeed = [...qualifiers].sort((a, b) => seeds[a] - seeds[b]);
@@ -335,12 +349,14 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     const title = `${['Crown', 'Grand', 'Premier', 'Masters', 'Senior', 'District', 'Club', 'Open'][c.division - 1]} Division champion (${c.region + 1}) S${season}`;
     res.titles.push({ id: champ, title });
   }
-  const sw = swissTable(plan.swiss, games);
-  if (sw[0]) res.titles.push({ id: sw[0].id, title: `Federation Open winner S${season}` });
+  for (const ev of plan.swiss) {
+    const t = swissTable(ev, games);
+    if (t[0]) res.titles.push({ id: t[0].id, title: `${ev.name} winner S${season}` });
+  }
   if (plan.champ?.champions.length) for (const id of plan.champ.champions) res.titles.push({ id, title: plan.champ.champions.length > 1 ? `Joint Crown Champion S${season}` : `Crown Champion S${season}` });
   for (const t of res.titles) {
     if (isPlayer(t.id)) world.player.titles.push({ season, title: t.title });
-    else { const c = competitors.get(t.id)!; c.titles.push({ season, title: t.title }); c.reputation = Math.min(100, c.reputation + (t.title.startsWith('Crown') || t.title.startsWith('Joint') ? 25 : t.title.startsWith('Federation') ? 10 : 4)); }
+    else { const c = competitors.get(t.id)!; c.titles.push({ season, title: t.title }); c.reputation = Math.min(100, c.reputation + (t.title.startsWith('Crown Champion') || t.title.startsWith('Joint') ? 25 : t.title.startsWith('Federation') ? 10 : 4)); }
   }
   // promotion / relegation (simultaneous exchange between adjacent divisions within a region)
   const moves: { id: string; region: number; from: number; to: number }[] = [];
