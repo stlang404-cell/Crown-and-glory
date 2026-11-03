@@ -37,17 +37,20 @@ export const defaultIdentity = (region: number): ClubIdentity => ({ name: `${REG
 // ---------------------------------------------------------------- AI clubs
 const NOUNS = ['Rooks', 'Knights', 'Gambit', 'Citadel', 'Lantern', 'Bastion', 'Compass', 'Harbour', 'Spire', 'Meridian', 'Vanguard', 'Archive', 'Forge', 'Crescent', 'Beacon', 'Sentinel'];
 const KIND = ['Chess Club', 'Chess Society', 'Circle', 'Academy'];
-const MOTTOS = ['Patience conquers', 'Every square counts', 'Calm in the storm', 'We move together', 'Strength in study', 'First to the centre', 'Never resign', 'Quiet moves, loud results', 'The long game', 'Courage at the board', 'Precision before speed', 'Hold the line'];
+const MOTTOS = ['Patience conquers', 'Every square counts', 'Calm in the storm', 'We move together', 'Strength in study', 'First to the centre', 'Never resign', 'Quiet moves, loud results', 'The long game', 'Courage at the board', 'Precision before speed', 'Hold the line',
+  'Think twice, move once', 'From pawn to crown', 'The file is ours', 'Steady hands, bright minds', 'No square undefended', 'Seek the initiative', 'Honour in every game', 'We study, we strike', 'Win the endgame', 'Light the long diagonal', 'Learn from every loss', 'Tempo is treasure',
+  'Ever forward', 'The quiet move wins', 'Watch the king', 'Craft over chance', 'Together on six squares', 'Bold but sound', 'Patience is a weapon', 'Our word is our move'];
 function h32(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 export interface AiClub { id: string; region: number; identity: ClubIdentity; founded: number }
+/** 32 clubs with arms unique by construction: every club gets its own symbol/shape pair and colour pair. */
 export const AI_CLUBS: AiClub[] = Array.from({ length: 32 }, (_, i) => {
   const region = Math.floor(i / 2), h = h32(`club-${i}`);
-  const primary = CLUB_COLOURS[h % 10];
-  let secondary = CLUB_COLOURS[(h >>> 5) % 12];
+  const primary = CLUB_COLOURS[(i * 5) % 10];
+  let secondary = CLUB_COLOURS[(i * 7 + 3) % 12];
   if (secondary === primary) secondary = primary === 'or' ? 'sable' : 'or';
   return {
     id: `aic${String(i).padStart(2, '0')}`, region, founded: 1 + (h % 3),
-    identity: { name: `${REGION_NAMES[region]} ${NOUNS[(i * 7 + (h >>> 9)) % 16]} ${KIND[(h >>> 13) % 4]}`, primary, secondary, shape: CLUB_SHAPES[(h >>> 17) % 6], symbol: CLUB_SYMBOLS[(h >>> 21) % 16], motto: MOTTOS[(h >>> 25) % 12], division: (['fess', 'pale', 'bend', 'chevron', 'chief', 'quarterly'] as const)[(h >>> 3) % 6] },
+    identity: { name: `${REGION_NAMES[region]} ${NOUNS[(i * 7 + (h >>> 9)) % 16]} ${KIND[(h >>> 13) % 4]}`, primary, secondary, shape: CLUB_SHAPES[Math.floor(i / 16) * 3 + (i % 3)], symbol: CLUB_SYMBOLS[i % 16], motto: MOTTOS[i], division: (['fess', 'pale', 'bend', 'chevron', 'chief', 'quarterly'] as const)[(i * 5) % 6] },
   };
 });
 /** A competitor's club: one of the two clubs of their region, fixed by their id. */

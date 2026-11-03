@@ -100,6 +100,8 @@ describe('clubs and featured rivals', () => {
   it('32 AI clubs with unique names; affiliation is stable; identity validation', () => {
     expect(AI_CLUBS).toHaveLength(32);
     expect(new Set(AI_CLUBS.map(c => c.identity.name)).size).toBe(32);
+    expect(new Set(AI_CLUBS.map(c => `${c.identity.shape}|${c.identity.symbol}|${c.identity.primary}|${c.identity.secondary}`)).size).toBe(32);
+    expect(new Set(AI_CLUBS.map(c => c.identity.motto)).size).toBe(32);
     for (const c of AI_CLUBS) expect(validateIdentity(c.identity)).toBeNull();
     expect(clubOf('c0007', 3)).toBe(clubOf('c0007', 3));
     expect(clubOf('c0007', 3).region).toBe(3);

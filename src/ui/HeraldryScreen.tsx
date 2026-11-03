@@ -8,7 +8,7 @@ import type { EmblemSpec } from '../heraldry/spec';
 
 function Row({ items }: { items: { spec: EmblemSpec; label: string; sub?: string }[] }) {
   return (
-    <div className="emblem-row">
+    <div className="emblem-row" style={{ alignItems: 'flex-start' }}>
       {items.map(x => (
         <div key={x.label} className="emblem-cell" data-testid="emblem-cell">
           <Emblem spec={x.spec} size="md" title={x.label} />
