@@ -76,6 +76,9 @@ export interface GameRecord {
   adjudicationPolicy: string;
   notationVersion: string;
   initialFen: string;
+  /** Moves applied from initialFen before this game's own moves (training retries keep the original
+   *  history so repetition state is exact). Never shown or analysed as part of this game. */
+  setupMoves?: string[];
   mode: GameMode;
   status: GameStatus;
   timeControl: TimeControl;

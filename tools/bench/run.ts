@@ -18,7 +18,7 @@ import { Spec, specId } from './specs';
 import { buildOpenings } from './openings';
 import { GameRecord, pairBootstrap, scoreFor, eloFromScore } from './match';
 import { Position } from '../../src/rules/position';
-import { moveToCcn, parseLegalCcn } from '../../src/rules/notation';
+import { moveToCcn } from '../../src/rules/notation';
 import { Searcher, SEARCH_ID } from '../../src/engine/search';
 import { EVAL_ID } from '../../src/engine/evaluate';
 

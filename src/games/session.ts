@@ -19,6 +19,7 @@ export interface NewGameOptions {
   human: ParticipantSnapshot;
   engine: ParticipantSnapshot;
   initialFen?: string;
+  clocks?: { whiteMs: number; blackMs: number };
   /** Moves already played from initialFen (training retries keep the original history for repetition). */
   prefixMoves?: string[];
   context?: GameRecord['context'];
@@ -39,6 +40,7 @@ export function createGameRecord(o: NewGameOptions): GameRecord {
     adjudicationPolicy: ADJUDICATION_POLICY,
     notationVersion: NOTATION_VERSION,
     initialFen: o.initialFen ?? START_FEN,
+    setupMoves: o.prefixMoves ?? [],
     mode: rated ? 'rated' : o.mode === 'rated' ? 'casual' : o.mode,
     status: 'active',
     timeControl: o.timeControl,
@@ -54,7 +56,7 @@ export function createGameRecord(o: NewGameOptions): GameRecord {
     pauses: [],
     result: null,
     termination: null,
-    clocks: timed ? { whiteMs: o.timeControl.initialMs, blackMs: o.timeControl.initialMs } : null,
+    clocks: timed ? (o.clocks ?? { whiteMs: o.timeControl.initialMs, blackMs: o.timeControl.initialMs }) : null,
     context: o.context ?? { kind: 'quick-match' },
     opening: null,
     finalizationKey: null,
@@ -79,6 +81,11 @@ export class GameSession {
   constructor(record: GameRecord) {
     this.record = record;
     this.pos = Position.fromFen(record.initialFen);
+    for (const s of record.setupMoves ?? []) {
+      const mv = parseLegalCcn(this.pos, s);
+      if (mv < 0) throw new Error(`Corrupt game ${record.id}: illegal setup move ${s}`);
+      this.pos.makeMove(mv);
+    }
     for (const m of record.moves) {
       const mv = parseLegalCcn(this.pos, m.ccn);
       if (mv < 0) throw new Error(`Corrupt game ${record.id}: illegal move ${m.ccn} at ply ${m.ply}`);
@@ -196,7 +203,7 @@ export class GameSession {
       ...(engine ? { engine } : {}),
     };
     this.record.moves.push(rec);
-    if (this.record.moves.length === 4 || (!this.record.opening && this.record.moves.length >= 2)) {
+    if (!this.record.setupMoves?.length && (this.record.moves.length === 4 || (!this.record.opening && this.record.moves.length >= 2))) {
       this.record.opening = classifyOpening(this.record.initialFen, this.record.moves.map(x => x.ccn));
     }
     const auto = automaticOutcome(this.pos);

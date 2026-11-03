@@ -1,0 +1,173 @@
+/**
+ * Application command layer: the UI calls these commands; they validate, run one transactional
+ * domain operation and notify subscribers. React never mutates history or ratings directly.
+ */
+import { CrownDB, AnalysisJob } from '../storage/db';
+import { gameChecksum } from '../storage/checksum';
+import { EngineChannel } from '../engine/client';
+import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor } from '../analysis/analyzer';
+import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/types';
+import type { GameRecord } from '../games/types';
+import type { RatingEvent } from '../ratings/ledger';
+
+export const APP_VERSION = '0.1.0';
+
+type Listener = () => void;
+
+export interface AnalysisProgress {
+  jobId: string;
+  gameId: string;
+  done: number;
+  total: number;
+  status: AnalysisJob['status'];
+  partial: PlyAnalysis[];
+}
+
+export class AppServices {
+  readonly play = new EngineChannel(undefined, 'play');
+  readonly analysis = new EngineChannel(undefined, 'analysis');
+  private listeners = new Set<Listener>();
+  progress: AnalysisProgress | null = null;
+  matchActive = false;
+  writerLease: 'held' | 'unavailable' | 'unsupported' = 'unsupported';
+  private processing = false;
+  revision = 0;
+
+  constructor(readonly db: CrownDB) {}
+
+  static async boot(): Promise<AppServices> {
+    const db = await CrownDB.open();
+    const s = new AppServices(db);
+    await s.acquireLease();
+    // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
+    for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
+    return s;
+  }
+
+  /** Single-writer lease across tabs (Web Locks). A second tab is read-only. */
+  private acquireLease(): Promise<void> {
+    const locks = (navigator as Navigator & { locks?: LockManager }).locks;
+    if (!locks) { this.writerLease = 'unsupported'; return Promise.resolve(); }
+    return new Promise(resolve => {
+      locks.request('crown-writer', { ifAvailable: true }, lock => {
+        if (!lock) { this.writerLease = 'unavailable'; resolve(); return; }
+        this.writerLease = 'held';
+        resolve();
+        return new Promise<void>(() => {}); // hold for the lifetime of the tab
+      });
+    });
+  }
+
+  get readOnly(): boolean { return this.writerLease === 'unavailable'; }
+
+  subscribe(l: Listener): () => void { this.listeners.add(l); return () => this.listeners.delete(l); }
+  notify(): void { this.revision++; for (const l of this.listeners) l(); }
+
+  async saveGame(g: GameRecord): Promise<void> {
+    if (this.readOnly) return;
+    await this.db.saveGame(g);
+  }
+
+  /** Atomic finalization (game + rating event + analysis intent), then start analysis. */
+  async finalize(g: GameRecord): Promise<{ game: GameRecord; event: RatingEvent | null }> {
+    if (this.readOnly) throw new Error('This tab is read-only: Crown & Calculation is open in another tab.');
+    const checksum = await gameChecksum(g);
+    const human = g.humanColor;
+    const score = g.result === '1/2-1/2' ? 0.5 : g.result === '1-0' ? (human === 'white' ? 1 : 0) : g.result === '0-1' ? (human === 'black' ? 1 : 0) : null;
+    const r = await this.db.finalizeGame(g, { checksum, nowIso: new Date().toISOString(), analysisSettingsId: DEFAULT_ANALYSIS.id, humanScore: score });
+    this.notify();
+    void this.processQueue();
+    return r;
+  }
+
+  async requestAnalysis(gameId: string, settings: AnalysisSettings): Promise<void> {
+    const id = `job:${gameId}:${settings.id}`;
+    const existing = await this.db.getJob(id);
+    if (existing && (existing.status === 'complete' || existing.status === 'running' || existing.status === 'queued')) return;
+    const g = await this.db.getGame(gameId);
+    if (!g) return;
+    const now = new Date().toISOString();
+    await this.db.putJob({ id, gameId, settingsId: settings.id, status: 'queued', createdAt: now, updatedAt: now, progress: 0, total: g.moves.length, generation: (existing?.generation ?? 0) + 1 });
+    this.notify();
+    void this.processQueue();
+  }
+
+  async cancelAnalysis(): Promise<void> {
+    const p = this.progress;
+    this.analysis.cancel();
+    if (p) {
+      const j = await this.db.getJob(p.jobId);
+      if (j) await this.db.putJob({ ...j, status: 'cancelled', progress: p.done, updatedAt: new Date().toISOString() });
+    }
+    this.progress = null;
+    this.notify();
+  }
+
+  setMatchActive(active: boolean): void {
+    this.matchActive = active;
+    if (active && this.progress) {
+      // Foreground play has priority: pause (cancel and re-queue) background analysis.
+      const p = this.progress;
+      this.analysis.cancel();
+      this.progress = null;
+      void this.db.getJob(p.jobId).then(j => j && this.db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() })).then(() => this.notify());
+    }
+    if (!active) void this.processQueue();
+  }
+
+  async processQueue(): Promise<void> {
+    if (this.processing || this.readOnly) return;
+    this.processing = true;
+    try {
+      for (;;) {
+        if (this.matchActive) return;
+        const jobs = (await this.db.allJobs()).filter(j => j.status === 'queued').sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const job = jobs[0];
+        if (!job) return;
+        const game = await this.db.getGame(job.gameId);
+        const settings = ANALYSIS_PRESETS.find(s => s.id === job.settingsId);
+        if (!game || !settings || !game.checksum) {
+          await this.db.putJob({ ...job, status: 'failed', error: 'Game or settings unavailable', updatedAt: new Date().toISOString() });
+          continue;
+        }
+        const running: AnalysisJob = { ...job, status: 'running', updatedAt: new Date().toISOString(), total: game.moves.length };
+        await this.db.putJob(running);
+        this.progress = { jobId: job.id, gameId: game.id, done: 0, total: game.moves.length, status: 'running', partial: [] };
+        this.notify();
+        try {
+          const report = await this.analysis.analyze(
+            { gameId: game.id, checksum: game.checksum, initialFen: game.initialFen, setupMoves: game.setupMoves, moves: game.moves.map(m => m.ccn), settings },
+            (ply, i, n) => {
+              if (this.progress?.jobId !== job.id) return;
+              this.progress = { ...this.progress, done: i + 1, total: n, partial: [...this.progress.partial, ply] };
+              this.notify();
+            },
+          );
+          const human = game.humanColor;
+          report.recommendations = recommendationsFor(report, human);
+          await this.db.addReport(report, { ...running, status: report.status === 'complete' ? 'complete' : 'partial', progress: report.plies.length, reportId: report.id, updatedAt: new Date().toISOString() });
+        } catch (e) {
+          if ((e as Error).message === 'cancelled') return; // state already written by the canceller
+          await this.db.putJob({ ...running, status: 'failed', error: (e as Error).message, updatedAt: new Date().toISOString() });
+        } finally {
+          if (this.progress?.jobId === job.id) this.progress = null;
+          this.notify();
+        }
+      }
+    } finally {
+      this.processing = false;
+    }
+  }
+
+  async reportsFor(gameId: string): Promise<AnalysisReport[]> { return this.db.reportsForGame(gameId); }
+}
+
+export async function requestPersistentStorage(): Promise<{ persisted: boolean | null; usage: number | null; quota: number | null }> {
+  const st = navigator.storage;
+  if (!st) return { persisted: null, usage: null, quota: null };
+  let persisted: boolean | null = null;
+  try { persisted = (await st.persisted?.()) ?? null; if (!persisted && st.persist) persisted = await st.persist(); } catch { persisted = null; }
+  let usage: number | null = null, quota: number | null = null;
+  try { const e = await st.estimate(); usage = e.usage ?? null; quota = e.quota ?? null; } catch { /* unsupported */ }
+  return { persisted, usage, quota };
+}

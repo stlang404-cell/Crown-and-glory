@@ -21,7 +21,7 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
     if (req.type === 'ping') { post({ type: 'pong', ...base, engine: ENGINE_BUILD }); return; }
     if (req.type === 'move') {
       const pos = Position.fromFen(req.initialFen);
-      for (const s of req.moves) {
+      for (const s of [...(req.setupMoves ?? []), ...req.moves]) {
         const m = parseLegalCcn(pos, s);
         if (m < 0) throw new Error(`Illegal history move ${s}`);
         pos.makeMove(m);
@@ -39,7 +39,7 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
     }
     if (req.type === 'analyze') {
       const report = analyzeGame(
-        { gameId: req.gameId, checksum: req.checksum, initialFen: req.initialFen, moves: req.moves },
+        { gameId: req.gameId, checksum: req.checksum, initialFen: req.initialFen, setupMoves: req.setupMoves, moves: req.moves },
         req.settings,
         { onPly: (ply, index, total) => post({ type: 'ply', ...base, index, total, ply }) },
         searcher,

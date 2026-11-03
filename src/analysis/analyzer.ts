@@ -43,6 +43,8 @@ export interface AnalyzeInput {
   gameId: string;
   checksum: string;
   initialFen: string;
+  /** Replayed (not analysed) before `moves`, e.g. training-retry history. */
+  setupMoves?: string[];
   moves: string[];
   preHashes?: string[];
   postHashes?: string[];
@@ -72,6 +74,11 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
   const startedAt = new Date().toISOString();
   searcher.newGame();
   const pos = Position.fromFen(input.initialFen);
+  for (const s of input.setupMoves ?? []) {
+    const m = parseLegalCcn(pos, s);
+    if (m < 0) throw new Error(`Illegal setup move ${s}`);
+    pos.makeMove(m);
+  }
   const plies: PlyAnalysis[] = [];
   let phase: Phase = 'opening';
   let prevCaptureSquare = -1;

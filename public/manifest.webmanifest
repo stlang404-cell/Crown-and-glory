@@ -1,0 +1,16 @@
+{
+  "name": "Crown & Calculation",
+  "short_name": "Crown",
+  "description": "Offline 6x6 chess: local engine, Glicko-2 career and engine game analysis.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#10151e",
+  "theme_color": "#10151e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

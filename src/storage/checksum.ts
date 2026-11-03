@@ -10,7 +10,7 @@ export async function sha256Hex(text: string): Promise<string> {
 /** Canonical content of a game used for its checksum (rules-relevant record content only). */
 export function canonicalGame(g: GameRecord): string {
   return JSON.stringify({
-    id: g.id, variantId: g.variantId, rulesVersion: g.rulesVersion, initialFen: g.initialFen,
+    id: g.id, variantId: g.variantId, rulesVersion: g.rulesVersion, initialFen: g.initialFen, setupMoves: g.setupMoves ?? [],
     moves: g.moves.map(m => m.ccn), result: g.result, termination: g.termination,
   });
 }

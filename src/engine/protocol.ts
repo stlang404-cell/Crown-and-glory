@@ -8,6 +8,7 @@ export interface MoveRequest {
   requestId: string;
   generation: number;
   initialFen: string;
+  setupMoves?: string[];
   moves: string[];
   level: number;
   seed: number;
@@ -22,6 +23,7 @@ export interface AnalyzeRequest {
   gameId: string;
   checksum: string;
   initialFen: string;
+  setupMoves?: string[];
   moves: string[];
   settings: AnalysisSettings;
 }

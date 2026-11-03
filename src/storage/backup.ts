@@ -51,6 +51,11 @@ export async function validateBundle(raw: unknown): Promise<BackupBundle> {
     if (typeof g.id !== 'string' || g.variantId !== VARIANT_ID || !Array.isArray(g.moves)) throw new ImportError(`Game ${g?.id ?? '?'} is malformed.`);
     let pos: Position;
     try { pos = Position.fromFen(g.initialFen); } catch (e) { throw new ImportError(`Game ${g.id}: invalid initial position (${(e as Error).message}).`); }
+    for (const s of g.setupMoves ?? []) {
+      const mv = parseLegalCcn(pos, s);
+      if (mv < 0) throw new ImportError(`Game ${g.id}: illegal setup move ${s}.`);
+      pos.makeMove(mv);
+    }
     for (const m of g.moves) {
       const mv = parseLegalCcn(pos, m.ccn);
       if (mv < 0) throw new ImportError(`Game ${g.id}: illegal move ${m.ccn} at ply ${m.ply}.`);

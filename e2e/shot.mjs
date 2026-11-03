@@ -1,0 +1,14 @@
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const [url, out, w = '1366', h = '900'] = process.argv.slice(2);
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: +w, height: +h } });
+const errs = [];
+p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+p.on('pageerror', e => errs.push(String(e)));
+await p.goto(url);
+await p.waitForTimeout(1500);
+await p.screenshot({ path: out, fullPage: false });
+console.log('errors:', errs);
+await b.close();
