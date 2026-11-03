@@ -13,7 +13,7 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 
-export const APP_VERSION = '0.6.0-preview.1';
+export const APP_VERSION = '0.7.0';
 
 type Listener = () => void;
 
