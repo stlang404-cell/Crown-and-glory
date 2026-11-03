@@ -136,3 +136,50 @@ describe('live in-play trading', () => {
     for (const [a, val] of svc2.state!.balances) if (a !== 'mint') expect(val).toBeGreaterThanOrEqual(0);
   }, 300_000);
 });
+
+describe('Sandbox Exchange isolation and anti-exploit rules', () => {
+  it('own casual game: back yourself only, closes at move 1, settles in sandbox money, never touches official books', async () => {
+    const svc = await make();
+    await svc.create(1, 777);
+    const { createGameRecord } = await import('../src/games/session');
+    const { TIME_CONTROLS } = await import('../src/games/types');
+    const { opponentSnapshot, ROSTER } = await import('../src/federation/roster') as never as { opponentSnapshot?: unknown; ROSTER: { id: string; name: string; level: number }[] };
+    void opponentSnapshot;
+    const mk = (id: string) => createGameRecord({ id, mode: 'casual', timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human: { kind: 'human', id: 'player', name: 'You', rating: null, rd: null },
+      engine: { kind: 'engine', id: ROSTER[0].id, name: ROSTER[0].name, rating: 800, rd: 50, engine: { profileId: 'L1', level: 1, levelsId: 'x', searchId: 'x', evalId: 'x', calibrationId: 'x', style: 'Universal' } as never }, engineSeed: 1, nowIso: now(), context: { kind: 'quick-match' } });
+    const officialBefore = [...svc.state!.balances].filter(([a]) => !a.startsWith('sandbox:')).sort().join();
+    const finBefore = JSON.stringify(svc.finance().netWorth);
+    const g = mk('sb-test-1');
+    await svc.db.saveGame(g);
+    const m = await svc.openSandbox(g, [0.2, 0.3, 0.5]);
+    expect(m.sandbox).toBe(true);
+    expect(m.claims!.map(c => c.id)).toEqual(['win', 'nolose']); // no claim pays on your own loss
+    await svc.sandboxTrade(g.id, 0, 10, 'buy');
+    // isolation: no official account changed, net worth unchanged
+    expect([...svc.state!.balances].filter(([a]) => !a.startsWith('sandbox:')).sort().join()).toBe(officialBefore);
+    expect(JSON.stringify(svc.finance().netWorth)).toBe(finBefore);
+    // win → pays 10 sandbox crowns
+    const sbBefore = svc.sandboxBalance();
+    await svc.settleSandbox({ ...g, moves: new Array(30).fill({}) as never, status: 'finalized', result: '1-0', termination: 'checkmate' } as GameRecord);
+    expect(svc.sandboxBalance() - sbBefore).toBe(10_000_000);
+    expect(svc.sandboxMarketFor(g.id)!.status).toBe('settled');
+    await svc.settleSandbox({ ...g, status: 'finalized', result: '1-0' } as GameRecord); // idempotent
+    expect(svc.sandboxBalance() - sbBefore).toBe(10_000_000);
+    // assisted game → cancelled at the published opening prices (no profit from forcing a void)
+    const g2 = mk('sb-test-2');
+    await svc.db.saveGame(g2);
+    await svc.openSandbox(g2, [0.1, 0.2, 0.7]);
+    const before2 = svc.sandboxBalance();
+    await svc.sandboxTrade(g2.id, 0, 20, 'buy');
+    const paid = before2 - svc.sandboxBalance();
+    await svc.settleSandbox({ ...g2, moves: new Array(40).fill({}) as never, assistance: [{ ply: 3, kind: 'hint' }] as never, status: 'finalized', result: '1-0', termination: 'checkmate' } as GameRecord);
+    expect(svc.sandboxMarketFor(g2.id)!.status).toBe('cancelled');
+    expect(svc.sandboxBalance() - (before2 - paid)).toBeLessThanOrEqual(paid);
+    // rated, federation and assisted games are ineligible
+    expect(FederationService.sandboxIneligible({ ...g, mode: 'rated', rated: true } as GameRecord)).toMatch(/Rated/);
+    expect(FederationService.sandboxIneligible({ ...g, context: { kind: 'federation' } } as GameRecord)).toMatch(/casual/);
+    // a mixed sandbox/official journal is impossible at the ledger level
+    expect(svc.state!.balances.get('player:cash')).toBe(Number(officialBefore.match(/player:cash,(-?\d+)/)![1]));
+    expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
+  }, 60_000);
+});

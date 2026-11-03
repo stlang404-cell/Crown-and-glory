@@ -88,6 +88,8 @@ export class AppServices {
     const r = await this.db.finalizeGame(g, { checksum, nowIso: new Date().toISOString(), analysisSettingsId: DEFAULT_ANALYSIS.id, humanScore: score });
     // federation fixtures learn their result from the finalized (rated) game; idempotent
     if (r.game.context.kind === 'federation' && this.fed?.ready) { try { await this.fed.recordPlayerGame(r.game); } catch (e) { console.error('federation result', e); } }
+    // sandbox markets on own casual games settle (or cancel) from the finalized record; idempotent
+    if (this.fed?.ready && this.fed.sandboxMarketFor(r.game.id)) { try { await this.fed.settleSandbox(r.game); } catch (e) { console.error('sandbox settlement', e); } }
     this.notify();
     void this.processQueue();
     return r;

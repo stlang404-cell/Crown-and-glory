@@ -15,7 +15,9 @@ import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSH
 import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
-import { Market, Position, openMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices } from '../exchange/market';
+import { prices } from '../exchange/lmsr';
+import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices } from '../exchange/market';
+import { normaliseModel } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
@@ -44,7 +46,8 @@ export interface LiveGame {
 }
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
-export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null }[] }
+export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
+  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[] }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 const FEATURED_NODE_CAP = 30_000;
@@ -507,6 +510,111 @@ export class FederationService {
     return { rec, game, markets, positions };
   }
 
+  // ------------------------------------------------------------------ Sandbox Exchange (own casual games)
+  /** Sandbox balances live only in `sandbox:*` accounts: the ledger rejects any journal mixing them with official
+   *  accounts, and official net worth, P&L, prestige and the federation never read them. */
+  sandboxBalance(): number { return this.balance('sandbox:player'); }
+  sandboxMarketFor(gameId: string): Market | undefined { return this.state?.markets.get(`sb:${gameId}`); }
+
+  /** Why a game cannot carry a sandbox market, or null if it can. */
+  static sandboxIneligible(g: GameRecord): string | null {
+    if (g.mode === 'rated' || g.rated) return 'Rated games never carry markets';
+    if (g.context.kind !== 'quick-match') return 'Only casual quick matches (federation and training games are excluded)';
+    if (g.initialFen !== START_FEN || (g.setupMoves?.length ?? 0) > 0) return 'Only games from the standard start position';
+    if (g.assistance.length) return 'Assisted games are excluded';
+    if (g.moves.length) return 'The sandbox market closes when the game starts';
+    if (g.status !== 'active' && g.status !== 'paused') return 'This game is over';
+    return null;
+  }
+
+  /** Open a sandbox market on the player's own casual game, priced at the rating-based prior. */
+  async openSandbox(g: GameRecord, prior: number[]): Promise<Market> {
+    const why = FederationService.sandboxIneligible(g);
+    if (why) throw new Error(why);
+    return this.run(async () => {
+      const st = this.clone();
+      const id = `sb:${g.id}`;
+      if (st.markets.has(id)) return st.markets.get(id)!;
+      const posted: Journal[] = [];
+      const C = (x: number) => x * MICRO;
+      // sandbox money is created only by explicit sandbox:mint entries (never official mint)
+      if (!st.journalIds.has('sandbox-grant:player')) this.post(st, [{ id: 'sandbox-grant:player', at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox starting balance (practice money)', lines: [{ account: 'sandbox:mint', amount: -C(500) }, { account: 'sandbox:player', amount: C(500) }] }], posted);
+      const tr = st.balances.get('sandbox:treasury') ?? 0;
+      if (tr < C(1_000)) this.post(st, [{ id: `sandbox-treasury:${st.journalIds.size}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox market-maker float', lines: [{ account: 'sandbox:mint', amount: -(C(5_000) - tr) }, { account: 'sandbox:treasury', amount: C(5_000) - tr }] }], posted);
+      const p0 = normaliseModel(prior, 0.03);
+      const opp = g.humanColor === 'white' ? g.black : g.white;
+      const { market, journal } = openGenericMarket({
+        id, kind: 'sandbox', sandbox: true, title: `Your casual game vs ${opp.name}`, outcomes: ['You win', 'Draw', 'You lose'],
+        claims: [{ id: 'win', label: 'You win', states: [0] }, { id: 'nolose', label: 'You draw or win', states: [0, 1] }],
+        model: p0, prior: p0, rules: 'Sandbox practice market on your own casual game. Opens at the rating-based prior; you may only back yourself (win, or draw-or-win), never your own loss. Trading closes at the first move. Settlement: the result. Cancelled at the published opening prices if the game is assisted, abandoned, or ends before move 10. Sandbox money never affects official cash, net worth, ratings, standings, or prestige.',
+        season: st.world.season, round: st.world.round, b: 60, at: this.now(), ref: { gameId: g.id },
+      });
+      market.cancelVector = p0;
+      this.post(st, [journal], posted);
+      st.markets.set(id, market);
+      await this.commit(st, posted, { markets: [market] }, { season: st.world.season, round: st.world.round });
+      return market;
+    });
+  }
+
+  async sandboxTrade(gameId: string, claim: number, shares: number, side: 'buy' | 'sell'): Promise<void> {
+    const g = await this.db.getGame(gameId);
+    if (!g || g.moves.length) throw new Error('Trading closed: the game has started');
+    return this.run(async () => {
+      const st = this.clone();
+      const m = st.markets.get(`sb:${gameId}`);
+      if (!m || m.status !== 'open') throw new Error('No open sandbox market for this game');
+      const pos = st.positions.get(`${m.id}|sandbox:player`) ?? null;
+      const t = trade(m, pos, 'sandbox:player', claim, shares, side, this.now(), m.history.length);
+      const posted: Journal[] = [];
+      this.post(st, [t.journal], posted);
+      st.markets.set(m.id, t.market); st.positions.set(t.position.id, t.position);
+      await this.commit(st, posted, { markets: [t.market], positions: [t.position] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Close the sandbox market when the game starts (trading is also refused once a move exists). */
+  async closeSandbox(gameId: string): Promise<void> {
+    const m = this.sandboxMarketFor(gameId);
+    if (!m || m.status !== 'open') return;
+    return this.run(async () => {
+      const st = this.clone();
+      const c = closeMarket(st.markets.get(m.id)!, this.now());
+      st.markets.set(c.id, c);
+      await this.commit(st, [], { markets: [c] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Resolve a sandbox market from the finalized game (idempotent). */
+  async settleSandbox(g: GameRecord): Promise<void> {
+    const m0 = this.sandboxMarketFor(g.id);
+    if (!m0 || m0.status === 'settled' || m0.status === 'cancelled' || !g.result) return;
+    return this.run(async () => {
+      const st = this.clone();
+      const m = st.markets.get(m0.id)!;
+      const ps = [...st.positions.values()].filter(p => p.marketId === m.id);
+      const closed = closeMarket(m, this.now());
+      const short = g.moves.length < 20; // fewer than 10 moves each
+      const voided = g.assistance.length > 0 || g.status === 'abandoned' || (short && g.termination !== 'checkmate');
+      const coll = st.balances.get(acct(m, 'collateral')) ?? 0;
+      const mine = g.result === '1/2-1/2' ? 1 : (g.result === '1-0') === (g.humanColor === 'white') ? 0 : 2;
+      const r = voided ? cancelMarket(closed, ps, this.now(), coll) : settleMarket(closed, ps, mine, this.now(), coll, g.id);
+      const posted: Journal[] = [];
+      this.post(st, [r.journal], posted);
+      st.markets.set(m.id, r.market);
+      for (const p of r.positions) st.positions.set(p.id, p);
+      // controlled refill: practice money tops up to 200 only after 5 settled sandbox markets since the last refill
+      const settledCount = [...st.markets.values()].filter(x => x.kind === 'sandbox' && (x.status === 'settled' || x.status === 'cancelled')).length;
+      const lastRefill = st.extra.sandboxRefillAt ?? 0;
+      if ((st.balances.get('sandbox:player') ?? 0) < 20 * MICRO && settledCount - lastRefill >= 5) {
+        const amt = 200 * MICRO - (st.balances.get('sandbox:player') ?? 0);
+        this.post(st, [{ id: `sandbox-refill:${settledCount}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox practice refill', lines: [{ account: 'sandbox:mint', amount: -amt }, { account: 'sandbox:player', amount: amt }] }], posted);
+        st.extra.sandboxRefillAt = settledCount;
+      }
+      await this.commit(st, posted, { markets: [r.market], positions: r.positions }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
   // ------------------------------------------------------------------ live in-play featured games
   /** Single-move engine hook (fresh, seeded search → a reload resumes the same timeline). The app plugs in a worker. */
   computeMove: (req: { moves: string[]; profile: ReturnType<typeof profileForStrength>; style: StyleId; seed: number }) => Promise<{ ccn: string; score: SelfplayMove['score']; depth: number; nodes: number; ms: number }>
@@ -807,7 +915,9 @@ export class FederationService {
       if (!m || m.status !== 'open') throw new Error('Forecasts close with the market');
       const s = probs.reduce((a, b) => a + b, 0);
       if (s <= 0) throw new Error('Invalid forecast');
-      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null }];
+      if (probs.length !== m.q.length) throw new Error('A forecast needs one probability per state');
+      // snapshot of the public market price and model at forecast time (for honest comparisons later)
+      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l] }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }

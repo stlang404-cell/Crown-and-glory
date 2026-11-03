@@ -52,6 +52,10 @@ export interface Market {
   rules?: string;
   /** Live in-play state for match markets traded during the game. */
   live?: { plies: number; lastEval: number | null } | null;
+  /** Virtual initial inventory for prior-priced markets (liabilities are q − q0, never q0). */
+  q0?: number[];
+  /** Published cancellation payout vector (default uniform 1/n). */
+  cancelVector?: number[];
   /** Ids this market depends on (fixture, event, competitor, …) for idempotent resolution. */
   ref?: Record<string, string | number>;
 }
@@ -96,16 +100,20 @@ export function openMarket(p: { id: string; sandbox: boolean; fixtureId: string;
 
 /** Open any market family with uniform q0 and its funded subsidy b·ln n. */
 export function openGenericMarket(p: { id: string; kind: MarketKind; sandbox: boolean; title: string; outcomes: string[]; claims?: Market['claims']; model: number[]; rules: string;
-  fixtureId?: string; white?: string; black?: string; season: number; round: number; b: number; at: string; ref?: Market['ref']; forecast?: Market['forecast'] }): { market: Market; journal: Journal } {
+  fixtureId?: string; white?: string; black?: string; season: number; round: number; b: number; at: string; ref?: Market['ref']; forecast?: Market['forecast'];
+  /** Optional opening prices p0 (research doc 09): virtual inventory q0_i = b·ln(p0_i/max p0); worst-case subsidy b·ln(1/min p0). */
+  prior?: number[] }): { market: Market; journal: Journal } {
   const n = p.outcomes.length;
+  if (p.prior && (p.prior.length !== n || p.prior.some(x => !(x > 0)) || Math.abs(p.prior.reduce((a, x) => a + x, 0) - 1) > 1e-9)) throw new MarketError('Prior must be a strictly positive probability vector');
   if (n < 2) throw new MarketError('A market needs at least two states');
   if (p.model.length !== n || Math.abs(p.model.reduce((a, x) => a + x, 0) - 1) > 1e-6) throw new MarketError('Model must be a probability vector over the states');
   for (const c of p.claims ?? []) if (!c.states.length || c.states.some(s => s < 0 || s >= n) || new Set(c.states).size !== c.states.length) throw new MarketError(`Bad claim ${c.id}`);
   const market: Market = {
     id: p.id, sandbox: p.sandbox, fixtureId: p.fixtureId ?? '', title: p.title, white: p.white ?? '', black: p.black ?? '', season: p.season, round: p.round, b: p.b,
-    q: new Array(n).fill(0), status: 'open', subsidy: subsidyMicro(p.b, n), result: null,
+    q: p.prior ? p.prior.map(x => p.b * Math.log(x / Math.max(...p.prior!))) : new Array(n).fill(0), status: 'open',
+    subsidy: p.prior ? Math.ceil(p.b * Math.log(1 / Math.min(...p.prior)) * MICRO) : subsidyMicro(p.b, n), result: null, q0: p.prior ? p.prior.map(x => p.b * Math.log(x / Math.max(...p.prior!))) : undefined,
     forecast: p.forecast ?? { w: p.model[0], d: n > 1 ? p.model[1] : 0, l: n > 2 ? p.model[2] : 0, source: 'model' },
-    history: [{ at: p.at, seq: 0, prices: new Array(n).fill(1 / n), by: 'open' }], openedAt: p.at, closedAt: null, settledAt: null, gameId: null,
+    history: [{ at: p.at, seq: 0, prices: p.prior ?? new Array(n).fill(1 / n), by: 'open' }], openedAt: p.at, closedAt: null, settledAt: null, gameId: null,
     kind: p.kind, outcomes: p.outcomes, claims: p.claims, model: p.model, payout: null, rules: p.rules, live: null, ref: p.ref,
   };
   const journal: Journal = {
@@ -166,7 +174,9 @@ export function closeMarket(m: Market, at: string): Market {
 }
 
 /** Required collateral: the maximum possible payout. */
-export const maxLiability = (m: Market) => Math.max(...m.q) * MICRO; // q = issued shares per state (uniform q0 = 0)
+/** Issued shares per state (q − q0). */
+export const exposure = (m: Market) => m.q.map((x, i) => x - (m.q0?.[i] ?? 0));
+export const maxLiability = (m: Market) => Math.max(...exposure(m)) * MICRO;
 
 /** Resolve by a payout vector over states: pay holders from collateral (then subsidy), return the rest to
  *  the treasury. One balanced journal with a unique id (`settle:<market>`), so a retry is rejected. */
@@ -204,7 +214,8 @@ export function settleMarket(m: Market, positions: Position[], result: number, a
 /** Cancellation: the published uniform vector — each share pays |S|/n crowns (rounded down per holding). */
 export function cancelMarket(m: Market, positions: Position[], at: string, collateral: number): { market: Market; positions: Position[]; journal: Journal } {
   const n = statesOf(m).length;
-  return resolveMarket(m, positions, uniformPayout(n), 'cancel', at, collateral, null, `Cancel ${m.title}: 1/${n} per state`);
+  const v = m.cancelVector ?? uniformPayout(n);
+  return resolveMarket(m, positions, v, 'cancel', at, collateral, null, m.cancelVector ? `Cancel ${m.title}: published cancellation vector` : `Cancel ${m.title}: 1/${n} per state`);
 }
 
 /** Executable liquidation value of a position (sell everything now, after fees), µ. */
@@ -213,8 +224,8 @@ export function liquidationValue(m: Market, p: Position): number {
   const claims = claimsOf(m);
   if (m.status === 'closed') {
     // not tradeable: the published cancellation vector is the only executable guarantee
-    const n = statesOf(m).length;
-    return Math.floor(p.shares.reduce((a, x, c) => a + x * ((claims[c]?.states.length ?? 0) / n), 0) * MICRO);
+    const v = m.cancelVector ?? uniformPayout(statesOf(m).length);
+    return Math.floor(p.shares.reduce((a, x, c) => a + x * (claims[c]?.states.reduce((s2, st) => s2 + v[st], 0) ?? 0), 0) * MICRO);
   }
   let q = [...m.q], total = 0;
   for (let c = 0; c < claims.length; c++) {

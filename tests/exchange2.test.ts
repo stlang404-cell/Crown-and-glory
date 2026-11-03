@@ -130,3 +130,40 @@ describe('8-state bounded knockout model (conditional / conjunction claims)', ()
     expect(lv).toBe(quote(t.market, 5, 20, 'sell').total);
   });
 });
+
+describe('prior-priced markets (sandbox) — research doc 09 initial-prior funding', () => {
+  it('opens at p0, funds b·ln(1/min p0), stays solvent for every outcome and cancels on the published vector', async () => {
+    const { exposure } = await import('../src/exchange/market');
+    for (let run = 0; run < 12; run++) {
+      const books = new Books(); fund(books, ['player:cash', 'npc:a']);
+      const p0 = [[0.08, 0.22, 0.7], [0.6, 0.3, 0.1], [0.33, 0.34, 0.33]][run % 3];
+      const { market, journal } = openGenericMarket({ id: `p${run}`, kind: 'sandbox', sandbox: false, title: 'P', outcomes: ['Win', 'Draw', 'Loss'], claims: [{ id: 'win', label: 'Win', states: [0] }, { id: 'nolose', label: 'Draw or win', states: [0, 1] }], model: p0, prior: p0, rules: 'r', season: 1, round: 1, b: 60, at: 'T' });
+      market.cancelVector = p0;
+      books.post(journal);
+      expect(market.subsidy).toBe(Math.ceil(60 * Math.log(1 / Math.min(...p0)) * MICRO));
+      claimPrices(market).forEach((x, i) => expect(x).toBeCloseTo([p0[0], p0[0] + p0[1]][i], 9));
+      const r = mulberry32(50 + run);
+      let m = market; const pos = new Map<string, Position>(); let seq = 1;
+      for (let k = 0; k < 150; k++) {
+        const h = ['player:cash', 'npc:a'][r() % 2], c = r() % 2, sh = 1 + (r() % 30);
+        const p = pos.get(`${m.id}|${h}`) ?? null;
+        const side = p && p.shares[c] >= sh && r() % 3 === 0 ? 'sell' : 'buy';
+        try { const t = trade(m, p, h, c, sh, side, 'T', seq++); books.post(t.journal); m = t.market; pos.set(t.position.id, t.position); } catch (e) { if (!(e instanceof LedgerError) && !(e instanceof MarketError)) throw e; }
+        expect(books.balance(acct(m, 'collateral')) + books.balance(acct(m, 'subsidy'))).toBeGreaterThanOrEqual(Math.max(...exposure(m)) * MICRO);
+      }
+      const closed = closeMarket(m, 'T');
+      for (const v of [unitPayout(3, 0), unitPayout(3, 1), unitPayout(3, 2), p0]) {
+        const b2 = new Books(); b2.balances = new Map(books.balances); b2.journals = new Map(books.journals);
+        b2.post(resolveMarket(closed, [...pos.values()], v, 'settle', 'T', b2.balance(acct(closed, 'collateral')), null, 'x').journal);
+        expect(b2.total()).toBe(0);
+        for (const [a, val] of b2.balances) if (a !== 'mint') expect(val).toBeGreaterThanOrEqual(0);
+      }
+      // cancellation pays the published prior: buying at the opening price then forcing a cancellation gains nothing
+      const fresh = openGenericMarket({ id: `q${run}`, kind: 'sandbox', sandbox: false, title: 'Q', outcomes: ['Win', 'Draw', 'Loss'], claims: [{ id: 'win', label: 'Win', states: [0] }], model: p0, prior: p0, rules: 'r', season: 1, round: 1, b: 60, at: 'T' }).market;
+      fresh.cancelVector = p0;
+      const t = trade(fresh, null, 'player:cash', 0, 10, 'buy', 'T', 1);
+      const c = cancelMarket(closeMarket(t.market, 'T'), [t.position], 'T', t.quote.amount);
+      expect(c.positions[0].received).toBeLessThanOrEqual(t.quote.total);
+    }
+  });
+});
