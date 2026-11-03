@@ -6,7 +6,7 @@
   "cores": 4,
   "searchId": "crown-search-1",
   "evalId": "crown-eval-3",
-  "date": "2026-11-03T03:36:53.594Z"
+  "date": "2026-11-03T03:39:34.425Z"
  },
  "pairsPerMatch": 20,
  "openings": "tools/bench/openings.json",
@@ -458,6 +458,43 @@
    },
    "reasons": {
     "checkmate": 40
+   }
+  },
+  {
+   "a": "crown-L8",
+   "b": "crown-L6",
+   "pairs": 10,
+   "games": 20,
+   "wins": 19,
+   "draws": 1,
+   "losses": 0,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.975,
+   "scoreCI": [
+    0.925,
+    1
+   ],
+   "eloDiff": 636,
+   "eloCI": [
+    436,
+    null
+   ],
+   "avgDepth": {
+    "crown-L8": 12.46,
+    "crown-L6": 5.07
+   },
+   "avgNodes": {
+    "crown-L8": 458545,
+    "crown-L6": 3598
+   },
+   "avgMs": {
+    "crown-L8": 1086,
+    "crown-L6": 9
+   },
+   "reasons": {
+    "checkmate": 19,
+    "threefold-claim": 1
    }
   }
  ]
