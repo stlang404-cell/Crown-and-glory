@@ -1,4 +1,43 @@
-# Test results (v0.3.0)
+# Test results (v0.4.0 — The Grand Exchange)
+
+Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22, Playwright headless Chromium). No Windows machine
+or physical iPhone was available. Every result below was executed in this session.
+
+## Automated suites — `npx vitest run`: **VITEST_COUNT**
+
+New or extended in v0.4.0:
+
+| File | What it covers |
+| --- | --- |
+| tests/exchange2.test.ts | n-state LMSR under randomized adversarial trading (16-state tournament markets, the 8-state final-four model with overlapping conditional claims, prior-priced sandbox markets): solvency after every trade, conservation, maker loss ≤ funded subsidy for every unit vector, joint splits and cancellation; canonical claims; complete-set identity; non-simplex payouts and double resolution rejected; models never move inventory |
+| tests/markets.test.ts | model coherence (knockout, bracket, final four); a full season of every family through the service (listing, closure before the closing round, settlement from recorded results, consistency between the champion and final-four markets, conservation); live in-play trading (windows, NPC reaction, stale-quote rejection, resume after reload, no trading after the end); Sandbox isolation and anti-exploit rules; institutions (upgrade escrow, contracts, conflict-of-interest block, prize shares = 25% exactly); mid-season migrated saves; the player's Federation Open route and its market-cancellation conflict rule |
+| tests/storage.test.ts | + DB v3 → v4 migration |
+| tests/theme.test.ts | theme/board ids known to the pre-paint script; preference storage fallbacks |
+| tests/styles.test.ts, tests/engine*.ts | see docs/M4_ENGINE_STRENGTH.md |
+
+Typecheck (`tsc -b`): pass. Production build (`vite build`): pass. Contrast audit (`node tools/contrast/check-themes.mjs`): all pairs pass.
+
+## Browser journeys
+
+| Script | Result | Evidence |
+| --- | --- | --- |
+| `e2e/m4-journey.mjs` — **v0.4.0 player acceptance journey, 28 steps**, from a save made by the real v0.3.0 build on the same origin | JOURNEY_RESULT | docs/evidence/m4/journey-log.txt, journey-results.json, screenshots (desktop + 390 px phone, no horizontal overflow) |
+| `e2e/federation.mjs` (v0.3.0 journey), `e2e/run.mjs`, `e2e/academy.mjs`, `e2e/offline.mjs` | REGRESSION_RESULT | docs/evidence/ |
+| `e2e/m4-themes.mjs` — every theme × key screens × desktop/phone | pass (theme workstream) | docs/evidence/m4-themes/ |
+
+## Simulations
+
+`tools/sim/economy.ts` — 9 strategies × 3 seeds × 4 seasons + an 8-season convergence run (docs/M4_ECONOMY.md);
+`tools/sim/federation.ts` — 3 seeds × 40 seasons (docs/M4_ECONOMY.md §4); `tools/bench/analysis_speed.ts`;
+`tools/styles/validate.ts`; engine benchmarks in docs/M4_ENGINE_STRENGTH.md.
+
+## Not tested
+
+Windows launchers on Windows; physical iPhone/iPad; screen readers; human playtesting.
+
+---
+
+# Earlier results (v0.3.0)
 
 Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22.23.4, Playwright headless Chromium).
 No Windows machine or physical iPhone was available.
