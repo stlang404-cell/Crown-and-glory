@@ -9,8 +9,9 @@ import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor } from '../analy
 import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/types';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
+import { FederationService } from './federation';
 
-export const APP_VERSION = '0.2.0';
+export const APP_VERSION = '0.3.0';
 
 type Listener = () => void;
 
@@ -27,6 +28,8 @@ export class AppServices {
   readonly play = new EngineChannel(undefined, 'play');
   readonly analysis = new EngineChannel(undefined, 'analysis');
   readonly assist = new EngineChannel(undefined, 'assist');
+  readonly spectator = new EngineChannel(undefined, 'spectator');
+  fed!: FederationService;
   private listeners = new Set<Listener>();
   progress: AnalysisProgress | null = null;
   matchActive = false;
@@ -40,6 +43,11 @@ export class AppServices {
     const db = await CrownDB.open();
     const s = new AppServices(db);
     await s.acquireLease();
+    s.fed = new FederationService(db, async () => { const p = await db.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; });
+    s.fed.runSelfplay = (req, onMove) => s.spectator.selfplay(req, m => onMove(m)).then(r => ({ moves: r.moves, result: r.result, termination: r.termination }));
+    s.fed.onChange = () => s.notify();
+    await s.fed.load();
+    if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
     return s;
@@ -76,6 +84,8 @@ export class AppServices {
     const human = g.humanColor;
     const score = g.result === '1/2-1/2' ? 0.5 : g.result === '1-0' ? (human === 'white' ? 1 : 0) : g.result === '0-1' ? (human === 'black' ? 1 : 0) : null;
     const r = await this.db.finalizeGame(g, { checksum, nowIso: new Date().toISOString(), analysisSettingsId: DEFAULT_ANALYSIS.id, humanScore: score });
+    // federation fixtures learn their result from the finalized (rated) game; idempotent
+    if (r.game.context.kind === 'federation' && this.fed?.ready) { try { await this.fed.recordPlayerGame(r.game); } catch (e) { console.error('federation result', e); } }
     this.notify();
     void this.processQueue();
     return r;

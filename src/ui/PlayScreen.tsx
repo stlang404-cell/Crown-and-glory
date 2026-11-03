@@ -284,7 +284,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     setThinking(true);
     const ply = rec.moves.length;
     services.play.move({
-      initialFen: rec.initialFen, setupMoves: rec.setupMoves, moves: rec.moves.map(m => m.ccn), level: engine.engine!.level, seed: (rec.engineSeed + ply * 7919) >>> 0,
+      initialFen: rec.initialFen, setupMoves: rec.setupMoves, moves: rec.moves.map(m => m.ccn), level: engine.engine!.level || 1, profile: engine.engine?.profile, style: engine.engine?.styleId, seed: (rec.engineSeed + ply * 7919) >>> 0,
       clock: session.timed ? { remainingMs: session.remaining(engineColor as 0 | 1, Date.now()), incrementMs: rec.timeControl.incrementMs } : undefined,
       newGame: ply < 2,
     }).then(r => {
@@ -379,7 +379,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       <div className={`player-bar${session.sideToMove === c && !session.isOver ? ' to-move' : ''}`} data-testid={isHuman ? 'human-bar' : 'engine-bar'}>
         {isHuman ? <div className="portrait" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center' }}><PieceSvg kind="k" color={c === 0 ? 'w' : 'b'} /></div> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={oppMeta?.level === 8} />}
         <div style={{ minWidth: 0 }}>
-          <div className="player-name">{p.name} {!isHuman && <span className="chip gold">L{p.engine?.level}</span>}</div>
+          <div className="player-name">{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</div>
           <div className="player-meta">
             {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Uncalibrated'}
             {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
@@ -516,8 +516,10 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         <p className="small muted">Saved permanently. The engine report is being prepared in the background.</p>
         <div className="row" style={{ justifyContent: 'center' }}>
           <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View analysis</button>
-          <button className="btn" onClick={rematch}>Rematch</button>
-          <button className="btn ghost" onClick={() => { onClose(); go({ name: 'play' }); }}>New game</button>
+          {g.context.kind === 'federation'
+            ? <button className="btn" data-testid="back-to-federation" onClick={() => { onClose(); go({ name: 'world' }); }}>Back to Federation</button>
+            : <><button className="btn" onClick={rematch}>Rematch</button>
+              <button className="btn ghost" onClick={() => { onClose(); go({ name: 'play' }); }}>New game</button></>}
         </div>
       </div>
     </div>

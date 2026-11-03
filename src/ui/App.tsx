@@ -7,7 +7,12 @@ import { AnalysisScreen } from './AnalysisScreen';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
-import { FederationScreen } from './FederationScreen';
+import { WorldScreen, StandingsScreen, TournamentsScreen } from './WorldScreen';
+import { CompetitorsScreen, CompetitorScreen } from './CompetitorScreen';
+import { SpectatorScreen } from './SpectatorScreen';
+import { ExchangeScreen } from './ExchangeScreen';
+import { FinanceScreen } from './FinanceScreen';
+import { APP_VERSION } from '../app/services';
 import { AcademyScreen } from './AcademyScreen';
 import { Icon } from './Icons';
 
@@ -19,7 +24,14 @@ export type View =
   | { name: 'profile' }
   | { name: 'lab' }
   | { name: 'academy' }
-  | { name: 'federation' };
+  | { name: 'world' }
+  | { name: 'standings' }
+  | { name: 'tournaments' }
+  | { name: 'competitors' }
+  | { name: 'competitor'; id: string }
+  | { name: 'watch'; id: string }
+  | { name: 'exchange'; id?: string }
+  | { name: 'finance' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
 export const useApp = () => useContext(Ctx)!;
@@ -36,23 +48,34 @@ function parseHash(): View {
   const [name, id, ply] = h.split('/');
   if (name === 'match' && id) return { name: 'match', gameId: decodeURIComponent(id) };
   if (name === 'analysis' && id) return { name: 'analysis', gameId: decodeURIComponent(id), ply: ply ? +ply : undefined };
-  if (name === 'library' || name === 'profile' || name === 'lab' || name === 'federation' || name === 'academy') return { name };
+  if (name === 'competitor' && id) return { name: 'competitor', id: decodeURIComponent(id) };
+  if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
+  if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
+  if (name === 'federation') return { name: 'world' };
+  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance'].includes(name)) return { name } as View;
   return { name: 'play' };
 }
 function toHash(v: View): string {
   if (v.name === 'match') return `#/match/${encodeURIComponent(v.gameId)}`;
   if (v.name === 'analysis') return `#/analysis/${encodeURIComponent(v.gameId)}${v.ply !== undefined ? '/' + v.ply : ''}`;
+  if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
+  if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
   return `#/${v.name}`;
 }
 
 const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['name'] }[] = [
   { id: 'play', label: 'Play', icon: 'play' },
+  { id: 'world', label: 'Federation', icon: 'world' },
+  { id: 'exchange', label: 'Exchange', icon: 'exchange' },
+  { id: 'finance', label: 'Finance', icon: 'finance' },
   { id: 'library', label: 'Library', icon: 'library' },
   { id: 'academy', label: 'Academy', icon: 'academy' },
   { id: 'profile', label: 'Passport', icon: 'profile' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
-  { id: 'federation', label: 'Federation', icon: 'world' },
 ];
+/** The phone tab bar keeps the five most-used sections; the rest live in the World/Passport screens and the side rail. */
+const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile'];
+const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -62,7 +85,7 @@ export function App({ services }: { services: AppServices }) {
     return () => window.removeEventListener('hashchange', on);
   }, []);
   const go = (v: View) => { const h = toHash(v); if (location.hash !== h) location.hash = h; else setView(v); window.scrollTo(0, 0); };
-  const section = view.name === 'match' ? 'play' : view.name === 'analysis' ? 'library' : view.name;
+  const section = SECTION[view.name] ?? view.name;
   return (
     <Ctx.Provider value={{ services, go }}>
       <PieceDefs />
@@ -81,7 +104,7 @@ export function App({ services }: { services: AppServices }) {
             </button>
           ))}
           <div className="rail-foot">
-            Offline · local saves · fictional money only<br />v{'0.2.0'} · crown-la6-v1
+            Offline · local saves · fictional money only<br />v{APP_VERSION} · crown-la6-v1
           </div>
         </nav>
         <main className="main" id="main">
@@ -93,10 +116,17 @@ export function App({ services }: { services: AppServices }) {
           {view.name === 'profile' && <ProfileScreen />}
           {view.name === 'lab' && <LabScreen />}
           {view.name === 'academy' && <AcademyScreen />}
-          {view.name === 'federation' && <FederationScreen />}
+          {view.name === 'world' && <WorldScreen />}
+          {view.name === 'standings' && <StandingsScreen />}
+          {view.name === 'tournaments' && <TournamentsScreen />}
+          {view.name === 'competitors' && <CompetitorsScreen />}
+          {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
+          {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
+          {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
+          {view.name === 'finance' && <FinanceScreen />}
         </main>
         <nav className="tabbar" aria-label="Main">
-          {NAV.map(n => (
+          {NAV.filter(n => TABS.includes(n.id)).map(n => (
             <button key={n.id} aria-current={section === n.id ? 'page' : undefined} onClick={() => go({ name: n.id } as View)}>
               <Icon name={n.icon} />{n.label}
             </button>

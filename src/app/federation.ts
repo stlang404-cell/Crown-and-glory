@@ -299,6 +299,18 @@ export class FederationService {
     });
   }
 
+  /** Recovery: record any finalized federation game whose fixture is still pending (e.g. the app closed between the two commits). */
+  async reconcilePlayerGames(): Promise<number> {
+    if (!this.state) return 0;
+    let n = 0;
+    const pending = new Set(this.playerFixtures().map(f => f.id));
+    if (!pending.size) return 0;
+    for (const g of await this.db.allGames()) {
+      if (g.context.kind === 'federation' && g.status === 'finalized' && g.context.fixtureId && pending.has(g.context.fixtureId)) { await this.recordPlayerGame(g); n++; }
+    }
+    return n;
+  }
+
   /** Forfeit a player fixture (loss, no game, unrated). */
   async forfeit(fixtureId: string): Promise<void> {
     return this.run(async () => {
@@ -340,7 +352,18 @@ export class FederationService {
    * (live, move by move). Settlement commits the game, the fixture result and the market settlement in one
    * transaction. Deterministic: node-limited profiles + seeded choices, so a crash simply replays it.
    */
-  async playFeatured(fixtureId: string, mode: 'watched-live' | 'background', onMove?: (m: SelfplayMove, ply: number) => void): Promise<WorldGame> {
+  /** In-flight featured games: a second caller (e.g. Advance while a game is being watched) joins the same run. */
+  private inflight = new Map<string, Promise<WorldGame>>();
+  playFeatured(fixtureId: string, mode: 'watched-live' | 'background', onMove?: (m: SelfplayMove, ply: number) => void): Promise<WorldGame> {
+    const running = this.inflight.get(fixtureId);
+    if (running) return running;
+    const p = this.playFeaturedOnce(fixtureId, mode, onMove).finally(() => { this.inflight.delete(fixtureId); this.live.delete(fixtureId); this.onChange?.(); });
+    this.inflight.set(fixtureId, p);
+    return p;
+  }
+  isLive(fixtureId: string): boolean { return this.inflight.has(fixtureId); }
+
+  private async playFeaturedOnce(fixtureId: string, mode: 'watched-live' | 'background', onMove?: (m: SelfplayMove, ply: number) => void): Promise<WorldGame> {
     if (!this.state) throw new Error('No federation');
     const f0 = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
     if (!f0 || f0.tier !== 2) throw new Error('Not a featured fixture');

@@ -9,6 +9,8 @@ import { personalRecords } from '../academy/lab';
 import type { AnalysisReport } from '../analysis/types';
 import type { Attempt, TrainingRun } from '../academy/academy';
 import { resultText } from './PlayScreen';
+import { PrestigeLadders } from './FinanceScreen';
+import { divisionLabel, REGION_NAMES } from '../federation/model';
 
 const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
 
@@ -72,7 +74,7 @@ export function ProfileScreen() {
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
         <div className="panel stat"><span className="k">Crown rating ({pool})</span><span className="v" data-testid="current-rating">{Math.round(s.rating)}</span><span className="small muted">RD ±{Math.round(s.rd)} · σ {s.sigma.toFixed(4)} · {prov ? 'provisional' : 'established'}</span></div>
-        <div className="panel stat"><span className="k">Rank</span><span className="v" style={{ fontSize: '1.3rem' }}>{rankFor(s.rating, s.games, s.rd)}</span><span className="small muted">Policy {RANK_POLICY} (rating bands until federation events exist)</span></div>
+        <div className="panel stat"><span className="k">Rank</span><span className="v" style={{ fontSize: '1.3rem' }}>{rankFor(s.rating, s.games, s.rd)}</span><span className="small muted">Policy {RANK_POLICY} (rating bands; federation titles are listed under Federation career)</span></div>
         <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
         <div className="panel stat"><span className="k">Peak / lowest (established)</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? '—' : Math.round(s.peak)} / {s.lowest === null ? '—' : Math.round(s.lowest)}</span><span className="small muted">Provisional ratings are excluded</span></div>
       </div>
@@ -119,9 +121,10 @@ export function ProfileScreen() {
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
         <h3>Rank history</h3>
-        {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}. Crown Champion is earned only through federation championships (M3).</p>
+        {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}. The Crown Champion title is earned only by winning the Crown Championship.</p>
           : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {Math.round(e.after.rating)}, game {e.gameId})</li>)}</ul>}
       </div>
+      <FederationCareer peak={s.peak} />
       <Passport games={games} events={events} reports={reports} attempts={attempts} runs={runs} filters={{ fOpp, setFOpp, fTc, setFTc, fRes, setFRes, fFrom, setFFrom, fTo, setFTo }} />
     </div>
   );
@@ -207,5 +210,27 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
         {list.length > 50 && <p className="small muted">Showing 50 of {list.length}; the Library pages through everything.</p>}
       </div>
     </>
+  );
+}
+
+function FederationCareer({ peak }: { peak: number | null }) {
+  const services = useServices();
+  const { go } = useApp();
+  const fed = services.fed;
+  if (!fed.ready) return <div className="panel" style={{ marginTop: 14 }}><h3>Federation career</h3><p className="small muted">You have not joined the federation yet. <button className="btn ghost small" onClick={() => go({ name: 'world' })}>Found it</button></p></div>;
+  const w = fed.state!.world;
+  const cabinet = fed.ownsAsset('trophy-cabinet');
+  return (
+    <div style={{ marginTop: 14 }} className="stack" data-testid="federation-career">
+      <div className="panel">
+        <h3>Federation career</h3>
+        <div className="small">Season {w.season} · {divisionLabel(w.player.division)}, {REGION_NAMES[w.player.region]}</div>
+        {w.player.history.length > 0 && <table className="small"><thead><tr><th>Season</th><th>Division</th><th>Rank</th><th>Points</th></tr></thead><tbody>{w.player.history.map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division}</td><td>{h.rank}</td><td>{h.points}</td></tr>)}</tbody></table>}
+        <h3>{cabinet ? 'Walnut trophy cabinet' : 'Titles'}</h3>
+        {w.player.titles.length === 0 ? <p className="small muted">No titles yet. Titles come only from results (league titles, Swiss events, the Crown Championship); they can never be bought.</p>
+          : <div className="row" style={{ flexWrap: 'wrap' }}>{w.player.titles.map((t, i) => <span key={i} className={`chip ${cabinet ? 'gold' : ''}`}>{cabinet ? '🏆 ' : ''}{t.title}</span>)}</div>}
+      </div>
+      <PrestigeLadders bestRating={peak} />
+    </div>
   );
 }
