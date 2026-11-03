@@ -27,7 +27,7 @@ export function HeraldryScreen() {
       <p className="small muted">Every emblem is original vector art drawn by the game (no external images) and built from one design system: a shield shape per family, a field division, fixed heraldic tinctures, a charge, and — for the highest ranks — crests, wreaths, gold borders and pixel pips. Outlines follow your colour theme.</p>
       <section className="panel stack" data-testid="gallery-sizes">
         <h3>Sizes</h3>
-        <div className="emblem-row">
+        <div className="emblem-row" style={{ alignItems: 'flex-end' }}>
           {(['sm', 'md', 'lg'] as const).map(s => <div key={s} className="emblem-cell"><Emblem spec={tournamentCrest('champ')} size={s} title={`Crown Championship crest (${s})`} /><span className="small muted">{s === 'sm' ? 'small · 22 px (lists, phone)' : s === 'md' ? 'medium · 44 px' : 'large · 104 px (ceremonies)'}</span></div>)}
           {(['sm', 'md', 'lg'] as const).map(s => <div key={`d${s}`} className="emblem-cell"><Emblem spec={divisionEmblem(1)} size={s} title={`Crown Division (${s})`} /></div>)}
         </div>

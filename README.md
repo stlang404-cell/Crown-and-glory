@@ -97,6 +97,18 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
   games, and any use makes a casual game permanently assisted.
 - **Chess Passport**: career timeline, records, memorable moves, opponent history, filters and CSV export.
 
+## What the M5 heraldry addendum adds
+
+- **Original heraldry** for every league division, rating rank, federation title, region, tournament, trophy,
+  club, financial tier and achievement — one vector design system, three sizes, all themes (`#/heraldry`).
+- **28 featured rivals** with portraits, insignia, clubs, ambitions and career records (`#/rivals`).
+- **Rivalries** computed only from recorded events (meetings, upsets, eliminations, rematches, promotion
+  battles, streaks), capped against farming and decaying over seasons; they never affect results.
+- **Fictional federation titles** — Squire, Knight, Paladin, Sovereign — earned by norms plus a peak rating.
+- **Club identity editor** for your club, 32 AI clubs with ledger-backed treasuries.
+- **Ceremonies** for titles, promotions and champions; a **Hall of Fame** with your trophy room.
+- **Discovery filters** and *Follow career*. Details: [docs/M5_HERALDRY.md](docs/M5_HERALDRY.md).
+
 ## What v0.4.0 adds
 
 - **The Grand Exchange**: one funded LMSR mechanism for match markets, tournament-champion markets (Federation

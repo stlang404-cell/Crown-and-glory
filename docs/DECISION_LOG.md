@@ -49,3 +49,16 @@ entries below record implementation decisions and conflicts resolved during M0/M
 
 - Directive asks to "investigate Fairy-Stockfish… If infeasible use the fallback": feasibility was investigated (I01). Integration as an optional, separately licensed engine module behind cross-origin isolation remains possible later (see ROADMAP).
 - Research recommends Tauri for a Windows wrapper; the directive asks for a BAT/PowerShell launcher. M1 ships the launcher (no native wrapper).
+
+## M5 addendum (Living Rivalry & Heraldry)
+
+| # | Decision | Reason |
+| --- | --- | --- |
+| H01 | The addendum is implemented on top of v0.4.0; the main v0.5.0 prompt was not received. | Nothing to integrate with beyond the existing game; no requirement invented. |
+| H02 | Emblems are data (`EmblemSpec`) rendered by one SVG component; tinctures fixed, outlines from theme variables. | One reusable system, theme-safe, testable (self-contained SVG, distinct signatures, monotonic prestige). |
+| H03 | Federation titles are fictional (Squire/Knight/Paladin/Sovereign) and norm-based with an Elo-inverse performance capped at ±800. | Mirrors the structure of real title systems without claiming FIDE meaning; a linear performance formula capped too low to reach the higher norms. |
+| H04 | Norms use opponents' ratings at the end of the event, not at pairing time. | Per-game rating snapshots are not stored for summary results; documented approximation. |
+| H05 | Rivalries are derived on demand from recorded games, never stored or fed back. | Guarantees they cannot change results, pairings or strength, and survive saves without migration. |
+| H06 | Only the first two meetings of a pair per season score; upsets once per season; ×0.7 decay. | Anti-farming and bounded intensity. |
+| H07 | AI club finances are real ledger journals (5% dues, 60% operations to the sink). | Club treasuries must be legitimate records, and the ledger must stay conserved. |
+| H08 | Ceremonies have deterministic ids and are created only in the round commit. | No duplicate awards; every ceremony traces to a recorded result. |

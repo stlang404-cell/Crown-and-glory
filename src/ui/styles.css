@@ -276,7 +276,7 @@ tr.me td { background: var(--accent-soft); }
 /* ---- heraldry (crown-heraldry-1): emblem outlines follow the theme; tinctures are fixed like real arms ---- */
 :root, [data-theme] { --her-line: var(--text); --her-outline: var(--bg); --her-shine: #fff8e6; }
 .emblem, .trophy { display: inline-block; vertical-align: middle; flex: none; overflow: visible; }
-.emblem-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.emblem-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
 .emblem-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 76px; }
 .emblem-cell .small { max-width: 110px; }
 .intensity { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }

@@ -26,7 +26,8 @@ export function CeremonyOverlay() {
         <div className="glow">{visual}</div>
         <h2 style={{ margin: 0 }}>{c.title}</h2>
         {c.kind === 'championship' && <div className="row" style={{ justifyContent: 'center', gap: 12 }}>{c.ids.map(id => id === PLAYER_ID ? <strong key={id}>You</strong> : <span key={id} className="stack" style={{ alignItems: 'center', gap: 2 }}><Portrait seed={st.competitors.get(id)?.portraitSeed ?? 0} size={56} crown /><strong className="small">{fed.name(id)}</strong></span>)}</div>}
-        <p className="small muted" style={{ margin: 0 }}>{c.detail}</p>
+        {c.kind !== 'championship' && <p className="small muted" style={{ margin: 0 }}>{c.detail}</p>}
+        {c.kind === 'championship' && <p className="small muted" style={{ margin: 0 }}>Recorded in the Hall of Fame with the grand trophy.</p>}
         <button className="btn primary" data-testid="ceremony-continue" onClick={dismiss} autoFocus>Continue</button>
       </div>
     </div>
