@@ -52,7 +52,7 @@ export const ASSETS: AssetType[] = [
 ];
 export const assetType = (id: string) => ASSETS.find(a => a.id === id)!;
 
-export interface OwnedAsset { id: string; typeId: string; acquiredSeason: number; suspended: boolean; upkeepPaidSeason: number }
+export interface OwnedAsset { id: string; typeId: string; acquiredSeason: number; suspended: boolean; upkeepPaidSeason: number; level?: number }
 
 const j = (id: string, kind: string, memo: string, lines: { account: string; amount: number }[], season?: number, round?: number, at = ''): Journal => ({ id, at, kind, memo, lines: lines.filter(l => l.amount !== 0), season, round });
 
@@ -97,10 +97,12 @@ export function payPool(id: string, pool: string, balance: number, recipients: {
   return j(id, 'prize', memo, lines, season, round, at);
 }
 
-export function sponsorJournal(season: number, milestone: string, budget: number, at: string): Journal | null {
+export function sponsorJournal(season: number, milestone: string, budget: number, at: string, bonus = 0): Journal | null {
   const m = SPONSOR_MILESTONES[milestone];
-  if (!m || budget < m.amount) return null;
-  return j(`sponsor:${season}:${milestone}`, 'sponsor', `Sponsor milestone: ${m.label}`, [{ account: `sponsor:${season}`, amount: -m.amount }, { account: 'player:cash', amount: m.amount }], season, undefined, at);
+  if (!m) return null;
+  const amount = Math.min(budget, Math.round(m.amount * (1 + bonus)));
+  if (amount < m.amount) return null;
+  return j(`sponsor:${season}:${milestone}`, 'sponsor', `Sponsor milestone: ${m.label}${bonus ? ' (Federation Club bonus)' : ''}`, [{ account: `sponsor:${season}`, amount: -amount }, { account: 'player:cash', amount }], season, undefined, at);
 }
 
 export function purchaseJournal(a: AssetType, season: number, at: string): Journal {
@@ -164,4 +166,36 @@ export function prestige(p: { titles: { title: string }[]; promotions: number; b
     chess, chessTier: tier(chess, [[0, 'Unranked'], [50, 'Contender'], [200, 'Titled'], [500, 'Laureate'], [1000, 'Grandee']]), chessBasis,
     financial: fin, financialTier: tier(fin, [[0, 'Apprentice'], [60, 'Saver'], [150, 'Investor'], [300, 'Patron'], [600, 'Magnate']]), financialBasis,
   };
+}
+
+// ---------------------------------------------------------------- institutions (v0.4.0)
+/** Club levels. Upgrade cost: half is escrowed (refundable when the club closes, counted in book value),
+ *  half is spent (sink). Extra upkeep is charged with the club's upkeep each season. */
+export interface ClubLevel { level: number; name: string; cost: number; escrow: number; extraUpkeep: number; weekendSize: number; contractSlots: number; sponsorBonus: number; effect: string }
+export const CLUB_LEVELS: ClubLevel[] = [
+  { level: 1, name: 'Starter Chess Club', cost: 0, escrow: 0, extraUpkeep: 0, weekendSize: 4, contractSlots: 1, sponsorBonus: 0, effect: '4-player Club Weekend; one sponsorship contract.' },
+  { level: 2, name: 'Club with Tournament Venue', cost: C(400), escrow: C(200), extraUpkeep: C(30), weekendSize: 8, contractSlots: 2, sponsorBonus: 0, effect: '8-player Club Weekend over three rounds (more attendance income, larger funded prize and sponsor); two sponsorship contracts.' },
+  { level: 3, name: 'Federation Club', cost: C(900), escrow: C(450), extraUpkeep: C(60), weekendSize: 8, contractSlots: 3, sponsorBonus: 0.25, effect: 'Sponsor milestones pay 25% more (from the season sponsor budget); three sponsorship contracts.' },
+];
+export const clubLevel = (lv: number) => CLUB_LEVELS[Math.max(1, Math.min(3, lv)) - 1];
+export function clubUpgradeJournal(to: number, season: number, at: string): Journal {
+  const L = clubLevel(to);
+  return j(`club-upgrade:${to}:${season}:${at}`, 'asset-purchase', `Upgrade club to ${L.name}`, [
+    { account: 'player:cash', amount: -L.cost }, { account: 'asset:club:upgrade', amount: L.escrow }, { account: 'sink', amount: L.cost - L.escrow },
+  ], season, undefined, at);
+}
+export function clubUpgradeRefundJournal(escrow: number, season: number, at: string): Journal | null {
+  if (escrow <= 0) return null;
+  return j(`club-upgrade-refund:${season}:${at}`, 'asset-sale', 'Club upgrades: refundable escrow returned on closing', [{ account: 'asset:club:upgrade', amount: -escrow }, { account: 'player:cash', amount: escrow }], season, undefined, at);
+}
+
+/** Sponsorship contracts (talent recruitment): a season stipend paid to the competitor in exchange for a share of
+ *  every prize they win while the contract is active. Contracts have no book value (they are an expense). */
+export const CONTRACT_SHARE = 0.25;
+export const stipendFor = (division: number) => C(Math.max(25, Math.round((leaguePool(division) / MICRO) * 0.08)));
+export function stipendJournal(contractId: string, competitorId: string, amount: number, season: number, at: string): Journal {
+  return j(`stipend:${contractId}:${season}`, 'contract-stipend', `Sponsorship stipend, season ${season}`, [{ account: 'player:cash', amount: -amount }, { account: `comp:${competitorId}`, amount }], season, undefined, at);
+}
+export function contractShareJournal(prizeJournalId: string, competitorId: string, amount: number, season: number, at: string): Journal {
+  return j(`contract-share:${prizeJournalId}:${competitorId}`, 'contract-share', 'Sponsorship share of prize money', [{ account: `comp:${competitorId}`, amount: -amount }, { account: 'player:cash', amount }], season, undefined, at);
 }

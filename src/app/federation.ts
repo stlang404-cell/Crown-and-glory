@@ -23,7 +23,7 @@ import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import type { GameRecord } from '../games/types';
@@ -196,7 +196,7 @@ export class FederationService {
 
   private snapshotFinance(st: FedState): void {
     const cash = st.balances.get('player:cash') ?? 0;
-    const assets = [...st.assets.values()].filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0);
+    const assets = [...st.assets.values()].filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0) + ([...st.assets.values()].some(a => a.typeId === 'club' && !a.suspended) ? st.balances.get('asset:club:upgrade') ?? 0 : 0);
     const positions = [...st.positions.values()].filter(p => p.holder === 'player:cash').reduce((s, p) => s + liquidationValue(st.markets.get(p.marketId)!, p), 0);
     const nw = netWorth(cash, assets, positions);
     st.finance.points.push({ season: st.world.season, round: st.world.round, at: this.now(), cash, assets, positions, netWorth: nw });
@@ -767,7 +767,7 @@ export class FederationService {
       }
       // Club Weekend (owner only): set up at round 10, pay at round 11
       if (round === CLUB_ROUNDS[0] - 1 && [...st.assets.values()].some(a => a.typeId === 'club' && !a.suspended)) this.setupClubWeekend(st, ctx, posted);
-      if (round === CLUB_ROUNDS[1] && oldPlan.club?.champions.length) this.payClubWeekend(st, oldPlan.club, posted);
+      if (oldPlan.club && round === oldPlan.club.stages[oldPlan.club.stages.length - 1].round && oldPlan.club.champions.length) this.payClubWeekend(st, oldPlan.club, posted);
       if (res.seasonEnd) {
         // championship prizes by stage reached
         const champ = oldPlan.champ;
@@ -794,8 +794,12 @@ export class FederationService {
           if (!t.upkeep) continue;
           const cash = st.balances.get('player:cash') ?? 0;
           const na = { ...a };
-          if (cash >= t.upkeep) { this.post(st, [upkeepJournal(t, season, this.now())], posted); na.suspended = false; na.upkeepPaidSeason = season; }
-          else na.suspended = true;
+          const extra = a.typeId === 'club' ? clubLevel(a.level ?? 1).extraUpkeep : 0;
+          if (cash >= t.upkeep + extra) {
+            this.post(st, [upkeepJournal(t, season, this.now())], posted);
+            if (extra) this.post(st, [{ id: `upkeep:club-level:${season}`, at: this.now(), kind: 'upkeep', memo: `${clubLevel(a.level ?? 1).name}: facility upkeep, season ${season}`, lines: [{ account: 'player:cash', amount: -extra }, { account: 'sink', amount: extra }], season }], posted);
+            na.suspended = false; na.upkeepPaidSeason = season;
+          } else na.suspended = true;
           st.assets.set(a.id, na);
         }
         // treasury replenishment toward its target (explicit, capped issuance)
@@ -834,6 +838,19 @@ export class FederationService {
         if (gain > 0) c.earnings += gain;
         c.balanceSeen = bal;
       }
+      // sponsorship contracts: share of prizes paid this round; next season's stipends at season end
+      const changedContracts: Contract[] = [];
+      this.contractShares(st, posted, changedContracts);
+      if (res.seasonEnd) {
+        for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) {
+          const comp = st.competitors.get(ct.competitorId);
+          const cash = st.balances.get('player:cash') ?? 0;
+          const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
+          if (!comp || comp.status !== 'active' || !club || cash < ct.stipend) { const e = { ...ct, status: 'ended' as const, endedSeason: season }; st.contracts.set(ct.id, e); changedContracts.push(e); continue; }
+          this.post(st, [stipendJournal(ct.id, ct.competitorId, ct.stipend, season + 1, this.now())], posted);
+          const n = { ...ct, paid: ct.paid + ct.stipend }; st.contracts.set(ct.id, n); changedContracts.push(n);
+        }
+      }
       // Grand Exchange: settle from recorded results, list new markets, refresh models, NPC re-trading
       const ops = this.opsOf(st, posted);
       afterRound(ops, season, round, rec, games, oldPlan, res.seasonEnd);
@@ -845,7 +862,7 @@ export class FederationService {
       st.rounds.set(opened.rec.id, opened.rec);
       if (res.seasonEnd) openSeasonMarkets(ops);
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts }, expect);
       return res;
     });
   }
@@ -853,24 +870,32 @@ export class FederationService {
   private sponsor(st: FedState, milestone: string, posted: Journal[], season: number): void {
     const key = `${season}:${milestone}`;
     if (st.extra.sponsorsPaid.includes(key)) return;
-    const j = sponsorJournal(season, milestone, st.balances.get(`sponsor:${season}`) ?? 0, this.now());
+    const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
+    const j = sponsorJournal(season, milestone, st.balances.get(`sponsor:${season}`) ?? 0, this.now(), club ? clubLevel(club.level ?? 1).sponsorBonus : 0);
     if (j) { this.post(st, [j], posted); st.extra.sponsorsPaid.push(key); }
   }
 
   private setupClubWeekend(st: FedState, ctx: Ctx, posted: Journal[]): void {
     const circuit = ctx.plan.circuits.find(c => c.members.includes(PLAYER_ID));
     if (!circuit) return;
+    const club = [...st.assets.values()].find(a => a.typeId === 'club')!;
+    const L = clubLevel(club.level ?? 1);
     const myR = ctx.player.rating;
-    const guests = circuit.members.filter(m => m !== PLAYER_ID).sort((a, b) => Math.abs(ratingOfC(st, a) - myR) - Math.abs(ratingOfC(st, b) - myR) || a.localeCompare(b)).slice(0, 3);
+    const guests = circuit.members.filter(m => m !== PLAYER_ID).sort((a, b) => Math.abs(ratingOfC(st, a) - myR) - Math.abs(ratingOfC(st, b) - myR) || a.localeCompare(b)).slice(0, L.weekendSize - 1);
     const ids = [PLAYER_ID, ...guests];
     const seeds = Object.fromEntries([...ids].sort((a, b) => (b === PLAYER_ID ? myR : ratingOfC(st, b)) - (a === PLAYER_ID ? myR : ratingOfC(st, a))).map((id, i) => [id, i + 1]));
     const bySeed = [...ids].sort((a, b) => seeds[a] - seeds[b]);
     const mk = (a: string, b: string): KoMatch => ({ a, b, seedA: seeds[a], seedB: seeds[b], games: [], winner: null, joint: false, decidedBy: null });
-    ctx.plan.club = { name: 'club', qualifiers: ids, seeds, stages: [{ round: CLUB_ROUNDS[0], label: 'Club Semifinal', matches: [mk(bySeed[0], bySeed[3]), mk(bySeed[1], bySeed[2])] }, { round: CLUB_ROUNDS[1], label: 'Club Final', matches: [] }], champions: [] };
+    const stages = L.weekendSize === 8
+      ? [{ round: CLUB_ROUNDS[0], label: 'Club Quarterfinal', matches: [mk(bySeed[0], bySeed[7]), mk(bySeed[3], bySeed[4]), mk(bySeed[2], bySeed[5]), mk(bySeed[1], bySeed[6])] },
+        { round: CLUB_ROUNDS[1], label: 'Club Semifinal', matches: [] as KoMatch[] }, { round: CLUB_ROUNDS[1] + 1, label: 'Club Final', matches: [] as KoMatch[] }]
+      : [{ round: CLUB_ROUNDS[0], label: 'Club Semifinal', matches: [mk(bySeed[0], bySeed[3]), mk(bySeed[1], bySeed[2])] }, { round: CLUB_ROUNDS[1], label: 'Club Final', matches: [] as KoMatch[] }];
+    ctx.plan.club = { name: 'club', qualifiers: ids, seeds, stages, champions: [] };
     const season = st.world.season;
     const cash = st.balances.get('player:cash') ?? 0;
     const C = (x: number) => x * MICRO;
-    if (cash >= C(60)) this.post(st, [{ id: `club-host:${season}`, at: this.now(), kind: 'club-hosting', memo: 'Club Weekend: hosting cost and prize escrow', lines: [{ account: 'player:cash', amount: -C(60) }, { account: 'sink', amount: C(20) }, { account: `prize:${season}:club`, amount: C(40) }], season }], posted);
+    const host = L.weekendSize === 8 ? C(40) : C(20), escrow = L.weekendSize === 8 ? C(80) : C(40);
+    if (cash >= host + escrow) this.post(st, [{ id: `club-host:${season}`, at: this.now(), kind: 'club-hosting', memo: `Club Weekend (${L.weekendSize} players): hosting cost and prize escrow`, lines: [{ account: 'player:cash', amount: -(host + escrow) }, { account: 'sink', amount: host }, { account: `prize:${season}:club`, amount: escrow }], season }], posted);
     // attendance revenue: each guest pays 5 ₵ if they can
     for (const g of guests) if ((st.balances.get(`comp:${g}`) ?? 0) >= C(5)) this.post(st, [{ id: `club-attend:${season}:${g}`, at: this.now(), kind: 'club-attendance', memo: `Club Weekend attendance (${this.name(g)})`, lines: [{ account: `comp:${g}`, amount: -C(5) }, { account: 'player:cash', amount: C(5) }], season }], posted);
   }
@@ -879,9 +904,88 @@ export class FederationService {
     const season = st.world.season;
     const pool = `prize:${season}:club`;
     const bal = st.balances.get(pool) ?? 0;
-    if (bal) this.post(st, [payPool(`prize-pay:${season}:club`, pool, bal, club.champions.map(id => ({ id, share: 1 / club.champions.length })), 'Club Weekend prize', season, CLUB_ROUNDS[1], this.now())], posted);
+    const last = club.stages[club.stages.length - 1].round;
+    if (bal) this.post(st, [payPool(`prize-pay:${season}:club`, pool, bal, club.champions.map(id => ({ id, share: 1 / club.champions.length })), 'Club Weekend prize', season, last, this.now())], posted);
+    const sponsorAmt = (club.qualifiers.length === 8 ? 60 : 30) * MICRO;
     const sp = st.balances.get(`sponsor:${season}`) ?? 0;
-    if (sp >= 30 * MICRO) this.post(st, [{ id: `club-sponsor:${season}`, at: this.now(), kind: 'sponsor', memo: 'Club Weekend sponsor (completed event)', lines: [{ account: `sponsor:${season}`, amount: -30 * MICRO }, { account: 'player:cash', amount: 30 * MICRO }], season }], posted);
+    if (sp >= sponsorAmt) this.post(st, [{ id: `club-sponsor:${season}`, at: this.now(), kind: 'sponsor', memo: 'Club Weekend sponsor (completed event)', lines: [{ account: `sponsor:${season}`, amount: -sponsorAmt }, { account: 'player:cash', amount: sponsorAmt }], season }], posted);
+  }
+
+  // ------------------------------------------------------------------ institutions: club levels and sponsorship contracts
+  clubLevelOf(): number { const c = [...(this.state?.assets.values() ?? [])].find(a => a.typeId === 'club'); return c ? c.level ?? 1 : 0; }
+
+  async upgradeClub(): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const club = [...st.assets.values()].find(a => a.typeId === 'club');
+      if (!club || club.suspended) throw new Error('You need an active Starter Chess Club');
+      const to = (club.level ?? 1) + 1;
+      if (to > 3) throw new Error('Your club is already a Federation Club');
+      if (st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before rebuilding the club');
+      const posted: Journal[] = [];
+      this.post(st, [clubUpgradeJournal(to, st.world.season, this.now())], posted);
+      const next = { ...club, level: to };
+      st.assets.set(club.id, next);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, { assets: [next] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  activeContracts(): Contract[] { return [...(this.state?.contracts.values() ?? [])].filter(c => c.status === 'active'); }
+
+  /** Sign a competitor to a sponsorship contract (stipend for this season paid now). */
+  async signContract(competitorId: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
+      if (!club) throw new Error('Sponsorship contracts are signed through your club');
+      const active = [...st.contracts.values()].filter(c => c.status === 'active');
+      if (active.length >= clubLevel(club.level ?? 1).contractSlots) throw new Error('No free contract slot — upgrade your club or release a contract');
+      const c = st.competitors.get(competitorId);
+      if (!c || c.status !== 'active') throw new Error('Unknown or inactive competitor');
+      if (active.some(x => x.competitorId === competitorId)) throw new Error('Already under contract');
+      // conflict rule: no new contract while you hold a position in an open market involving them
+      const conflict = [...st.positions.values()].some(p => p.holder === 'player:cash' && p.shares.some(x => x) && ['open', 'closed'].includes(st.markets.get(p.marketId)?.status ?? '') && marketInvolves(st.markets.get(p.marketId)!, competitorId));
+      if (conflict) throw new Error('You hold a position in a market involving this competitor; settle or sell it first');
+      const stipend = stipendFor(c.division);
+      const ct: Contract = { id: `ct:${competitorId}:${st.world.season}`, competitorId, signedSeason: st.world.season, stipend, share: CONTRACT_SHARE, status: 'active', earned: 0, paid: stipend, endedSeason: null };
+      const posted: Journal[] = [];
+      this.post(st, [stipendJournal(ct.id, competitorId, stipend, st.world.season, this.now())], posted);
+      st.contracts.set(ct.id, ct);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, { contracts: [ct], competitors: true }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  async releaseContract(contractId: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const ct = st.contracts.get(contractId);
+      if (!ct || ct.status !== 'active') throw new Error('No active contract');
+      const next: Contract = { ...ct, status: 'ended', endedSeason: st.world.season };
+      st.contracts.set(ct.id, next);
+      await this.commit(st, [], { contracts: [next] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Transfer the contract share of every prize paid in this command to a contracted competitor. */
+  private contractShares(st: FedState, posted: Journal[], changed: Contract[]): void {
+    const active = new Map([...st.contracts.values()].filter(c => c.status === 'active').map(c => [c.competitorId, c]));
+    if (!active.size) return;
+    for (const j of [...posted]) {
+      if (j.kind !== 'prize') continue;
+      for (const l of j.lines) {
+        if (!l.account.startsWith('comp:') || l.amount <= 0) continue;
+        const ct = active.get(l.account.slice(5));
+        if (!ct) continue;
+        const amt = Math.floor(l.amount * ct.share);
+        if (amt <= 0) continue;
+        this.post(st, [contractShareJournal(j.id, ct.competitorId, amt, st.world.season, this.now())], posted);
+        const next = { ...ct, earned: ct.earned + amt };
+        st.contracts.set(ct.id, next); active.set(ct.competitorId, next);
+        const k = changed.findIndex(x => x.id === ct.id); if (k >= 0) changed[k] = next; else changed.push(next);
+      }
+    }
   }
 
   // ------------------------------------------------------------------ exchange
@@ -893,6 +997,8 @@ export class FederationService {
       const m = st.markets.get(marketId);
       if (!m || m.sandbox) throw new Error('Unknown market');
       if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games');
+      const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
+      if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who is part of this market (you may still sell existing shares)`);
       const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
       if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since this quote — review the new quote');
       const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
@@ -946,9 +1052,14 @@ export class FederationService {
       if (a.typeId === 'club' && st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before closing the club');
       const posted: Journal[] = [];
       this.post(st, [saleJournal(assetType(a.typeId), st.world.season, this.now())], posted);
+      const ended: Contract[] = [];
+      if (a.typeId === 'club') {
+        this.post(st, [clubUpgradeRefundJournal(st.balances.get('asset:club:upgrade') ?? 0, st.world.season, this.now())], posted);
+        for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) { const e = { ...ct, status: 'ended' as const, endedSeason: st.world.season }; st.contracts.set(ct.id, e); ended.push(e); }
+      }
       st.assets.delete(id);
       this.snapshotFinance(st);
-      await this.commit(st, posted, { delAssets: [id] }, { season: st.world.season, round: st.world.round });
+      await this.commit(st, posted, { delAssets: [id], contracts: ended }, { season: st.world.season, round: st.world.round });
     });
   }
 
@@ -969,7 +1080,7 @@ export class FederationService {
     const st = this.state!;
     const cash = st.balances.get('player:cash') ?? 0;
     const owned = [...st.assets.values()];
-    const assetValueSum = owned.filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0);
+    const assetValueSum = owned.filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0) + (owned.some(a => a.typeId === 'club' && !a.suspended) ? st.balances.get('asset:club:upgrade') ?? 0 : 0);
     const myPositions = [...st.positions.values()].filter(p => p.holder === 'player:cash');
     let open = 0, realized = 0, unrealized = 0, fees = 0;
     for (const p of myPositions) {
@@ -1017,3 +1128,10 @@ export function eventName(event: string): string {
   return { open: 'Federation Open', challenger: 'Challenger Open', champ: 'Crown Championship', club: 'Club Weekend' }[event] ?? event;
 }
 export { CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON };
+
+/** Does a market's outcome depend on this competitor? (conflict-of-interest rule for sponsorship contracts) */
+export function marketInvolves(m: Market, competitorId: string): boolean {
+  if (m.white === competitorId || m.black === competitorId) return true;
+  if (m.ref?.subject === competitorId) return true;
+  return String(m.ref?.ids ?? '').split(',').includes(competitorId);
+}

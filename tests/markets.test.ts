@@ -183,3 +183,41 @@ describe('Sandbox Exchange isolation and anti-exploit rules', () => {
     expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
   }, 60_000);
 });
+
+describe('institutions: club levels and sponsorship contracts', () => {
+  it('upgrade escrow counts in book value and is refunded; contracts pay stipends, receive prize shares and block conflicted trades', async () => {
+    const svc = await make();
+    await svc.create(3, 9090);
+    // fund the player generously through a real prize route is slow; use the ledger's issuance for the test only
+    (svc as unknown as { state: { balances: Map<string, number> } }).state.balances.set('player:cash', 5_000_000_000);
+    (svc as unknown as { state: { balances: Map<string, number> } }).state.balances.set('mint', svc.state!.balances.get('mint')! - 4_000_000_000);
+    await svc.buyAsset('club');
+    const nw0 = svc.finance().netWorth;
+    await svc.upgradeClub();
+    expect(svc.clubLevelOf()).toBe(2);
+    expect(svc.finance().netWorth).toBe(nw0 - 200_000_000); // 400 paid: 200 escrowed (book value), 200 spent
+    // sign a competitor whose market is open: buying is then a conflict of interest
+    const m = svc.featuredFixtures().map(f => svc.marketFor(f.id)!).find(x => x && x.status === 'open')!;
+    await svc.signContract(m.white);
+    expect(svc.activeContracts()).toHaveLength(1);
+    await expect(svc.trade(m.id, 0, 5, 'buy')).rejects.toThrow(/Conflict of interest/);
+    // play the season: stipends and prize shares are journal transfers; money is conserved
+    for (let i = 0; i < ROUNDS_PER_SEASON; i++) { await playMine(svc); await svc.advanceRound(); expect(total(svc)).toBe(0); }
+    const ct = [...svc.state!.contracts.values()][0];
+    const journals = await svc.db.loadAll<{ id: string; kind: string; lines: { account: string; amount: number }[] }>('journal');
+    expect(journals.filter(j => j.kind === 'contract-stipend').length).toBeGreaterThanOrEqual(1);
+    const prizesToHim = journals.filter(j => j.kind === 'prize').map(j => j.lines.filter(l => l.account === `comp:${ct.competitorId}` && l.amount > 0).reduce((a, l) => a + l.amount, 0)).filter(x => x > 0);
+    const shares = journals.filter(j => j.kind === 'contract-share').reduce((a, j) => a + j.lines.filter(l => l.account === 'player:cash').reduce((x, l) => x + l.amount, 0), 0);
+    expect(shares).toBe(prizesToHim.reduce((a, x) => a + Math.floor(x * 0.25), 0));
+    expect(ct.earned).toBe(shares);
+    // closing the club refunds the upgrade escrow and ends contracts
+    if (!svc.state!.plan.club || svc.state!.plan.club.champions.length) {
+      const before = svc.balance('player:cash');
+      const esc = svc.balance('asset:club:upgrade');
+      await svc.sellAsset('club');
+      expect(svc.balance('player:cash') - before).toBe(300_000_000 + esc);
+      expect(svc.activeContracts()).toHaveLength(0);
+    }
+    for (const [a, v] of svc.state!.balances) if (a !== 'mint') expect(v, a).toBeGreaterThanOrEqual(0);
+  }, 300_000);
+});
