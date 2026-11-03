@@ -76,38 +76,39 @@ export function ProfileScreen() {
   return (
     <div>
       <PassportBanner />
-      <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Chess Passport</h1></div>
-      <div className="seg" role="group" aria-label="Rating pool" style={{ marginBottom: 12 }}>
+      <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Career Passport</h1></div>
+      <div className="seg" role="group" aria-label="Rating Pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
-        <div className="panel stat"><span className="k">Crown rating ({pool})</span><span className="v" data-testid="current-rating">{Math.round(s.rating)}</span><span className="small muted">RD ±{Math.round(s.rd)} · σ {s.sigma.toFixed(4)} · {prov ? 'provisional' : 'established'}</span></div>
-        <div className="panel stat"><span className="k">Rank</span><span className="v row" style={{ fontSize: '1.3rem', gap: 8 }}><Emblem spec={rankEmblem(rankFor(s.rating, s.games, s.rd))} size="md" title={`Rank: ${rankFor(s.rating, s.games, s.rd)}`} />{rankFor(s.rating, s.games, s.rd)}</span><span className="small muted">Policy {RANK_POLICY} (temporary rating bands — distinct from permanent federation titles, earned by norms)</span></div>
+        <div className="panel stat"><span className="k">Rating ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v" data-testid="current-rating">{Math.round(s.rating)}</span><span className="small muted">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span></div>
+        <div className="panel stat"><span className="k">Rank</span><span className="v row" style={{ fontSize: '1.3rem', gap: 8 }}><Emblem spec={rankEmblem(rankFor(s.rating, s.games, s.rd))} size="md" title={`Rank: ${rankFor(s.rating, s.games, s.rd)}`} />{rankFor(s.rating, s.games, s.rd)}</span><span className="small muted">A temporary label from your rating. Federation Titles are separate and permanent.</span></div>
         <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
-        <div className="panel stat"><span className="k">Peak / lowest (established)</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? '—' : Math.round(s.peak)} / {s.lowest === null ? '—' : Math.round(s.lowest)}</span><span className="small muted">Provisional ratings are excluded</span></div>
+        <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? '—' : Math.round(s.peak)} / {s.lowest === null ? '—' : Math.round(s.lowest)}</span><span className="small muted">Established ratings only</span></div>
       </div>
       <div className="panel">
-        <div className="panel-title"><h2>Rating history</h2>
+        <div className="panel-title"><h2>Rating History</h2>
           <div className="seg" role="group" aria-label="Window">{(['10', '30', '100', 'all'] as const).map(w => <button key={w} aria-pressed={window_ === w} onClick={() => setWindow(w)}>{w === 'all' ? 'All' : `Last ${w}`}</button>)}</div>
         </div>
         <RatingChart points={points} />
-        <p className="small muted">Internal Crown ratings (Glicko-2, initial 1500 ±350, τ = 0.5, one rated game per rating period). They are not FIDE ratings. Provisional until 20 games and RD ≤ 100.</p>
+        <p className="small muted">Game ratings, not FIDE ratings. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
+        <details className="small muted"><summary>Details</summary>Glicko-2: start 1500 ±350, τ = 0.5, one rated game per rating period. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.</details>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>By time control (all saved games)</h3>
-          <table><thead><tr><th>Control</th><th>Games</th><th>W</th><th>D</th><th>L</th></tr></thead>
-            <tbody>{byTc.map(r => <tr key={r.tc}><td>{r.tc}</td><td>{r.n}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td></tr>)}</tbody></table>
+          <h3>By Time Control</h3>
+          <table><thead><tr><th>Time Control</th><th>Games</th><th>W</th><th>D</th><th>L</th></tr></thead>
+            <tbody>{byTc.map(r => <tr key={r.tc}><td>{r.tc[0].toUpperCase() + r.tc.slice(1)}</td><td>{r.n}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td></tr>)}</tbody></table>
         </div>
         <div className="panel">
-          <h3>By opponent strength ({pool}, rated)</h3>
-          <table><thead><tr><th>Opp. rating</th><th>Games</th><th>Score</th><th>Expected</th></tr></thead>
+          <h3>By Opponent Strength</h3>
+          <table><thead><tr><th>Opponent Rating</th><th>Games</th><th>Score</th><th>Expected</th></tr></thead>
             <tbody>{bands.map(b => <tr key={b.label}><td>{b.label}</td><td>{b.n}</td><td>{b.n ? b.score : '—'}</td><td>{b.n ? b.exp.toFixed(1) : '—'}</td></tr>)}</tbody></table>
-          <p className="small muted">Expected = sum of Glicko-2 expected scores before each game.</p>
+          <p className="small muted">Rated {pool} games. Expected is the score your rating predicted before each game.</p>
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Rating events ({ev.length})</h3>
+        <h3>Rated Games ({ev.length})</h3>
         {ev.length === 0 ? <p className="muted">No rated games in this pool yet.</p> : (
           <div style={{ overflowX: 'auto' }}>
             <table>
@@ -128,9 +129,9 @@ export function ProfileScreen() {
         )}
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Rank history</h3>
-        {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}. The Crown Champion title is earned only by winning the Crown Championship.</p>
-          : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {Math.round(e.after.rating)}, game {e.gameId})</li>)}</ul>}
+        <h3>Rank History</h3>
+        {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}.</p>
+          : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {Math.round(e.after.rating)})</li>)}</ul>}
       </div>
       <CareerStanding rating={s.rating} rd={s.rd} games={s.games} peak={s.peak} />
       <FederationCareer peak={s.peak} />
@@ -176,47 +177,46 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
   return (
     <>
       <div className="grid-3" style={{ marginTop: 14 }}>
-        <div className="panel stat"><span className="k">Best accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>open game</button>}</div>
-        <div className="panel stat"><span className="k">Strongest win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${Math.round(rec.strongestWin.rating)})` : '—'}</span></div>
-        <div className="panel stat"><span className="k">Longest win streak</span><span className="v">{rec.longestWinStreak}</span></div>
-        <div className="panel stat"><span className="k">Established peak</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${Math.round(rec.peakRating.rating)} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">provisional ratings excluded</span></div>
-        <div className="panel stat"><span className="k">Puzzle Rush best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
+        <div className="panel stat"><span className="k">Best Accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>Open Game</button>}</div>
+        <div className="panel stat"><span className="k">Strongest Win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${Math.round(rec.strongestWin.rating)})` : '—'}</span></div>
+        <div className="panel stat"><span className="k">Longest Win Streak</span><span className="v">{rec.longestWinStreak}</span></div>
+        <div className="panel stat"><span className="k">Peak Rating</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${Math.round(rec.peakRating.rating)} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
+        <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Career timeline</h3>
+          <h3>Career Timeline</h3>
           {timeline.length === 0 ? <p className="muted small">Your milestones appear here as you play and train.</p> : (
             <ul className="small" style={{ paddingLeft: 18 }}>{timeline.slice(0, 20).map((t, i) => <li key={i}>{new Date(t.at).toLocaleDateString()} — {t.gameId ? <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: t.gameId! })}>{t.text}</button> : t.text}</li>)}</ul>
           )}
         </div>
         <div className="panel">
-          <h3>Memorable moves & greatest wins</h3>
-          {rec.memorable.length === 0 && greatest.length === 0 ? <p className="muted small">Great and Brilliant moves from your analysed games, and your wins against the strongest opponents, appear here.</p> : null}
-          {rec.memorable.slice(0, 6).map(m => <div key={`${m.gameId}-${m.ply}`} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: m.gameId, ply: m.ply })}>{m.grade === 'brilliant' ? '!!' : '!'} {m.san} (ply {m.ply})</button></div>)}
+          <h3>Memorable Moves &amp; Greatest Wins</h3>
+          {rec.memorable.length === 0 && greatest.length === 0 ? <p className="muted small">Your Great and Brilliant moves and your best wins appear here once you play and analyse games.</p> : null}
+          {rec.memorable.slice(0, 6).map(m => <div key={`${m.gameId}-${m.ply}`} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: m.gameId, ply: m.ply })}>{m.grade === 'brilliant' ? '!!' : '!'} {m.san} (move {Math.ceil(m.ply / 2)})</button></div>)}
           {greatest.map(({ g, r }) => <div key={g.id} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: g.id })}>Win vs {oppName(g)} ({Math.round(r)}) · {new Date(g.startedAt).toLocaleDateString()}</button></div>)}
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Opponent history</h3>
+        <h3>Opponent History</h3>
         {opp.size === 0 ? <p className="muted small">No finished games yet.</p> : (
-          <table><thead><tr><th>Opponent</th><th>W</th><th>D</th><th>L</th><th>Last played</th></tr></thead>
+          <table><thead><tr><th>Opponent</th><th>W</th><th>D</th><th>L</th><th>Last Played</th></tr></thead>
             <tbody>{[...opp.entries()].map(([k, o]) => <tr key={k}><td>{k}</td><td>{o.w}</td><td>{o.d}</td><td>{o.l}</td><td>{new Date(o.last).toLocaleDateString()}</td></tr>)}</tbody></table>
         )}
-        <p className="small muted">Rivalries (M3) will be derived from repeated consequential games recorded here.</p>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Game history ({list.length})</h3><button className="btn small" onClick={exportCsv}>Export CSV</button></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Game History ({list.length})</h3><button className="btn small" onClick={exportCsv}>Export CSV</button></div>
         <div className="row" style={{ marginBottom: 8 }}>
-          <select value={filters.fOpp} onChange={e => filters.setFOpp(e.target.value)} aria-label="Opponent"><option value="all">All opponents</option>{[...opp.keys()].map(k => <option key={k}>{k}</option>)}</select>
-          <select value={filters.fTc} onChange={e => filters.setFTc(e.target.value)} aria-label="Time control"><option value="all">All controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
-          <select value={filters.fRes} onChange={e => filters.setFRes(e.target.value)} aria-label="Result"><option value="all">All results</option><option value="victory">Wins</option><option value="draw">Draws</option><option value="defeat">Losses</option></select>
-          <input type="date" value={filters.fFrom} onChange={e => filters.setFFrom(e.target.value)} aria-label="From date" />
-          <input type="date" value={filters.fTo} onChange={e => filters.setFTo(e.target.value)} aria-label="To date" />
+          <select value={filters.fOpp} onChange={e => filters.setFOpp(e.target.value)} aria-label="Opponent"><option value="all">All Opponents</option>{[...opp.keys()].map(k => <option key={k}>{k}</option>)}</select>
+          <select value={filters.fTc} onChange={e => filters.setFTc(e.target.value)} aria-label="Time Control"><option value="all">All Time Controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
+          <select value={filters.fRes} onChange={e => filters.setFRes(e.target.value)} aria-label="Result"><option value="all">All Results</option><option value="victory">Wins</option><option value="draw">Draws</option><option value="defeat">Losses</option></select>
+          <input type="date" value={filters.fFrom} onChange={e => filters.setFFrom(e.target.value)} aria-label="From Date" />
+          <input type="date" value={filters.fTo} onChange={e => filters.setFTo(e.target.value)} aria-label="To Date" />
         </div>
-        <table><thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th className="hide-sm">Control</th><th>Rating</th></tr></thead>
+        <table><thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th className="hide-sm">Time Control</th><th>Rating</th></tr></thead>
           <tbody>{list.slice(0, 50).map(g => { const e = evBy.get(g.id); return (
-            <tr key={g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: g.id })}><td>{new Date(g.startedAt).toLocaleDateString()}</td><td>{oppName(g)}</td><td>{resultText(g)}</td><td className="hide-sm">{g.timeControl.label}</td><td>{e ? `${Math.round(e.after.rating)} (${e.delta >= 0 ? '+' : ''}${e.delta.toFixed(1)})` : 'unrated'}</td></tr>); })}</tbody></table>
-        {list.length > 50 && <p className="small muted">Showing 50 of {list.length}; the Library pages through everything.</p>}
+            <tr key={g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: g.id })}><td>{new Date(g.startedAt).toLocaleDateString()}</td><td>{oppName(g)}</td><td>{resultText(g)}</td><td className="hide-sm">{g.timeControl.label}</td><td>{e ? `${Math.round(e.after.rating)} (${e.delta >= 0 ? '+' : ''}${e.delta.toFixed(1)})` : 'Unrated'}</td></tr>); })}</tbody></table>
+        {list.length > 50 && <p className="small muted">Showing 50 of {list.length}. Open the Library to see them all.</p>}
       </div>
     </>
   );
@@ -226,17 +226,17 @@ function FederationCareer({ peak }: { peak: number | null }) {
   const services = useServices();
   const { go } = useApp();
   const fed = services.fed;
-  if (!fed.ready) return <div className="panel" style={{ marginTop: 14 }}><h3>Federation career</h3><p className="small muted">You have not joined the federation yet. <button className="btn ghost small" onClick={() => go({ name: 'world' })}>Found it</button></p></div>;
+  if (!fed.ready) return <div className="panel" style={{ marginTop: 14 }}><h3>Federation Career</h3><p className="small muted">You haven't joined the federation yet. <button className="btn ghost small" onClick={() => go({ name: 'world' })}>Go to Federation</button></p></div>;
   const w = fed.state!.world;
   const cabinet = fed.ownsAsset('trophy-cabinet');
   return (
     <div style={{ marginTop: 14 }} className="stack" data-testid="federation-career">
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Federation career</h3>{w.player.fedTitle ? <span className="row" style={{ gap: 6 }}><Emblem spec={titleEmblem(w.player.fedTitle)} size="md" title={`Federation title ${w.player.fedTitle}`} /><strong>{w.player.fedTitle}</strong></span> : <span className="small muted">no federation title yet</span>}</div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Federation Career</h3>{w.player.fedTitle ? <span className="row" style={{ gap: 6 }}><Emblem spec={titleEmblem(w.player.fedTitle)} size="md" title={`Federation title ${w.player.fedTitle}`} /><strong>{w.player.fedTitle}</strong></span> : <span className="small muted">No Federation Title yet</span>}</div>
         <div className="small">Season {w.season} · {divisionLabel(w.player.division)}, {REGION_NAMES[w.player.region]}</div>
-        {w.player.history.length > 0 && <table className="small"><thead><tr><th>Season</th><th>Division</th><th>Rank</th><th>Points</th></tr></thead><tbody>{w.player.history.map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division}</td><td>{h.rank}</td><td>{h.points}</td></tr>)}</tbody></table>}
-        <h3>{cabinet ? 'Walnut trophy cabinet' : 'Titles'}</h3>
-        {w.player.titles.length === 0 ? <p className="small muted">No titles yet. Titles come only from results (league titles, Swiss events, the Crown Championship); they can never be bought.</p>
+        {w.player.history.length > 0 && <table className="small"><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Points</th></tr></thead><tbody>{w.player.history.map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division}</td><td>{h.rank}</td><td>{h.points}</td></tr>)}</tbody></table>}
+        <h3>{cabinet ? 'Walnut Trophy Cabinet' : 'Titles'}</h3>
+        {w.player.titles.length === 0 ? <p className="small muted">No titles yet. Win your league, a Swiss event or the Crown Championship to earn one. Titles can't be bought.</p>
           : <div className="row" style={{ flexWrap: 'wrap' }}>{w.player.titles.map((t, i) => <span key={i} className={`chip ${cabinet ? 'gold' : ''}`}>{cabinet && <Trophy kind={TROPHY_FOR[titleKind(t.title)]} size="sm" title={t.title} />} {t.title}</span>)}</div>}
       </div>
       <PrestigeLadders bestRating={peak} />

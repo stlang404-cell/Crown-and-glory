@@ -8,6 +8,7 @@ import { fmtCrowns, MICRO } from '../exchange/ledger';
 import type { Journal } from '../exchange/ledger';
 import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
 import type { FederationService } from '../app/federation';
+import { statusLabel } from './ExchangeScreen';
 
 const KIND_LABEL: Record<string, string> = {
   prize: 'Prize money', sponsor: 'Sponsorships', 'trade-buy': 'Exchange purchases', 'trade-sell': 'Exchange sales', 'market-settle': 'Exchange settlements', 'market-cancel': 'Exchange cancellations',
@@ -46,13 +47,13 @@ export function PrestigeLadders({ bestRating }: { bestRating: number | null }) {
   return (
     <div className="grid-2" data-testid="prestige">
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Chess prestige</h3><span className="chip gold">{p.chessTier} · {p.chess}</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Chess Prestige</h3><span className="chip gold">{p.chessTier} · {p.chess}</span></div>
         <ul className="small">{p.chessBasis.length ? p.chessBasis.map((b, i) => <li key={i}>{b}</li>) : <li className="muted">Earned only through results: titles, promotions, podiums and established rating.</li>}</ul>
       </div>
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={financialEmblem(p.financialTier)} size="md" title={`Financial tier ${p.financialTier}`} /> Financial prestige</h3><span className="chip info">{p.financialTier} · {p.financial}</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={financialEmblem(p.financialTier)} size="md" title={`Financial Prestige: ${p.financialTier}`} /> Financial Prestige</h3><span className="chip info">{p.financialTier} · {p.financial}</span></div>
         <ul className="small">{p.financialBasis.map((b, i) => <li key={i}>{b}</li>)}</ul>
-        <div className="small muted">Separate ladder: money never buys chess prestige or titles.</div>
+        <div className="small muted">Money never buys chess prestige or titles.</div>
       </div>
     </div>
   );
@@ -79,34 +80,35 @@ export function FinanceScreen() {
   return (
     <div>
       <h1>Finance</h1>
-      <div className="small muted" style={{ marginBottom: 12 }}>All money is fictional crowns (₵) with no real-world value. Every figure below is read from the double-entry ledger ({ECONOMY_ID}).</div>
+      <div className="small muted" style={{ marginBottom: 12 }}>All money is fictional crowns (₵) with no real-world value.</div>
       {msg && <div className={`notice ${msg.kind === 'warn' ? 'warn' : ''}`} role="status" style={{ marginBottom: 12 }}>{msg.text}</div>}
       <div className="panel" data-testid="networth">
         <div className="row" style={{ gap: 28, flexWrap: 'wrap' }}>
-          <div className="stat"><span className="v">{fmtCrowns(fin.netWorth, 0)}</span><span className="k">Net worth</span></div>
+          <div className="stat"><span className="v">{fmtCrowns(fin.netWorth, 0)}</span><span className="k">Net Worth</span></div>
           <div className="stat"><span className="v">{fmtCrowns(fin.cash, 0)}</span><span className="k">Cash</span></div>
-          <div className="stat"><span className="v">{fmtCrowns(fin.assets, 0)}</span><span className="k">Assets (book)</span></div>
-          <div className="stat"><span className="v">{fmtCrowns(fin.positions, 0)}</span><span className="k">Open positions</span></div>
+          <div className="stat"><span className="v">{fmtCrowns(fin.assets, 0)}</span><span className="k">Assets</span></div>
+          <div className="stat"><span className="v">{fmtCrowns(fin.positions, 0)}</span><span className="k">Open Positions</span></div>
           <div className="stat"><span className="v">{fmtCrowns(0, 0)}</span><span className="k">Liabilities</span></div>
-          <div className="stat"><span className="v">{fmtCrowns(fin.peak, 0)}</span><span className="k">Peak net worth</span></div>
+          <div className="stat"><span className="v">{fmtCrowns(fin.peak, 0)}</span><span className="k">Peak Net Worth</span></div>
         </div>
-        <div className="small muted" style={{ marginTop: 6 }}>Net worth = cash + asset book value (refundable bond + resale price) + open positions at their sell-now value after fees (closed, unsettled markets at the 1/3 cancellation floor) − liabilities (there is no borrowing, so liabilities are always 0).</div>
+        <div className="small muted" style={{ marginTop: 6 }}>Net worth is your cash, plus your assets, plus what your open positions would sell for now. You can't borrow, so you never owe anything.</div>
         <NetWorthChart points={st.finance.points} />
-        <div className="small muted">Solid accent line: net worth · dashed: cash · {st.finance.points.length} snapshots.</div>
+        <div className="small muted">Solid line: net worth · dashed line: cash.</div>
+        <details className="small muted"><summary>Details</summary>Net worth = cash + asset book value (refundable bond + resale price) + open positions at their sell-now value after fees (closed, unsettled markets at the 1/3 cancellation refund) − liabilities (always 0). Every figure is read from the double-entry ledger ({ECONOMY_ID}) · {st.finance.points.length} snapshots.</details>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Income and spending</h3>
+          <h3>Income and Spending</h3>
           <table className="small"><tbody>
             {[...byKind].sort((a, b) => b[1] - a[1]).map(([k, v]) => <tr key={k}><td>{k === 'exchange' ? 'Exchange (net)' : KIND_LABEL[k] ?? k}</td><td className={`mono ${v >= 0 ? 'pos' : 'neg'}`}>{v >= 0 ? '+' : ''}{fmtCrowns(v)}</td></tr>)}
           </tbody></table>
-          <div className="small" style={{ marginTop: 8 }}>Exchange: realized {fmtCrowns(fin.realized)} · unrealized {fmtCrowns(fin.unrealized)} · fees paid {fmtCrowns(fin.fees)}</div>
-          {fin.cash < RECOVERY_THRESHOLD && <div className="notice" style={{ marginTop: 8 }}>Low on cash? You can never go into debt. Below {fmtCrowns(RECOVERY_THRESHOLD, 0)} a free recovery voucher (one per season) pays the Challenger Open entry, sell assets for their resale value, and league prizes and sponsorships keep coming from chess results.</div>}
+          <div className="small" style={{ marginTop: 8 }}>Exchange: realised {fmtCrowns(fin.realized)} · unrealised {fmtCrowns(fin.unrealized)} · fees paid {fmtCrowns(fin.fees)}</div>
+          {fin.cash < RECOVERY_THRESHOLD && <div className="notice" style={{ marginTop: 8 }}>Low on cash? You can't go into debt. Below {fmtCrowns(RECOVERY_THRESHOLD, 0)} you get one free recovery voucher per season for the Challenger Open entry. You can also sell assets, and prizes and sponsorships keep coming from your results.</div>}
         </div>
         <div className="panel">
-          <h3>Open positions</h3>
-          {fin.myPositions.filter(p => { const m = st.markets.get(p.marketId)!; return (m.status === 'open' || m.status === 'closed') && p.shares.some(x => x); }).length === 0 ? <p className="small muted">None. <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>Go to the Exchange</button></p> : (
-            <ul className="small">{fin.myPositions.map(p => { const m = st.markets.get(p.marketId)!; if (!(m.status === 'open' || m.status === 'closed') || !p.shares.some(x => x)) return null; return <li key={p.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'exchange', id: m.id })}>{m.title}</button> · W/D/B {p.shares.join('/')} · {m.status}</li>; })}</ul>
+          <h3>Open Positions</h3>
+          {fin.myPositions.filter(p => { const m = st.markets.get(p.marketId)!; return (m.status === 'open' || m.status === 'closed') && p.shares.some(x => x); }).length === 0 ? <p className="small muted">No open positions. <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>Go to Exchange</button></p> : (
+            <ul className="small">{fin.myPositions.map(p => { const m = st.markets.get(p.marketId)!; if (!(m.status === 'open' || m.status === 'closed') || !p.shares.some(x => x)) return null; return <li key={p.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'exchange', id: m.id })}>{m.title}</button> · W/D/B {p.shares.join('/')} · {statusLabel(m.status)}</li>; })}</ul>
           )}
         </div>
       </div>
@@ -119,32 +121,32 @@ export function FinanceScreen() {
             const o = owned.get(a.id);
             return (
               <div key={a.id} className="panel stack" style={{ background: 'transparent', borderColor: o ? 'var(--accent)' : undefined }}>
-                <div className="row"><strong>{a.name}</strong><span className="spacer" />{o ? <span className={`chip ${o.suspended ? 'neg' : 'pos'}`}>{o.suspended ? 'suspended (upkeep unpaid)' : 'owned'}</span> : <span className="chip">{fmtCrowns(a.price, 0)}</span>}</div>
+                <div className="row"><strong>{a.name}</strong><span className="spacer" />{o ? <span className={`chip ${o.suspended ? 'neg' : 'pos'}`}>{o.suspended ? 'Suspended · Upkeep Unpaid' : 'Owned'}</span> : <span className="chip">{fmtCrowns(a.price, 0)}</span>}</div>
                 <div className="small">{a.effect}</div>
-                <div className="small muted">Price {fmtCrowns(a.price, 0)}{a.bond ? ` (incl. ${fmtCrowns(a.bond, 0)} refundable bond)` : ''} · resale {fmtCrowns(a.resale, 0)} · book value {fmtCrowns(assetValue(a), 0)} · upkeep {a.upkeep ? `${fmtCrowns(a.upkeep, 0)} per season` : 'none'}</div>
+                <div className="small muted">Price {fmtCrowns(a.price, 0)}{a.bond ? ` (includes a ${fmtCrowns(a.bond, 0)} refundable bond)` : ''} · resale {fmtCrowns(a.resale, 0)} · counts {fmtCrowns(assetValue(a), 0)} toward net worth · {a.upkeep ? `upkeep ${fmtCrowns(a.upkeep, 0)} per season` : 'no upkeep'}</div>
                 {o ? (
                   confirm === a.id
-                    ? <div className="row"><button className="btn danger small" onClick={() => act(`Sold ${a.name}.`, () => fed.sellAsset(o.id))}>Confirm: receive {fmtCrowns(assetValue(a), 0)}</button><button className="btn small" onClick={() => setConfirm(null)}>Keep</button></div>
-                    : <button className="btn small" disabled={services.readOnly} onClick={() => setConfirm(a.id)}>{a.kind === 'club' ? 'Close club' : 'Sell'}</button>
+                    ? <div className="row"><button className="btn danger small" onClick={() => act(`Sold ${a.name}.`, () => fed.sellAsset(o.id))}>Confirm: Receive {fmtCrowns(assetValue(a), 0)}</button><button className="btn small" onClick={() => setConfirm(null)}>Keep</button></div>
+                    : <button className="btn small" disabled={services.readOnly} onClick={() => setConfirm(a.id)}>{a.kind === 'club' ? 'Close Club' : 'Sell'}</button>
                 ) : confirm === a.id
-                  ? <div className="row"><button className="btn primary small" data-testid={`confirm-buy-${a.id}`} onClick={() => act(`Bought ${a.name}.`, () => fed.buyAsset(a.id))}>Confirm: pay {fmtCrowns(a.price, 0)}</button><button className="btn small" onClick={() => setConfirm(null)}>Cancel</button></div>
+                  ? <div className="row"><button className="btn primary small" data-testid={`confirm-buy-${a.id}`} onClick={() => act(`Bought ${a.name}.`, () => fed.buyAsset(a.id))}>Confirm: Pay {fmtCrowns(a.price, 0)}</button><button className="btn small" onClick={() => setConfirm(null)}>Cancel</button></div>
                   : <button className="btn small" data-testid={`buy-${a.id}`} disabled={services.readOnly || fin.cash < a.price} onClick={() => setConfirm(a.id)}>Buy</button>}
               </div>
             );
           })}
         </div>
-        <div className="small muted">Upkeep is charged at season end. If cash cannot cover it, the asset is suspended (its effect stops and it leaves net worth) until you can pay — you never go into debt.</div>
+        <div className="small muted">Upkeep is charged at season end. If you can't cover it, the asset is suspended — its effect stops and it leaves your net worth — until you pay. You never go into debt.</div>
       </div>
       <div style={{ marginTop: 14 }}><PrestigeLadders bestRating={null} /></div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Ledger · your cash account</h3>
+        <h3>Cash Ledger</h3>
         <div style={{ maxHeight: 360, overflow: 'auto' }}>
           <table className="small">
             <thead><tr><th>When</th><th>Entry</th><th>Amount</th></tr></thead>
             <tbody>{journal.slice(0, 200).map(j => { const amt = j.lines.filter(l => l.account === 'player:cash').reduce((s, l) => s + l.amount, 0); return <tr key={j.id}><td className="mono">{j.season ? `S${j.season}${j.round ? ` R${j.round}` : ''}` : j.at.slice(0, 10)}</td><td>{j.memo}</td><td className={`mono ${amt >= 0 ? 'pos' : 'neg'}`}>{amt >= 0 ? '+' : ''}{fmtCrowns(amt)}</td></tr>; })}</tbody>
           </table>
         </div>
-        <div className="small muted">Each entry is a balanced double-entry journal in whole microcrowns ({MICRO.toLocaleString('en')} µ = 1 ₵); entries are idempotent and never edited.</div>
+        <details className="small muted"><summary>Details</summary>Each entry is a balanced double-entry journal in whole microcrowns ({MICRO.toLocaleString('en')} µ = 1 ₵); entries are idempotent and never edited.</details>
       </div>
     </div>
   );
@@ -166,35 +168,35 @@ function Institutions() {
   return (
     <div className="grid-2" style={{ marginTop: 14 }} data-testid="institutions">
       <div className="panel stack">
-        <h3>Your club</h3>
+        <h3>Your Club</h3>
         {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
-        {!L ? <p className="small">You do not own a club. Buy the <strong>Starter Chess Club</strong> below to host a Club Weekend, sign sponsorship contracts and build up to a Federation Club.</p> : (
+        {!L ? <p className="small">You don't own a club yet. Buy the <strong>Starter Chess Club</strong> below to host a Club Weekend, sign sponsorship contracts and grow it into a Federation Club.</p> : (
           <>
             <div className="row"><span className="chip gold">Level {level}</span><strong>{fed.clubIdentity()?.name ?? L.name}</strong><span className="muted small">{L.name}</span></div>
-            <details data-testid="club-identity"><summary className="small"><strong>Club identity — name, colours and arms</strong></summary><ClubEditor /></details>
-            <div className="small">{L.effect} Club Weekend: {L.weekendSize} players · contract slots: {L.contractSlots}{L.sponsorBonus ? ` · sponsor milestones +${L.sponsorBonus * 100}%` : ''}.</div>
+            <details data-testid="club-identity"><summary className="small"><strong>Club Identity: Name, Colours and Arms</strong></summary><ClubEditor /></details>
+            <div className="small">{L.effect} Club Weekend: {L.weekendSize} players · sponsorship slots: {L.contractSlots}{L.sponsorBonus ? ` · sponsor milestones +${L.sponsorBonus * 100}%` : ''}.</div>
             {next ? (
               <div className="panel stack" style={{ background: 'transparent' }}>
                 <strong>Upgrade to {next.name}</strong>
                 <div className="small">{next.effect}</div>
-                <div className="small muted">Cost {fmtCrowns(next.cost, 0)}: {fmtCrowns(next.escrow, 0)} is held in a refundable escrow (counted in book value, returned if you close the club), {fmtCrowns(next.cost - next.escrow, 0)} is spent on construction. Extra upkeep {fmtCrowns(next.extraUpkeep, 0)} per season. Not a guaranteed profit: income comes only from attendance, prizes and sponsors your events actually earn.</div>
+                <div className="small muted">Costs {fmtCrowns(next.cost, 0)}: {fmtCrowns(next.escrow, 0)} is a refundable deposit (it counts toward net worth and comes back if you close the club) and {fmtCrowns(next.cost - next.escrow, 0)} pays for building work. Upkeep rises by {fmtCrowns(next.extraUpkeep, 0)} per season. Profit isn't guaranteed: income comes only from the attendance, prizes and sponsors your events earn.</div>
                 {confirm
-                  ? <div className="row"><button className="btn primary small" data-testid="confirm-upgrade" onClick={() => act(`Club upgraded to ${next.name}.`, () => fed.upgradeClub())}>Confirm: pay {fmtCrowns(next.cost, 0)}</button><button className="btn small" onClick={() => setConfirm(false)}>Cancel</button></div>
-                  : <button className="btn small" data-testid="upgrade-club" disabled={services.readOnly || fed.balance('player:cash') < next.cost} onClick={() => setConfirm(true)}>Upgrade club</button>}
+                  ? <div className="row"><button className="btn primary small" data-testid="confirm-upgrade" onClick={() => act(`Club upgraded to ${next.name}.`, () => fed.upgradeClub())}>Confirm: Pay {fmtCrowns(next.cost, 0)}</button><button className="btn small" onClick={() => setConfirm(false)}>Cancel</button></div>
+                  : <button className="btn small" data-testid="upgrade-club" disabled={services.readOnly || fed.balance('player:cash') < next.cost} onClick={() => setConfirm(true)}>Upgrade Club</button>}
               </div>
             ) : <div className="small muted">Your club is at the highest level.</div>}
           </>
         )}
       </div>
       <div className="panel stack" data-testid="contracts">
-        <h3>Sponsorship contracts</h3>
-        <div className="small muted">Recruit talent: pay a season stipend to a competitor and receive {CONTRACT_SHARE * 100}% of every prize they win while signed (a ledger transfer from their prize account). Sign from a competitor's profile. While you sponsor someone, you may not buy into markets that involve them.</div>
-        {contracts.length === 0 ? <p className="small">No contracts yet. <button className="btn ghost small" onClick={() => go({ name: 'competitors' })}>Browse competitors</button></p> : (
-          <table className="small"><thead><tr><th>Competitor</th><th>Stipend</th><th>Paid</th><th>Prize share</th><th></th></tr></thead>
-            <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since S{c.signedSeason}{c.status === 'ended' ? ` · ended S${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
+        <h3>Sponsorship Contracts</h3>
+        <div className="small muted">Pay a competitor a stipend each season and receive {CONTRACT_SHARE * 100}% of every prize they win while signed. Sign from a competitor's profile. While you sponsor someone, you can't buy into markets that involve them.</div>
+        {contracts.length === 0 ? <p className="small">No contracts yet. <button className="btn ghost small" onClick={() => go({ name: 'competitors' })}>Browse Competitors</button></p> : (
+          <table className="small"><thead><tr><th>Competitor</th><th>Stipend</th><th>Paid</th><th>Prize Share</th><th></th></tr></thead>
+            <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since season {c.signedSeason}{c.status === 'ended' ? ` · ended season ${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
         )}
-        <h3>Sandbox (practice money)</h3>
-        <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox ₵ — a separate ledger for practice markets on your own casual games. Never part of cash, net worth, P&L, prestige, ratings or standings.</div>
+        <h3>Sandbox Money</h3>
+        <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox ₵ for practice markets on your own casual games. Sandbox money is separate: it never counts toward cash, net worth, profit, prestige, ratings or standings.</div>
       </div>
     </div>
   );

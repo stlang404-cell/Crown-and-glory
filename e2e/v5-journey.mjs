@@ -81,7 +81,7 @@ async function startMatch(page, opp, { tc = 'Rapid 5+3', mode = 'Casual', color 
   await page.getByRole('button', { name: tc }).click();
   await page.getByRole('button', { name: mode, exact: true }).click();
   await page.getByRole('button', { name: color, exact: true }).click();
-  await page.getByRole('button', { name: /Start match/ }).click();
+  await page.getByRole('button', { name: /Start match/i }).click();
   await page.waitForSelector('[data-testid="match"]');
 }
 const dump = page => page.evaluate(async () => {
@@ -146,12 +146,12 @@ if (old) {
   await page.waitForSelector('[data-testid="report-status"]', { timeout: 60000 });
   const histTxt = await page.locator('body').textContent();
   await page.screenshot({ path: OUT + '01-historical-report.png', fullPage: true });
-  const btn = page.getByRole('button', { name: /Analyse with these settings/ });
+  const btn = page.getByRole('button', { name: /Analyse Again/ });
   const enabled = await btn.isEnabled();
   await btn.click();
   await waitUntil(page, async id => (await window.__crown.db.allReports()).some(r => r.gameId === id && r.status === 'complete' && r.engine.buildId === 'crown-search-2+crown-eval-4'), gid, 900000);
   const reps = await page.evaluate(async id => (await window.__crown.db.allReports()).filter(r => r.gameId === id).map(r => ({ id: r.id, build: r.engine.buildId, grading: r.methodology.gradingId, acc: r.methodology.accuracyId })), gid);
-  check('6a', enabled && /Historical report/.test(histTxt) && reps.length === 2 && reps.some(r => r.grading === 'crown-grade-v1-experimental') && reps.some(r => r.grading === 'crown-grade-v2-experimental'),
+  check('6a', enabled && /Historical report/.test(histTxt) && reps.length === 2 && reps.some(r => r.grading === 'crown-grade-v1-experimental') && reps.some(r => r.grading === 'crown-grade-v3-experimental'),
     `Historical report labelled and kept; re-analysis with the canonical engine produced a second report: ${JSON.stringify(reps)}`);
 } else step('no v0.4.0 dist given: migration steps skipped (NOT RUN)');
 
@@ -213,7 +213,7 @@ await page.waitForSelector('[data-ply="3"]', { timeout: 60000 });
 await page.click('[data-ply="3"]');
 await page.waitForSelector('[data-testid="move-panel"]', { timeout: 60000 });
 const rep = await page.evaluate(async id => { const r = (await window.__crown.db.allReports()).find(x => x.gameId === id && x.status === 'complete'); return { plies: r.plies.length, build: r.engine.buildId, grading: r.methodology.gradingId, acc: r.methodology.accuracyId, accuracyOk: Object.values(r.summary ?? {}).every(s => s?.accuracy === null || s?.accuracy === undefined || (s.accuracy >= 0 && s.accuracy <= 100)) }; }, rated.id);
-check(6, rep.plies === rated.moves.length && rep.build === 'crown-search-2+crown-eval-4' && rep.grading === 'crown-grade-v2-experimental' && rep.accuracyOk, `Move-by-move analysis: ${rep.plies}/${rated.moves.length} plies graded by ${rep.build} (${rep.grading}, ${rep.acc}); accuracies bounded 0–100`);
+check(6, rep.plies === rated.moves.length && rep.build === 'crown-search-2+crown-eval-4' && rep.grading === 'crown-grade-v3-experimental' && rep.accuracyOk, `Move-by-move analysis: ${rep.plies}/${rated.moves.length} plies graded by ${rep.build} (${rep.grading}, ${rep.acc}); accuracies bounded 0–100`);
 await page.screenshot({ path: OUT + '05-analysis.png', fullPage: true });
 
 // ---- 9: Academy puzzle from the re-verified library
@@ -233,7 +233,7 @@ await page.goto(URL_ + '#/lab');
 await page.waitForTimeout(1500);
 const labTxt = (await page.locator('main, .app').first().textContent()).replace(/\s+/g, ' ');
 const m = labTxt.match(/Methodology ([^·]+)·/);
-check(10, m && !/crown-search-1/.test(m[1]) && /crown-grade-v2/.test(m[1]), `Lab uses one methodology: "${m?.[1]?.trim()}" (other versions excluded and counted, never mixed)`);
+check(10, m && !/crown-search-1/.test(m[1]) && /crown-grade-v3/.test(m[1]), `Lab uses one methodology: "${m?.[1]?.trim()}" (other versions excluded and counted, never mixed)`);
 await page.screenshot({ path: OUT + '07-lab.png', fullPage: true });
 
 // ---- 21: cosmetic purchase; 11/22: Passport accuracy

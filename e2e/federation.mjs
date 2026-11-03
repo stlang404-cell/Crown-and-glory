@@ -85,7 +85,7 @@ if (OLD_DIST) {
   await page.getByRole('button', { name: 'Rapid 5+3' }).click();
   await page.getByRole('button', { name: 'Rated', exact: true }).click();
   await page.getByRole('button', { name: 'White', exact: true }).click();
-  await page.getByRole('button', { name: /Start match/ }).click();
+  await page.getByRole('button', { name: /Start match/i }).click();
   const t = await playOut(page);
   const v2 = await page.evaluate(async () => ({ games: (await window.__crown.db.allGames()).map(g => ({ id: g.id, status: g.status, result: g.result, moves: g.moves.length })), rating: await window.__crown.db.ratingState('rapid'), events: (await window.__crown.db.ratingEvents()).length }));
   step(`v0.2.0 game finished (${t}); save: ${JSON.stringify({ games: v2.games, rating: Math.round(v2.rating.rating), events: v2.events })}`);

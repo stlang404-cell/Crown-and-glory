@@ -9,7 +9,7 @@ p.on('pageerror', e => errs.push(String(e)));
 p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(url);
 await p.getByRole('button', { name: 'White' }).click();
-await p.getByRole('button', { name: /Start match/ }).click();
+await p.getByRole('button', { name: /Start match/i }).click();
 await p.waitForSelector('[data-square="c2"]');
 await p.click('[data-square="c2"]');
 await p.waitForTimeout(300);

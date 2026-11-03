@@ -22,7 +22,7 @@ export function ClubEditor() {
     <div className="stack" data-testid="club-editor">
       <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div className="emblem-cell"><Emblem spec={clubEmblem(id, level)} size="lg" title={`${id.name} arms`} /><span className="small"><strong>{id.name || '—'}</strong>{id.motto && <><br /><em className="muted">“{id.motto}”</em></>}</span>
-          <span className="row" style={{ gap: 6 }}><Emblem spec={clubEmblem(id, level)} size="md" title="medium" /><Emblem spec={clubEmblem(id, level)} size="sm" title="small" /></span></div>
+          <span className="row" style={{ gap: 6 }}><Emblem spec={clubEmblem(id, level)} size="md" title="Medium preview" /><Emblem spec={clubEmblem(id, level)} size="sm" title="Small preview" /></span></div>
         <div className="stack" style={{ flex: 1, minWidth: 240 }}>
           <label className="small">Club name <input value={id.name} maxLength={32} onChange={e => set({ name: e.target.value })} aria-label="Club name" data-testid="club-name" style={{ width: '100%' }} /></label>
           <label className="small">Motto (optional) <input value={id.motto} maxLength={48} onChange={e => set({ motto: e.target.value })} aria-label="Club motto" data-testid="club-motto" style={{ width: '100%' }} /></label>
@@ -33,8 +33,8 @@ export function ClubEditor() {
           <div className="small">Symbol<div className="icon-pick" role="radiogroup" aria-label="Symbol">{CLUB_SYMBOLS.map(sy => <button key={sy} aria-pressed={id.symbol === sy} aria-label={`Symbol: ${sy}`} data-testid={`symbol-${sy}`} onClick={() => set({ symbol: sy })}><Emblem spec={clubEmblem({ ...id, symbol: sy })} size="sm" title={sy} /></button>)}</div></div>
           {err && <div className="small notice warn">{err}</div>}
           {msg && <div className={`small notice ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
-          <button className="btn primary small" data-testid="save-club-identity" disabled={!!err || services.readOnly} onClick={save}>Save club identity</button>
-          <div className="small muted">All shapes and symbols are original federation heraldry; your club's arms gain a double border at level 2 and a coronet at level 3.</div>
+          <button className="btn primary small" data-testid="save-club-identity" disabled={!!err || services.readOnly} onClick={save}>Save Club Identity</button>
+          <div className="small muted">Your club's arms gain a double border at level 2 and a coronet at level 3.</div>
         </div>
       </div>
     </div>

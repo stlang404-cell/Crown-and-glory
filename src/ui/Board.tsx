@@ -127,14 +127,14 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
   };
 
   return (
-    <div className="board-wrap">
-      <div ref={boardRef} className="board" role="grid" aria-label={label} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => setDrag(null)}>
+    <div className={`board-wrap${showCoords ? ' with-coords' : ''}`}>
+      <div ref={boardRef} className={`board${legal.length ? ' interactive' : ''}${selected ? ' has-sel' : ''}`} role="grid" aria-label={label} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => setDrag(null)}>
         {order.map((idx, pos) => {
           const name = sqName(idx);
           const p = board[idx];
           const light = (idx % 6 + Math.floor(idx / 6)) % 2 === 1;
-          const cls = ['sq', light ? 'light' : 'dark', last.includes(name) ? 'last' : '', selected === name || highlights.includes(name) ? 'sel' : '', checkSquare === name ? 'check' : ''].join(' ');
           const isDest = dests.has(name);
+          const cls = ['sq', light ? 'light' : 'dark', last.includes(name) ? `last ${name === last[0] ? 'last-from' : 'last-to'}` : '', selected === name || highlights.includes(name) ? 'sel' : '', checkSquare === name ? 'check' : '', isDest ? (p ? 'dest capture' : 'dest') : ''].filter(Boolean).join(' ');
           const row = Math.floor(pos / 6), col = pos % 6;
           return (
             <button
@@ -186,7 +186,9 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
                   <PieceSvg kind={k} color={promoColor} />
                 </button>
               ))}
-              <button aria-label="Cancel promotion" onClick={() => { setPromo(null); setSelected(null); }} style={{ background: 'var(--panel-2)', color: 'var(--muted)', fontSize: 28 }}>×</button>
+              <button className="promo-cancel" aria-label="Cancel promotion" onClick={() => { setPromo(null); setSelected(null); }}>
+                <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round"><path d="M7 7l10 10M17 7 7 17" /></svg>
+              </button>
             </div>
           </div>
         )}

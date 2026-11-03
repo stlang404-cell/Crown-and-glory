@@ -42,9 +42,12 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found your federation: <strong>2,048 AI competitors</strong> in 16 regions × 8 divisions, each with a persistent identity, hidden playing strength, public Glicko-2 rating, career and titles. You join the Open Division (division 8) of your home region with a 1,000 ₵ starting grant (fictional, non-redeemable).</p>
-          <p className="small muted">Every season: a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, if you own a club, a Club Weekend. Your league games are real rated games; AI-vs-AI results are drawn from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
-          <label className="small">Home region{' '}
+          <p>Found a federation of <strong>2,048 AI competitors</strong> across 16 regions and 8 divisions. You start in the Open Division of your home region with 1,000 ₵ (fictional money).</p>
+          <details className="small"><summary>Details</summary>
+            <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
+            <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
+          </details>
+          <label className="small">Home Region{' '}
             <select value={region} onChange={e => setRegion(+e.target.value)}>{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
           </label>
           <button className="btn primary" disabled={!!busy || services.readOnly} onClick={() => act('create', () => fed.create(region))}>{busy ? 'Founding the federation…' : 'Found the federation'}</button>
@@ -77,7 +80,7 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'standings' })}>Divisions</button>
         <button className="btn small" onClick={() => go({ name: 'tournaments' })}>Tournaments</button>
         <button className="btn small" onClick={() => go({ name: 'competitors' })}>Competitors</button>
-        <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; history</button>
+        <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; History</button>
         <button className="btn small" onClick={() => go({ name: 'rivals' })}>Rivals</button>
         <button className="btn small" onClick={() => go({ name: 'hall' })}>Hall of Fame</button>
         <button className="btn small" onClick={() => go({ name: 'heraldry' })}>Heraldry</button>
@@ -85,8 +88,8 @@ export function WorldScreen() {
       {msg && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>{msg}</div>}
       <div className="grid-2">
         <div className="panel stack" data-testid="my-fixtures">
-          <h3>Your fixtures this round</h3>
-          {mine.length === 0 ? <p className="small muted">{w.round > LEAGUE_ROUNDS ? 'No games for you this round (league finished).' : 'All your games this round are done.'}</p> : mine.map(f => {
+          <h3>Your Fixtures This Round</h3>
+          {mine.length === 0 ? <p className="small muted">{w.round > LEAGUE_ROUNDS ? 'No games for you this round. The league has finished.' : 'You have played all your games this round.'}</p> : mine.map(f => {
             const opp = f.white === PLAYER_ID ? f.black : f.white;
             const c = st.competitors.get(opp)!;
             return (
@@ -94,7 +97,7 @@ export function WorldScreen() {
                 <Portrait seed={c.portraitSeed} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
-                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · you play {f.white === PLAYER_ID ? 'White' : 'Black'} · {Math.round(c.rating)} ±{Math.round(c.rd)} · rapid 5+3, rated</div>
+                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {Math.round(c.rating)} ±{Math.round(c.rd)} · Rapid 5+3, rated</div>
                 </div>
                 <button className="btn primary small" disabled={!!busy} data-testid="play-fixture" onClick={() => act('play', async () => {
                   const pr = await services.db.ratingState('rapid');
@@ -102,24 +105,24 @@ export function WorldScreen() {
                   if (!(await services.db.getGame(g.id))) await services.saveGame(g);
                   go({ name: 'match', gameId: g.id });
                 })}>Play</button>
-                {fed.ownsAsset('training') && <button className="btn small" data-testid="spar-fixture" disabled={!!busy} title="Unrated practice against this opponent's exact engine profile (Training Hall)" onClick={() => act('spar', async () => {
+                {fed.ownsAsset('training') && <button className="btn small" data-testid="spar-fixture" disabled={!!busy} title="Unrated practice against this opponent's playing style (Training Hall)" onClick={() => act('spar', async () => {
                   const g = await fed.sparringGameFor(f.id, f.white === PLAYER_ID ? 'white' : 'black');
                   await services.saveGame(g);
                   go({ name: 'match', gameId: g.id });
                 })}>Spar</button>}
                 {confirmForfeit === f.id
-                  ? <><button className="btn danger small" onClick={() => act('forfeit', () => fed.forfeit(f.id)).then(() => setConfirmForfeit(null))}>Confirm forfeit</button><button className="btn small" onClick={() => setConfirmForfeit(null)}>Keep</button></>
+                  ? <><button className="btn danger small" onClick={() => act('forfeit', () => fed.forfeit(f.id)).then(() => setConfirmForfeit(null))}>Confirm Forfeit</button><button className="btn small" onClick={() => setConfirmForfeit(null)}>Keep</button></>
                   : <button className="btn ghost small" onClick={() => setConfirmForfeit(f.id)}>Forfeit</button>}
               </div>
             );
           })}
           <button className="btn primary" data-testid="advance-round" disabled={!!busy || mine.length > 0 || services.readOnly} onClick={() => act('advance', () => fed.advanceRound())}>
-            {busy === 'advance' ? 'Advancing… (featured games are being played)' : `Advance to round ${w.round === ROUNDS_PER_SEASON ? `1 of season ${w.season + 1}` : w.round + 1}`}
+            {busy === 'advance' ? 'Advancing… Playing featured games' : `Advance to Round ${w.round === ROUNDS_PER_SEASON ? `1 of Season ${w.season + 1}` : w.round + 1}`}
           </button>
-          <div className="small muted">Advancing resolves all {((st.rounds.get(`${w.season}:${w.round}`)?.abstract.length) ?? 0).toLocaleString('en')} background games of the round (summary results, not replayable), plays any unwatched featured games on the engine, updates ratings and standings, and settles markets.</div>
+          <div className="small muted">Advancing plays the round's other {((st.rounds.get(`${w.season}:${w.round}`)?.abstract.length) ?? 0).toLocaleString('en')} games (results only, no replays) and any featured games you haven't watched, then updates ratings and standings and settles markets.</div>
         </div>
         <div className="panel stack" data-testid="featured">
-          <h3>Featured matches · Crown Exchange</h3>
+          <h3>Featured Matches · Crown Exchange</h3>
           {featured.length === 0 ? <p className="small muted">No featured matches this round.</p> : featured.map(f => {
             const m = fed.marketFor(f.id);
             const p = m ? prices(m.q, m.b) : null;
@@ -128,7 +131,7 @@ export function WorldScreen() {
                 <div className="row"><strong>{fed.name(f.white)}</strong><span className="muted">vs</span><strong>{fed.name(f.black)}</strong><span className="spacer" /><span className="chip">{eventName(f.event)}</span></div>
                 <div className="row small">
                   {p && <span className="mono">W {(p[0] * 100).toFixed(0)}% · D {(p[1] * 100).toFixed(0)}% · B {(p[2] * 100).toFixed(0)}%</span>}
-                  <span className={`chip ${m?.status === 'open' ? 'pos' : ''}`}>{f.result !== null ? `final: ${f.result === 1 ? '1–0' : f.result === 0 ? '0–1' : '½–½'}` : m?.status === 'open' ? 'market open' : 'closed'}</span>
+                  <span className={`chip ${m?.status === 'open' ? 'pos' : ''}`}>{f.result !== null ? `Final: ${f.result === 1 ? '1–0' : f.result === 0 ? '0–1' : '½–½'}` : m?.status === 'open' ? 'Trading Open' : 'Trading Closed'}</span>
                   <span className="spacer" />
                   {m?.status === 'open' && <button className="btn small" onClick={() => go({ name: 'exchange', id: m.id })}>Trade</button>}
                   <button className="btn small" onClick={() => go({ name: 'watch', id: f.id })}>{f.result === null ? 'Watch live' : 'Replay'}</button>
@@ -136,28 +139,28 @@ export function WorldScreen() {
               </div>
             );
           })}
-          <div className="small muted">Markets close the moment a match starts; the result does not exist before that. Official markets never include your own games.</div>
+          <div className="small muted">Trading closes when a match starts. There are no markets on your own games.</div>
         </div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <div className="panel-title"><h3 style={{ margin: 0 }}>{myCircuit ? `${divisionLabel(myCircuit.division)} · ${REGION_NAMES[myCircuit.region]}` : 'Your division'}</h3><button className="btn ghost small" onClick={() => go({ name: 'standings' })}>All divisions</button></div>
+          <div className="panel-title"><h3 style={{ margin: 0 }}>{myCircuit ? `${divisionLabel(myCircuit.division)} · ${REGION_NAMES[myCircuit.region]}` : 'Your Division'}</h3><button className="btn ghost small" onClick={() => go({ name: 'standings' })}>All Divisions</button></div>
           <LeagueTableView rows={table} division={myCircuit?.division ?? DIVISIONS} />
         </div>
         <div className="panel stack">
-          <h3>Season calendar</h3>
-          <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · Promotion/relegation at season end (top/bottom two).</div>
+          <h3>Season Calendar</h3>
+          <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · At season end, the top two are promoted and the bottom two relegated.</div>
           <div className="panel" style={{ background: 'transparent' }}>
-            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'divisions 2–4, 32 players, five Swiss rounds, prizes 1,500 ₵; the top 8 qualify for the Crown Championship' : 'divisions 5–8, 32 players, five Swiss rounds, prizes 600 ₵'}.
-            <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market at 1/32 per share (published conflict rule).' : ''}</div>
+            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'Divisions 2–4, 32 players, five Swiss rounds, 1,500 ₵ in prizes. The top 8 qualify for the Crown Championship' : 'Divisions 5–8, 32 players, five Swiss rounds, 600 ₵ in prizes'}.
+            <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>
             {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && myEvent ? (
               <div className="row" style={{ marginTop: 6 }}>
                 <button className="btn small" disabled={!!busy || cash < CHALLENGER_FEE} onClick={() => act('reg', () => fed.registerChallenger(false))}>Register ({fmtCrowns(CHALLENGER_FEE, 0)})</button>
-                {cash < RECOVERY_THRESHOLD && <button className="btn small" disabled={!!busy || st.extra.vouchers.includes(w.season)} onClick={() => act('reg', () => fed.registerChallenger(true))}>Use recovery voucher</button>}
+                {cash < RECOVERY_THRESHOLD && <button className="btn small" disabled={!!busy || st.extra.vouchers.includes(w.season)} onClick={() => act('reg', () => fed.registerChallenger(true))}>Use Recovery Voucher</button>}
               </div>
-            ) : <span className="chip">{!myEvent ? 'Crown Division: qualify through your league' : 'Registration closed'}</span>}
+            ) : <span className="chip">{!myEvent ? 'Crown Division: Qualify Through Your League' : 'Registration Closed'}</span>}
           </div>
-          {w.player.titles.length > 0 && <div><strong>Your titles</strong><ul className="small">{w.player.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul></div>}
+          {w.player.titles.length > 0 && <div><strong>Your Titles</strong><ul className="small">{w.player.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul></div>}
         </div>
       </div>
     </div>
@@ -171,20 +174,21 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
   return (
     <div style={{ overflowX: 'auto' }}>
       <table>
-        <thead><tr><th>#</th><th>Competitor</th><th>Pts</th><th className="hide-sm">P</th><th className="hide-sm">W-D-L</th><th className="hide-sm">SB</th><th>Rating</th></tr></thead>
+        <thead><tr><th>#</th><th>Competitor</th><th>Pts</th><th className="hide-sm">P</th><th className="hide-sm">W–D–L</th><th className="hide-sm">SB</th><th>Rating</th></tr></thead>
         <tbody>
           {rows.map((r, i) => {
             const promo = division > 1 && i < 2, releg = division < DIVISIONS && i >= rows.length - 2;
             const c = fed.state!.competitors.get(r.id);
             return (
               <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
-                <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}-{r.d}-{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td>{r.id === PLAYER_ID ? '—' : Math.round(c!.rating)}</td>
+                <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td>{r.id === PLAYER_ID ? '—' : Math.round(c!.rating)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      <div className="small muted" style={{ marginTop: 4 }}>Left edge marks the promotion zone (positive colour) and the relegation zone (negative colour). Order: points, head-to-head, Sonneborn–Berger, pre-season seed.</div>
+      <div className="small muted" style={{ marginTop: 4 }}>A green left edge marks the promotion zone; a red one marks the relegation zone.</div>
+      <details className="small"><summary>Details</summary>P: games played. SB: Sonneborn–Berger. Tiebreak order: points, head-to-head, Sonneborn–Berger, pre-season seed.</details>
     </div>
   );
 }
@@ -240,28 +244,29 @@ export function TournamentsScreen() {
           const rows = swissTable(sw, games);
           return (
             <div key={sw.event} className="panel" data-testid={`swiss-${sw.event}`}>
-              <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 rounds</span></div>
-              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · top 8 qualify for the Crown Championship · prizes 1,500 ₵' : 'Divisions 5–8 (+ you if registered) · prizes 600 ₵'} · Swiss pairing without repeats, byes to the lowest player without one · order: points, Buchholz Cut-1, Buchholz, SB, seed.</div>
+              <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 Rounds</span></div>
+              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · Top 8 qualify for the Crown Championship · 1,500 ₵ in prizes' : 'Divisions 5–8, plus you if registered · 600 ₵ in prizes'}</div>
+              <details className="small" style={{ marginBottom: 6 }}><summary>Details</summary>Swiss pairing with no rematches; a bye goes to the lowest-placed player who hasn't had one. BH-1: Buchholz Cut-1. Tiebreak order: points, Buchholz Cut-1, Buchholz, Sonneborn–Berger, seed.</details>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th></tr></thead>
                   <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td></tr>)}</tbody></table>
               </div>
-              {sw.rounds.some(r => r.repeats > 0) && <div className="small notice warn">A pairing round required a rematch (no repeat-free pairing existed).</div>}
+              {sw.rounds.some(r => r.repeats > 0) && <div className="small notice warn">One round needed a rematch because no other pairing was possible.</div>}
             </div>
           );
         })}
       </div>
       <div className="panel" style={{ marginTop: 14 }} data-testid="championship">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">8,000 ₵ prize fund</span></div>
-        {!champ ? <p className="small muted">The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: the 8 best regional Crown Division winners and the top 8 of the Federation Open. Two-game matches; level → rapid pair → blitz pair → higher seed advances (the final ends in joint champions instead).</p> : (
+        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">8,000 ₵ Prize Fund</span></div>
+        {!champ ? <div className="small muted"><p>The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: the 8 best regional Crown Division winners and the top 8 of the Federation Open.</p><details><summary>Details</summary>Matches are two games. If level, a rapid pair is played, then a blitz pair, then the higher seed advances. A level final produces joint champions.</details></div> : (
           <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }}>
             {champ.stages.map(sg => (
               <div key={sg.label} style={{ minWidth: 200 }}>
-                <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{sg.label} · round {sg.round}</div>
-                {sg.matches.length === 0 ? <div className="small muted">to be decided</div> : sg.matches.map((m, i) => (
+                <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{sg.label} · Round {sg.round}</div>
+                {sg.matches.length === 0 ? <div className="small muted">To be decided</div> : sg.matches.map((m, i) => (
                   <div key={i} className="panel" style={{ padding: 8, margin: '6px 0' }}>
                     {[m.a, m.b].map(id => <div key={id} className="row small" style={{ fontWeight: m.winner === id || (m.joint) ? 700 : 400 }}><span>({m.a === id ? m.seedA : m.seedB}) {fed.name(id)}</span><span className="spacer" /><span className="mono">{m.games.filter(g => g.result !== null).reduce((s, g) => s + (g.white === id ? g.result! : g.black === id ? 1 - g.result! : 0), 0)}</span></div>)}
-                    {m.decidedBy && <div className="small muted">{m.joint ? 'Joint champions' : `decided by ${m.decidedBy}`}</div>}
+                    {m.decidedBy && <div className="small muted">{m.joint ? 'Joint champions' : `Decided by ${m.decidedBy}`}</div>}
                     {(() => { const r = previewRivalry(m.a, m.b); return r && r.meetings > 0 ? <div className="small" data-testid="rivalry-preview"><span className="chip">{r.level}</span> {r.w}–{r.d}–{r.l} in {r.meetings}{r.events[0] ? ` · ${r.events[0].text}` : ''}</div> : null; })()}
                   </div>
                 ))}
@@ -291,7 +296,7 @@ function HallOfChampions() {
   if (!champs.length) return null;
   return (
     <div className="panel" style={{ marginTop: 14 }}>
-      <h3>Hall of champions</h3>
+      <h3>Hall of Champions</h3>
       <ul className="small">{champs.sort((a, b) => b.season - a.season).map((c, i) => <li key={i}>S{c.season} · {c.title.replace(/ S\d+$/, '')}: <strong>{c.name}</strong></li>)}</ul>
     </div>
   );

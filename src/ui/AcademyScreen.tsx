@@ -46,14 +46,14 @@ export function AcademyScreen() {
     <div>
       <h1>Crown Academy</h1>
       <div className="grid-3" style={{ marginBottom: 14 }}>
-        <div className="panel stat"><span className="k">Puzzles solved (first try, no hint)</span><span className="v">{first.filter(a => a.clean).length}</span><span className="small muted">{cleanRate === null ? 'no attempts yet' : `${Math.round(cleanRate * 100)}% of ${first.length} first attempts`}</span></div>
-        <div className="panel stat"><span className="k">Puzzle Rush best</span><span className="v">{rushBest}</span><span className="small muted">{data.runs.filter(r => r.mode === 'rush').length} runs</span></div>
-        <div className="panel stat"><span className="k">Verified puzzles</span><span className="v">{data.puzzles.filter(p => !p.retired).length}</span><span className="small muted">{data.puzzles.filter(p => p.split === 'heldout' && !p.retired).length} reserved for held-out assessment{data.puzzles.some(p => p.retired) ? ` · ${data.puzzles.filter(p => p.retired).length} retired after canonical re-verification` : ''}</span></div>
+        <div className="panel stat"><span className="k">Solved First Try</span><span className="v">{first.filter(a => a.clean).length}</span><span className="small muted">{cleanRate === null ? 'No attempts yet' : `${Math.round(cleanRate * 100)}% of ${first.length} first attempts, without hints`}</span></div>
+        <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rushBest}</span><span className="small muted">{data.runs.filter(r => r.mode === 'rush').length} runs</span></div>
+        <div className="panel stat"><span className="k">Puzzles Available</span><span className="v">{data.puzzles.filter(p => !p.retired).length}</span><span className="small muted">{data.puzzles.filter(p => p.split === 'heldout' && !p.retired).length} kept for assessments{data.puzzles.some(p => p.retired) ? ` · ${data.puzzles.filter(p => p.retired).length} retired after a recheck` : ''}</span></div>
       </div>
       <div className="panel" style={{ marginBottom: 14 }}>
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Recommended next</h3><span className="chip gold">Adaptive</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Recommended Next</h3><span className="chip gold">Adaptive</span></div>
         <p className="small" style={{ margin: '0 0 8px' }}>{adaptive.basis}</p>
-        <button className="btn primary" onClick={() => setMode('adaptive')}>Start adaptive training{adaptive.themes.length ? `: ${adaptive.themes.map(themeLabel).join(', ')}` : ''}</button>
+        <button className="btn primary" onClick={() => setMode('adaptive')}>Start Adaptive Training{adaptive.themes.length ? `: ${adaptive.themes.map(themeLabel).join(', ')}` : ''}</button>
       </div>
       <div className="grid-2">
         {(['tactics', 'rush', 'calculation', 'defense', 'endgame', 'mistakes', 'assessment'] as AcademyMode[]).map(m => (
@@ -61,13 +61,13 @@ export function AcademyScreen() {
             <div className="panel-title"><h3 style={{ margin: 0 }}>{MODE_INFO[m].title}</h3><span className="chip">{count(m)} {m === 'mistakes' ? 'positions' : 'puzzles'}</span></div>
             <p className="small muted">{MODE_INFO[m].blurb}</p>
             <button className="btn" disabled={count(m) === 0} onClick={() => setMode(m)}>
-              {count(m) === 0 ? (m === 'mistakes' ? 'Play and analyse games first' : 'No content') : m === 'rush' ? 'Start a 3-minute rush' : m === 'assessment' ? 'Take an assessment' : 'Start'}
+              {count(m) === 0 ? (m === 'mistakes' ? 'Play and Analyse Games First' : 'No Puzzles Yet') : m === 'rush' ? 'Start a 3-Minute Rush' : m === 'assessment' ? 'Take an Assessment' : 'Start'}
             </button>
           </div>
         ))}
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Train a theme</h3>
+        <h3>Train a Theme</h3>
         <div className="row">
           {themes.map(t => {
             const s = stats.get(t);
@@ -75,10 +75,11 @@ export function AcademyScreen() {
           })}
         </div>
         <p className="small muted" style={{ marginTop: 8 }}>
-          Every puzzle is a legal crown-la6-v1 position whose solution the Crown engine verified as uniquely best ({data.meta.policy}) Engine {data.meta.engine}.
-          Difficulty is a heuristic (line length, quiet first move, material investment, engine effort) — not yet calibrated on human solvers.
-          Theme statistics count first exposures only; repeated puzzles never count as evidence.
+          Every puzzle is a legal position, and the engine checked that its solution is the only best move.
+          Difficulty is an estimate (line length, quiet first move, material given up, engine effort) and is not yet tuned on human solvers.
+          Theme stats count only the first time you see each puzzle.
         </p>
+        <details className="small muted"><summary>Details</summary>Verification policy {data.meta.policy} · engine {data.meta.engine}</details>
       </div>
     </div>
   );
@@ -163,19 +164,19 @@ function PuzzleSession({ mode, theme, data, onExit }: { mode: AcademyMode; theme
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn ghost small" onClick={() => { if (run && !runState.done) void finishRun(); onExit(); }}>← Academy</button>
         <h1 style={{ margin: 0 }}>{MODE_INFO[mode].title}{theme ? `: ${themeLabel(theme)}` : ''}</h1>
-        {run && <span className="chip gold" data-testid="run-score">Score {runState.score}{mode === 'rush' ? ` · strikes ${runState.strikes}/3` : ` · ${runState.attempted}/10`}</span>}
+        {run && <span className="chip gold" data-testid="run-score">Score {runState.score}{mode === 'rush' ? ` · Strikes ${runState.strikes}/3` : ` · ${runState.attempted}/10`}</span>}
         {left !== null && <span className="chip" role="timer">{Math.floor(left / 60000)}:{String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}</span>}
       </div>
       {mode === 'adaptive' && <div className="notice" style={{ marginBottom: 12 }}>{adaptive.basis}</div>}
       {runState.done ? (
         <div className="panel" style={{ maxWidth: 520 }}>
-          <h2>{mode === 'rush' ? 'Rush complete' : 'Assessment complete'}</h2>
-          <p>Solved {runState.score} of {runState.attempted} {mode === 'rush' ? 'before time or three strikes' : 'unseen held-out puzzles'}.</p>
-          {mode === 'assessment' && <p className="small muted">Held-out items are never reused for assessment, so this result reflects first exposure. One assessment of 10 items is a noisy measurement; the Lab combines all assessments with an uncertainty interval.</p>}
+          <h2>{mode === 'rush' ? 'Rush Complete' : 'Assessment Complete'}</h2>
+          <p>Solved {runState.score} of {runState.attempted} {mode === 'rush' ? 'before time ran out or three strikes' : 'assessment puzzles you had not seen before'}.</p>
+          {mode === 'assessment' && <p className="small muted">Assessment puzzles are never reused, so this result reflects first attempts. Ten puzzles is a small sample; the Lab combines all your assessments and shows the uncertainty.</p>}
           <button className="btn primary" onClick={onExit}>Back to the Academy</button>
         </div>
       ) : !current ? (
-        <div className="panel"><p>{mode === 'assessment' ? 'You have seen every held-out puzzle. Assessment content is exhausted until the puzzle bank grows.' : 'No puzzles match this selection.'}</p><button className="btn" onClick={onExit}>Back</button></div>
+        <div className="panel"><p>{mode === 'assessment' ? 'You have seen every assessment puzzle. New ones appear when the puzzle bank grows.' : 'No puzzles match this choice. Pick another mode or theme.'}</p><button className="btn" onClick={onExit}>Back</button></div>
       ) : (
         <PuzzlePlayer key={current.id} p={current} reveal={mode !== 'rush' && mode !== 'assessment'} onDone={async res => { await record(current, res); }} onNext={() => pick()} onPlayOut={mode === 'endgame' ? () => void playOut(current) : undefined} autoNext={mode === 'rush' || mode === 'assessment'} />
       )}
@@ -240,25 +241,27 @@ function PuzzlePlayer({ p, onDone, onNext, onPlayOut, reveal, autoNext }: {
   return (
     <div className="analysis">
       <div className="board-col">
-        <Board fen={fen} orientation={orientation} legal={step % 2 === 0 ? legal : []} onMove={onMove} lastMove={last} checkSquare={check.inCheck() ? squareName(check.kingSq[check.side]) : null} highlights={hintSq} label="Puzzle board" />
+        <Board fen={fen} orientation={orientation} legal={step % 2 === 0 ? legal : []} onMove={onMove} lastMove={last} checkSquare={check.inCheck() ? squareName(check.kingSq[check.side]) : null} highlights={hintSq} label="Puzzle Board" />
       </div>
       <div className="side-col">
         <div className="panel stack" data-testid="puzzle-panel" data-puzzle={p.id} data-solution={p.solution.join(' ')} data-status={status}>
-          <div className="panel-title"><h3 style={{ margin: 0 }}>{orientation === 'white' ? 'White' : 'Black'} to move</h3><span className="chip gold">Difficulty {p.difficulty}/5</span></div>
+          <div className="panel-title"><h3 style={{ margin: 0 }}>{orientation === 'white' ? 'White' : 'Black'} to Move</h3><span className="chip gold">Difficulty {p.difficulty}/5</span></div>
           <div><strong>{p.goal}</strong>{p.playerMoves > 1 && <span className="muted"> · {p.playerMoves} moves</span>}</div>
           <div className="row">{p.themes.slice(0, 4).map(t => <span key={t} className="chip">{themeLabel(t)}</span>)}</div>
-          {status === 'wrong' && <div className="notice warn" role="status">Not the engine-verified move. Look again{p.themes.includes('defensive') ? ' — what does your opponent threaten?' : ''}.</div>}
-          {status === 'solved' && <div className="notice" role="status">Solved{mistaken || hints ? ' (with help — not counted as a clean solve)' : ''}. Line: {p.solutionSan.join(' ')}</div>}
+          {status === 'wrong' && <div className="notice warn" role="status">That is not the best move. Look again{p.themes.includes('defensive') ? ' — what does your opponent threaten?' : ''}.</div>}
+          {status === 'solved' && <div className="notice" role="status">Solved{mistaken || hints ? ' with help, so it does not count as a clean solve' : ''}. Line: {p.solutionSan.join(' ')}</div>}
           {status === 'failed' && <div className="notice warn" role="status">Solution: {p.solutionSan.join(' ')}</div>}
           <div className="row">
             {(status === 'playing' || status === 'wrong') && !autoNext && <button className="btn" onClick={() => setHints(h => h + 1)}>Hint</button>}
-            {(status === 'playing' || status === 'wrong') && reveal && <button className="btn ghost" onClick={doReveal}>Show solution</button>}
-            {(status === 'solved' || status === 'failed') && !autoNext && <button className="btn primary" onClick={onNext}>Next puzzle</button>}
-            {onPlayOut && (status === 'solved' || status === 'failed') && <button className="btn" onClick={onPlayOut}>Play it out vs the engine</button>}
+            {(status === 'playing' || status === 'wrong') && reveal && <button className="btn ghost" onClick={doReveal}>Show Solution</button>}
+            {(status === 'solved' || status === 'failed') && !autoNext && <button className="btn primary" onClick={onNext}>Next Puzzle</button>}
+            {onPlayOut && (status === 'solved' || status === 'failed') && <button className="btn" onClick={onPlayOut}>Play It Out vs the Engine</button>}
           </div>
-          <div className="small muted">
-            Verification: Crown depth {p.verification.crownDepth}, gap {p.verification.gap.toFixed(2)} expected score to the next move{p.verification.fairy && p.verification.fairy !== 'not run' && !p.verification.fairy.startsWith('n/a') ? `; Fairy-Stockfish cross-check ${p.verification.fairy}` : ''}. {p.source === 'mistake' ? `From your game (ply ${p.sourcePly}); moves within 0.02 of the best are accepted.` : 'Unique under this search policy; not a mathematical proof.'}
-          </div>
+          {p.source === 'mistake' && <div className="small muted">From your game (move {Math.ceil((p.sourcePly ?? 0) / 2)}). Moves almost as good as the best one are accepted.</div>}
+          <details className="small muted">
+            <summary>Details</summary>
+            Engine check at depth {p.verification.crownDepth}: the solution beats the next move by {p.verification.gap.toFixed(2)} expected score{p.verification.fairy && p.verification.fairy !== 'not run' && !p.verification.fairy.startsWith('n/a') ? `; Fairy-Stockfish cross-check ${p.verification.fairy}` : ''}. {p.source === 'mistake' ? 'Moves within 0.02 of the best are accepted.' : 'Best under this search setting; not a mathematical proof.'}
+          </details>
         </div>
       </div>
     </div>

@@ -14,7 +14,10 @@ import { NPC_TRADERS } from '../exchange/npc';
 import { scoreAll, summary } from '../app/forecasting';
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-export const KIND_LABEL: Record<string, string> = { match: 'Match', winner: 'Tournament champion', promotion: 'Promotion', qualification: 'Qualification', season: 'Season title', bracket: 'Conditional · final four', sandbox: 'Sandbox' };
+export const KIND_LABEL: Record<string, string> = { match: 'Match', winner: 'Tournament Champion', promotion: 'Promotion', qualification: 'Qualification', season: 'Season Title', bracket: 'Conditional · Final Four', sandbox: 'Sandbox' };
+/** Player-facing market states (style guide terminology). */
+export const STATUS_LABEL: Record<string, string> = { open: 'Trading Open', closed: 'Trading Closed', settled: 'Market Settled', cancelled: 'Market Cancelled' };
+export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
 const SERIES = ['var(--text)', 'var(--accent)', 'var(--info)', 'var(--positive)', 'var(--warn)'];
 
 /** Price history of the (up to five) currently most likely claims, from recorded trades only. */
@@ -43,17 +46,18 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
   const fed = services.fed;
   const st = fed.state;
   const [tab, setTab] = useState<'markets' | 'forecasts' | 'traders'>('markets');
-  if (!st) return <div className="panel"><h1>Crown Exchange</h1><p>Found the federation first; markets list federation matches, tournaments and seasons.</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
+  if (!st) return <div className="panel"><h1>Crown Exchange</h1><p>Found the federation to open the Exchange. Markets cover federation matches, tournaments and seasons.</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
   if (marketId && st.markets.has(marketId)) return <MarketScreen m={st.markets.get(marketId)!} />;
   const all = [...st.markets.values()].filter(m => !m.sandbox).sort((a, b) => b.season - a.season || b.round - a.round || a.title.localeCompare(b.title));
   const live = all.filter(m => m.status === 'open' || m.status === 'closed');
   const settled = all.filter(m => m.status === 'settled' || m.status === 'cancelled');
   const mine = (m: Market) => st.positions.get(`${m.id}|player:cash`);
-  const groups: [string, Market[]][] = [
-    ['Matches', live.filter(m => (m.kind ?? 'match') === 'match')],
-    ['Tournaments', live.filter(m => m.kind === 'winner')],
-    ['Season & league', live.filter(m => m.kind === 'promotion' || m.kind === 'qualification' || m.kind === 'season')],
-    ['Conditional (bounded state model)', live.filter(m => m.kind === 'bracket')],
+  // [test id key (unchanged), heading, markets]
+  const groups: [string, string, Market[]][] = [
+    ['Matches', 'Matches', live.filter(m => (m.kind ?? 'match') === 'match')],
+    ['Tournaments', 'Tournaments', live.filter(m => m.kind === 'winner')],
+    ['Season & league', 'Season & League', live.filter(m => m.kind === 'promotion' || m.kind === 'qualification' || m.kind === 'season')],
+    ['Conditional (bounded state model)', 'Conditional Markets', live.filter(m => m.kind === 'bracket')],
   ];
   const sc = scoreAll(st.extra.forecasts, st.markets);
   const sum = summary(sc);
@@ -66,42 +70,42 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
           {(['markets', 'forecasts', 'traders'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{t === 'markets' ? 'Markets' : t === 'forecasts' ? 'Forecasts' : 'Traders'}</button>)}
         </div>
       </div>
-      <div className="notice" style={{ marginBottom: 12 }}>Prediction markets on federation events you cannot influence, priced by one automated market maker per event (LMSR). Shares pay 1 ₵ if their outcome happens. All crowns are fictional and non-redeemable. Each market shows its states, closing rule, settlement rule and cancellation terms before you trade.</div>
+      <div className="notice" style={{ marginBottom: 12 }}>Trade on federation events you can't influence. Each share pays 1 ₵ if its outcome happens, and every market shows its rules before you trade. All crowns are fictional and can't be redeemed.</div>
       {tab === 'markets' && (
         <>
           <div className="grid-2">
-            {groups.map(([label, ms]) => (
-              <div key={label} className="panel" data-testid={`group-${label}`}>
+            {groups.map(([key, label, ms]) => (
+              <div key={key} className="panel" data-testid={`group-${key}`}>
                 <h3>{label}</h3>
                 {ms.length === 0 ? <p className="small muted">None open right now.</p> : <MarketTable markets={ms} mine={mine} />}
               </div>
             ))}
           </div>
           <div className="panel" style={{ marginTop: 14 }}>
-            <h3>Settled history</h3>
-            {settled.length === 0 ? <p className="small muted">Nothing settled yet.</p> : <MarketTable markets={settled.slice(0, 80)} mine={mine} />}
+            <h3>Settled Markets</h3>
+            {settled.length === 0 ? <p className="small muted">No settled markets yet.</p> : <MarketTable markets={settled.slice(0, 80)} mine={mine} />}
           </div>
         </>
       )}
       {tab === 'forecasts' && (
         <div className="panel stack">
-          <h3>Paper forecasts</h3>
-          <p className="small">Free, no money. {sum.n === 0 ? 'No scored forecasts yet.' : <>Over {sum.n} resolved forecast{sum.n > 1 ? 's' : ''}: your Brier <strong>{sum.brier!.toFixed(3)}</strong>{sum.priceBrier !== null && <> · market price at the time {sum.priceBrier.toFixed(3)}</>}{sum.modelBrier !== null && <> · public model {sum.modelBrier.toFixed(3)}</>}.</>}</p>
-          <button className="btn" onClick={() => go({ name: 'forecasts' })}>Open the forecasting companion</button>
+          <h3>Paper Forecasts</h3>
+          <p className="small">Free practice with no money at stake. {sum.n === 0 ? 'No scored forecasts yet.' : <>Over {sum.n} resolved forecast{sum.n > 1 ? 's' : ''}, your Brier score is <strong>{sum.brier!.toFixed(3)}</strong> (lower is better){sum.priceBrier !== null && <> · market price {sum.priceBrier.toFixed(3)}</>}{sum.modelBrier !== null && <> · public forecast {sum.modelBrier.toFixed(3)}</>}.</>}</p>
+          <button className="btn" onClick={() => go({ name: 'forecasts' })}>Open Forecasting</button>
         </div>
       )}
       {tab === 'traders' && (
         <div className="panel">
-          <h3>NPC traders</h3>
-          <p className="small muted">Funded from the federation treasury, trading through the same market maker as you, on public information only (published model, live engine evaluation, price history). None is guaranteed to profit.</p>
-          <table className="small"><thead><tr><th>Trader</th><th>Strategy</th><th>Wallet</th><th>Open exposure</th></tr></thead>
+          <h3>Other Traders</h3>
+          <p className="small muted">Computer traders funded by the federation. They trade through the same market maker as you, using only public information, and none is guaranteed to profit.</p>
+          <table className="small"><thead><tr><th>Trader</th><th>Strategy</th><th>Wallet</th><th>At Risk</th></tr></thead>
             <tbody>{NPC_TRADERS.map(t => {
               const exp = [...st.positions.values()].filter(p => p.holder === t.id && ['open', 'closed'].includes(st.markets.get(p.marketId)?.status ?? '')).reduce((a, p) => a + Math.max(0, p.spent - p.received), 0);
               return <tr key={t.id}><td>{t.name}</td><td>{t.description}</td><td className="mono">{fmtCrowns(fed.balance(t.id), 0)}</td><td className="mono">{fmtCrowns(exp, 0)}</td></tr>;
             })}</tbody></table>
         </div>
       )}
-      <div className="small muted" style={{ marginTop: 8 }}>Exchange {EXCHANGE_ID} · market families {MARKETS_ID} · match forecasts {RESULT_MODEL_ID} on public ratings.</div>
+      <details className="small muted" style={{ marginTop: 8 }}><summary>Details</summary>Each event has one automated market maker (LMSR): prices move only when someone trades. Exchange {EXCHANGE_ID} · market families {MARKETS_ID} · match forecasts {RESULT_MODEL_ID} on public ratings.</details>
     </div>
   );
 }
@@ -115,14 +119,14 @@ function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) =
         <tbody>{markets.map(m => {
           const claims = claimsOf(m);
           const pr = claimPrices(m);
-          const lead = m.status === 'settled' ? (m.result !== null && m.result >= 0 ? statesOf(m)[m.result] : 'split') : (() => { const i = pr.indexOf(Math.max(...pr)); return `${claims[i].label} ${(pr[i] * 100).toFixed(0)}¢`; })();
+          const lead = m.status === 'settled' ? (m.result !== null && m.result >= 0 ? statesOf(m)[m.result] : 'Split') : (() => { const i = pr.indexOf(Math.max(...pr)); return `${claims[i].label} ${(pr[i] * 100).toFixed(0)}¢`; })();
           const pos = mine(m);
           return (
             <tr key={m.id} className="clickable" data-testid="market-row" data-kind={m.kind ?? 'match'} onClick={() => go({ name: 'exchange', id: m.id })}>
-              <td>{m.title}<div className="small muted">{KIND_LABEL[m.kind ?? 'match']} · S{m.season} R{m.round}{m.live ? ' · in-play' : ''}</div></td>
+              <td>{m.title}<div className="small muted">{KIND_LABEL[m.kind ?? 'match']} · Season {m.season}, Round {m.round}{m.live ? ' · live trading' : ''}</div></td>
               <td className="small">{lead}</td>
-              <td><span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{m.status}</span></td>
-              <td className="hide-sm mono small">{pos && pos.shares.some(x => x) ? `${pos.shares.reduce((a, b) => a + b, 0)} sh` : ''}</td>
+              <td><span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span></td>
+              <td className="hide-sm mono small">{pos && pos.shares.some(x => x) ? `${pos.shares.reduce((a, b) => a + b, 0)} shares` : ''}</td>
             </tr>
           );
         })}</tbody>
@@ -153,18 +157,18 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
   const revision = revisionOf(m);
   const exec = async () => {
     setBusy(true); setMsg(null);
-    try { await fed.trade(m.id, claim, shares, side, { expectVersion: version, expectRevision: revision }); setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} × ${claims[claim].label}.` }); }
+    try { await fed.trade(m.id, claim, shares, side, { expectVersion: version, expectRevision: revision }); setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} shares of ${claims[claim].label}.` }); }
     catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } finally { setBusy(false); }
   };
   return (
     <div className="panel stack" data-testid="ticket" data-revision={revision}>
-      <h3>Trade ticket</h3>
-      {!canTrade && <div className="small notice">{m.status === 'open' ? 'Trading unavailable in this tab.' : `This market is ${m.status}; trading has ended.`}</div>}
+      <h3>Trade Ticket</h3>
+      {!canTrade && <div className="small notice">{m.status === 'open' ? 'Trading isn’t available here.' : `${statusLabel(m.status)}: trading has ended.`}</div>}
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
       <div className="seg" role="group" aria-label="Side"><button aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy</button><button aria-pressed={side === 'sell'} onClick={() => setSide('sell')}>Sell</button></div>
       {claims.length <= 3
         ? <div className="seg" role="group" aria-label="Outcome">{claims.map((c, i) => <button key={c.id} aria-pressed={claim === i} onClick={() => setClaim(i)}>{c.label}</button>)}</div>
-        : <label className="small">Claim <select value={claim} onChange={e => setClaim(+e.target.value)} aria-label="Claim" data-testid="claim-select">{claims.map((c, i) => <option key={c.id} value={i}>{c.label} — {(claimPrices(m)[i] * 100).toFixed(1)}¢</option>)}</select></label>}
+        : <label className="small">Outcome <select value={claim} onChange={e => setClaim(+e.target.value)} aria-label="Outcome" data-testid="claim-select">{claims.map((c, i) => <option key={c.id} value={i}>{c.label} — {(claimPrices(m)[i] * 100).toFixed(1)}¢</option>)}</select></label>}
       <label className="small">Shares <input type="number" min={1} step={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 90 }} aria-label="Shares" /></label>
       {q.ok ? (
         <table className="small"><tbody>
@@ -172,14 +176,14 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
           <tr><td>Fee (1%)</td><td className="mono">{fmtCrowns(q.ok.fee)}</td></tr>
           <tr><td><strong>{side === 'buy' ? 'You pay' : 'You receive'}</strong></td><td className="mono"><strong>{fmtCrowns(q.ok.total)}</strong></td></tr>
           {!compact && <tr><td>Average price</td><td className="mono">{(q.ok.avgPrice * 100).toFixed(2)}¢</td></tr>}
-          <tr><td>Price after</td><td className="mono">{(q.ok.priceBefore * 100).toFixed(1)}¢ → {(q.ok.priceAfter * 100).toFixed(1)}¢</td></tr>
+          <tr><td>Price moves</td><td className="mono">{(q.ok.priceBefore * 100).toFixed(1)}¢ → {(q.ok.priceAfter * 100).toFixed(1)}¢</td></tr>
           {side === 'buy' && <><tr><td>Max payout</td><td className="mono">{fmtCrowns(q.ok.maxPayout)}</td></tr><tr><td>Max loss</td><td className="mono">{fmtCrowns(q.ok.maxLoss)}</td></tr></>}
         </tbody></table>
       ) : <div className="small notice warn">{q.err}</div>}
-      {tooMuch && <div className="small notice warn">Not enough cash ({fmtCrowns(cash)}).</div>}
-      {tooMany && <div className="small notice warn">You hold only {holding} share(s) of this claim (no short selling).</div>}
-      <button className="btn primary" data-testid="confirm-trade" disabled={!canTrade || busy || !q.ok || tooMuch || tooMany} onClick={exec}>{busy ? 'Executing…' : `Confirm ${side}`}</button>
-      <div className="small muted">Cash {fmtCrowns(cash)} · quote valid for market version {version} (a changed price is rejected, never silently filled)</div>
+      {tooMuch && <div className="small notice warn">Not enough cash: you have {fmtCrowns(cash)}.</div>}
+      {tooMany && <div className="small notice warn">You only have {holding} {holding === 1 ? 'share' : 'shares'} of this outcome to sell.</div>}
+      <button className="btn primary" data-testid="confirm-trade" disabled={!canTrade || busy || !q.ok || tooMuch || tooMany} onClick={exec}>{busy ? 'Placing Trade…' : q.ok ? `Confirm: ${side === 'buy' ? 'Pay' : 'Receive'} ${fmtCrowns(q.ok.total)}` : `Confirm ${side === 'buy' ? 'Buy' : 'Sell'}`}</button>
+      <div className="small muted">Cash {fmtCrowns(cash)} · if the price changes before you confirm, the trade is rejected, never filled at a new price.</div>
     </div>
   );
 }
@@ -191,14 +195,14 @@ function PositionPanel({ m }: { m: Market }) {
   const claims = claimsOf(m);
   return (
     <div className="panel stack">
-      <h3>Your position</h3>
-      {!pos || (!pos.shares.some(x => x) && !pos.spent) ? <p className="small muted">None.</p> : (
+      <h3>Your Position</h3>
+      {!pos || (!pos.shares.some(x => x) && !pos.spent) ? <p className="small muted">No shares in this market yet.</p> : (
         <div className="small">
-          {claims.map((c, i) => pos.shares[i] ? <div key={c.id}>{c.label}: <strong>{pos.shares[i]}</strong> share(s)</div> : null)}
-          <div>Spent {fmtCrowns(pos.spent)} (incl. fees {fmtCrowns(pos.fees)}) · received {fmtCrowns(pos.received)}</div>
-          {(m.status === 'open' || m.status === 'closed') && <div>Executable value now: {fmtCrowns(liquidationValue(m, pos))}{m.status === 'closed' ? ' (closed: cancellation-terms floor)' : ''} · unrealized P&L {fmtCrowns(liquidationValue(m, pos) + pos.received - pos.spent)}</div>}
-          {m.status === 'settled' && <div>Settled · net {fmtCrowns(pos.received - pos.spent)}</div>}
-          {m.status === 'cancelled' && <div>Cancelled on the published terms · net {fmtCrowns(pos.received - pos.spent)}</div>}
+          {claims.map((c, i) => pos.shares[i] ? <div key={c.id}>{c.label}: <strong>{pos.shares[i]}</strong> {pos.shares[i] === 1 ? 'share' : 'shares'}</div> : null)}
+          <div>Spent {fmtCrowns(pos.spent)} (including {fmtCrowns(pos.fees)} fees) · received {fmtCrowns(pos.received)}</div>
+          {(m.status === 'open' || m.status === 'closed') && <div>Value if sold now: {fmtCrowns(liquidationValue(m, pos))}{m.status === 'closed' ? ' (trading closed: valued at the cancellation refund)' : ''} · profit or loss if sold now {fmtCrowns(liquidationValue(m, pos) + pos.received - pos.spent)}</div>}
+          {m.status === 'settled' && <div>Market Settled · net {fmtCrowns(pos.received - pos.spent)}</div>}
+          {m.status === 'cancelled' && <div>Market Cancelled and refunded on its published terms · net {fmtCrowns(pos.received - pos.spent)}</div>}
         </div>
       )}
     </div>
@@ -218,8 +222,8 @@ export function ForecastPanel({ m }: { m: Market }) {
   const total = Math.max(1, vals.reduce((a, x) => a + x, 0));
   return (
     <div className="panel stack" data-testid="forecast-panel">
-      <h3>Paper forecast</h3>
-      <div className="small muted">Free and scored with the Brier score when the market resolves. Your inputs are normalised to 100%.</div>
+      <h3>Paper Forecast</h3>
+      <div className="small muted">Free practice, scored when the market resolves. Your numbers are scaled to add up to 100%.</div>
       <div style={{ maxHeight: 260, overflow: 'auto' }}>
         {states.map((o, i) => (
           <label key={i} className="small row" style={{ justifyContent: 'space-between' }}>{o}
@@ -227,7 +231,7 @@ export function ForecastPanel({ m }: { m: Market }) {
           </label>
         ))}
       </div>
-      <button className="btn small" data-testid="record-forecast" disabled={m.status !== 'open' || services.readOnly} onClick={() => fed.forecast(m.id, vals).then(() => setMsg('Forecast recorded (locked when the market closes).'), e => setMsg((e as Error).message))}>{existing ? 'Update forecast' : 'Record forecast'}</button>
+      <button className="btn small" data-testid="record-forecast" disabled={m.status !== 'open' || services.readOnly} onClick={() => fed.forecast(m.id, vals).then(() => setMsg('Forecast recorded. It locks when trading closes.'), e => setMsg((e as Error).message))}>{existing ? 'Update Forecast' : 'Record Forecast'}</button>
       {msg && <div className="small">{msg}</div>}
     </div>
   );
@@ -250,28 +254,32 @@ function MarketScreen({ m }: { m: Market }) {
         <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>← Exchange</button>
         <h1 style={{ margin: 0, fontSize: '1.3rem' }}>{m.title}</h1>
         <span className="chip">{KIND_LABEL[kind]}</span>
-        <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`} data-testid="market-status">{m.status}</span>
+        <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`} data-testid="market-status">{statusLabel(m.status)}</span>
         <span className="spacer" />
-        {kind === 'match' && <button className="btn small" onClick={() => go({ name: 'watch', id: m.fixtureId })}>{m.status === 'settled' ? 'Replay match' : 'Watch match'}</button>}
+        {kind === 'match' && <button className="btn small" onClick={() => go({ name: 'watch', id: m.fixtureId })}>{m.status === 'settled' ? 'Replay Match' : 'Watch Match'}</button>}
       </div>
       <div className="grid-2">
         <div className="stack">
           {kind === 'match' && <MatchResearch m={m} />}
           <div className="panel stack">
-            <h3>{kind === 'bracket' ? 'Claims' : 'Outcomes'} · model vs price</h3>
+            <h3>Live Odds</h3>
             <div style={{ maxHeight: 420, overflow: 'auto' }}>
               <table className="small">
-                <thead><tr><th>{kind === 'bracket' ? 'Claim (pays 1 ₵ in each listed path)' : 'State'}</th><th>Model</th><th>Price</th><th>Model − price</th></tr></thead>
+                <thead><tr><th>Outcome</th><th>Forecast</th><th>Price</th><th>Difference</th></tr></thead>
                 <tbody>{claims.map((c, i) => ({ c, i })).sort((a, b) => (kind === 'bracket' ? 0 : cp[b.i] - cp[a.i])).map(({ c, i }) => (
-                  <tr key={c.id}><td>{c.label}{kind === 'bracket' && <div className="muted">paths {c.states.map(s => s + 1).join(', ')}</div>}</td><td className="mono">{pct(claimModel[i])}</td><td className="mono">{(cp[i] * 100).toFixed(1)}¢</td><td className={`mono ${claimModel[i] - cp[i] > 0.02 ? 'pos' : ''}`}>{((claimModel[i] - cp[i]) * 100).toFixed(1)}</td></tr>
+                  <tr key={c.id}><td>{c.label}{kind === 'bracket' && <div className="muted">pays 1 ₵ in paths {c.states.map(s => s + 1).join(', ')}</div>}</td><td className="mono">{pct(claimModel[i])}</td><td className="mono">{(cp[i] * 100).toFixed(1)}¢</td><td className={`mono ${claimModel[i] - cp[i] > 0.02 ? 'pos' : ''}`}>{((claimModel[i] - cp[i]) * 100).toFixed(1)}</td></tr>
                 ))}</tbody>
               </table>
             </div>
             {kind === 'bracket' && <ConditionalTable m={m} />}
-            <div className="small muted">Model: published public-rating probabilities (information, never the price). Price: what the market maker charges now; it moves only with trades.</div>
+            <div className="small muted">Forecast: each outcome's chance from public ratings, for information only. Price: what a share costs now; it moves only when someone trades.</div>
           </div>
-          <div className="panel small"><strong>Contract terms.</strong> {m.rules ?? 'States: White wins / Draw / Black wins. Trading: until the match starts. Settlement: the result. Cancellation: 1/3 per share.'}<div className="muted" style={{ marginTop: 4 }}>States: {states.length} · b = {m.b} · funded maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · fee 1% each way.</div></div>
-          {(analyst || kind !== 'match') && <div className="panel"><h3>Price history</h3><PriceChart m={m} /></div>}
+          <div className="panel small stack" style={{ gap: 6 }}>
+            <div><strong>Rules.</strong> {m.rules ?? 'Outcomes: White wins, draw or Black wins. Trading: until the match starts. Settlement: each winning share pays 1 ₵. Cancellation: 1/3 ₵ per share.'}</div>
+            <div>Fee: 1% on every buy and sell. You can never lose more than you pay.</div>
+            <details className="small muted"><summary>Details</summary>Priced by an automated market maker (LMSR) over {states.length} outcomes · liquidity b = {m.b} · market maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · prices from the {prices(m.q, m.b).length}-state inventory · {MICRO.toLocaleString('en')} µ = 1 ₵ · market revision {revisionOf(m)}.</details>
+          </div>
+          {(analyst || kind !== 'match') && <div className="panel"><h3>Price History</h3><PriceChart m={m} /></div>}
         </div>
         <div className="stack">
           <TradeTicket m={m} />
@@ -279,7 +287,6 @@ function MarketScreen({ m }: { m: Market }) {
           <ForecastPanel m={m} />
         </div>
       </div>
-      <div className="small muted" style={{ marginTop: 8 }}>{MICRO.toLocaleString('en')} µ = 1 ₵ · prices from LMSR {prices(m.q, m.b).length}-state inventory.</div>
     </div>
   );
 }
@@ -298,10 +305,10 @@ function ConditionalTable({ m }: { m: Market }) {
     return { label: c.label.split(' (=')[0], cond: pf > 0 ? pj / pf : null, joint: pj };
   });
   return (
-    <details className="small"><summary>Indicative conditional probabilities</summary>
-      <table><thead><tr><th>Final</th><th>Joint price</th><th>P(win | loser reaches final)</th></tr></thead>
+    <details className="small"><summary>Implied Final Odds</summary>
+      <table><thead><tr><th>Final</th><th>Combined Price</th><th>Win Chance If Both Reach the Final</th></tr></thead>
         <tbody>{rows.map(r => <tr key={r.label}><td>{r.label}</td><td className="mono">{(r.joint * 100).toFixed(1)}¢</td><td className="mono">{r.cond === null ? '—' : pct(r.cond)}</td></tr>)}</tbody></table>
-      <div className="muted">The ratio of two prices is not an executable price; you trade the joint (conjunction) claim, which pays 0 if the condition fails.</div>
+      <div className="muted">This is a ratio of two prices, not a price you can trade. You trade the combined outcome, which pays nothing if the two players don't meet in the final.</div>
     </details>
   );
 }
@@ -327,22 +334,23 @@ function MatchResearch({ m }: { m: Market }) {
   const fx = [...st.rounds.values()].flatMap(r => r.fixtures).find(f => f.id === m.fixtureId);
   return (
     <div className="panel stack">
-      <h3>Match research</h3>
-      {fx && <div className="small muted">{eventName(fx.event)}{fx.stage ? ` · ${fx.stage}` : ''} · season {fx.season}, round {fx.round}</div>}
+      <h3>Match Research</h3>
+      {fx && <div className="small muted">{eventName(fx.event)}{fx.stage ? ` · ${fx.stage}` : ''} · Season {fx.season}, Round {fx.round}</div>}
       {[w, b].map((c, i) => (
         <div key={c.id} className="row" style={{ alignItems: 'flex-start' }}>
           <Portrait seed={c.portraitSeed} size={44} />
           <div style={{ flex: 1 }}>
             <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button> <span className="muted small">({i === 0 ? 'White' : 'Black'})</span>
-            <div className="small">{Math.round(c.rating)} ±{Math.round(c.rd)} · form <span className="mono">{c.form || '—'}</span> · {c.stats.w}-{c.stats.d}-{c.stats.l} · {divisionLabel(c.division)}, {REGION_NAMES[c.region]}</div>
-            <div className="small muted">Style: {isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'}{c.titles.length ? ` · ${c.titles.length} title(s)` : ''}</div>
+            <div className="small">{Math.round(c.rating)} ±{Math.round(c.rd)} · form <span className="mono">{c.form || '—'}</span> · {c.stats.w}–{c.stats.d}–{c.stats.l} · {divisionLabel(c.division)}, {REGION_NAMES[c.region]}</div>
+            <div className="small muted">Style: {isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'}{c.titles.length ? ` · ${c.titles.length} ${c.titles.length === 1 ? 'title' : 'titles'}` : ''}</div>
           </div>
         </div>
       ))}
-      <div className="small">Head-to-head before this match: {h2h.n === 0 ? 'never met' : `${w.name} ${h2h.a} – ${h2h.n - h2h.a} ${b.name} (${h2h.n})`}</div>
-      <div className="small muted">Model: {RESULT_MODEL_ID} (Davidson draw model, ν = {NU}) on public ratings: W {pct(model[0])} · D {pct(model[1])} · B {pct(model[2])}.</div>
-      {analyst ? <div className="small" data-testid="analyst">Analyst Office · White expected score {(model[0] + model[1] / 2).toFixed(3)} · rating difference {Math.round(w.rating - b.rating)} · White-win probability across ±1 RD: {pct(lo.w)} – {pct(hi.w)} (rating uncertainty, not a model confidence interval).</div>
-        : <div className="small muted">An Analyst Office adds the forecast breakdown, rating-uncertainty range and price history.</div>}
+      <div className="small">Head-to-head: {h2h.n === 0 ? 'never met before' : `${w.name} ${h2h.a}–${h2h.n - h2h.a} ${b.name} (${h2h.n} ${h2h.n === 1 ? 'game' : 'games'})`}</div>
+      <div className="small muted">Forecast from public ratings: White {pct(model[0])} · Draw {pct(model[1])} · Black {pct(model[2])}.</div>
+      {analyst ? <div className="small" data-testid="analyst">Analyst Office: White's expected score {(model[0] + model[1] / 2).toFixed(3)} · rating gap {Math.round(w.rating - b.rating)} · White win chance across both ratings' uncertainty {pct(lo.w)}–{pct(hi.w)}.</div>
+        : <div className="small muted">An Analyst Office adds a forecast breakdown, a rating-uncertainty range and price history.</div>}
+      <details className="small muted"><summary>Details</summary>Forecast model {RESULT_MODEL_ID}: Davidson draw model (ν = {NU}) on public ratings. The uncertainty range uses ±1 rating deviation; it is not a confidence interval of the model.</details>
     </div>
   );
 }

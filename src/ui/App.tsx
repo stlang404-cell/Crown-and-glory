@@ -81,15 +81,15 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'world', label: 'Federation', icon: 'world' },
   { id: 'exchange', label: 'Exchange', icon: 'exchange' },
   { id: 'finance', label: 'Finance', icon: 'finance' },
-  { id: 'library', label: 'Library', icon: 'library' },
+  { id: 'library', label: 'Games', icon: 'library' },
   { id: 'academy', label: 'Academy', icon: 'academy' },
-  { id: 'profile', label: 'Passport', icon: 'profile' },
+  { id: 'profile', label: 'Career', icon: 'profile' },
   { id: 'rivals', label: 'Rivals', icon: 'rivals' },
   { id: 'hall', label: 'Hall of Fame', icon: 'hall' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
-/** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the World/Passport screens and the side rail. */
+/** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the Federation/Career screens and the side rail. */
 const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile', 'settings'];
 const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall' };
 
@@ -120,11 +120,11 @@ export function App({ services }: { services: AppServices }) {
             </button>
           ))}
           <div className="rail-foot">
-            Offline · local saves · fictional money only<br />v{APP_VERSION} · crown-la6-v1
+            Works offline · Saves stay on this device · Fictional money only<br />Version {APP_VERSION}
           </div>
         </nav>
         <main className="main" id="main">
-          {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab. This tab is read-only to protect your saves.</div>}
+          {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
           {view.name === 'play' && <PlayScreen />}
           {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
           {view.name === 'analysis' && <AnalysisScreen key={view.gameId} gameId={view.gameId} initialPly={view.ply} />}

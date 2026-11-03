@@ -39,7 +39,7 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
   };
   return (
     <svg ref={ref} className="graph" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img"
-      aria-label={`Evaluation graph over ${plies.length} analysed plies, white advantage upward`}
+      aria-label={`Evaluation graph of ${plies.length} analysed positions, higher is better for White`}
       onPointerDown={e => pick(e.clientX)} onPointerMove={e => e.buttons && pick(e.clientX)}>
       <rect width={W} height={H} style={{ fill: 'var(--eval-black)' }} />
       <path d={area} style={{ fill: 'var(--eval-white)', opacity: 0.92 }} />
@@ -59,7 +59,7 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
 export interface RatingPoint { at: string; rating: number; rd: number; label: string }
 
 export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; height?: number }) {
-  if (points.length < 2) return <p className="muted">The rating chart appears after your first rated game in this pool.</p>;
+  if (points.length < 2) return <p className="muted">Your rating chart appears after your first rated game at this time control.</p>;
   const W = 640, H = height, pad = 36;
   const lo = Math.min(...points.map(p => p.rating - p.rd));
   const hi = Math.max(...points.map(p => p.rating + p.rd));
@@ -83,7 +83,7 @@ export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; h
       <path d={band} style={{ fill: 'color-mix(in srgb, var(--info) 16%, transparent)' }} />
       <path d={line} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth="2.5" />
       {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.rating)} r="3.5" style={{ fill: 'var(--panel)', stroke: 'var(--accent)' }} strokeWidth="2"><title>{p.label}</title></circle>)}
-      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">Band = ±1 RD (model uncertainty, not a guarantee)</text>
+      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">Shaded band: how uncertain your rating is</text>
     </svg>
   );
 }

@@ -203,7 +203,7 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const club = [...st.assets.values()].find(a => a.typeId === 'club');
-      if (!club) throw new Error('You need a club first');
+      if (!club) throw new Error('You need a club first. Buy a Starter Chess Club in Finance.');
       const next = { ...club, identity: { ...identity, name: identity.name.trim(), motto: identity.motto.trim() } };
       st.assets.set(club.id, next);
       await this.commit(st, [], { assets: [next] }, { season: st.world.season, round: st.world.round });
@@ -249,7 +249,7 @@ export class FederationService {
 
   /** Serialize commands: one at a time, guarded by the committed cursor. */
   private async run<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.busy) throw new Error('Another federation operation is in progress');
+    if (this.busy) throw new Error('Another federation action is still running. Wait a moment and try again.');
     this.busy = true;
     try { return await fn(); } finally { this.busy = false; }
   }
@@ -273,8 +273,8 @@ export class FederationService {
     if (changed.contracts?.length) writes.push({ store: 'contracts', put: changed.contracts });
     await this.db.commit(writes, async get => {
       const w = (await get('world', 'world')) as WorldState | undefined;
-      if (expect && (!w || w.season !== expect.season || w.round !== expect.round)) throw new Error('World changed underneath this command (stale or duplicate); reload');
-      if (!expect && w) throw new Error('A federation already exists');
+      if (expect && (!w || w.season !== expect.season || w.round !== expect.round)) throw new Error('World changed since this screen loaded. Reload and try again.');
+      if (!expect && w) throw new Error('A federation already exists. Reload to see it.');
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
     this.state = next;
@@ -294,7 +294,7 @@ export class FederationService {
   // ------------------------------------------------------------------ creation
   async create(region: number, seed = Date.now() % 2_147_483_647): Promise<void> {
     return this.run(async () => {
-      if (this.state) throw new Error('A federation already exists');
+      if (this.state) throw new Error('A federation already exists. Reload to see it.');
       const comps = generateFederation(seed);
       const { world, plan } = createWorld(seed, comps, this.now());
       const st: FedState = {
@@ -386,7 +386,7 @@ export class FederationService {
   /** Create (or return) the rated game record for a player fixture. Opponent strength comes from hidden latent via the calibrated profile map. */
   async playerGameFor(fixtureId: string, human: { rating: number | null; rd: number | null }): Promise<GameRecord> {
     const f = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
-    if (!f || f.tier !== 1) throw new Error('Not a player fixture');
+    if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const existing = (await this.db.allGames()).find(g => g.context.fixtureId === fixtureId);
     if (existing) return existing;
     const oppId = f.white === PLAYER_ID ? f.black : f.white;
@@ -411,9 +411,9 @@ export class FederationService {
 
   /** Training Hall: an unrated practice game against a fixture opponent's exact profile (never a federation result). */
   async sparringGameFor(fixtureId: string, humanColor: 'white' | 'black'): Promise<GameRecord> {
-    if (!this.ownsAsset('training')) throw new Error('Sparring needs a Training Hall');
+    if (!this.ownsAsset('training')) throw new Error('Sparring needs a Training Hall. Buy one in Finance first.');
     const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
-    if (!f || f.tier !== 1) throw new Error('Not one of your fixtures');
+    if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const c = this.state!.competitors.get(f.white === PLAYER_ID ? f.black : f.white)!;
     const profile = profileForStrength(c.latent);
     const { createGameRecord } = await import('../games/session');
@@ -475,7 +475,7 @@ export class FederationService {
       const st = this.clone();
       const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const f = rec.fixtures.find(x => x.id === fixtureId);
-      if (!f || f.tier !== 1 || f.result !== null) throw new Error('Nothing to forfeit');
+      if (!f || f.tier !== 1 || f.result !== null) throw new Error('There is no unplayed match to forfeit.');
       f.result = f.white === PLAYER_ID ? 0 : 1;
       f.forfeit = true;
       st.rounds.set(rec.id, rec);
@@ -487,16 +487,16 @@ export class FederationService {
   async registerChallenger(useVoucher: boolean): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closes before round 4');
+      if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closed before round 4. You can enter next season.');
       const posted: Journal[] = [];
       const cash = st.balances.get('player:cash') ?? 0;
       if (useVoucher) {
-        if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than 100 ₵');
-        if (st.extra.vouchers.includes(st.world.season)) throw new Error('One recovery voucher per season');
+        if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than 100 ₵.');
+        if (st.extra.vouchers.includes(st.world.season)) throw new Error('You have already used this season’s recovery voucher.');
         this.post(st, [voucherJournal(st.world.season, this.now())], posted);
         st.extra.vouchers.push(st.world.season);
       } else {
-        if (cash < CHALLENGER_FEE) throw new Error('Not enough cash for the entry fee (a recovery voucher is available below 100 ₵)');
+        if (cash < CHALLENGER_FEE) throw new Error('You do not have enough cash for the entry fee. If you have less than 100 ₵, use a recovery voucher.');
         this.post(st, [entryFeeJournal(st.world.season, this.now())], posted);
       }
       // conflict procedure: entering an event cancels its open market on the published 1/n vector first
@@ -533,14 +533,14 @@ export class FederationService {
   isLive(fixtureId: string): boolean { return this.inflight.has(fixtureId); }
 
   private async playFeaturedOnce(fixtureId: string, mode: 'watched-live' | 'background', onMove?: (m: SelfplayMove, ply: number) => void): Promise<WorldGame> {
-    if (!this.state) throw new Error('No federation');
+    if (!this.state) throw new Error('No federation yet. Found the federation first.');
     const f0 = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
-    if (!f0 || f0.tier !== 2) throw new Error('Not a featured fixture');
-    if (f0.result !== null) throw new Error('Already played');
+    if (!f0 || f0.tier !== 2) throw new Error('That is not a featured match.');
+    if (f0.result !== null) throw new Error('This match has already been played.');
     // a game already running live is finished move by move (same committed timeline)
     if (this.state.liveGames.get(fixtureId)?.status === 'live') {
       for (let guard = 0; guard < 500; guard++) { const r = await this.liveStep(fixtureId); if (r.done) return r.game!; }
-      throw new Error('Live game did not finish');
+      throw new Error('The live game did not finish. Try again.');
     }
     // 1) close the market (commit) before any move exists — and any family market whose closing round started
     await this.closeDueMarkets();
@@ -578,7 +578,7 @@ export class FederationService {
   private async finishFeaturedIn(st: FedState, posted: Journal[], fixtureId: string, moves: SelfplayMove[], result: '1-0' | '0-1' | '1/2-1/2', termination: string, mode: WorldGame['mode'], seed: number, profiles: string[]) {
     const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
     const f = rec.fixtures.find(x => x.id === fixtureId)!;
-    if (f.result !== null) throw new Error('Already recorded');
+    if (f.result !== null) throw new Error('This result is already recorded.');
     const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
     const game: WorldGame = {
       id: `wg:${fixtureId}`, fixtureId, season: f.season, round: f.round, event: f.event, stage: f.stage, white: f.white, black: f.black, whiteName: w.name, blackName: b.name,
@@ -658,11 +658,11 @@ export class FederationService {
 
   async sandboxTrade(gameId: string, claim: number, shares: number, side: 'buy' | 'sell'): Promise<void> {
     const g = await this.db.getGame(gameId);
-    if (!g || g.moves.length) throw new Error('Trading closed: the game has started');
+    if (!g || g.moves.length) throw new Error('Trading closed because the game has started.');
     return this.run(async () => {
       const st = this.clone();
       const m = st.markets.get(`sb:${gameId}`);
-      if (!m || m.status !== 'open') throw new Error('No open sandbox market for this game');
+      if (!m || m.status !== 'open') throw new Error('This game has no open practice market.');
       const pos = st.positions.get(`${m.id}|sandbox:player`) ?? null;
       const t = trade(m, pos, 'sandbox:player', claim, shares, side, this.now(), m.history.length);
       const posted: Journal[] = [];
@@ -730,15 +730,15 @@ export class FederationService {
 
   /** Start a featured game in live mode: its market (if any) stays open for in-play trading between moves. */
   async startLive(fixtureId: string): Promise<LiveGame> {
-    if (!this.state) throw new Error('No federation');
+    if (!this.state) throw new Error('No federation yet. Found the federation first.');
     await this.closeDueMarkets();
     return this.run(async () => {
       const st = this.clone();
       const f = st.rounds.get(`${st.world.season}:${st.world.round}`)!.fixtures.find(x => x.id === fixtureId);
-      if (!f || f.tier !== 2) throw new Error('Not a featured fixture of the current round');
-      if (f.result !== null || st.liveGames.has(fixtureId)) throw new Error('This match has already started');
+      if (!f || f.tier !== 2) throw new Error('That is not a featured match in this round.');
+      if (f.result !== null || st.liveGames.has(fixtureId)) throw new Error('This match has already started.');
       const m = st.markets.get(`mk:${fixtureId}`);
-      if (m && m.status !== 'open') throw new Error('This market has already closed');
+      if (m && m.status !== 'open') throw new Error('This market has already closed.');
       const lg: LiveGame = {
         id: fixtureId, fixtureId, season: f.season, round: f.round, seed: hashSeed(st.world.seed, 'featured', fixtureId), moves: [], status: 'live', startedAt: this.now(),
         marketId: m ? m.id : null, points: m ? [{ ply: 0, prices: claimPrices(m), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l], at: this.now() }] : [],
@@ -757,9 +757,9 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const lg0 = st.liveGames.get(fixtureId);
-      if (!lg0 || lg0.status !== 'live') throw new Error('No live game for this fixture');
+      if (!lg0 || lg0.status !== 'live') throw new Error('No live game for this match right now.');
       // duplicate or stale step request (e.g. a second tab, a double click): never publish two moves for one request
-      if (expectPly !== undefined && lg0.moves.length !== expectPly) throw new Error(`Stale step: the game is at ply ${lg0.moves.length}, not ${expectPly}`);
+      if (expectPly !== undefined && lg0.moves.length !== expectPly) throw new Error(`Stale step: the game has moved on (ply ${lg0.moves.length}, not ${expectPly}). Wait for the board to update and try again.`);
       // the market revision is locked for the duration of this command (commands are serialised): no trade can
       // execute between computing the move and publishing it; trades quoted before it are rejected afterwards
       const lockedRevision = lg0.marketId && st.markets.get(lg0.marketId) ? revisionOf(st.markets.get(lg0.marketId)!) : null;
@@ -829,11 +829,11 @@ export class FederationService {
   // ------------------------------------------------------------------ round advance
   /** Advance the world by one round. Player fixtures must be played or forfeited; featured games are played in the background first. */
   async advanceRound(): Promise<ProcessedRound> {
-    if (!this.state) throw new Error('No federation');
-    if (this.playerFixtures().length) throw new Error('Play or forfeit your fixtures first');
+    if (!this.state) throw new Error('No federation yet. Found the federation first.');
+    if (this.playerFixtures().length) throw new Error('Play or forfeit your remaining fixtures first.');
     await this.closeDueMarkets();
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
-    if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready — play it first');
+    if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
     return this.run(async () => {
       const st = this.clone();
       const expect = { season: st.world.season, round: st.world.round };
@@ -1047,10 +1047,10 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const club = [...st.assets.values()].find(a => a.typeId === 'club');
-      if (!club || club.suspended) throw new Error('You need an active Starter Chess Club');
+      if (!club || club.suspended) throw new Error('You need an active Starter Chess Club to do this.');
       const to = (club.level ?? 1) + 1;
-      if (to > 3) throw new Error('Your club is already a Federation Club');
-      if (st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before rebuilding the club');
+      if (to > 3) throw new Error('Your club is already a Federation Club, the top level.');
+      if (st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before you rebuild the club.');
       const posted: Journal[] = [];
       this.post(st, [clubUpgradeJournal(to, st.world.season, this.now())], posted);
       const next = { ...club, level: to };
@@ -1067,15 +1067,15 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
-      if (!club) throw new Error('Sponsorship contracts are signed through your club');
+      if (!club) throw new Error('Sponsorship contracts are signed through your club. Buy a Starter Chess Club first.');
       const active = [...st.contracts.values()].filter(c => c.status === 'active');
-      if (active.length >= clubLevel(club.level ?? 1).contractSlots) throw new Error('No free contract slot — upgrade your club or release a contract');
+      if (active.length >= clubLevel(club.level ?? 1).contractSlots) throw new Error('All your contract slots are full. Upgrade your club or release a contract.');
       const c = st.competitors.get(competitorId);
-      if (!c || c.status !== 'active') throw new Error('Unknown or inactive competitor');
-      if (active.some(x => x.competitorId === competitorId)) throw new Error('Already under contract');
+      if (!c || c.status !== 'active') throw new Error('That competitor is not active right now.');
+      if (active.some(x => x.competitorId === competitorId)) throw new Error('You already sponsor this competitor.');
       // conflict rule: no new contract while you hold a position in an open market involving them
       const conflict = [...st.positions.values()].some(p => p.holder === 'player:cash' && p.shares.some(x => x) && ['open', 'closed'].includes(st.markets.get(p.marketId)?.status ?? '') && marketInvolves(st.markets.get(p.marketId)!, competitorId));
-      if (conflict) throw new Error('You hold a position in a market involving this competitor; settle or sell it first');
+      if (conflict) throw new Error('You hold shares in a market with this competitor. Sell them or wait for the market to settle first.');
       const stipend = stipendFor(c.division, avgSeasonEarnings(c));
       const ct: Contract = { id: `ct:${competitorId}:${st.world.season}`, competitorId, signedSeason: st.world.season, stipend, share: CONTRACT_SHARE, status: 'active', earned: 0, paid: stipend, endedSeason: null };
       const posted: Journal[] = [];
@@ -1090,7 +1090,7 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const ct = st.contracts.get(contractId);
-      if (!ct || ct.status !== 'active') throw new Error('No active contract');
+      if (!ct || ct.status !== 'active') throw new Error('You have no active contract with this competitor.');
       const next: Contract = { ...ct, status: 'ended', endedSeason: st.world.season };
       st.contracts.set(ct.id, next);
       await this.commit(st, [], { contracts: [next] }, { season: st.world.season, round: st.world.round });
@@ -1124,17 +1124,17 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const m = st.markets.get(marketId);
-      if (!m || m.sandbox) throw new Error('Unknown market');
-      if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games');
+      if (!m || m.sandbox) throw new Error('That market could not be found.');
+      if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games.');
       const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
-      if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who is part of this market (you may still sell existing shares)`);
+      if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who plays in this market. You can still sell shares you already hold.`);
       const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
-      if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since this quote — review the new quote');
-      if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved to revision ${revisionOf(m)} (a new move or trade) — review the new quote`);
-      if (m.status !== 'open') throw new Error('Trading is closed for this market');
+      if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since you opened this ticket. Check the new price and try again.');
+      if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved (a new move or trade). Check the new price and try again.`);
+      if (m.status !== 'open') throw new Error('Trading is closed for this market.');
       const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
       const t = trade(m, pos, 'player:cash', outcome, shares, side, this.now(), seq);
-      if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('Cost exceeds your limit — review the new quote');
+      if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('The cost is now above your limit. Check the new price and try again.');
       const posted: Journal[] = [];
       this.post(st, [t.journal], posted);
       st.markets.set(m.id, t.market);
@@ -1149,10 +1149,10 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const m = st.markets.get(marketId);
-      if (!m || m.status !== 'open') throw new Error('Forecasts close with the market');
+      if (!m || m.status !== 'open') throw new Error('Forecasts are closed because this market has closed.');
       const s = probs.reduce((a, b) => a + b, 0);
-      if (s <= 0) throw new Error('Invalid forecast');
-      if (probs.length !== m.q.length) throw new Error('A forecast needs one probability per state');
+      if (s <= 0) throw new Error('That forecast is not valid. Enter a stake above zero.');
+      if (probs.length !== m.q.length) throw new Error('A forecast needs one probability for each outcome.');
       // snapshot of the public market price and model at forecast time (for honest comparisons later)
       st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l] }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
@@ -1164,8 +1164,8 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const t = ASSETS.find(a => a.id === typeId);
-      if (!t) throw new Error('Unknown asset');
-      if (t.unique && [...st.assets.values()].some(a => a.typeId === typeId)) throw new Error('Already owned');
+      if (!t) throw new Error('That asset could not be found.');
+      if (t.unique && [...st.assets.values()].some(a => a.typeId === typeId)) throw new Error('Already owned: you can only have one of these.');
       const posted: Journal[] = [];
       this.post(st, [purchaseJournal(t, st.world.season, this.now())], posted);
       const owned: OwnedAsset = { id: typeId, typeId, acquiredSeason: st.world.season, suspended: false, upkeepPaidSeason: st.world.season };
@@ -1179,8 +1179,8 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const a = st.assets.get(id);
-      if (!a) throw new Error('Not owned');
-      if (a.typeId === 'club' && st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before closing the club');
+      if (!a) throw new Error('You do not own this asset.');
+      if (a.typeId === 'club' && st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before you close the club.');
       const posted: Journal[] = [];
       this.post(st, [saleJournal(assetType(a.typeId), st.world.season, this.now())], posted);
       const ended: Contract[] = [];
@@ -1207,11 +1207,11 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const c = cosmetic(id);
-      if (!c) throw new Error('Unknown item');
-      if (c.price === null) throw new Error('This item is earned through results and cannot be bought');
+      if (!c) throw new Error('That item could not be found.');
+      if (c.price === null) throw new Error('This item is earned through results and cannot be bought.');
       const cs = st.extra.cosmetics ?? emptyCosmetics();
-      if (cs.owned.includes(id)) throw new Error('Already owned');
-      if ((st.balances.get('player:cash') ?? 0) < c.price) throw new Error('Not enough cash');
+      if (cs.owned.includes(id)) throw new Error('Already owned: this item is already in your collection.');
+      if ((st.balances.get('player:cash') ?? 0) < c.price) throw new Error('You do not have enough cash for this item.');
       const posted: Journal[] = [];
       this.post(st, [cosmeticJournal(c, st.world.season, this.now())], posted);
       st.extra.cosmetics = { ...cs, owned: [...cs.owned, id], equipped: { ...cs.equipped, [c.kind]: id } };
@@ -1222,8 +1222,8 @@ export class FederationService {
   async equipCosmetic(kind: CosmeticKind, id: string | null, avatarSeed?: number): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      if (id && (!this.hasCosmetic(id) || cosmetic(id)?.kind !== kind)) throw new Error('Not available');
-      if (avatarSeed !== undefined && (!this.hasCosmetic('avatar-portraits') || !AVATAR_SEEDS.includes(avatarSeed))) throw new Error('Portrait studio not owned');
+      if (id && (!this.hasCosmetic(id) || cosmetic(id)?.kind !== kind)) throw new Error('You have not unlocked this item yet.');
+      if (avatarSeed !== undefined && (!this.hasCosmetic('avatar-portraits') || !AVATAR_SEEDS.includes(avatarSeed))) throw new Error('You need the Portrait Studio for this.');
       const cs = st.extra.cosmetics ?? emptyCosmetics();
       const equipped = { ...cs.equipped };
       if (id) equipped[kind] = id; else delete equipped[kind];
@@ -1238,7 +1238,7 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const limit = this.ownsAsset('scouting') ? Infinity : 3;
-      if (ids.length > limit) throw new Error('The watchlist holds 3 competitors without a Scouting Department');
+      if (ids.length > limit) throw new Error('Your watchlist holds 3 competitors. Buy a Scouting Department to follow more.');
       st.extra.watchlist = [...new Set(ids)];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });

@@ -39,11 +39,12 @@ export function RivalsScreen() {
     <div>
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0 }}>Rivals</h1><span className="spacer" />
-        <div className="seg" role="tablist" aria-label="Rivals sections">
-          {(['featured', 'mine', 'legends', 'clubs'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{{ featured: 'Featured rivals', mine: 'Your rivalries', legends: 'Legend rivalries', clubs: 'Clubs' }[t]}</button>)}
+        <div className="seg" role="tablist" aria-label="Rivals Sections">
+          {(['featured', 'mine', 'legends', 'clubs'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{{ featured: 'Featured Rivals', mine: 'Your Rivalries', legends: 'Legend Rivalries', clubs: 'Clubs' }[t]}</button>)}
         </div>
       </div>
-      <p className="small muted">Rivalry intensity is computed only from recorded events — meetings, upsets, knockout eliminations, championship rematches, promotion battles and streaks — with caps against repeated low-stakes games and decay over seasons. It shapes presentation and goals; it never touches results, pairings or engine strength.</p>
+      <p className="small muted">Rivalries grow from what actually happens between players. They never affect results, pairings or playing strength.</p>
+      <details className="small muted"><summary>Details</summary>Intensity counts meetings, upsets, knockout eliminations, championship rematches, promotion battles and streaks. Repeated low-stakes games are capped, and points fade each season.</details>
       {tab === 'featured' && (
         <div className="grid-2" data-testid="featured-rivals">
           {featured.map(f => {
@@ -54,9 +55,9 @@ export function RivalsScreen() {
               <div key={f.id} className="panel rival-card clickable" data-testid="rival-card" onClick={() => go({ name: 'competitor', id: c.id })} style={{ cursor: 'pointer' }}>
                 <div className="stack" style={{ alignItems: 'center', gap: 4 }}><Portrait seed={c.portraitSeed} size={56} crown={c.titles.some(t => /Crown Champion/.test(t.title))} /><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s insignia`} /></div>
                 <div className="stack" style={{ gap: 4 }}>
-                  <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}><strong>{c.name}</strong>{c.fedTitle && <span className="chip gold"><Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={c.fedTitle} /> {c.fedTitle}</span>}{f.tag === 'circle' && <span className="chip info">your circle</span>}{favs.has(c.id) && <span className="chip">★ followed</span>}{c.status === 'retired' && <span className="chip">retired</span>}</div>
-                  <div className="small"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /> {divisionLabel(c.division)} · {REGION_NAMES[c.region]} · {Math.round(c.rating)} ±{Math.round(c.rd)} · form <span className="mono">{c.form || '—'}</span></div>
-                  <div className="small"><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} /> {club.identity.name} · {c.titles.length} title(s) · reputation {c.reputation}</div>
+                  <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}><strong>{c.name}</strong>{c.fedTitle && <span className="chip gold"><Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={c.fedTitle} /> {c.fedTitle}</span>}{f.tag === 'circle' && <span className="chip info">Your Circle</span>}{favs.has(c.id) && <span className="chip">★ Followed</span>}{c.status === 'retired' && <span className="chip">Retired</span>}</div>
+                  <div className="small"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /> {divisionLabel(c.division)} · {REGION_NAMES[c.region]} · {Math.round(c.rating)} ±{Math.round(c.rd)} · Form <span className="mono">{c.form || '—'}</span></div>
+                  <div className="small"><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} /> {club.identity.name} · {c.titles.length} {c.titles.length === 1 ? 'title' : 'titles'} · Reputation {c.reputation}</div>
                   <div className="small muted">{ambitionOf(c)}</div>
                   {r ? <IntensityBar r={r} /> : <span className="small muted">You have not met yet.</span>}
                 </div>
@@ -67,7 +68,7 @@ export function RivalsScreen() {
       )}
       {tab === 'mine' && (
         <div className="panel" data-testid="my-rivalries">
-          {mine.length === 0 ? <p className="small muted">No rivalries yet — play federation games.</p> : (
+          {mine.length === 0 ? <p className="small muted">No rivalries yet. Play federation games to start one.</p> : (
             <table className="small"><thead><tr><th>Opponent</th><th>Intensity</th><th className="hide-sm">Latest</th></tr></thead>
               <tbody>{mine.slice(0, 30).map(r => <tr key={r.b} className="clickable" onClick={() => go({ name: 'competitor', id: r.b })}><td>{fed.name(r.b)}</td><td style={{ minWidth: 160 }}><IntensityBar r={r} /></td><td className="hide-sm muted">{r.events[0]?.text ?? ''}</td></tr>)}</tbody></table>
           )}
@@ -88,7 +89,7 @@ export function RivalsScreen() {
               const members = [...st.competitors.values()].filter(c => c.status === 'active' && c.region === k.region && clubOf(c.id, c.region).id === k.id);
               return <tr key={k.id}><td><span className="row" style={{ gap: 8 }}><Emblem spec={clubEmblem(k.identity, members.reduce((a, c) => a + c.titles.length, 0) >= 10 ? 2 : 1)} size="sm" title={k.identity.name} /><span>{k.identity.name}<div className="muted">“{k.identity.motto}”</div></span></span></td><td className="hide-sm">{REGION_NAMES[k.region]}</td><td>{members.length}</td><td>{members.reduce((a, c) => a + c.titles.length, 0)}</td><td className="mono">{fmtCrowns(fed.balance(`club:${k.id}`), 0)}</td></tr>;
             })}</tbody></table>
-          <div className="small muted">Club treasuries are ledger accounts: 5% membership dues from members' balances each season, 60% spent on operations.</div>
+          <div className="small muted">Each season, members pay 5% of their balance in dues and the club spends 60% of its treasury on running costs.</div>
         </div>
       )}
     </div>

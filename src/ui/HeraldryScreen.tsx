@@ -24,33 +24,37 @@ export function HeraldryScreen() {
   return (
     <div>
       <h1>Heraldry of the Federation</h1>
-      <p className="small muted">Every emblem is original vector art drawn by the game (no external images) and built from one design system: a shield shape per family, a field division, fixed heraldic tinctures, a charge, and — for the highest ranks — crests, wreaths, gold borders and pixel pips. Outlines follow your colour theme.</p>
+      <p className="small muted">Every emblem in the federation, and what it takes to earn one. All art is drawn by the game and follows your colour theme.</p>
+      <details className="small muted"><summary>Details</summary>Each emblem family has its own shield shape, field division, fixed tinctures and charge. The highest ranks add crests, wreaths, gold borders and pips.</details>
       <section className="panel stack" data-testid="gallery-sizes">
         <h3>Sizes</h3>
         <div className="emblem-row" style={{ alignItems: 'flex-end' }}>
-          {(['sm', 'md', 'lg'] as const).map(s => <div key={s} className="emblem-cell"><Emblem spec={tournamentCrest('champ')} size={s} title={`Crown Championship crest (${s})`} /><span className="small muted">{s === 'sm' ? 'small · 22 px (lists, phone)' : s === 'md' ? 'medium · 44 px' : 'large · 104 px (ceremonies)'}</span></div>)}
+          {(['sm', 'md', 'lg'] as const).map(s => <div key={s} className="emblem-cell"><Emblem spec={tournamentCrest('champ')} size={s} title={`Crown Championship crest (${s})`} /><span className="small muted">{s === 'sm' ? 'Small · 22 px (lists, phone)' : s === 'md' ? 'Medium · 44 px' : 'Large · 104 px (ceremonies)'}</span></div>)}
           {(['sm', 'md', 'lg'] as const).map(s => <div key={`d${s}`} className="emblem-cell"><Emblem spec={divisionEmblem(1)} size={s} title={`Crown Division (${s})`} /></div>)}
         </div>
       </section>
-      <section className="panel stack" data-testid="gallery-divisions"><h3>League divisions</h3><Row items={Array.from({ length: 8 }, (_, i) => ({ spec: divisionEmblem(i + 1), label: divisionLabel(i + 1), sub: `Division ${i + 1}` }))} /></section>
-      <section className="panel stack" data-testid="gallery-ranks"><h3>Rating ranks <span className="chip">temporary — follow your current rating band</span></h3><Row items={RANK_ORDER.map(r => ({ spec: rankEmblem(r), label: r }))} /></section>
+      <section className="panel stack" data-testid="gallery-divisions"><h3>Divisions</h3><Row items={Array.from({ length: 8 }, (_, i) => ({ spec: divisionEmblem(i + 1), label: divisionLabel(i + 1), sub: `Division ${i + 1}` }))} /></section>
+      <section className="panel stack" data-testid="gallery-ranks"><h3>Ranks <span className="chip">Temporary · Follows Your Rating</span></h3><Row items={RANK_ORDER.map(r => ({ spec: rankEmblem(r), label: r }))} /></section>
       <section className="panel stack" data-testid="gallery-titles">
-        <h3>Federation titles <span className="chip gold">permanent — earned by norms</span></h3>
+        <h3>Federation Titles <span className="chip gold">Permanent · Earned by Norms</span></h3>
         <Row items={FED_TITLES.map(t => ({ spec: titleEmblem(t), label: `${t} (${FED_TITLE_ABBR[t]})` }))} />
-        <table className="small"><thead><tr><th>Title</th><th>Norms</th><th>Norm performance</th><th>Opposition floor</th><th>Norm games</th><th>Peak rating</th><th>Also</th></tr></thead>
-          <tbody>{TITLE_RULES.map(r => <tr key={r.title}><td>{r.title}</td><td>{r.norms}</td><td>{r.tpr}+</td><td>{r.oppFloor}+</td><td>{r.normGames}+</td><td>{r.peak}{r.established ? ' (established)' : ''}</td><td>{r.honour === 'none' ? '—' : r.honour === 'any-title' ? 'an event title' : 'a Crown Championship final'}</td></tr>)}</tbody></table>
-        <div className="small muted">{TITLES_ID}: fictional honours of the Six-Square Federation, inspired by how real chess titles reward sustained performance (norms over several events plus a rating requirement). They are not FIDE titles and carry no meaning outside this game.</div>
+        <details className="small"><summary>Details</summary>
+        <table className="small"><thead><tr><th>Title</th><th>Norms</th><th>Norm Performance</th><th>Opponent Average</th><th>Norm Games</th><th>Peak Rating</th><th>Also Needs</th></tr></thead>
+          <tbody>{TITLE_RULES.map(r => <tr key={r.title}><td>{r.title}</td><td>{r.norms}</td><td>{r.tpr}+</td><td>{r.oppFloor}+</td><td>{r.normGames}+</td><td>{r.peak}{r.established ? ' (established)' : ''}</td><td>{r.honour === 'none' ? '—' : r.honour === 'any-title' ? 'An event title' : 'A Crown Championship final'}</td></tr>)}</tbody></table>
+        <p className="muted">Norm Performance is your performance rating in one event; Opponent Average is the minimum average rating of your opponents there. "Established" means the peak was reached with a settled rating (uncertainty ±100 or less).</p>
+        </details>
+        <div className="small muted">Fictional honours of this federation, earned like real chess titles through norms and a peak rating. They are not FIDE titles.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-regions"><h3>Regional federations</h3><Row items={REGION_NAMES.map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
+      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={REGION_NAMES.map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
       <section className="panel stack" data-testid="gallery-tournaments">
-        <h3>Major tournaments and their trophies</h3>
+        <h3>Major Tournaments and Their Trophies</h3>
         <div className="emblem-row">{TOURNAMENTS.map(t => <div key={t} className="emblem-cell"><span className="row"><Emblem spec={tournamentCrest(t)} size="md" title={`${TOURNAMENT_NAME[t]} crest`} /><Trophy kind={TROPHY_FOR[t]} size="md" title={`${TOURNAMENT_NAME[t]} trophy`} /></span><span className="small"><strong>{TOURNAMENT_NAME[t]}</strong></span></div>)}</div>
-        <div className="small muted">Trophies appear in the Hall of Fame only for titles actually recorded in a season.</div>
+        <div className="small muted">Win one of these events to add its trophy to your Hall of Fame.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-finance"><h3>Financial prestige tiers</h3><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
+      <section className="panel stack" data-testid="gallery-finance"><h3>Financial Prestige</h3><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
       <section className="panel stack" data-testid="gallery-achievements"><h3>Achievements</h3><Row items={ACHIEVEMENTS.map(a => ({ spec: achievementEmblem(a, true), label: a.name, sub: a.description }))} /></section>
-      <section className="panel stack" data-testid="gallery-clubs"><h3>Clubs of the federation</h3><Row items={AI_CLUBS.map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
-      <div className="small muted">Rivalries use {RIVALRY_ID} (see a competitor's profile for the breakdown); titles use {TITLES_ID}.</div>
+      <section className="panel stack" data-testid="gallery-clubs"><h3>Clubs of the Federation</h3><Row items={AI_CLUBS.map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
+      <details className="small muted"><summary>Details</summary>Rules versions: rivalries {RIVALRY_ID}, titles {TITLES_ID}. A competitor's profile shows how your rivalry with them was scored.</details>
     </div>
   );
 }

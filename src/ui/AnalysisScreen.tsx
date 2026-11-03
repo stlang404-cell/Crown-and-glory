@@ -149,43 +149,43 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn ghost small" onClick={() => go({ name: 'library' })}>← Library</button>
         <h1 style={{ margin: 0 }}>{resultText(game)} vs {opp.name}</h1>
-        <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'unfinished'}</span>
+        <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'Unfinished'}</span>
         <span className="chip">{game.timeControl.label}</span>
         <span className={`chip ${game.rated ? 'pos' : ''}`}>{game.mode === 'training' ? 'Training' : game.rated ? 'Rated' : 'Casual'}</span>
         <span className="spacer" />
-        <button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export game</button>
+        <button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export Game</button>
       </div>
       <div className="analysis">
         <div className="board-col">
           <Board fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
           <div className="navbar" role="group" aria-label="Move navigation">
-            <button className="btn" onClick={() => goPly(0)} aria-label="First position"><Icon name="first" /></button>
-            <button className="btn" onClick={() => variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1)} aria-label="Previous move"><Icon name="prev" /></button>
+            <button className="btn" onClick={() => goPly(0)} aria-label="First Position"><Icon name="first" /></button>
+            <button className="btn" onClick={() => variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1)} aria-label="Previous Move"><Icon name="prev" /></button>
             <span className="chip mono" style={{ alignSelf: 'center' }} data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>
-            <button className="btn" onClick={() => variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1)} aria-label="Next move"><Icon name="next" /></button>
-            <button className="btn" onClick={() => goPly(n)} aria-label="Last position"><Icon name="last" /></button>
-            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip board"><Icon name="flip" /></button>
+            <button className="btn" onClick={() => variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1)} aria-label="Next Move"><Icon name="next" /></button>
+            <button className="btn" onClick={() => goPly(n)} aria-label="Last Position"><Icon name="last" /></button>
+            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip Board"><Icon name="flip" /></button>
           </div>
           <div className="row" style={{ justifyContent: 'center' }}>
-            <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark position'}</button>
-            <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable move' : '♔ Mark memorable'}</button>
+            <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark Position'}</button>
+            <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable Move' : '♔ Mark Memorable'}</button>
             {bookmarks.length > 0 && <span className="small muted">Saved: {[...new Set(bookmarks.map(b => b.ply))].sort((a, b) => a - b).map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>{k}</button>)}</span>}
           </div>
           {variation && (
             <div className="notice">
-              Exploring {variation.label} from ply {variation.origin}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
-              <button className="btn small" onClick={() => setVariation(null)}>Return to main line</button>
+              Exploring {variation.label}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
+              <button className="btn small" onClick={() => setVariation(null)}>Return to Main Line</button>
             </div>
           )}
           <div className="panel">
-            <div className="panel-title"><h3>Evaluation</h3><span className="small muted">White advantage up · bounded expected score (mate shown at the edge)</span></div>
-            {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet — the graph is drawn only from completed engine analysis.</p>}
+            <div className="panel-title"><h3>Evaluation</h3><span className="small muted">Higher is better for White</span></div>
+            {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet. The graph appears as the analysis finishes.</p>}
           </div>
         </div>
         <div className="side-col">
           <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
           {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId} /> : (
-            <div className="panel"><h3>{ply === 0 ? 'Initial position' : `Ply ${ply}`}</h3><p className="muted small">{ply === 0 ? 'Select a move in the list or graph, or use ← → keys.' : 'This move has not been analysed yet.'}</p></div>
+            <div className="panel"><h3>{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h3><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
           )}
           <div className="panel">
             <h3>Moves</h3>
@@ -208,52 +208,68 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
           </div>
           {report && mine && theirs && (
             <div className="panel">
-              <div className="panel-title"><h3>Summary</h3><span className="chip gold" title={report.methodology.calibration}>Experimental methodology</span></div>
+              <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
               <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                <div className="stat"><span className="k">Your accuracy</span><span className="v" data-testid="accuracy">{fmtAcc(mine.accuracy)}</span><span className="small muted">{mine.eligible} graded decisions · {mine.forced} forced excluded</span></div>
-                <div className="stat"><span className="k">{opp.name}</span><span className="v">{fmtAcc(theirs.accuracy)}</span><span className="small muted">{theirs.eligible} graded decisions</span></div>
+                <div className="stat"><span className="k">Your Accuracy</span><span className="v" data-testid="accuracy">{fmtAcc(mine.accuracy)}</span><span className="small muted">{mine.eligible} graded moves · {mine.forced} forced moves skipped</span></div>
+                <div className="stat"><span className="k">{opp.name}</span><span className="v">{fmtAcc(theirs.accuracy)}</span><span className="small muted">{theirs.eligible} graded moves</span></div>
               </div>
               <table style={{ marginTop: 10 }}>
-                <thead><tr><th>Label</th><th>You</th><th>{opp.name.split(' ')[0]}</th></tr></thead>
+                <thead><tr><th>Grade</th><th>You</th><th>{opp.name.split(' ')[0]}</th></tr></thead>
                 <tbody>{GRADES.map(g => <tr key={g}><td><GradeIcon grade={g} /> {GRADE_LABEL[g]}</td><td>{mine.counts[g]}</td><td>{theirs.counts[g]}</td></tr>)}</tbody>
               </table>
               <div className="small muted" style={{ marginTop: 8 }}>
-                Phase accuracy (you): opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} ({mine.phaseAccuracy.opening.eligible}) · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} ({mine.phaseAccuracy.middlegame.eligible}) · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} ({mine.phaseAccuracy.endgame.eligible}). “—” means the phase did not occur.<br />
-                Critical positions handled: {mine.critical.handled}/{mine.critical.total}. Best-move frequency: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}. Avg. loss on cp-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
+                Your accuracy by phase: opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} (“—” means the game never reached that phase).<br />
+                Critical moments handled: {mine.critical.handled}/{mine.critical.total} · Best moves: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}.<br />
+                Accuracy runs from 0 to 100 and shows how close your moves were to the engine's in this game. It is not a rating or an IQ.
                 {report.methodology.accuracyId === 'crown-accuracy-v2'
-                  ? 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100. It measures move quality in this game against the engine — it is not a rating or an IQ. The expected-score map (crown-outcome-map-v2) was refitted for the canonical engine and validated on held-out opening families; the grade boundaries and k = 4 remain experimental.'
+                  ? null
                   : report.methodology.accuracyId === 'crown-accuracy-v1'
-                  ? 'Historical report (engine crown-search-1 + crown-eval-3, map crown-outcome-map-v1). Accuracy = 100·exp(−4·mean expected-score loss). Re-analyse to get a report from the current canonical engine; this one is kept unchanged.'
-                  : 'Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp (methodology v0). These parameters are uncalibrated research placeholders; re-analyse to get a current report.'}
+                  ? ' Historical report: made with an older engine and kept unchanged. Analyse again for an up-to-date report.'
+                  : ' This report uses early, untuned settings. Analyse again for an up-to-date report.'}
               </div>
+              <details className="small">
+                <summary>Details</summary>
+                <div className="muted">
+                  Graded moves by phase: opening {mine.phaseAccuracy.opening.eligible} · middlegame {mine.phaseAccuracy.middlegame.eligible} · endgame {mine.phaseAccuracy.endgame.eligible}.<br />
+                  Average loss on centipawn-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
+                  {report.methodology.accuracyId === 'crown-accuracy-v2'
+                    ? 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100. The expected-score map (crown-outcome-map-v2) was refitted for the current engine and validated on held-out opening families; the grade boundaries and k = 4 remain experimental.'
+                    : report.methodology.accuracyId === 'crown-accuracy-v1'
+                    ? 'Engine crown-search-1 + crown-eval-3, map crown-outcome-map-v1. Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100.'
+                    : 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100; logistic scale s = 200 cp (methodology v0, uncalibrated placeholders).'}
+                  <br />Calibration: {report.methodology.calibration}
+                </div>
+              </details>
               <ClockPressure game={game} plies={plies} />
               <div className="row" style={{ marginTop: 10 }}>
-                {report.highlights.worstMistake && <button className="btn small" onClick={() => goPly(report.highlights.worstMistake!)}>Biggest mistake (ply {report.highlights.worstMistake})</button>}
-                {report.highlights.biggestMiss && <button className="btn small" onClick={() => goPly(report.highlights.biggestMiss!)}>Missed opportunity (ply {report.highlights.biggestMiss})</button>}
-                {report.highlights.bestTactic && <button className="btn small" onClick={() => goPly(report.highlights.bestTactic!)}>Best find (ply {report.highlights.bestTactic})</button>}
+                {report.highlights.worstMistake && <button className="btn small" onClick={() => goPly(report.highlights.worstMistake!)}>Biggest Mistake (Move {Math.ceil(report.highlights.worstMistake / 2)})</button>}
+                {report.highlights.biggestMiss && <button className="btn small" onClick={() => goPly(report.highlights.biggestMiss!)}>Missed Chance (Move {Math.ceil(report.highlights.biggestMiss / 2)})</button>}
+                {report.highlights.bestTactic && <button className="btn small" onClick={() => goPly(report.highlights.bestTactic!)}>Best Find (Move {Math.ceil(report.highlights.bestTactic / 2)})</button>}
               </div>
-              {report.turningPoints.length > 0 && <div className="small muted" style={{ marginTop: 6 }}>Turning points (evaluation crossed a ±0.65 / 0.35 expected-score band): {report.turningPoints.map(t => <button key={t} className="btn ghost small" onClick={() => goPly(t)}>{t}</button>)}</div>}
+              {report.turningPoints.length > 0 && <div className="small muted" style={{ marginTop: 6 }}>Turning points: {report.turningPoints.map(t => <button key={t} className="btn ghost small" onClick={() => goPly(t)}>{t}</button>)}</div>}
             </div>
           )}
           {report && report.recommendations.length > 0 && (
             <div className="panel">
-              <h3>Training focus</h3>
+              <h3>Training Focus</h3>
               {report.recommendations.slice(0, 3).map(r => (
                 <div key={r.topic} className="coach" style={{ marginBottom: 8 }}>
                   <strong>{r.label}</strong>
                   <div className="small muted">{r.basis}</div>
-                  {r.plies.length > 0 && <div className="small">Moments: {r.plies.map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>ply {k}</button>)}</div>}
+                  {r.plies.length > 0 && <div className="small">Moments: {r.plies.map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>move {Math.ceil(k / 2)}</button>)}</div>}
                 </div>
               ))}
-              <div className="small muted">The full training academy with held-out exercises is planned for M2.</div>
             </div>
           )}
           {event && (
             <div className="panel">
-              <h3>Rating change</h3>
+              <h3>Rating Change</h3>
               <div className={`delta ${event.delta >= 0 ? 'up' : 'down'}`}>{event.delta >= 0 ? '+' : ''}{event.delta.toFixed(1)}</div>
               <p className="small">{explainEvent(event)}</p>
-              <div className="small muted">Glicko-2: {Math.round(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {Math.round(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</div>
+              <details className="small">
+                <summary>Details</summary>
+                <span className="muted">Glicko-2 (rating/RD/volatility): {Math.round(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {Math.round(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</span>
+              </details>
             </div>
           )}
         </div>
@@ -270,22 +286,26 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
   return (
     <div className="panel stack" data-testid="report-status">
       <div className="panel-title">
-        <h3>Engine report</h3>
+        <h3>Match Analysis</h3>
         <span className={`chip ${status === 'complete' ? 'pos' : status === 'failed' ? 'neg' : 'info'}`} data-testid="analysis-status">{status ?? 'not analysed'}</span>
       </div>
       {live && (
         <div>
           <div className="evalbar" aria-label="Analysis progress"><div style={{ width: `${(live.done / Math.max(1, live.total)) * 100}%`, background: 'var(--accent)' }} /></div>
-          <div className="row small"><span>Analysing ply {live.done}/{live.total} in a background worker…</span><span className="spacer" /><button className="btn small" onClick={() => void services.cancelAnalysis()}>Cancel</button></div>
+          <div className="row small"><span>Analysing… {live.done}/{live.total} positions</span><span className="spacer" /><button className="btn small" onClick={() => void services.cancelAnalysis()}>Cancel</button></div>
         </div>
       )}
       {report && (
         <div className="small muted">
-          {report.settings.label} · {report.engine.buildId} · {report.methodology.gradingId} · {report.status === 'partial' ? `PARTIAL (${report.coverage.analysed}/${report.coverage.total} plies)` : `${report.coverage.analysed}/${report.coverage.total} plies`} · {Math.round(report.elapsedMs / 1000)} s
+          {report.settings.label}{report.status === 'partial' ? ` · Partial: ${report.coverage.analysed} of ${report.coverage.total} positions analysed` : ''} · {Math.round(report.elapsedMs / 1000)} s
+          <details className="small">
+            <summary>Details</summary>
+            Engine {report.engine.buildId} · grading {report.methodology.gradingId} · {report.coverage.analysed}/{report.coverage.total} plies analysed
+          </details>
         </div>
       )}
       {reports.length > 1 && (
-        <label className="small">Report version{' '}
+        <label className="small">Version{' '}
           <select value={reportIdx} onChange={e => setReportIdx(+e.target.value)}>
             {reports.map((r, i) => <option key={r.id} value={i}>{r.settings.label} · {new Date(r.completedAt).toLocaleString()}</option>)}
           </select>
@@ -297,11 +317,11 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
             {ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
           <button className="btn small" disabled={reports.some(r => AppServices.isCurrent(r, preset))} onClick={() => void services.requestAnalysis(game.id, ANALYSIS_PRESETS.find(p => p.id === preset)!)}>
-            {reports.length ? 'Analyse with these settings (new version)' : status === 'cancelled' || status === 'failed' ? 'Retry analysis' : 'Analyse'}
+            {reports.length ? 'Analyse Again' : status === 'cancelled' || status === 'failed' ? 'Retry Analysis' : 'Analyse'}
           </button>
         </div>
       )}
-      {!report && !live && status === 'queued' && <div className="small muted">Queued — analysis starts when no match is in progress.</div>}
+      {!report && !live && status === 'queued' && <div className="small muted">Queued. Analysis starts when you are not in a match.</div>}
     </div>
   );
 }
@@ -314,21 +334,24 @@ function MovePanel({ p, onExplore, onRetry, humanPov, accuracyId }: { p: PlyAnal
         <h3 className="row" style={{ margin: 0 }}><GradeIcon grade={p.grade} provisional={p.gradeProvisional} /> {Math.ceil(p.ply / 2)}{p.color === 'white' ? '.' : '…'} {p.san}</h3>
         <span className="chip" data-testid="move-grade">{p.grade ? GRADE_LABEL[p.grade] : 'Ungraded'}{p.gradeProvisional ? ' (provisional)' : ''}</span>
       </div>
-      {p.uncertainGrades && <div className="small notice warn">Uncertain between {p.uncertainGrades.map(g => GRADE_LABEL[g]).join(' / ')} — the loss changed between search depths.</div>}
+      {p.uncertainGrades && <div className="small notice warn">Between {p.uncertainGrades.map(g => GRADE_LABEL[g]).join(' and ')}: the verdict changed with deeper search.</div>}
       <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
-        <div className="stat"><span className="k">Before (best play)</span><span className="v" style={{ fontSize: '1.2rem' }}>{formatScore(p.evalBefore, 'white')}</span></div>
+        <div className="stat"><span className="k">Before (Best Play)</span><span className="v" style={{ fontSize: '1.2rem' }}>{formatScore(p.evalBefore, 'white')}</span></div>
         <div className="stat"><span className="k">After {p.san}</span><span className="v" style={{ fontSize: '1.2rem' }}>{formatScore(p.evalAfter, 'white')}</span></div>
       </div>
       <div className="evalbar" aria-label={`White expected score ${Math.round(whiteU(p.evalAfter, accuracyId) * 100)}%`}><div style={{ width: `${whiteU(p.evalAfter, accuracyId) * 100}%` }} /></div>
       <div className="small muted">
-        Scores from White's view. Expected-score loss for {mover}: {p.loss === null ? 'n/a' : p.loss.toFixed(3)}{p.lossInterval ? ` (range across depths ${p.lossInterval[0].toFixed(3)}–${p.lossInterval[1].toFixed(3)})` : ''}{p.cpLoss !== null ? ` · ${Math.round(p.cpLoss)} cp` : ''}.
-        {' '}{p.legalCount} legal move{p.legalCount === 1 ? '' : 's'} · depth {p.achievedDepth} · {p.nodes.toLocaleString()} nodes · {p.phase}{p.critical ? ' · critical position' : ''}.
+        Scores are from White's side. {p.legalCount} legal move{p.legalCount === 1 ? '' : 's'} · {p.phase}{p.critical ? ' · critical position' : ''}.
+        <details className="small">
+          <summary>Details</summary>
+          Expected-score loss for {mover}: {p.loss === null ? 'n/a' : p.loss.toFixed(3)}{p.lossInterval ? ` (range across depths ${p.lossInterval[0].toFixed(3)}–${p.lossInterval[1].toFixed(3)})` : ''}{p.cpLoss !== null ? ` · ${Math.round(p.cpLoss)} cp` : ''} · depth {p.achievedDepth} · {p.nodes.toLocaleString()} nodes
+        </details>
       </div>
       {p.gradeReasons.map((r, i) => <div key={i} className="small">{r}</div>)}
       {p.mateNote && <div className="small">{p.mateNote}</div>}
       {p.notes.map((nt, i) => <div key={i} className="coach"><div>{nt.text}</div><div className="small muted">{nt.evidence}</div></div>)}
       <div>
-        <div className="small muted" style={{ marginBottom: 6 }}>Engine candidates (same depth, {mover}'s view) — tap to explore the line</div>
+        <div className="small muted" style={{ marginBottom: 6 }}>Engine moves, scored from {mover}'s side. Tap one to explore its line.</div>
         <div className="stack">
           {p.candidates.map(c => (
             <button key={c.ccn} className="cand" onClick={() => onExplore(c, c.ccn === p.ccn ? 'the played line' : `line after ${c.san}`)} data-testid="candidate">
@@ -339,13 +362,13 @@ function MovePanel({ p, onExplore, onRetry, humanPov, accuracyId }: { p: PlyAnal
           ))}
         </div>
       </div>
-      {p.color === humanPov && p.loss !== null && p.loss > 0.05 && <button className="btn" onClick={onRetry}>Retry from this position (unrated training)</button>}
+      {p.color === humanPov && p.loss !== null && p.loss > 0.05 && <button className="btn" onClick={onRetry}>Retry from This Position (Unrated)</button>}
     </div>
   );
 }
 
 function ClockPressure({ game, plies }: { game: GameRecord; plies: PlyAnalysis[] }) {
-  if (!game.clocks) return <div className="small muted" style={{ marginTop: 6 }}>Clock pressure: untimed game.</div>;
+  if (!game.clocks) return <div className="small muted" style={{ marginTop: 6 }}>Clock: untimed game.</div>;
   const limit = game.timeControl.initialMs * 0.2;
   const mine = plies.filter(p => p.color === game.humanColor && !p.forced && p.loss !== null);
   const low = mine.filter(p => (game.moves[p.ply - 1]?.clockBeforeMs ?? Infinity) < limit);
@@ -355,8 +378,8 @@ function ClockPressure({ game, plies }: { game: GameRecord; plies: PlyAnalysis[]
   const longest = mine.reduce<PlyAnalysis | null>((a, p) => (!a || (game.moves[p.ply - 1]?.elapsedMs ?? 0) > (game.moves[a.ply - 1]?.elapsedMs ?? 0) ? p : a), null);
   return (
     <div className="small" style={{ marginTop: 6 }} data-testid="clock-pressure">
-      <strong>Clock:</strong> {low.length ? <>{low.length} decision{low.length === 1 ? '' : 's'} with under 20% of your starting time (average loss {mean(low)!.toFixed(3)} vs {mean(rest)?.toFixed(3) ?? '—'} otherwise; single game, descriptive only).</> : 'you never dropped below 20% of your starting time.'}
-      {think.length > 0 && longest && <> Longest think: {Math.round((game.moves[longest.ply - 1].elapsedMs) / 1000)} s on {longest.san} (ply {longest.ply}{longest.critical ? ', a critical position' : ''}).</>}
+      <strong>Clock:</strong> {low.length ? <>{low.length} move{low.length === 1 ? '' : 's'} played with under 20% of your starting time (average loss {mean(low)!.toFixed(3)} vs {mean(rest)?.toFixed(3) ?? '—'} otherwise).</> : 'you never dropped below 20% of your starting time.'}
+      {think.length > 0 && longest && <> Longest think: {Math.round((game.moves[longest.ply - 1].elapsedMs) / 1000)} s on {longest.san}{longest.critical ? ', a critical position' : ''}.</>}
     </div>
   );
 }

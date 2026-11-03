@@ -48,10 +48,10 @@ export function CosmeticsShop() {
   const cs = fed.cosmetics();
   const cash = fed.finance().cash;
   const act = async (fn: () => Promise<void>, text: string) => { setMsg(null); try { await fn(); setMsg({ kind: 'ok', text }); } catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } };
-  const kinds: [CosmeticKind, string][] = [['frame', 'Portrait frames'], ['banner', 'Passport banners'], ['board', 'Board palettes'], ['avatar', 'Portraits']];
+  const kinds: [CosmeticKind, string][] = [['frame', 'Portrait Frames'], ['banner', 'Passport Banners'], ['board', 'Board Palettes'], ['avatar', 'Portraits']];
   return (
     <section className="panel stack" style={{ marginTop: 14 }} data-testid="cosmetics">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Cosmetics</h3><span className="small muted">Visual only — never strength, rating, titles or prizes. Bought items go to the federation sink and cannot be resold.</span></div>
+      <div className="panel-title"><h3 style={{ margin: 0 }}>Cosmetics</h3><span className="small muted">Looks only: never affects strength, rating, titles or prizes. Purchases can't be resold.</span></div>
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
       {kinds.map(([k, label]) => (
         <div key={k}>
@@ -62,12 +62,12 @@ export function CosmeticsShop() {
               const on = cs.equipped[k] === c.id;
               return (
                 <div key={c.id} className="panel stack" style={{ gap: 4 }} data-testid={`cosmetic-${c.id}`}>
-                  <div className="row" style={{ gap: 6 }}><strong className="small">{c.name}</strong>{on && <span className="chip pos">equipped</span>}{c.price === null && <span className="chip gold">earned</span>}</div>
+                  <div className="row" style={{ gap: 6 }}><strong className="small">{c.name}</strong>{on && <span className="chip pos">Equipped</span>}{c.price === null && <span className="chip gold">Earned</span>}</div>
                   <span className="small muted">{c.description}</span>
                   {have ? (
-                    k === 'avatar' ? null : k === 'board' ? <button className="btn small" onClick={() => setBoard(c.boardId as BoardId)}>Use this board</button>
+                    k === 'avatar' ? null : k === 'board' ? <button className="btn small" onClick={() => setBoard(c.boardId as BoardId)}>Use Board</button>
                       : <button className="btn small" disabled={services.readOnly} onClick={() => act(() => fed.equipCosmetic(k, on ? null : c.id), on ? 'Removed.' : `${c.name} equipped.`)}>{on ? 'Remove' : 'Equip'}</button>
-                  ) : c.price === null ? <span className="small muted">Locked — earn it through results.</span>
+                  ) : c.price === null ? <span className="small muted">Locked: earn it through your results.</span>
                     : <button className="btn small primary" data-testid={`buy-cosmetic-${c.id}`} disabled={services.readOnly || cash < c.price} onClick={() => act(() => fed.buyCosmetic(c.id), `Bought ${c.name} for ${fmtCrowns(c.price!, 0)}.`)}>Buy {fmtCrowns(c.price, 0)}</button>}
                 </div>
               );

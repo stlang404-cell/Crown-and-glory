@@ -77,16 +77,16 @@ export function PlayScreen() {
       <section className="hero">
         <Portrait seed={opp.portraitSeed} size={84} crown={opp.level >= 8} />
         <div>
-          <h1>Six squares. Every move remembered.</h1>
-          <p className="muted" style={{ margin: 0 }}>Play the crown-la6-v1 variant against a genuine local engine. Every game is saved, rated games update your Glicko-2 rating once, and each finished game gets a full engine report.</p>
+          <h1>Six Squares. Every Move Remembered.</h1>
+          <p className="muted" style={{ margin: 0 }}>Six-square chess against engine opponents. Every game is saved, rated games change your rating, and every finished game gets a full analysis.</p>
         </div>
       </section>
       <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
         {[
-          { k: '1 · Play', t: 'A rated or casual game against a calibrated engine opponent.', a: null },
-          { k: '2 · Analyse', t: recent ? `Review every move of your last game vs ${recent.humanColor === 'white' ? recent.black.name : recent.white.name}.` : 'Every finished game gets an engine report.', a: recent ? () => go({ name: 'analysis', gameId: recent.id }) : null },
-          { k: '3 · Train', t: 'Verified puzzles, Puzzle Rush and your own mistakes in the Academy.', a: () => go({ name: 'academy' }) },
-          { k: '4 · Improve', t: 'Track measured skills with honest uncertainty in the Lab.', a: () => go({ name: 'lab' }) },
+          { k: '1 · Play', t: 'Play a rated or casual game against an engine opponent.', a: null },
+          { k: '2 · Analyse', t: recent ? `Review every move of your last game vs ${recent.humanColor === 'white' ? recent.black.name : recent.white.name}.` : 'Every finished game gets a full analysis.', a: recent ? () => go({ name: 'analysis', gameId: recent.id }) : null },
+          { k: '3 · Train', t: 'Solve puzzles, play Puzzle Rush and replay your own mistakes in the Academy.', a: () => go({ name: 'academy' }) },
+          { k: '4 · Improve', t: 'Track how your skills change over time in the Lab.', a: () => go({ name: 'lab' }) },
         ].map(x => (
           <div key={x.k} className="panel" style={{ padding: 12 }}>
             <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{x.k}</div>
@@ -100,16 +100,16 @@ export function PlayScreen() {
           <div className="panel-title"><h2>Resume</h2></div>
           {unfinished.map(g => (
             <div key={g.id} className="row">
-              <span>vs {g.humanColor === 'white' ? g.black.name : g.white.name} · {g.timeControl.label} · {g.moves.length} plies · {g.rated ? 'Rated' : 'Casual'}</span>
+              <span>vs {g.humanColor === 'white' ? g.black.name : g.white.name} · {g.timeControl.label} · {Math.ceil(g.moves.length / 2)} moves · {g.rated ? 'Rated' : 'Casual'}</span>
               <span className="spacer" />
-              <button className="btn primary" onClick={() => go({ name: 'match', gameId: g.id })}>{g.status === 'terminal' ? 'Finish saving' : 'Resume'}</button>
+              <button className="btn primary" onClick={() => go({ name: 'match', gameId: g.id })}>{g.status === 'terminal' ? 'Finish Saving' : 'Resume'}</button>
             </div>
           ))}
         </div>
       )}
       <div className="grid-2">
         <div className="panel">
-          <div className="panel-title"><h2>Choose your opponent</h2><span className="chip info" title={`Calibration ${CALIBRATION_ID}`}>Calibrated ratings</span></div>
+          <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span></div>
           <div className="stack" role="radiogroup" aria-label="Opponent">
             {ROSTER.map(o => {
               const cal = levelRating(o.level);
@@ -122,28 +122,36 @@ export function PlayScreen() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? Math.round(cal.rating) : '—'}</div>
-                    <div className="small muted">{cal ? `±${Math.round(cal.rd)}` : 'uncalibrated'}</div>
+                    <div className="small muted">{cal ? `±${Math.round(cal.rd)}` : 'not yet rated'}</div>
                   </div>
                 </button>
               );
             })}
           </div>
+          <details className="small">
+            <summary>Details</summary>
+            <p className="muted">Opponent ratings come from measured engine test games (calibration {CALIBRATION_ID}).</p>
+          </details>
         </div>
         <div className="panel stack">
-          <h2>Match settings</h2>
+          <h2>Match Settings</h2>
           <div>
-            <div className="small muted">Time control</div>
+            <div className="small muted">Time Control</div>
             <div className="seg" role="group" aria-label="Time control">
               {(Object.keys(TIME_CONTROLS) as TimeControlId[]).map(id => <button key={id} aria-pressed={tc === id} onClick={() => setTc(id)}>{TIME_CONTROLS[id].label}</button>)}
             </div>
           </div>
           {isMax && (
             <div data-testid="max-budget">
-              <div className="small muted">Sovereign Max thinking budget (per move, at most)</div>
+              <div className="small muted">Thinking Time per Move</div>
               <div className="seg" role="group" aria-label="Thinking budget">
                 {MAX_BUDGETS_S.map(b => <button key={b} aria-pressed={budget === b} onClick={() => setBudget(b)}>{b} s</button>)}
               </div>
-              <div className="small muted" style={{ marginTop: 4 }}>Engine: {maxProfile(budget).description.split(':')[0]} · canonical crown-search-2 + crown-eval-4 · {(1 << (maxProfile(budget).ttBits ?? 18)) * 11 / 1048576 | 0} MB table · no random choices, no handicap. The clock can shorten a move; it never lengthens it. Rated games use {MAX_RATED_BUDGET_S} s.</div>
+              <div className="small muted" style={{ marginTop: 4 }}>The most Sovereign Max thinks per move. The clock can cut a move short but never extends it. Rated games use {MAX_RATED_BUDGET_S} s.</div>
+              <details className="small">
+                <summary>Details</summary>
+                <span className="muted">Engine: {maxProfile(budget).description.split(':')[0]} · crown-search-2 + crown-eval-4 · {(1 << (maxProfile(budget).ttBits ?? 18)) * 11 / 1048576 | 0} MB table · no random choices, no handicap.</span>
+              </details>
             </div>
           )}
           <div>
@@ -153,32 +161,32 @@ export function PlayScreen() {
               <button aria-pressed={mode === 'casual' || !ratedAllowed} onClick={() => setMode('casual')}>Casual</button>
             </div>
             <div className="small muted" style={{ marginTop: 4 }}>
-              {!calibrated ? (isMax && levelRating(opp.level) ? `Only the ${MAX_RATED_BUDGET_S} s budget is calibrated, so this budget is casual.` : 'This opponent has no measured calibration yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play. One result updates your rating once.' : 'Casual: saved and analysed, never rated.'}
+              {!calibrated ? (isMax && levelRating(opp.level) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
             </div>
           </div>
           <div>
-            <div className="small muted">Your colour</div>
+            <div className="small muted">Your Colour</div>
             <div className="seg" role="group" aria-label="Colour">
               {(['white', 'random', 'black'] as const).map(c => <button key={c} aria-pressed={color === c} onClick={() => setColor(c)}>{c[0].toUpperCase() + c.slice(1)}</button>)}
             </div>
           </div>
           {pool && mode === 'rated' && ratedAllowed && (
             <div className="notice">
-              Your {poolFor(tc)} rating: <strong>{Math.round(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). Expected uncertainty is high until you have played more rated games.
+              Your {poolFor(tc)} rating: <strong>{Math.round(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). It becomes more certain as you play more rated games.
             </div>
           )}
           <button className="btn primary" style={{ width: '100%', fontSize: '1.05rem' }} onClick={start} disabled={services.readOnly}>
-            <Icon name="play" /> Start match vs {opp.name}
+            <Icon name="play" /> Start Match vs {opp.name}
           </button>
           <details className="small">
-            <summary>crown-la6-v1 rules at a glance</summary>
+            <summary>Rules at a Glance</summary>
             <ul className="muted">
               <li>6×6 board: rooks, knights, queens, kings and pawns. No bishops.</li>
               <li>Pawns move one square only (no double step, no en passant). No castling.</li>
               <li>Promotion on the last rank is mandatory: queen, rook or knight.</li>
-              <li>Threefold repetition and 100 halfmoves without pawn move/capture can be claimed; fivefold and 150 are automatic draws.</li>
-              <li>Bare kings is an automatic draw; other low-material endings continue (a declared Crown difference from orthodox chess).</li>
-              <li>On time-out you lose if your opponent has any piece besides the king — even one that could not mate. Otherwise it is a draw.</li>
+              <li>You can claim a draw after threefold repetition or 50 moves each without a pawn move or capture. Fivefold repetition and 75 moves each are automatic draws.</li>
+              <li>King against king is an automatic draw. Unlike standard chess, other low-material endings play on.</li>
+              <li>If your time runs out, you lose when your opponent has any piece besides the king, even one that cannot mate. Otherwise it is a draw.</li>
               <li>Draws by agreement are allowed after each side has made ten moves.</li>
             </ul>
           </details>
@@ -186,7 +194,7 @@ export function PlayScreen() {
             <div className="row small">
               <span className="muted">Last game: {resultText(recent)} vs {recent.humanColor === 'white' ? recent.black.name : recent.white.name}</span>
               <span className="spacer" />
-              <button className="btn small" onClick={() => go({ name: 'analysis', gameId: recent.id })}>Open report</button>
+              <button className="btn small" onClick={() => go({ name: 'analysis', gameId: recent.id })}>Open Analysis</button>
             </div>
           )}
         </div>
@@ -249,7 +257,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       const r = await services.finalize(snap);
       setFinal(r);
     } catch (e) {
-      setError(`Could not save the result: ${(e as Error).message}. Your game is kept; reopen it from Play to retry.`);
+      setError(`Couldn't save the result (${(e as Error).message}). Your game is kept. Reopen it from Play to try again.`);
       finalizing.current = false;
     }
     services.setMatchActive(false);
@@ -307,13 +315,13 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       setThinking(false);
       engineScore.current = r.score;
       const res = session.applyMove(r.move, Date.now(), new Date().toISOString(), { depth: r.depth, nodes: r.nodes, timeMs: r.timeMs, selected: r.selected, seed: (rec.engineSeed + ply * 7919) >>> 0, score: r.score.kind === 'mate' ? { kind: 'mate', value: r.score.plies } : r.score.kind === 'cp' ? { kind: 'cp', value: r.score.value } : undefined, stopReason: r.stopReason, build: r.provenance?.build });
-      if (!res.ok && !res.outcome) setError(`Engine move rejected: ${res.error}`);
+      if (!res.ok && !res.outcome) setError(`The engine's move was rejected (${res.error}). Reopen the game from Play to continue.`);
       void services.saveGame(session.snapshot());
       if (session.isOver) void finalize(session);
       force();
     }).catch(e => {
       setThinking(false);
-      if (!(e instanceof CancelledError)) setError(`Engine error: ${(e as Error).message}`);
+      if (!(e instanceof CancelledError)) setError(`The engine stopped (${(e as Error).message}). Reopen the game from Play to continue.`);
     });
   }, [session, session?.plies, session?.paused, thinking, engineColor, services, finalize]);
 
@@ -326,7 +334,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     force();
     if (kind === 'threat') {
       const t = threatsAgainst(session.pos, session.humanColor as 0 | 1);
-      setAssist({ kind, text: t.mateInOne ? 'Warning: your opponent threatens mate in one.' : t.bestGain >= 100 ? `Your opponent threatens to win about ${Math.round(t.bestGain / 100)} pawn(s) of material on ${squareName(t.square)} (static exchange).` : 'No immediate material or mate-in-one threat (static check; deeper threats are possible).' });
+      setAssist({ kind, text: t.mateInOne ? 'Your opponent threatens mate in one.' : t.bestGain >= 100 ? `Your opponent threatens to win material worth about ${Math.round(t.bestGain / 100)} pawn(s) on ${squareName(t.square)}.` : 'No immediate threat to your material or of mate in one. Deeper threats are still possible.' });
       return;
     }
     setAssistBusy(true);
@@ -336,8 +344,8 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       const best = r.candidates[0];
       const pov = session.humanColor === 0 ? 'white' : 'black';
       if (kind === 'hint') setAssist({ kind, text: `Consider moving the piece on ${best.ccn.slice(0, 2)}.`, hint: best.ccn.slice(0, 2) });
-      else if (kind === 'evaluation') setAssist({ kind, text: `Engine evaluation (depth ${r.depth}, your view): ${formatScore(best.score, pov)}.` });
-      else if (kind === 'candidates') setAssist({ kind, text: `Top engine candidates at depth ${r.depth}:`, candidates: r.candidates });
+      else if (kind === 'evaluation') setAssist({ kind, text: `Evaluation from your side: ${formatScore(best.score, pov)} (depth ${r.depth}).` });
+      else if (kind === 'candidates') setAssist({ kind, text: `The engine's top moves (depth ${r.depth}):`, candidates: r.candidates });
       else {
         const line = best.pv;
         const start = session.pos.clone();
@@ -345,10 +353,10 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         const tmp = start.clone();
         for (const c of line) { const mv = parseLegalCcn(tmp, c); if (mv < 0) break; moves.push(mv); tmp.makeMove(mv); }
         const motifs = motifsForLine(start, moves, best.score.kind === 'mate' && best.score.plies > 0);
-        setAssist({ kind, text: `The engine prefers ${best.san} (${formatScore(best.score, pov)}), line ${best.pvSan.slice(0, 6).join(' ')}.${motifs.length ? ` Features found on that line: ${motifs.map(m => MOTIF_LABEL[m.motif].toLowerCase()).join(', ')}.` : ' No specific tactical motif detected; it is a positional preference at this depth.'}` });
+        setAssist({ kind, text: `The engine prefers ${best.san} (${formatScore(best.score, pov)}), continuing ${best.pvSan.slice(0, 6).join(' ')}.${motifs.length ? ` Ideas on that line: ${motifs.map(m => MOTIF_LABEL[m.motif].toLowerCase()).join(', ')}.` : ' No clear tactic; it is a positional choice.'}` });
       }
     } catch (e) {
-      if (!(e instanceof CancelledError)) setAssist({ kind, text: `Assistant unavailable: ${(e as Error).message}` });
+      if (!(e instanceof CancelledError)) setAssist({ kind, text: `The assistant isn't available right now (${(e as Error).message}). Try again in a moment.` });
     } finally { setAssistBusy(false); }
   };
 
@@ -397,9 +405,9 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         <div style={{ minWidth: 0 }}>
           <div className="player-name">{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</div>
           <div className="player-meta">
-            {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Uncalibrated'}
+            {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
             {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
-            {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · unassisted</span> : <span className="chip">Casual</span>}</>}
+            {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
           </div>
           <div className="captured" aria-label={`Captured by ${p.name}`}>
             {caps.map((k, i) => <PieceSvg key={i} kind={k.toLowerCase() as PieceKind} color={k === k.toUpperCase() ? 'w' : 'b'} title={`${k === k.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[k.toLowerCase() as PieceKind]}`} />)}
@@ -432,7 +440,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         <div className="panel">
           <div className="panel-title">
             <h3>{rec.timeControl.label} · {rec.rated ? 'Rated' : 'Casual'}</h3>
-            <span className="chip">{session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your move' : 'Opponent to move'}</span>
+            <span className="chip">{session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move' : 'Opponent to Move'}</span>
           </div>
           {rec.opening && <div className="small muted" style={{ marginBottom: 8 }}>{rec.opening.name}</div>}
           <div className="moves" aria-label="Move list">
@@ -447,37 +455,37 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         </div>
         <div className="panel stack">
           <div className="row">
-            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip board"><Icon name="flip" /> Flip</button>
+            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip Board"><Icon name="flip" /> Flip</button>
             <button className="btn" disabled={!session.canAgreeDraw() || !humanToMove} onClick={() => {
               const yes = engineDrawDecision(engineScore.current, session.plies);
               if (yes) { session.agreeDraw(Date.now(), new Date().toISOString()); void finalize(session); force(); }
               else setToast(`${opp.name} declines the draw offer.`);
-            }} title={session.canAgreeDraw() ? 'Offer a draw' : 'Draws by agreement are allowed after each side has moved ten times'}><Icon name="handshake" /> Offer draw</button>
+            }} title={session.canAgreeDraw() ? 'Offer a draw' : 'You can offer a draw after each side has made ten moves'}><Icon name="handshake" /> Offer Draw</button>
             {(claims.threefold || claims.fiftyMove) && humanToMove && (
               <button className="btn" onClick={() => { session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', Date.now(), new Date().toISOString()); void finalize(session); force(); }}>
-                Claim draw ({claims.threefold ? 'threefold' : '100 halfmoves'})
+                Claim Draw ({claims.threefold ? 'Threefold Repetition' : '50-Move Rule'})
               </button>
             )}
             {!confirmResign
               ? <button className="btn danger" disabled={session.isOver} onClick={() => setConfirmResign(true)}><Icon name="flag" /> Resign</button>
               : <span className="row"><span className="small">Resign this game?</span>
-                <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, Date.now(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, resign</button>
+                <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, Date.now(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, Resign</button>
                 <button className="btn" onClick={() => setConfirmResign(false)}>No</button></span>}
           </div>
           {toast && <div className="notice" role="status" onClick={() => setToast(null)}>{toast}</div>}
-          {session.paused && <div className="notice warn">Clocks are paused while the app is in the background. Pauses are recorded with the game.</div>}
+          {session.paused && <div className="notice warn">Clocks are paused while the app is in the background.</div>}
           {rec.rated ? (
-            <div className="small" data-testid="assist-locked">Rated game: the assistant is locked. Engine help is never available in rated play.</div>
+            <div className="small" data-testid="assist-locked">Engine help is off in rated games.</div>
           ) : (
             <SandboxPanel rec={rec} />
           )}
           {rec.rated ? null : (
             <div className="stack" data-testid="assist-panel">
-              <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">casual game — never rated</span></div>
+              <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">Casual game, never rated</span></div>
               <div className="row">
                 {(['hint', 'candidates', 'threat', 'evaluation', 'explanation'] as const).map(k => (
                   <button key={k} className="btn small" disabled={!humanToMove || assistBusy || session.paused} onClick={() => void askAssist(k)}>
-                    {{ hint: 'Hint', candidates: 'Candidate moves', threat: 'Threat check', evaluation: 'Evaluation', explanation: 'Explain best move' }[k]}
+                    {{ hint: 'Hint', candidates: 'Candidate Moves', threat: 'Threat Check', evaluation: 'Evaluation', explanation: 'Explain Best Move' }[k]}
                   </button>
                 ))}
               </div>
@@ -490,7 +498,12 @@ export function MatchScreen({ gameId }: { gameId: string }) {
               )}
             </div>
           )}
-          <div className="small muted" data-testid="engine-config">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}{opp.engine?.config ? ` · ${opp.engine.config.selection === 'best' ? 'best move only' : 'bounded selection'} · up to ${opp.engine.config.maxTimeMs / 1000} s per move · ${Math.round((1 << opp.engine.config.ttBits) * 11 / 1048576)} MB table · ${opp.engine.config.backend}` : ''}. {rec.rated ? 'No engine help is available in rated play; analysis opens after the game.' : 'Full engine analysis opens after the game.'}</div>
+          <div className="small muted" data-testid="engine-config">Full analysis opens after the game.
+            <details className="small">
+              <summary>Details</summary>
+              Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}{opp.engine?.config ? ` · ${opp.engine.config.selection === 'best' ? 'best move only' : 'bounded selection'} · up to ${opp.engine.config.maxTimeMs / 1000} s per move · ${Math.round((1 << opp.engine.config.ttBits) * 11 / 1048576)} MB table · ${opp.engine.config.backend}` : ''}
+            </details>
+          </div>
         </div>
       </div>
       {final && <ResultOverlay final={final} onClose={() => setFinal(null)} />}
@@ -531,14 +544,14 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
             <div>{e.pool[0].toUpperCase() + e.pool.slice(1)} rating {Math.round(e.before.rating)} → <strong>{Math.round(e.after.rating)}</strong> (±{Math.round(e.after.rd)}){e.provisionalAfter ? ' · provisional' : ''}</div>
             <p className="small muted">{explainEvent(e)}</p>
           </div>
-        ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game — saved to your Library, no rating change.'}</p>}
-        <p className="small muted">Saved permanently. The engine report is being prepared in the background.</p>
+        ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game: saved to your Library, no rating change.'}</p>}
+        <p className="small muted">Game saved. Your analysis is being prepared.</p>
         <div className="row" style={{ justifyContent: 'center' }}>
-          <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View analysis</button>
+          <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
           {g.context.kind === 'federation'
             ? <button className="btn" data-testid="back-to-federation" onClick={() => { onClose(); go({ name: 'world' }); }}>Back to Federation</button>
             : <><button className="btn" onClick={rematch}>Rematch</button>
-              <button className="btn ghost" onClick={() => { onClose(); go({ name: 'play' }); }}>New game</button></>}
+              <button className="btn ghost" onClick={() => { onClose(); go({ name: 'play' }); }}>New Game</button></>}
         </div>
       </div>
     </div>
@@ -575,16 +588,16 @@ function SandboxPanel({ rec }: { rec: GameRecord }) {
   const cp = m ? claimPrices(m) : [];
   return (
     <div className="panel stack" data-testid="sandbox-panel" style={{ padding: 10 }}>
-      <div className="row small"><strong>Sandbox Exchange</strong><span className="chip">practice money · {fmtCrowns(fed.sandboxBalance(), 0)}</span>{m && <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`}>{m.status}</span>}</div>
+      <div className="row small"><strong>Sandbox Exchange</strong><span className="chip">Practice Money · {fmtCrowns(fed.sandboxBalance(), 0)}</span>{m && <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`}>{({ open: 'Trading Open', closed: 'Trading Closed', settled: 'Market Settled', cancelled: 'Market Cancelled' } as Record<string, string>)[m.status] ?? m.status}</span>}</div>
       {!m ? (
-        <><div className="small muted">Back yourself on this casual game with separate sandbox crowns (never official money). Opens at prices from your rapid rating vs your opponent; closes at the first move; cancelled at the opening prices if you use the assistant or the game ends before move 10.</div>
-          <button className="btn small" data-testid="open-sandbox" onClick={open} disabled={services.readOnly}>Open a sandbox market</button></>
+        <><div className="small muted">Back yourself on this casual game with practice crowns, not your real balance. Prices start from your rapid rating vs your opponent, and trading closes at the first move. If you use the assistant or the game ends before move 10, the market is cancelled at the opening prices.</div>
+          <button className="btn small" data-testid="open-sandbox" onClick={open} disabled={services.readOnly}>Open a Sandbox Market</button></>
       ) : (
         <>
           <div className="small">{claimsOf(m).map((c, i) => <span key={c.id} style={{ marginRight: 10 }}>{c.label}: <strong className="mono">{(cp[i] * 100).toFixed(0)}¢</strong>{pos?.shares[i] ? ` · you hold ${pos.shares[i]}` : ''}</span>)}</div>
           {m.status === 'open' && <div className="row"><input type="number" min={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 70 }} aria-label="Sandbox shares" />{claimsOf(m).map((c, i) => <button key={c.id} className="btn small" data-testid={`sandbox-buy-${c.id}`} onClick={() => buy(i)}>Buy {c.label}</button>)}</div>}
-          {m.status === 'settled' && <div className="small">Settled: {statesOf(m)[m.result!]} · received {fmtCrowns(pos?.received ?? 0)} sandbox ₵</div>}
-          {m.status === 'cancelled' && <div className="small">Cancelled at the opening prices (assistance, abandonment or a game under 10 moves).</div>}
+          {m.status === 'settled' && <div className="small">Market settled: {statesOf(m)[m.result!]}. You received {fmtCrowns(pos?.received ?? 0)} practice ₵.</div>}
+          {m.status === 'cancelled' && <div className="small">Market cancelled at the opening prices (assistant used, game abandoned or under 10 moves).</div>}
         </>
       )}
       {msg && <div className="small notice warn">{msg}</div>}

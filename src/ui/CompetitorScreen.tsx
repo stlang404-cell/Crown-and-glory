@@ -68,18 +68,18 @@ export function CompetitorsScreen() {
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn ghost small" onClick={() => go({ name: 'world' })}>← Federation</button>
-        <h1 style={{ margin: 0 }}>Discover competitors</h1>
-        <span className="chip">{active.toLocaleString('en')} active · {st.competitors.size.toLocaleString('en')} on record</span>
+        <h1 style={{ margin: 0 }}>Discover Competitors</h1>
+        <span className="chip">{active.toLocaleString('en')} Active · {st.competitors.size.toLocaleString('en')} on Record</span>
       </div>
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }} data-testid="discovery-filters">
-        <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search competitors" />
-        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region"><option value={-1}>All regions</option>{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
-        <select value={division} onChange={e => setDivision(+e.target.value)} aria-label="League"><option value={0}>All leagues</option>{Array.from({ length: DIVISIONS }, (_, i) => <option key={i} value={i + 1}>{i + 1} · {divisionLabel(i + 1)}</option>)}</select>
-        <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 4000)} style={{ width: 72 }} aria-label="Maximum rating" /></label>
-        <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation title"><option value="">Any title or none</option><option value="any">Any federation title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>
-        <select value={style} onChange={e => setStyle(e.target.value)} aria-label="Playing style"><option value="">Any style</option>{styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x as keyof typeof STYLE_LABEL]}</option>)}</select>
-        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any club</option>{AI_CLUBS.map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
-        <select value={special} onChange={e => setSpecial(e.target.value as typeof special)} aria-label="Show"><option value="">Everyone</option><option value="featured">Featured rivals</option><option value="rival">Your rivals (intensity ≥ 10)</option><option value="favorites">Followed</option><option value="watch">Watchlist ({st.extra.watchlist.length})</option><option value="titled">Event champions</option><option value="upcoming">Playing this round</option></select>
+        <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search Competitors" />
+        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region"><option value={-1}>All Regions</option>{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+        <select value={division} onChange={e => setDivision(+e.target.value)} aria-label="Division"><option value={0}>All Divisions</option>{Array.from({ length: DIVISIONS }, (_, i) => <option key={i} value={i + 1}>{i + 1} · {divisionLabel(i + 1)}</option>)}</select>
+        <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 4000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
+        <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation Title"><option value="">Any Title or None</option><option value="any">Any Federation Title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>
+        <select value={style} onChange={e => setStyle(e.target.value)} aria-label="Playing Style"><option value="">Any Style</option>{styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x as keyof typeof STYLE_LABEL]}</option>)}</select>
+        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{AI_CLUBS.map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
+        <select value={special} onChange={e => setSpecial(e.target.value as typeof special)} aria-label="Show"><option value="">Everyone</option><option value="featured">Featured Rivals</option><option value="rival">Your Rivals</option><option value="favorites">Followed</option><option value="watch">Watchlist ({st.extra.watchlist.length})</option><option value="titled">Event Champions</option><option value="upcoming">Playing This Round</option></select>
       </div>
       <div className="panel" style={{ overflowX: 'auto' }}>
         <table>
@@ -96,8 +96,8 @@ export function CompetitorsScreen() {
             ))}
           </tbody>
         </table>
-        {list.length > 200 && <div className="small muted">Showing the top 200 of {list.length.toLocaleString('en')} by rating. Narrow the filters to see more.</div>}
-        {list.length === 0 && <div className="small muted">No competitor matches these filters.</div>}
+        {list.length > 200 && <div className="small muted">Showing the top 200 of {list.length.toLocaleString('en')} by rating. Narrow the filters to see the rest.</div>}
+        {list.length === 0 && <div className="small muted">No competitors match these filters. Try widening them.</div>}
       </div>
     </div>
   );
@@ -138,8 +138,8 @@ export function CompetitorScreen({ id }: { id: string }) {
   const current: string[] = [];
   const circuit = st.plan.circuits.find(x => x.members.includes(id));
   if (circuit) { const t = leagueTable(circuit, seasonGames); const pos = t.findIndex(r => r.id === id); current.push(`League: ${pos + 1}${['st', 'nd', 'rd'][pos] ?? 'th'} of ${t.length} in the ${divisionLabel(circuit.division)} (${REGION_NAMES[circuit.region]}), ${t[pos]?.points ?? 0} points`); }
-  for (const sw of st.plan.swiss) if (sw.entrants.includes(id)) { const t = swissTable(sw, seasonGames); const pos = t.findIndex(r => r.id === id); current.push(`${sw.name}: ${sw.rounds.length ? `${pos + 1} of ${t.length}, ${t[pos]?.points ?? 0} points after ${sw.rounds.length} round(s)` : 'entered (starts round 4)'}`); }
-  if (st.plan.champ?.qualifiers.includes(id)) { const out = st.plan.champ.stages.flatMap(sg => sg.matches.map(m => ({ sg, m }))).filter(x => x.m.a === id || x.m.b === id); const last = out[out.length - 1]; current.push(`Crown Championship: ${last ? (last.m.winner === id || (st.plan.champ.champions.includes(id)) ? `through the ${last.sg.label}` : last.m.winner ? `eliminated in the ${last.sg.label}` : `playing the ${last.sg.label}`) : 'qualified'}`); }
+  for (const sw of st.plan.swiss) if (sw.entrants.includes(id)) { const t = swissTable(sw, seasonGames); const pos = t.findIndex(r => r.id === id); current.push(`${sw.name}: ${sw.rounds.length ? `${pos + 1} of ${t.length}, ${t[pos]?.points ?? 0} points after ${sw.rounds.length} round(s)` : 'Entered (starts round 4)'}`); }
+  if (st.plan.champ?.qualifiers.includes(id)) { const out = st.plan.champ.stages.flatMap(sg => sg.matches.map(m => ({ sg, m }))).filter(x => x.m.a === id || x.m.b === id); const last = out[out.length - 1]; current.push(`Crown Championship: ${last ? (last.m.winner === id || (st.plan.champ.champions.includes(id)) ? `through the ${last.sg.label}` : last.m.winner ? `eliminated in the ${last.sg.label}` : `playing the ${last.sg.label}`) : 'Qualified'}`); }
   if (!current.length) current.push(c.status === 'retired' ? 'Retired.' : 'No event in progress.');
   const rivalry = (() => { const { meetings, kos, finishes } = collect(st, new Set([PLAYER_ID]), games.mine); return computeRivalry(PLAYER_ID, id, meetings, kos, finishes, st.world.season, x => fed.name(x)); })();
   const toggleWatch = async () => {
@@ -151,12 +151,12 @@ export function CompetitorScreen({ id }: { id: string }) {
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn ghost small" onClick={() => history.back()}>← Back</button>
         <span className="spacer" />
-        <button className="btn small" data-testid="watch-toggle" disabled={services.readOnly} onClick={toggleWatch}>{watched ? '★ On watchlist' : '☆ Add to watchlist'}</button>
-        <button className="btn small" data-testid="follow-toggle" disabled={services.readOnly} onClick={() => { const f = st.extra.favorites ?? []; void fed.setFavorites(f.includes(id) ? f.filter(x => x !== id) : [...f, id]); }}>{(st.extra.favorites ?? []).includes(id) ? 'Following ✓' : 'Follow career'}</button>
+        <button className="btn small" data-testid="watch-toggle" disabled={services.readOnly} onClick={toggleWatch}>{watched ? '★ On Watchlist' : '☆ Add to Watchlist'}</button>
+        <button className="btn small" data-testid="follow-toggle" disabled={services.readOnly} onClick={() => { const f = st.extra.favorites ?? []; void fed.setFavorites(f.includes(id) ? f.filter(x => x !== id) : [...f, id]); }}>{(st.extra.favorites ?? []).includes(id) ? 'Following ✓' : 'Follow Career'}</button>
         {fed.clubLevelOf() > 0 && c && c.status === 'active' && !fed.activeContracts().some(x => x.competitorId === c.id) && (
-          <button className="btn small" data-testid="offer-contract" disabled={services.readOnly} title={`Season stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)}; you receive 25% of their prizes`} onClick={async () => { setMsg(null); try { await fed.signContract(c.id); setMsg(`Signed ${c.name}: stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)} per season.`); } catch (e) { setMsg((e as Error).message); } }}>Offer contract ({fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)}/season)</button>
+          <button className="btn small" data-testid="offer-contract" disabled={services.readOnly} title={`Stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)} per season; you receive 25% of their prize money`} onClick={async () => { setMsg(null); try { await fed.signContract(c.id); setMsg(`Signed ${c.name}: stipend ${fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)} per season.`); } catch (e) { setMsg((e as Error).message); } }}>Offer Contract ({fmtCrowns(stipendFor(c.division, avgSeasonEarnings(c)), 0)}/Season)</button>
         )}
-        {fed.activeContracts().some(x => x.competitorId === id) && <span className="chip gold">Sponsored by you</span>}
+        {fed.activeContracts().some(x => x.competitorId === id) && <span className="chip gold">Sponsored by You</span>}
       </div>
       {msg && <div className="notice warn" role="alert">{msg}</div>}
       <div className="panel row" style={{ alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
@@ -164,53 +164,53 @@ export function CompetitorScreen({ id }: { id: string }) {
         <div style={{ flex: 1, minWidth: 220 }}>
           <h1 style={{ margin: 0 }}>{c.name}</h1>
           <div className="row small muted" style={{ flexWrap: 'wrap' }}>
-            <Insignia division={c.division} size={20} />{divisionLabel(c.division)} · {REGION_NAMES[c.region]} · age {ageOf(c, season)} · {c.status}{c.status === 'retired' && c.retiredSeason ? ` (season ${c.retiredSeason})` : ''}
+            <Insignia division={c.division} size={20} />{divisionLabel(c.division)} · {REGION_NAMES[c.region]} · Age {ageOf(c, season)} · {c.status === 'retired' ? 'Retired' : c.status === 'reserve' ? 'Reserve' : 'Active'}{c.status === 'retired' && c.retiredSeason ? ` (season ${c.retiredSeason})` : ''}
           </div>
           <div className="row" style={{ marginTop: 10, gap: 24, flexWrap: 'wrap' }}>
             <div className="stat"><span className="v">{Math.round(c.rating)}</span><span className="k">Rating ±{Math.round(c.rd)}</span></div>
             <div className="stat"><span className="v mono">{c.form || '—'}</span><span className="k">Form (last 5)</span></div>
-            <div className="stat"><span className="v">{c.stats.w}-{c.stats.d}-{c.stats.l}</span><span className="k">Career W-D-L</span></div>
+            <div className="stat"><span className="v">{c.stats.w}–{c.stats.d}–{c.stats.l}</span><span className="k">Career W–D–L</span></div>
             <div className="stat"><span className="v">{c.reputation}</span><span className="k">Reputation</span></div>
-            <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career earnings</span></div>
+            <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career Earnings</span></div>
           </div>
-          <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but that style did not pass behavioural validation, so they play the common engine policy)</span>}</div>
-          <div className="small muted">Public rating only. Their hidden playing strength is never shown and is not used by forecasts or traders.</div>
-          <div className="small" style={{ marginTop: 6 }}><strong>Ambition:</strong> {ambitionOf(c)}{featuredTag ? <> · <span className="chip gold">{featuredTag === 'circle' ? 'featured rival — your circle' : 'featured legend'}</span></> : null}</div>
+          <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but they play the standard engine style)</span>}</div>
+          <div className="small muted">This is their public rating. Their true strength stays hidden, from forecasts and traders too.</div>
+          <div className="small" style={{ marginTop: 6 }}><strong>Ambition:</strong> {ambitionOf(c)}{featuredTag ? <> · <span className="chip gold">{featuredTag === 'circle' ? 'Featured Rival · Your Circle' : 'Featured Legend'}</span></> : null}</div>
         </div>
         <div className="emblem-row" data-testid="insignia-row">
-          <div className="emblem-cell"><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s personal insignia`} /><span className="small muted">insignia</span></div>
+          <div className="emblem-cell"><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s personal insignia`} /><span className="small muted">Insignia</span></div>
           {c.fedTitle && <div className="emblem-cell"><Emblem spec={titleEmblem(c.fedTitle)} size="md" title={`Federation title ${c.fedTitle}`} /><span className="small">{c.fedTitle}</span></div>}
-          <div className="emblem-cell"><Emblem spec={divisionEmblem(c.division)} size="md" title={divisionLabel(c.division)} /><span className="small muted">division {c.division}</span></div>
+          <div className="emblem-cell"><Emblem spec={divisionEmblem(c.division)} size="md" title={divisionLabel(c.division)} /><span className="small muted">Division {c.division}</span></div>
           <div className="emblem-cell"><Emblem spec={clubEmblem(clubOf(c.id, c.region).identity)} size="md" title={clubOf(c.id, c.region).identity.name} /><span className="small muted">{clubOf(c.id, c.region).identity.name}</span></div>
           <div className="emblem-cell"><Emblem spec={regionEmblem(c.region)} size="md" title={`Arms of ${REGION_NAMES[c.region]}`} /><span className="small muted">{REGION_NAMES[c.region]}</span></div>
         </div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel stack" data-testid="rivalry-panel">
-          <h3>Rivalry with you</h3>
+          <h3>Rivalry with You</h3>
           {rivalry && rivalry.meetings > 0 ? <>
             <IntensityBar r={rivalry} />
             <ul className="small" style={{ margin: 0 }}>{rivalry.events.slice(0, 8).map((e, i) => <li key={i}>{e.text} <span className="muted">(+{e.points}, S{e.season})</span></li>)}</ul>
-            <div className="small muted">Points decay ×0.7 per season; only the first two meetings of a season count (crown-rivalry-1).</div>
+            <details className="small muted"><summary>Details</summary>Points fade by 30% each season. Only the first two meetings in a season count.</details>
           </> : <p className="small muted">No recorded meetings yet.</p>}
         </div>
         <div className="panel stack" data-testid="following-panel">
-          <h3>This season</h3>
+          <h3>This Season</h3>
           {current.map((x, i) => <div key={i} className="small">{x}</div>)}
-          <div className="small"><strong>Federation title:</strong> {c.fedTitle ?? 'none'}{progress.next ? <> · next <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
-          <div className="small muted">Norms: {(c.norms ?? []).length ? (c.norms ?? []).slice(-4).map(n => `${n.event} ${n.tpr}`).join(' · ') : 'none'}</div>
+          <div className="small"><strong>Federation Title:</strong> {c.fedTitle ?? 'None'}{progress.next ? <> · Next: <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
+          <div className="small muted">Norms: {(c.norms ?? []).length ? (c.norms ?? []).slice(-4).map(n => `${n.event} ${n.tpr}`).join(' · ') : 'None'}</div>
         </div>
       </div>
       {scouting && nextOpp && (
         <div className="panel" style={{ marginTop: 14, borderColor: 'var(--accent)' }} data-testid="dossier">
-          <h3>Scouting dossier · your next opponent</h3>
-          <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${Math.round(h.rating)}`).join(' → ') || 'first season'} → now {Math.round(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
-          <div className="small muted">Recorded games below can be replayed; summary results are not games.</div>
+          <h3>Scouting Dossier · Your Next Opponent</h3>
+          <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${Math.round(h.rating)}`).join(' → ') || 'First season'} → now {Math.round(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
+          <div className="small muted">You can replay the recorded games below. Summary results have no moves to replay.</div>
         </div>
       )}
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Head-to-head with you</h3>
+          <h3>Head-to-Head with You</h3>
           {vsMe.length === 0 ? <p className="small muted">You have not met yet.</p> : <p>You {vsMe.reduce((s, r) => s + (1 - r.score), 0)} – {vsMe.reduce((s, r) => s + r.score, 0)} {c.name} ({vsMe.length} game{vsMe.length > 1 ? 's' : ''})</p>}
           <h3>Rivalries</h3>
           {topRivals.length === 0 ? <p className="small muted">No repeated opponents yet.</p> : (
@@ -220,25 +220,25 @@ export function CompetitorScreen({ id }: { id: string }) {
           {c.titles.length === 0 ? <p className="small muted">None yet.</p> : <ul className="small">{c.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul>}
         </div>
         <div className="panel">
-          <h3>Career by season</h3>
+          <h3>Career by Season</h3>
           {c.history.length === 0 ? <p className="small muted">First season in progress.</p> : (
-            <table><thead><tr><th>Season</th><th>Division</th><th>Rank</th><th>Pts</th><th>Rating</th></tr></thead>
+            <table><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Pts</th><th>Rating</th></tr></thead>
               <tbody>{c.history.slice().reverse().map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division} · {REGION_NAMES[h.region]}</td><td>{h.rank}</td><td>{h.points}</td><td>{Math.round(h.rating)}</td></tr>)}</tbody></table>
           )}
           {c.milestones.length > 0 && <><h3>Milestones</h3><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Recorded games</h3>
-        {games.world.length + games.mine.length === 0 ? <p className="small muted">No full game records yet. Most AI-vs-AI results are summary results (not replayable); only featured matches and your own games are recorded move by move.</p> : (
+        <h3>Recorded Games</h3>
+        {games.world.length + games.mine.length === 0 ? <p className="small muted">No recorded games yet. Only featured matches and your own games are recorded move by move.</p> : (
           <ul className="small">
-            {games.world.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>{g.whiteName} – {g.blackName} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
-            {games.mine.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · your rated game</span></li>)}
+            {games.world.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>{g.whiteName} – {g.blackName} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · Engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
+            {games.mine.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · Your rated game</span></li>)}
           </ul>
         )}
-        <h3>Recent results</h3>
+        <h3>Recent Results</h3>
         <table><thead><tr><th>S/R</th><th>Event</th><th>Opponent</th><th>Colour</th><th>Score</th><th className="hide-sm">Record</th></tr></thead>
-          <tbody>{results.slice(0, 25).map((r, i) => <tr key={i}><td>{r.season}/{r.round}</td><td className="small">{eventName(r.event)}</td><td>{fed.name(r.opp)}</td><td>{r.color}</td><td>{r.score === 1 ? 'W' : r.score === 0 ? 'L' : 'D'}</td><td className="hide-sm small muted">{r.tier === 3 ? 'summary result' : r.tier === 2 ? 'engine game' : 'your game'}</td></tr>)}</tbody></table>
+          <tbody>{results.slice(0, 25).map((r, i) => <tr key={i}><td>{r.season}/{r.round}</td><td className="small">{eventName(r.event)}</td><td>{fed.name(r.opp)}</td><td>{r.color === 'white' ? 'White' : 'Black'}</td><td>{r.score === 1 ? 'W' : r.score === 0 ? 'L' : 'D'}</td><td className="hide-sm small muted">{r.tier === 3 ? 'Summary result' : r.tier === 2 ? 'Engine game' : 'Your game'}</td></tr>)}</tbody></table>
       </div>
     </div>
   );

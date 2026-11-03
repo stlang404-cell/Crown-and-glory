@@ -88,7 +88,7 @@ export class AppServices {
 
   /** Atomic finalization (game + rating event + analysis intent), then start analysis. */
   async finalize(g: GameRecord): Promise<{ game: GameRecord; event: RatingEvent | null }> {
-    if (this.readOnly) throw new Error('This tab is read-only: Crown & Calculation is open in another tab.');
+    if (this.readOnly) throw new Error('This tab is read-only because Crown & Calculation is open in another tab. Close the other tab and reload this one.');
     const checksum = await gameChecksum(g);
     const human = g.humanColor;
     const score = g.result === '1/2-1/2' ? 0.5 : g.result === '1-0' ? (human === 'white' ? 1 : 0) : g.result === '0-1' ? (human === 'black' ? 1 : 0) : null;
@@ -208,7 +208,7 @@ export class AppServices {
         const game = job.gameId.startsWith('wg:') ? await this.worldGameAsRecord(job.gameId) : await this.db.getGame(job.gameId);
         const settings = ANALYSIS_PRESETS.find(s => s.id === job.settingsId);
         if (!game || !settings || !game.checksum) {
-          await this.db.putJob({ ...job, status: 'failed', error: 'Game or settings unavailable', updatedAt: new Date().toISOString() });
+          await this.db.putJob({ ...job, status: 'failed', error: 'The game or its analysis settings could not be found.', updatedAt: new Date().toISOString() });
           continue;
         }
         const running: AnalysisJob = { ...job, status: 'running', updatedAt: new Date().toISOString(), total: game.moves.length };
