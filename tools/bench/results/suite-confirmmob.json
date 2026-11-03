@@ -1,0 +1,55 @@
+{
+ "env": {
+  "node": "v22.23.4",
+  "platform": "linux 6.18.44-fc-v230",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "cores": 4,
+  "searchId": "crown-search-1",
+  "evalId": "crown-eval-2",
+  "date": "2026-11-03T03:09:08.105Z"
+ },
+ "pairsPerMatch": 32,
+ "openings": "tools/bench/openings.json",
+ "summaries": [
+  {
+   "a": "mobHi40k",
+   "b": "full40k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 28,
+   "draws": 21,
+   "losses": 15,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.6015625,
+   "scoreCI": [
+    0.5078125,
+    0.6953125
+   ],
+   "eloDiff": 72,
+   "eloCI": [
+    5,
+    143
+   ],
+   "avgDepth": {
+    "mobHi40k": 9.1,
+    "full40k": 9.3
+   },
+   "avgNodes": {
+    "mobHi40k": 37554,
+    "full40k": 37495
+   },
+   "avgMs": {
+    "mobHi40k": 97,
+    "full40k": 97
+   },
+   "reasons": {
+    "checkmate": 43,
+    "bare-kings": 5,
+    "threefold-claim": 12,
+    "fifty-move-claim": 3,
+    "stalemate": 1
+   }
+  }
+ ]
+}

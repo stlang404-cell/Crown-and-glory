@@ -9,7 +9,7 @@ import { Position } from '../rules/position';
 import { BLACK, KING, KNIGHT, PAWN, QUEEN, ROOK, WHITE, fileOf, rankOf } from '../rules/types';
 import { KING_TARGETS, KNIGHT_TARGETS, RAYS } from '../rules/tables';
 
-export const EVAL_ID = 'crown-eval-2';
+export const EVAL_ID = 'crown-eval-3';
 
 export interface EvalWeights {
   material: [number, number, number, number, number, number]; // index by piece type (0,P,N,R,Q,K)
@@ -33,7 +33,8 @@ export interface EvalWeights {
 export const DEFAULT_WEIGHTS: EvalWeights = {
   material: [0, 100, 330, 470, 920, 0],
   materialEg: [0, 125, 300, 520, 960, 0],
-  mobility: [0, 0, 4, 3, 2, 0],
+  // crown-eval-3: mobility raised from [4,3,2] (eval-2) after +66 Elo replicated on held-out openings.
+  mobility: [0, 0, 6, 5, 3, 0],
   passedMg: [0, 0, 10, 25, 50, 0],
   passedEg: [0, 0, 25, 55, 110, 0],
   kingShield: 12,

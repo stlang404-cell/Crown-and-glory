@@ -40,6 +40,8 @@ export const REGISTRY: Record<string, Spec> = {
   matAlt40k: { kind: 'config', id: 'matAlt40k', nodes: 40_000, weights: { material: [0, 100, 300, 500, 950, 0], materialEg: [0, 120, 290, 540, 1000, 0] } },
   passedHi40k: { kind: 'config', id: 'passedHi40k', nodes: 40_000, weights: { passedMg: [0, 0, 15, 40, 80, 0], passedEg: [0, 0, 40, 85, 160, 0] } },
   mobHi40k: { kind: 'config', id: 'mobHi40k', nodes: 40_000, weights: { mobility: [0, 0, 6, 5, 3, 0] } },
+  eval2_40k: { kind: 'config', id: 'eval2_40k', nodes: 40_000, weights: { mobility: [0, 0, 4, 3, 2, 0] } },
+  mob8_40k: { kind: 'config', id: 'mob8_40k', nodes: 40_000, weights: { mobility: [0, 0, 8, 7, 4, 0] } },
   both40k: { kind: 'config', id: 'both40k', nodes: 40_000, features: { lmrLog: true, lmp: true } },
   fairy1k: { kind: 'fairy', id: 'fairy-n1k', limit: 'nodes 1000' },
   fairy4k: { kind: 'fairy', id: 'fairy-n4k', limit: 'nodes 4000' },
@@ -199,6 +201,7 @@ async function main() {
       const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
         : name === 'confirm' ? [['both40k', 'full40k']]
+        : name === 'mobstep' ? [['mob8_40k', 'full40k']]
         : name === 'confirmmob' ? [['mobHi40k', 'full40k']]
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
         : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
