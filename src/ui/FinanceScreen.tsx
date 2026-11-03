@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import type { Journal } from '../exchange/ledger';
-import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID } from '../economy/economy';
+import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
 import type { FederationService } from '../app/federation';
 
 const KIND_LABEL: Record<string, string> = {
@@ -106,6 +106,7 @@ export function FinanceScreen() {
           )}
         </div>
       </div>
+      <Institutions />
       <div className="panel" style={{ marginTop: 14 }} data-testid="assets">
         <h3>Assets</h3>
         <div className="grid-2">
@@ -139,6 +140,55 @@ export function FinanceScreen() {
           </table>
         </div>
         <div className="small muted">Each entry is a balanced double-entry journal in whole microcrowns ({MICRO.toLocaleString('en')} µ = 1 ₵); entries are idempotent and never edited.</div>
+      </div>
+    </div>
+  );
+}
+
+/** Club management: level, upgrades, sponsorship contracts, and the (separate) sandbox balance. */
+function Institutions() {
+  const services = useServices();
+  const { go } = useApp();
+  const fed = services.fed;
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const st = fed.state!;
+  const level = fed.clubLevelOf();
+  const L = level ? clubLevel(level) : null;
+  const next = level && level < 3 ? CLUB_LEVELS[level] : null;
+  const contracts = [...st.contracts.values()].sort((a, b) => (a.status === b.status ? b.signedSeason - a.signedSeason : a.status === 'active' ? -1 : 1));
+  const act = async (label: string, fn: () => Promise<void>) => { setMsg(null); setConfirm(false); try { await fn(); setMsg({ kind: 'ok', text: label }); } catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } };
+  return (
+    <div className="grid-2" style={{ marginTop: 14 }} data-testid="institutions">
+      <div className="panel stack">
+        <h3>Your club</h3>
+        {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
+        {!L ? <p className="small">You do not own a club. Buy the <strong>Starter Chess Club</strong> below to host a Club Weekend, sign sponsorship contracts and build up to a Federation Club.</p> : (
+          <>
+            <div className="row"><span className="chip gold">Level {level}</span><strong>{L.name}</strong></div>
+            <div className="small">{L.effect} Club Weekend: {L.weekendSize} players · contract slots: {L.contractSlots}{L.sponsorBonus ? ` · sponsor milestones +${L.sponsorBonus * 100}%` : ''}.</div>
+            {next ? (
+              <div className="panel stack" style={{ background: 'transparent' }}>
+                <strong>Upgrade to {next.name}</strong>
+                <div className="small">{next.effect}</div>
+                <div className="small muted">Cost {fmtCrowns(next.cost, 0)}: {fmtCrowns(next.escrow, 0)} is held in a refundable escrow (counted in book value, returned if you close the club), {fmtCrowns(next.cost - next.escrow, 0)} is spent on construction. Extra upkeep {fmtCrowns(next.extraUpkeep, 0)} per season. Not a guaranteed profit: income comes only from attendance, prizes and sponsors your events actually earn.</div>
+                {confirm
+                  ? <div className="row"><button className="btn primary small" data-testid="confirm-upgrade" onClick={() => act(`Club upgraded to ${next.name}.`, () => fed.upgradeClub())}>Confirm: pay {fmtCrowns(next.cost, 0)}</button><button className="btn small" onClick={() => setConfirm(false)}>Cancel</button></div>
+                  : <button className="btn small" data-testid="upgrade-club" disabled={services.readOnly || fed.balance('player:cash') < next.cost} onClick={() => setConfirm(true)}>Upgrade club</button>}
+              </div>
+            ) : <div className="small muted">Your club is at the highest level.</div>}
+          </>
+        )}
+      </div>
+      <div className="panel stack" data-testid="contracts">
+        <h3>Sponsorship contracts</h3>
+        <div className="small muted">Recruit talent: pay a season stipend to a competitor and receive {CONTRACT_SHARE * 100}% of every prize they win while signed (a ledger transfer from their prize account). Sign from a competitor's profile. While you sponsor someone, you may not buy into markets that involve them.</div>
+        {contracts.length === 0 ? <p className="small">No contracts yet. <button className="btn ghost small" onClick={() => go({ name: 'competitors' })}>Browse competitors</button></p> : (
+          <table className="small"><thead><tr><th>Competitor</th><th>Stipend</th><th>Paid</th><th>Prize share</th><th></th></tr></thead>
+            <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since S{c.signedSeason}{c.status === 'ended' ? ` · ended S${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
+        )}
+        <h3>Sandbox (practice money)</h3>
+        <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox ₵ — a separate ledger for practice markets on your own casual games. Never part of cash, net worth, P&L, prestige, ratings or standings.</div>
       </div>
     </div>
   );

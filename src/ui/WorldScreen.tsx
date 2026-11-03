@@ -79,6 +79,7 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'standings' })}>Divisions</button>
         <button className="btn small" onClick={() => go({ name: 'tournaments' })}>Tournaments</button>
         <button className="btn small" onClick={() => go({ name: 'competitors' })}>Competitors</button>
+        <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; history</button>
       </div>
       {msg && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>{msg}</div>}
       <div className="grid-2">

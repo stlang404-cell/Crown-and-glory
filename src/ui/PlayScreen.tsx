@@ -19,6 +19,10 @@ import { formatScore } from './Charts';
 import type { AssistCandidate } from '../engine/protocol';
 import { motifsForLine, threatsAgainst, MOTIF_LABEL } from '../academy/motifs';
 import { parseLegalCcn } from '../rules/notation';
+import { FederationService } from '../app/federation';
+import { claimsOf, claimPrices, statesOf } from '../exchange/market';
+import { fmtCrowns } from '../exchange/ledger';
+import { wdl } from '../federation/resultModel';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtClock = (ms: number) => {
@@ -453,6 +457,9 @@ export function MatchScreen({ gameId }: { gameId: string }) {
           {rec.rated ? (
             <div className="small" data-testid="assist-locked">Rated game: the assistant is locked. Engine help is never available in rated play.</div>
           ) : (
+            <SandboxPanel rec={rec} />
+          )}
+          {rec.rated ? null : (
             <div className="stack" data-testid="assist-panel">
               <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">casual game — never rated</span></div>
               <div className="row">
@@ -527,3 +534,48 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
 }
 
 export { formatScore };
+
+/** Sandbox Exchange on your own casual game: practice money only, back-yourself claims, closes at move 1. */
+function SandboxPanel({ rec }: { rec: GameRecord }) {
+  const { services } = useApp();
+  const fed = services.fed;
+  const [msg, setMsg] = useState<string | null>(null);
+  const [shares, setShares] = useState(10);
+  const [, bump] = useState(0);
+  const m = fed.ready ? fed.sandboxMarketFor(rec.id) : undefined;
+  useEffect(() => { if (m && m.status === 'open' && rec.moves.length > 0) void fed.closeSandbox(rec.id).then(() => bump(x => x + 1)); }, [rec.moves.length, m?.status]);
+  if (!fed.ready) return null;
+  const why = FederationService.sandboxIneligible(rec);
+  if (!m && why) return rec.moves.length === 0 ? <div className="small muted" data-testid="sandbox-ineligible">Sandbox Exchange: {why}.</div> : null;
+  const open = async () => {
+    setMsg(null);
+    try {
+      const pool = await services.db.ratingState('rapid');
+      const opp = rec.humanColor === 'white' ? rec.black : rec.white;
+      const o = opp.rating ?? 1500;
+      const p = rec.humanColor === 'white' ? wdl(pool.rating, o) : wdl(o, pool.rating);
+      const prior = rec.humanColor === 'white' ? [p.w, p.d, p.l] : [p.l, p.d, p.w];
+      await fed.openSandbox(rec, prior); bump(x => x + 1);
+    } catch (e) { setMsg((e as Error).message); }
+  };
+  const buy = async (claim: number) => { setMsg(null); try { await fed.sandboxTrade(rec.id, claim, shares, 'buy'); bump(x => x + 1); } catch (e) { setMsg((e as Error).message); } };
+  const pos = m ? fed.state!.positions.get(`${m.id}|sandbox:player`) : undefined;
+  const cp = m ? claimPrices(m) : [];
+  return (
+    <div className="panel stack" data-testid="sandbox-panel" style={{ padding: 10 }}>
+      <div className="row small"><strong>Sandbox Exchange</strong><span className="chip">practice money · {fmtCrowns(fed.sandboxBalance(), 0)}</span>{m && <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`}>{m.status}</span>}</div>
+      {!m ? (
+        <><div className="small muted">Back yourself on this casual game with separate sandbox crowns (never official money). Opens at prices from your rapid rating vs your opponent; closes at the first move; cancelled at the opening prices if you use the assistant or the game ends before move 10.</div>
+          <button className="btn small" data-testid="open-sandbox" onClick={open} disabled={services.readOnly}>Open a sandbox market</button></>
+      ) : (
+        <>
+          <div className="small">{claimsOf(m).map((c, i) => <span key={c.id} style={{ marginRight: 10 }}>{c.label}: <strong className="mono">{(cp[i] * 100).toFixed(0)}¢</strong>{pos?.shares[i] ? ` · you hold ${pos.shares[i]}` : ''}</span>)}</div>
+          {m.status === 'open' && <div className="row"><input type="number" min={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 70 }} aria-label="Sandbox shares" />{claimsOf(m).map((c, i) => <button key={c.id} className="btn small" data-testid={`sandbox-buy-${c.id}`} onClick={() => buy(i)}>Buy {c.label}</button>)}</div>}
+          {m.status === 'settled' && <div className="small">Settled: {statesOf(m)[m.result!]} · received {fmtCrowns(pos?.received ?? 0)} sandbox ₵</div>}
+          {m.status === 'cancelled' && <div className="small">Cancelled at the opening prices (assistance, abandonment or a game under 10 moves).</div>}
+        </>
+      )}
+      {msg && <div className="small notice warn">{msg}</div>}
+    </div>
+  );
+}
