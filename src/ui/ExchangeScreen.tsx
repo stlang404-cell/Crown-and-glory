@@ -3,7 +3,7 @@ import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
-import { quote, liquidationValue, EXCHANGE_ID, claimsOf, statesOf, claimPrices } from '../exchange/market';
+import { quote, liquidationValue, EXCHANGE_ID, claimsOf, statesOf, claimPrices, revisionOf } from '../exchange/market';
 import type { Market, Position } from '../exchange/market';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import { wdl, NU, RESULT_MODEL_ID } from '../federation/resultModel';
@@ -150,13 +150,14 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
   const tooMuch = q.ok && side === 'buy' && q.ok.total > cash;
   const tooMany = side === 'sell' && shares > holding;
   const version = m.history.length;
+  const revision = revisionOf(m);
   const exec = async () => {
     setBusy(true); setMsg(null);
-    try { await fed.trade(m.id, claim, shares, side, { expectVersion: version }); setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} × ${claims[claim].label}.` }); }
+    try { await fed.trade(m.id, claim, shares, side, { expectVersion: version, expectRevision: revision }); setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} × ${claims[claim].label}.` }); }
     catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } finally { setBusy(false); }
   };
   return (
-    <div className="panel stack" data-testid="ticket">
+    <div className="panel stack" data-testid="ticket" data-revision={revision}>
       <h3>Trade ticket</h3>
       {!canTrade && <div className="small notice">{m.status === 'open' ? 'Trading unavailable in this tab.' : `This market is ${m.status}; trading has ended.`}</div>}
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}

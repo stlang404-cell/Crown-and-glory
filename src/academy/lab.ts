@@ -52,7 +52,8 @@ export const methodKey = (r: AnalysisReport) => `${r.methodology.gradingId} / ${
 
 export function eligibleItems(games: GameRecord[], reports: AnalysisReport[]): { items: Item[]; method: string | null; excluded: number } {
   const byGame = new Map<string, AnalysisReport>();
-  for (const r of reports) if (r.status === 'complete') { const c = byGame.get(r.gameId); if (!c || r.completedAt > c.completedAt) byGame.set(r.gameId, r); }
+  // federation engine games (Live Arena, gameId "wg:…") are not the player's games
+  for (const r of reports) if (r.status === 'complete' && !r.gameId.startsWith('wg:')) { const c = byGame.get(r.gameId); if (!c || r.completedAt > c.completedAt) byGame.set(r.gameId, r); }
   const counts = new Map<string, number>();
   for (const r of byGame.values()) counts.set(methodKey(r), (counts.get(methodKey(r)) ?? 0) + 1);
   const method = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;

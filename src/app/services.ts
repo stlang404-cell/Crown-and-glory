@@ -3,7 +3,7 @@
  * domain operation and notify subscribers. React never mutates history or ratings directly.
  */
 import { CrownDB, AnalysisJob } from '../storage/db';
-import { gameChecksum } from '../storage/checksum';
+import { gameChecksum, sha256Hex } from '../storage/checksum';
 import { EngineChannel, ENGINE_EVENTS } from '../engine/client';
 import { CANON_BUILD } from '../engine/canonical';
 import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor, ENGINE_BUILD } from '../analysis/analyzer';
@@ -13,7 +13,7 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 
-export const APP_VERSION = '0.5.0';
+export const APP_VERSION = '0.6.0-preview.1';
 
 type Listener = () => void;
 
@@ -120,6 +120,35 @@ export class AppServices {
     void this.processQueue();
   }
 
+  /**
+   * Post-game analysis of a federation engine game (Live Arena), on the canonical engine through the same queue,
+   * priority and cancellation rules as the player's own games. Information policy (crown-arena-policy-1): only once
+   * the game is recorded AND its official market can no longer trade (settled, cancelled, or none) — so no deep
+   * engine evaluation of a position is ever available while money can still be placed on it.
+   */
+  async requestWorldAnalysis(fixtureId: string, settings: AnalysisSettings = DEFAULT_ANALYSIS): Promise<'queued' | 'exists' | 'blocked' | 'missing'> {
+    const wg = await this.fed.worldGame(`wg:${fixtureId}`);
+    if (!wg) return 'missing';
+    const m = this.fed.marketFor(fixtureId);
+    if (m && (m.status === 'open' || m.status === 'closed')) return 'blocked';
+    const gid = `wg:${fixtureId}`;
+    const id = AppServices.jobId(gid, settings.id);
+    const existing = await this.db.getJob(id);
+    if (existing && (existing.status === 'complete' || existing.status === 'running' || existing.status === 'queued')) return 'exists';
+    const now = new Date().toISOString();
+    await this.db.putJob({ id, gameId: gid, settingsId: settings.id, status: 'queued', createdAt: now, updatedAt: now, progress: 0, total: wg.moves.length, generation: (existing?.generation ?? 0) + 1 });
+    this.notify();
+    void this.processQueue();
+    return 'queued';
+  }
+  /** A recorded federation engine game in the shape the analysis queue needs (checksum over the move record). */
+  private async worldGameAsRecord(gid: string): Promise<(Pick<GameRecord, 'id' | 'initialFen' | 'setupMoves' | 'humanColor' | 'checksum'> & { moves: { ccn: string }[] }) | null> {
+    const wg = await this.fed.worldGame(gid);
+    if (!wg) return null;
+    const checksum = await sha256Hex(JSON.stringify({ id: wg.id, moves: wg.moves.map(m => m.ccn), result: wg.result }));
+    return { id: wg.id, initialFen: wg.initialFen, setupMoves: undefined, humanColor: 'white', checksum, moves: wg.moves };
+  }
+
   /** Queue re-analysis of every finalized game lacking a complete report with these settings. */
   async batchReanalyze(settings: AnalysisSettings): Promise<number> {
     const [games, reports] = await Promise.all([this.db.allGames(), this.db.allReports()]);
@@ -176,7 +205,7 @@ export class AppServices {
         const jobs = (await this.db.allJobs()).filter(j => j.status === 'queued').sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const job = jobs[0];
         if (!job) return;
-        const game = await this.db.getGame(job.gameId);
+        const game = job.gameId.startsWith('wg:') ? await this.worldGameAsRecord(job.gameId) : await this.db.getGame(job.gameId);
         const settings = ANALYSIS_PRESETS.find(s => s.id === job.settingsId);
         if (!game || !settings || !game.checksum) {
           await this.db.putJob({ ...job, status: 'failed', error: 'Game or settings unavailable', updatedAt: new Date().toISOString() });
@@ -195,8 +224,7 @@ export class AppServices {
               this.notify();
             },
           );
-          const human = game.humanColor;
-          report.recommendations = recommendationsFor(report, human);
+          if (!job.gameId.startsWith('wg:')) report.recommendations = recommendationsFor(report, game.humanColor);
           await this.db.addReport(report, { ...running, status: report.status === 'complete' ? 'complete' : 'partial', progress: report.plies.length, reportId: report.id, updatedAt: new Date().toISOString() });
         } catch (e) {
           if ((e as Error).message === 'cancelled') return; // state already written by the canceller

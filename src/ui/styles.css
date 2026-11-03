@@ -295,3 +295,20 @@ tr.me td { background: var(--accent-soft); }
 .icon-pick { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .icon-pick button { padding: 4px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
 .icon-pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, transparent); }
+
+/* ---------- Sovereign Live Arena (crown-arena-1) ---------- */
+.arena-grid { display: grid; gap: 14px; grid-template-columns: minmax(340px, 1.05fr) minmax(300px, 1fr) minmax(300px, 1fr); align-items: start; }
+.arena-grid .arena-board { grid-column: 1; grid-row: 1 / span 2; }
+.arena-tabs { display: none; }
+.arena-moves { max-height: 180px; overflow: auto; line-height: 1.9; }
+.arena-moves .grade-icon { margin-left: 2px; }
+.arena-player { gap: 8px; }
+@media (max-width: 1180px) {
+  .arena-grid { grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); }
+}
+@media (max-width: 760px) {
+  .arena-grid { grid-template-columns: 1fr; }
+  .arena-grid .arena-board { grid-row: auto; }
+  .arena-tabs { display: flex; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 4px 0; }
+  .arena-tab-off, .arena-m-off { display: none; }
+}

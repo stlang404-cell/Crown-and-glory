@@ -175,6 +175,12 @@ export function closeMarket(m: Market, at: string): Market {
 
 /** Required collateral: the maximum possible payout. */
 /** Issued shares per state (q − q0). */
+/**
+ * Market revision (crown-market-revision-1): advances on every trade AND on every published live move, so a quote
+ * taken before new public information can never execute after it (in-play: a trade queued while the next move is
+ * being computed is rejected once that move is published).
+ */
+export const revisionOf = (m: Market): string => `${m.history.length}.${m.live?.plies ?? 0}`;
 export const exposure = (m: Market) => m.q.map((x, i) => x - (m.q0?.[i] ?? 0));
 export const maxLiability = (m: Market) => Math.max(...exposure(m)) * MICRO;
 

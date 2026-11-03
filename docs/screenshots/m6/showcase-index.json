@@ -1,0 +1,132 @@
+[
+ {
+  "file": "01-dashboard-federation.png",
+  "desc": "Main dashboard: the Federation screen with navigation, fixtures, standings and featured matches (season 2).",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "01b-dashboard-play.png",
+  "desc": "Play home: opponent ladder L1–L9 including Sovereign Max, match settings.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "05-grand-exchange.png",
+  "desc": "Grand Exchange: open markets, families, portfolio.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "05b-exchange-market.png",
+  "desc": "A market: research, model vs price, price history and the trade ticket.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "05c-forecasting.png",
+  "desc": "Forecasting companion: Brier/log scores and calibration.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "07-finance-clubs.png",
+  "desc": "Finance: cash, assets, positions, net worth history, financial prestige, club (Tournament Venue) and sponsorship contracts, cosmetics shop.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "08-tournaments.png",
+  "desc": "Tournaments: Swiss standings, Club Weekend and Crown Championship bracket.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "10b-mobile-federation.png",
+  "desc": "Phone: Federation dashboard.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "10c-mobile-exchange.png",
+  "desc": "Phone: Grand Exchange.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "10d-mobile-finance.png",
+  "desc": "Phone: Finance and clubs.",
+  "source": "m4 journey career"
+ },
+ {
+  "file": "04-career-passport.png",
+  "desc": "Career Passport: rating, rank, career standing (six separate records), title progress, trophies, achievements.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "08b-hall-of-fame.png",
+  "desc": "Hall of Fame: trophy room, Crown Champions with final replay, event champions, Paladins and Sovereigns.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "08c-rivals.png",
+  "desc": "Featured rivals with insignia, clubs, ambitions and rivalry intensity.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "08d-rival-profile.png",
+  "desc": "Competitor career: insignia, rivalry with you, this season, head-to-head, career by season.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "09-heraldry-ladders.png",
+  "desc": "Rank ladders and emblems: 8 league divisions, 7 rating ranks, 4 federation titles, regions, tournaments, trophies, clubs, achievements.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "09b-club-editor.png",
+  "desc": "Club identity editor: name, motto, colours, shield, field and symbol.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "09c-settings-customisation.png",
+  "desc": "Customisation: three themes, board palettes (two premium, locked until unlocked), motion, chess-intelligence panel.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "10e-mobile-passport.png",
+  "desc": "Phone: Career Passport.",
+  "source": "m5 journey career"
+ },
+ {
+  "file": "06-chess-analysis.png",
+  "desc": "Chess analysis of a finished game (grades in this game: {\"excellent\":4,\"best\":25,\"mistake\":1,\"inaccuracy\":4,\"good\":2,\"great\":2}).",
+  "source": "v0.5 journey career"
+ },
+ {
+  "file": "09d-cosmetics.png",
+  "desc": "Cosmetics: frames, banners, premium boards, portraits — bought with fictional crowns or earned.",
+  "source": "v0.5 journey career"
+ },
+ {
+  "file": "06b-lab.png",
+  "desc": "Chess Intelligence Lab (one methodology, evidence thresholds).",
+  "source": "v0.5 journey career"
+ },
+ {
+  "file": "06c-academy.png",
+  "desc": "Crown Academy with the re-verified puzzle library.",
+  "source": "v0.5 journey career"
+ },
+ {
+  "file": "08e-championship-bracket.png",
+  "desc": "Crown Championship bracket during the round of 16 (rivalry previews, crests).",
+  "source": "m6 Arena journey career"
+ },
+ {
+  "file": "02b-live-arena-midgame.png",
+  "desc": "Live Arena mid-game (another championship match): published evaluation, live odds, price history; no labels while trading.",
+  "source": "m6 Arena journey career"
+ },
+ {
+  "file": "live-arena.webm",
+  "desc": "Video: a live championship match advancing with in-play windows; the market and evaluation update per published move.",
+  "source": "m6 Arena journey career"
+ },
+ {
+  "file": "live-arena.gif",
+  "desc": "GIF excerpt of the same live match.",
+  "source": "m6 Arena journey career"
+ }
+]

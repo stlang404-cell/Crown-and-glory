@@ -16,7 +16,7 @@ import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
-import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices } from '../exchange/market';
+import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf } from '../exchange/market';
 import { normaliseModel } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
@@ -46,7 +46,7 @@ export interface LiveGame {
   id: string; fixtureId: string; season: number; round: number; seed: number; moves: SelfplayMove[];
   status: 'live' | 'done'; startedAt: string; marketId: string | null;
   /** Public information published after each move: market prices and the live model (for charts). */
-  points: { ply: number; prices: number[]; model: number[]; at: string }[];
+  points: { ply: number; prices: number[]; model: number[]; at: string; revision?: string }[];
 }
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
@@ -753,11 +753,16 @@ export class FederationService {
   /** Play the next move of a live game, publish it, let NPC traders react, and settle at the end.
    *  Trading is suspended while the move is computed (commands are serialized); it reopens once the move and
    *  the new public information are committed. Returns the new move, or null when the game was already over. */
-  async liveStep(fixtureId: string): Promise<{ move: SelfplayMove | null; done: boolean; game?: WorldGame }> {
+  async liveStep(fixtureId: string, expectPly?: number): Promise<{ move: SelfplayMove | null; done: boolean; game?: WorldGame }> {
     return this.run(async () => {
       const st = this.clone();
       const lg0 = st.liveGames.get(fixtureId);
       if (!lg0 || lg0.status !== 'live') throw new Error('No live game for this fixture');
+      // duplicate or stale step request (e.g. a second tab, a double click): never publish two moves for one request
+      if (expectPly !== undefined && lg0.moves.length !== expectPly) throw new Error(`Stale step: the game is at ply ${lg0.moves.length}, not ${expectPly}`);
+      // the market revision is locked for the duration of this command (commands are serialised): no trade can
+      // execute between computing the move and publishing it; trades quoted before it are rejected afterwards
+      const lockedRevision = lg0.marketId && st.markets.get(lg0.marketId) ? revisionOf(st.markets.get(lg0.marketId)!) : null;
       const lg: LiveGame = structuredClone(lg0);
       const f = st.rounds.get(`${st.world.season}:${st.world.round}`)!.fixtures.find(x => x.id === fixtureId)!;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
@@ -790,6 +795,7 @@ export class FederationService {
       const posted: Journal[] = [];
       const markets: Market[] = [], positions: Position[] = [];
       let m = lg.marketId ? st.markets.get(lg.marketId) : undefined;
+      if (m && lockedRevision !== null && revisionOf(m) !== lockedRevision) throw new Error('Market revision changed while the move was computed'); // invariant
       if (m && m.status === 'open' && move && !end) {
         // public information after the move: the engine's evaluation → live model (a forecast, never the price)
         const u = expectedU(toPov(move.score, 'white'));
@@ -804,7 +810,7 @@ export class FederationService {
         for (const x of ops.markets.values()) markets.push(x);
         for (const x of ops.positions.values()) positions.push(x);
         if (!ops.markets.size) { st.markets.set(m.id, m); markets.push(m); }
-        lg.points.push({ ply: lg.moves.length, prices: claimPrices(m), model, at: this.now() });
+        lg.points.push({ ply: lg.moves.length, prices: claimPrices(m), model, at: this.now(), revision: revisionOf(m) });
       }
       let game: WorldGame | undefined;
       const rounds: RoundRecord[] = [];
@@ -1114,7 +1120,7 @@ export class FederationService {
   // ------------------------------------------------------------------ exchange
   /** Execute a player trade. `opts.expectVersion` (the market history length the quote was computed on) rejects
    *  stale quotes; `opts.maxTotal` caps what a buy may cost (slippage guard). */
-  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; maxTotal?: number } = {}): Promise<void> {
+  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string; maxTotal?: number } = {}): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
       const m = st.markets.get(marketId);
@@ -1124,6 +1130,8 @@ export class FederationService {
       if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who is part of this market (you may still sell existing shares)`);
       const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
       if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since this quote — review the new quote');
+      if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved to revision ${revisionOf(m)} (a new move or trade) — review the new quote`);
+      if (m.status !== 'open') throw new Error('Trading is closed for this market');
       const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
       const t = trade(m, pos, 'player:cash', outcome, shares, side, this.now(), seq);
       if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('Cost exceeds your limit — review the new quote');
