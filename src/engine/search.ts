@@ -70,6 +70,8 @@ export interface SearchFeatures {
   pawnExt: boolean;
   /** Reverse futility up to depth 6 with an improving-aware margin. */
   rfpDeep: boolean;
+  /** Singular extension of the TT move (with multi-cut). */
+  singular: boolean;
 }
 
 export const DEFAULT_FEATURES: SearchFeatures = {
@@ -98,6 +100,7 @@ export const DEFAULT_FEATURES: SearchFeatures = {
   seeMain: false,
   pawnExt: false,
   rfpDeep: false,
+  singular: false,
 };
 
 /** The crown-search-1 feature set (all M4 additions off): reproduces the M3 engine node for node. */
@@ -251,6 +254,8 @@ export class Searcher {
     this.features = { ...DEFAULT_FEATURES, ...(features ?? {}) };
     if (this.features.qsTT && !this.features.ttBucket) this.features.qsTT = false;
     this.weights = weights ?? DEFAULT_WEIGHTS;
+    // asymmetric (styled) evaluation: the root side is the styled side
+    if (this.weights.version === 4 && this.weights.own) this.weights = { ...this.weights, styleColor: position.side };
     this.contempt = contempt ?? 0;
   }
 
@@ -459,7 +464,7 @@ export class Searcher {
     }
   }
 
-  private searchNode(depth: number, alpha: number, beta: number, ply: number, pvNode: boolean, wasNull: boolean, inCheckIn: number): number {
+  private searchNode(depth: number, alpha: number, beta: number, ply: number, pvNode: boolean, wasNull: boolean, inCheckIn: number, excluded = 0): number {
     const pos = this.pos;
     const F = this.features;
     this.pvLen[ply] = ply;
@@ -486,11 +491,12 @@ export class Searcher {
     this.checkLimits();
 
     const tt = this.tt;
-    let ttMove = 0;
-    if (F.tt) {
+    let ttMove = 0, ttScore = 0, ttDepth = -1, ttFlag = 0;
+    if (F.tt && !excluded) {
       const slot = this.ttProbe();
       if (slot >= 0) {
         ttMove = tt.moves[slot];
+        ttScore = scoreFromTT(tt.scores[slot], ply); ttDepth = tt.depths[slot]; ttFlag = tt.flags[slot];
         if (ply > 0 && !pvNode && tt.depths[slot] >= depth) {
           const s = scoreFromTT(tt.scores[slot], ply);
           const f = tt.flags[slot];
@@ -504,7 +510,7 @@ export class Searcher {
     this.evalStack[ply] = staticEval;
     const improving = !inCheck && ply >= 2 && this.evalStack[ply - 2] !== -INF && staticEval > this.evalStack[ply - 2];
 
-    if (!pvNode && !inCheck && !isMateScore(beta)) {
+    if (!pvNode && !inCheck && !excluded && !isMateScore(beta)) {
       // Reverse futility pruning (static null move) near the leaves.
       if (F.rfpDeep) {
         if (depth <= 6 && staticEval - (100 * depth - (improving ? 40 : 0)) >= beta) return staticEval;
@@ -519,7 +525,7 @@ export class Searcher {
     }
 
     // Null-move pruning, guarded against pawn-only zugzwang positions.
-    if (F.nullMove && !pvNode && !inCheck && !wasNull && depth >= 3 && staticEval >= beta && hasPieces(pos, pos.side)) {
+    if (F.nullMove && !pvNode && !inCheck && !wasNull && !excluded && depth >= 3 && staticEval >= beta && hasPieces(pos, pos.side)) {
       const R = F.nullAdaptive ? 3 + (depth >= 8 ? 1 : 0) + Math.min(2, Math.floor((staticEval - beta) / 200)) : 2 + (depth >= 6 ? 1 : 0);
       pos.makeNullMove();
       this.moveStack[ply] = 0;
@@ -533,7 +539,18 @@ export class Searcher {
     }
 
     // Internal iterative reduction: without a TT move, this node's ordering is poor anyway.
-    if (F.iir && depth >= 4 && !ttMove) depth--;
+    if (F.iir && depth >= 4 && !ttMove && !excluded) depth--;
+
+    // Singular extension: if every alternative to the TT move fails well below its score, extend it;
+    // if even the alternatives beat beta, cut (multi-cut).
+    let singularExt = 0;
+    if (F.singular && ply > 0 && depth >= 6 && ttMove && !excluded && ttDepth >= depth - 3 && ttFlag !== TT_UPPER && !isMateScore(ttScore) && ply < MAX_PLY / 2) {
+      const sBeta = ttScore - 2 * depth;
+      const sv = this.searchNode((depth - 1) >> 1, sBeta - 1, sBeta, ply, false, wasNull, inCheck ? 1 : 0, ttMove);
+      if (sv < sBeta) singularExt = 1;
+      else if (!pvNode && sBeta >= beta) return sBeta;
+      this.pvLen[ply] = ply;
+    }
 
     const moves = this.moveBufs[ply];
     const scores = this.scoreBufs[ply];
@@ -564,6 +581,7 @@ export class Searcher {
         const ts = scores[i]; scores[i] = scores[bi]; scores[bi] = ts;
       }
       const m = moves[i];
+      if (m === excluded) continue;
       const from = m & 63, to = (m >> 6) & 63;
       const isCapture = b[to] !== 0;
       const isPromo = ((m >> 12) & 7) !== 0;
@@ -578,8 +596,8 @@ export class Searcher {
       const givesCheck = pos.inCheck();
       const gc = givesCheck ? 1 : 0;
       const quietMove = !isCapture && !isPromo;
-      let ext = 0;
-      if (F.pawnExt && movedPawn && !isPromo && ply < MAX_PLY / 2) {
+      let ext = m === ttMove ? singularExt : 0;
+      if (F.pawnExt && ext === 0 && movedPawn && !isPromo && ply < MAX_PLY / 2) {
         const r = (to / 6) | 0;
         if ((us === 0 ? r : 5 - r) === 4) ext = 1;
       }
@@ -655,9 +673,9 @@ export class Searcher {
       }
       if (quietMove && nQuiets < 256) quiets[nQuiets++] = m;
     }
-    if (legal === 0) return inCheck ? -MATE + ply : this.drawScore(ply);
+    if (legal === 0) return excluded ? alpha : inCheck ? -MATE + ply : this.drawScore(ply);
 
-    if (F.tt) {
+    if (F.tt && !excluded) {
       const flag = bestScore >= beta ? TT_LOWER : bestScore > origAlpha ? TT_EXACT : TT_UPPER;
       this.ttStore(depth, flag, bestScore, bestMove, ply);
     }

@@ -1,17 +1,21 @@
 /**
- * Static evaluation for crown-la6-v1 (evaluator id crown-eval-2).
+ * Static evaluation for crown-la6-v1.
  *
- * Tapered (middlegame/endgame) hand-written evaluation. Terms were selected by ablation self-play
- * (see docs/ENGINE_BENCHMARKS.md); weights are engineering choices, not calibrated truths.
+ * Two evaluators share one entry point, selected by the weights' `version`:
+ *  - crown-eval-3 (version 3, below): the M2/M3 hand-written tapered evaluation;
+ *  - crown-eval-4 (version 4, ./eval4.ts): linear-in-parameters evaluation fitted in M4.
  * Returned score is in centipawns from the side-to-move perspective.
  */
 import { Position } from '../rules/position';
 import { BLACK, WHITE } from '../rules/types';
 import { KING_TARGETS, KNIGHT_TARGETS, RAYS } from '../rules/tables';
+import { Eval4Weights, evaluate4 } from './eval4';
+import { EVAL4_PARAMS } from './eval4-params';
 
 export const EVAL_ID = 'crown-eval-3';
 
-export interface EvalWeights {
+export interface Eval3Weights {
+  version?: 3;
   material: [number, number, number, number, number, number]; // index by piece type (0,P,N,R,Q,K)
   materialEg: [number, number, number, number, number, number];
   mobility: [number, number, number, number, number, number];
@@ -30,7 +34,10 @@ export interface EvalWeights {
   useKingSafety: boolean;
 }
 
-export const DEFAULT_WEIGHTS: EvalWeights = {
+export type EvalWeights = Eval3Weights | Eval4Weights;
+
+/** crown-eval-3 weights (M2/M3 evaluator). */
+export const EVAL3_WEIGHTS: Eval3Weights = {
   material: [0, 100, 330, 470, 920, 0],
   materialEg: [0, 125, 300, 520, 960, 0],
   // crown-eval-3: mobility raised from [4,3,2] (eval-2) after +66 Elo replicated on held-out openings.
@@ -128,7 +135,19 @@ for (let sq = 0; sq < 36; sq++) { FILE[sq] = sq % 6; RANK[sq] = (sq / 6) | 0; MI
 const pawnFilesBuf = new Int8Array(12);
 const kingZoneBuf = new Int32Array(2);
 
-export function evaluate(pos: Position, w: EvalWeights = DEFAULT_WEIGHTS): number {
+/** crown-eval-4 weights (fitted parameters in eval4-params.ts). */
+export const EVAL4_WEIGHTS: Eval4Weights = { version: 4, p: Int32Array.from(EVAL4_PARAMS) };
+
+export const DEFAULT_WEIGHTS: EvalWeights = EVAL3_WEIGHTS;
+
+/** Overlay partial weights on a base set (fields of the base's own evaluator version). */
+export function mergeWeights(base: EvalWeights, partial?: Partial<Eval3Weights> | Partial<Eval4Weights>): EvalWeights {
+  return { ...base, ...(partial ?? {}) } as EvalWeights;
+}
+
+export function evaluate(pos: Position, wAny: EvalWeights = DEFAULT_WEIGHTS): number {
+  if (wAny.version === 4) return evaluate4(pos, wAny);
+  const w = wAny;
   const b = pos.board;
   let mg = 0, eg = 0, phase = 0;
   // pawn counts per file per colour: index c * 6 + file

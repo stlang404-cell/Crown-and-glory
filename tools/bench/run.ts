@@ -21,7 +21,7 @@ import { Position } from '../../src/rules/position';
 import { moveToCcn } from '../../src/rules/notation';
 import { Searcher, SEARCH_ID } from '../../src/engine/search';
 import { Searcher as BaseSearcher } from './baseline/search1';
-import { EVAL_ID } from '../../src/engine/evaluate';
+import { EVAL_ID, EvalWeights } from '../../src/engine/evaluate';
 
 const RESULTS = new URL('./results/', import.meta.url);
 /** Optional suffix for result files (keeps earlier milestones' raw results intact). */
@@ -159,6 +159,15 @@ function env() {
   return { node: process.version, platform: `${os.platform()} ${os.release()}`, cpu: os.cpus()[0]?.model, cores: os.cpus().length, searchId: SEARCH_ID, evalId: EVAL_ID, date: new Date().toISOString() };
 }
 
+/** Optional FEATURES (JSON) / PARAMS (eval-4 parameter JSON file) for speed and tactics runs of the current engine. */
+function envSearchOptions(): { features?: Record<string, boolean>; weights?: EvalWeights } {
+  if (process.env.ENGINE === 'base') return {};
+  const o: { features?: Record<string, boolean>; weights?: EvalWeights } = {};
+  if (process.env.FEATURES) o.features = JSON.parse(process.env.FEATURES);
+  if (process.env.PARAMS) o.weights = { version: 4, p: Int32Array.from(JSON.parse(readFileSync(process.env.PARAMS, 'utf8')).params) };
+  return o;
+}
+
 async function speed() {
   const fens = [
     'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1',
@@ -172,7 +181,7 @@ async function speed() {
     const samples: { nps: number; depth: number; ms: number }[] = [];
     for (let rep = 0; rep < 5; rep++) {
       const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
-      const r = s.search(Position.fromFen(fen), { limits: { timeMs: 1000 } });
+      const r = s.search(Position.fromFen(fen), { limits: { timeMs: 1000 }, ...(envSearchOptions() as object) });
       samples.push({ nps: r.nodes / (r.timeMs / 1000), depth: r.depth, ms: r.timeMs });
     }
     const nps = samples.map(x => x.nps).sort((a, b) => a - b);
@@ -194,7 +203,7 @@ async function tactics() {
     const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
     for (const it of suite.items) {
       s.newGame();
-      const r = s.search(Position.fromFen(it.fen), { limits: { nodes } });
+      const r = s.search(Position.fromFen(it.fen), { limits: { nodes }, ...(envSearchOptions() as object) });
       if (it.best.includes(moveToCcn(r.bestMove))) solved++;
     }
     res[nodes] = { solved, total: suite.items.length, rate: +(solved / suite.items.length).toFixed(3) };

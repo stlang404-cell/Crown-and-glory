@@ -16,7 +16,7 @@ export interface MoveRequest {
   newGame?: boolean;
   /** Federation opponents: explicit profile and style weights (instead of a level). */
   profile?: import('./levels').StrengthProfile;
-  weights?: Partial<import('./evaluate').EvalWeights>;
+  weights?: Partial<import('./evaluate').Eval3Weights> | Partial<import('./eval4').Eval4Weights>;
   style?: import('../federation/model').StyleId;
 }
 
