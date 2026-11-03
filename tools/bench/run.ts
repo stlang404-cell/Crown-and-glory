@@ -42,6 +42,9 @@ export const REGISTRY: Record<string, Spec> = {
   mobHi40k: { kind: 'config', id: 'mobHi40k', nodes: 40_000, weights: { mobility: [0, 0, 6, 5, 3, 0] } },
   eval2_40k: { kind: 'config', id: 'eval2_40k', nodes: 40_000, weights: { mobility: [0, 0, 4, 3, 2, 0] } },
   mob8_40k: { kind: 'config', id: 'mob8_40k', nodes: 40_000, weights: { mobility: [0, 0, 8, 7, 4, 0] } },
+  kingHi40k: { kind: 'config', id: 'kingHi40k', nodes: 40_000, weights: { kingAttack: 14, kingShield: 18 } },
+  rookHi40k: { kind: 'config', id: 'rookHi40k', nodes: 40_000, weights: { rookOpenFile: 30 } },
+  pawnStruct40k: { kind: 'config', id: 'pawnStruct40k', nodes: 40_000, weights: { doubledPawn: 24, isolatedPawn: 18 } },
   both40k: { kind: 'config', id: 'both40k', nodes: 40_000, features: { lmrLog: true, lmp: true } },
   fairy1k: { kind: 'fairy', id: 'fairy-n1k', limit: 'nodes 1000' },
   fairy4k: { kind: 'fairy', id: 'fairy-n4k', limit: 'nodes 4000' },
@@ -201,6 +204,7 @@ async function main() {
       const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
         : name === 'confirm' ? [['both40k', 'full40k']]
+        : name === 'evalexp2' ? [['kingHi40k', 'full40k'], ['rookHi40k', 'full40k'], ['pawnStruct40k', 'full40k']]
         : name === 'mobstep' ? [['mob8_40k', 'full40k']]
         : name === 'confirmmob' ? [['mobHi40k', 'full40k']]
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
