@@ -1,0 +1,811 @@
+{
+ "id": "crown-sim-fed-1",
+ "seed": 7,
+ "seasons": 40,
+ "seconds": 15,
+ "championTitles": 40,
+ "distinctChampions": 20,
+ "mostTitles": 6,
+ "results": [
+  {
+   "season": 1,
+   "ms": 606,
+   "active": 2048,
+   "retired": 57,
+   "entrants": 57,
+   "ratingMean": 1834.1,
+   "ratingSd": 454.8,
+   "latentMean": 1834.1,
+   "ratingMinusLatent": 0,
+   "corrRatingLatent": 0.986,
+   "meanRd": 91.7,
+   "maxRating": 2875,
+   "divisionMoves": 437,
+   "mobility": 0.213,
+   "champions": [
+    "Witor Fairgrave"
+   ],
+   "top16MeanAge": 32.8
+  },
+  {
+   "season": 2,
+   "ms": 444,
+   "active": 2048,
+   "retired": 74,
+   "entrants": 74,
+   "ratingMean": 1833.5,
+   "ratingSd": 453.9,
+   "latentMean": 1832.4,
+   "ratingMinusLatent": 1.1,
+   "corrRatingLatent": 0.986,
+   "meanRd": 83,
+   "maxRating": 2873,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Eoden Pikeholt"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 3,
+   "ms": 405,
+   "active": 2048,
+   "retired": 116,
+   "entrants": 116,
+   "ratingMean": 1833.6,
+   "ratingSd": 453.3,
+   "latentMean": 1832,
+   "ratingMinusLatent": 1.6,
+   "corrRatingLatent": 0.985,
+   "meanRd": 84.2,
+   "maxRating": 2870,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Witor Fairgrave"
+   ],
+   "top16MeanAge": 30.5
+  },
+  {
+   "season": 4,
+   "ms": 472,
+   "active": 2048,
+   "retired": 98,
+   "entrants": 98,
+   "ratingMean": 1833.2,
+   "ratingSd": 453.3,
+   "latentMean": 1833,
+   "ratingMinusLatent": 0.3,
+   "corrRatingLatent": 0.985,
+   "meanRd": 81.4,
+   "maxRating": 2828,
+   "divisionMoves": 418,
+   "mobility": 0.204,
+   "champions": [
+    "Nosha Darwood"
+   ],
+   "top16MeanAge": 27.3
+  },
+  {
+   "season": 5,
+   "ms": 410,
+   "active": 2048,
+   "retired": 106,
+   "entrants": 106,
+   "ratingMean": 1833.1,
+   "ratingSd": 453.7,
+   "latentMean": 1832.3,
+   "ratingMinusLatent": 0.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.8,
+   "maxRating": 2767,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Orvia Thornwood"
+   ],
+   "top16MeanAge": 26.9
+  },
+  {
+   "season": 6,
+   "ms": 383,
+   "active": 2048,
+   "retired": 82,
+   "entrants": 82,
+   "ratingMean": 1832.7,
+   "ratingSd": 453.9,
+   "latentMean": 1832.1,
+   "ratingMinusLatent": 0.6,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.1,
+   "maxRating": 2791,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Vadov Westford"
+   ],
+   "top16MeanAge": 27.3
+  },
+  {
+   "season": 7,
+   "ms": 474,
+   "active": 2048,
+   "retired": 93,
+   "entrants": 93,
+   "ratingMean": 1832.2,
+   "ratingSd": 454.2,
+   "latentMean": 1831.7,
+   "ratingMinusLatent": 0.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.9,
+   "maxRating": 2771,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Samira Everby"
+   ],
+   "top16MeanAge": 25.6
+  },
+  {
+   "season": 8,
+   "ms": 384,
+   "active": 2048,
+   "retired": 88,
+   "entrants": 88,
+   "ratingMean": 1832,
+   "ratingSd": 455.2,
+   "latentMean": 1832.4,
+   "ratingMinusLatent": -0.4,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.4,
+   "maxRating": 2743,
+   "divisionMoves": 422,
+   "mobility": 0.206,
+   "champions": [
+    "Lulia Quillbury"
+   ],
+   "top16MeanAge": 26.6
+  },
+  {
+   "season": 9,
+   "ms": 317,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1832.5,
+   "ratingSd": 455.2,
+   "latentMean": 1833.9,
+   "ratingMinusLatent": -1.5,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.8,
+   "maxRating": 2794,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Vadov Westford"
+   ],
+   "top16MeanAge": 27.4
+  },
+  {
+   "season": 10,
+   "ms": 381,
+   "active": 2048,
+   "retired": 107,
+   "entrants": 107,
+   "ratingMean": 1832.3,
+   "ratingSd": 454.4,
+   "latentMean": 1833.9,
+   "ratingMinusLatent": -1.7,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.7,
+   "maxRating": 2810,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Nosha Darwood"
+   ],
+   "top16MeanAge": 27.9
+  },
+  {
+   "season": 11,
+   "ms": 362,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1832.3,
+   "ratingSd": 453.9,
+   "latentMean": 1835.8,
+   "ratingMinusLatent": -3.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82,
+   "maxRating": 2818,
+   "divisionMoves": 421,
+   "mobility": 0.206,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 29
+  },
+  {
+   "season": 12,
+   "ms": 349,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1833.1,
+   "ratingSd": 454.5,
+   "latentMean": 1836.5,
+   "ratingMinusLatent": -3.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.4,
+   "maxRating": 2851,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Nosha Darwood"
+   ],
+   "top16MeanAge": 29.1
+  },
+  {
+   "season": 13,
+   "ms": 331,
+   "active": 2048,
+   "retired": 92,
+   "entrants": 92,
+   "ratingMean": 1832.1,
+   "ratingSd": 454.5,
+   "latentMean": 1836.1,
+   "ratingMinusLatent": -4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80,
+   "maxRating": 2798,
+   "divisionMoves": 422,
+   "mobility": 0.206,
+   "champions": [
+    "Teise Craneholt"
+   ],
+   "top16MeanAge": 29.6
+  },
+  {
+   "season": 14,
+   "ms": 310,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1831.6,
+   "ratingSd": 454.4,
+   "latentMean": 1837.5,
+   "ratingMinusLatent": -5.9,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.8,
+   "maxRating": 2790,
+   "divisionMoves": 420,
+   "mobility": 0.205,
+   "champions": [
+    "Nevin Kingsworth"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 15,
+   "ms": 341,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1831.5,
+   "ratingSd": 454.2,
+   "latentMean": 1839,
+   "ratingMinusLatent": -7.5,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.3,
+   "maxRating": 2821,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Nosha Darwood"
+   ],
+   "top16MeanAge": 30.3
+  },
+  {
+   "season": 16,
+   "ms": 358,
+   "active": 2048,
+   "retired": 80,
+   "entrants": 80,
+   "ratingMean": 1832.6,
+   "ratingSd": 453.9,
+   "latentMean": 1840.1,
+   "ratingMinusLatent": -7.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 78.6,
+   "maxRating": 2857,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 30.3
+  },
+  {
+   "season": 17,
+   "ms": 314,
+   "active": 2048,
+   "retired": 90,
+   "entrants": 90,
+   "ratingMean": 1832,
+   "ratingSd": 453.8,
+   "latentMean": 1841.8,
+   "ratingMinusLatent": -9.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.5,
+   "maxRating": 2877,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Lulia Quillbury"
+   ],
+   "top16MeanAge": 29.9
+  },
+  {
+   "season": 18,
+   "ms": 353,
+   "active": 2048,
+   "retired": 96,
+   "entrants": 96,
+   "ratingMean": 1832.8,
+   "ratingSd": 454.1,
+   "latentMean": 1841.3,
+   "ratingMinusLatent": -8.5,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.2,
+   "maxRating": 2861,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 30.2
+  },
+  {
+   "season": 19,
+   "ms": 278,
+   "active": 2048,
+   "retired": 132,
+   "entrants": 132,
+   "ratingMean": 1832.6,
+   "ratingSd": 453.8,
+   "latentMean": 1843.2,
+   "ratingMinusLatent": -10.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 84.4,
+   "maxRating": 2845,
+   "divisionMoves": 417,
+   "mobility": 0.204,
+   "champions": [
+    "Zevia Oakby"
+   ],
+   "top16MeanAge": 31.1
+  },
+  {
+   "season": 20,
+   "ms": 557,
+   "active": 2048,
+   "retired": 98,
+   "entrants": 98,
+   "ratingMean": 1831.2,
+   "ratingSd": 454.3,
+   "latentMean": 1843,
+   "ratingMinusLatent": -11.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.2,
+   "maxRating": 2819,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Zevia Oakby"
+   ],
+   "top16MeanAge": 30.8
+  },
+  {
+   "season": 21,
+   "ms": 404,
+   "active": 2048,
+   "retired": 112,
+   "entrants": 112,
+   "ratingMean": 1831,
+   "ratingSd": 454.1,
+   "latentMean": 1843.7,
+   "ratingMinusLatent": -12.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.4,
+   "maxRating": 2848,
+   "divisionMoves": 418,
+   "mobility": 0.204,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 32.6
+  },
+  {
+   "season": 22,
+   "ms": 337,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1831.4,
+   "ratingSd": 454.5,
+   "latentMean": 1844.9,
+   "ratingMinusLatent": -13.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.5,
+   "maxRating": 2855,
+   "divisionMoves": 434,
+   "mobility": 0.212,
+   "champions": [
+    "Ullia Brookshaw"
+   ],
+   "top16MeanAge": 32.9
+  },
+  {
+   "season": 23,
+   "ms": 413,
+   "active": 2048,
+   "retired": 107,
+   "entrants": 107,
+   "ratingMean": 1831.2,
+   "ratingSd": 454.2,
+   "latentMean": 1846.3,
+   "ratingMinusLatent": -15,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.7,
+   "maxRating": 2886,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 32.3
+  },
+  {
+   "season": 24,
+   "ms": 351,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1831.3,
+   "ratingSd": 455,
+   "latentMean": 1846.4,
+   "ratingMinusLatent": -15.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.4,
+   "maxRating": 2838,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Lelan Glenton"
+   ],
+   "top16MeanAge": 32.3
+  },
+  {
+   "season": 25,
+   "ms": 396,
+   "active": 2048,
+   "retired": 85,
+   "entrants": 85,
+   "ratingMean": 1831.5,
+   "ratingSd": 454.5,
+   "latentMean": 1847,
+   "ratingMinusLatent": -15.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.2,
+   "maxRating": 2824,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Cadov Glenhurst"
+   ],
+   "top16MeanAge": 32.9
+  },
+  {
+   "season": 26,
+   "ms": 332,
+   "active": 2048,
+   "retired": 108,
+   "entrants": 108,
+   "ratingMean": 1831.7,
+   "ratingSd": 453.7,
+   "latentMean": 1848.3,
+   "ratingMinusLatent": -16.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.7,
+   "maxRating": 2785,
+   "divisionMoves": 434,
+   "mobility": 0.212,
+   "champions": [
+    "Isna Cranewell"
+   ],
+   "top16MeanAge": 30.6
+  },
+  {
+   "season": 27,
+   "ms": 240,
+   "active": 2048,
+   "retired": 86,
+   "entrants": 86,
+   "ratingMean": 1830.2,
+   "ratingSd": 454.3,
+   "latentMean": 1848.1,
+   "ratingMinusLatent": -17.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.4,
+   "maxRating": 2816,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Milia Goldley"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 28,
+   "ms": 423,
+   "active": 2048,
+   "retired": 108,
+   "entrants": 108,
+   "ratingMean": 1829.8,
+   "ratingSd": 454.2,
+   "latentMean": 1847.1,
+   "ratingMinusLatent": -17.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.6,
+   "maxRating": 2863,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Yaric Ironmore"
+   ],
+   "top16MeanAge": 30.8
+  },
+  {
+   "season": 29,
+   "ms": 313,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1830.2,
+   "ratingSd": 453.8,
+   "latentMean": 1847.4,
+   "ratingMinusLatent": -17.2,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.3,
+   "maxRating": 2825,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Nomar Hollowwood"
+   ],
+   "top16MeanAge": 30.3
+  },
+  {
+   "season": 30,
+   "ms": 310,
+   "active": 2048,
+   "retired": 103,
+   "entrants": 103,
+   "ratingMean": 1829.6,
+   "ratingSd": 455,
+   "latentMean": 1848,
+   "ratingMinusLatent": -18.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.2,
+   "maxRating": 2842,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Milia Goldley"
+   ],
+   "top16MeanAge": 29.4
+  },
+  {
+   "season": 31,
+   "ms": 471,
+   "active": 2048,
+   "retired": 99,
+   "entrants": 99,
+   "ratingMean": 1828.9,
+   "ratingSd": 454.4,
+   "latentMean": 1847.6,
+   "ratingMinusLatent": -18.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.9,
+   "maxRating": 2841,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Nedan Ashridge"
+   ],
+   "top16MeanAge": 27.9
+  },
+  {
+   "season": 32,
+   "ms": 409,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1828.6,
+   "ratingSd": 454.8,
+   "latentMean": 1848,
+   "ratingMinusLatent": -19.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.3,
+   "maxRating": 2820,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Nedan Ashridge"
+   ],
+   "top16MeanAge": 29.1
+  },
+  {
+   "season": 33,
+   "ms": 424,
+   "active": 2048,
+   "retired": 95,
+   "entrants": 95,
+   "ratingMean": 1827.8,
+   "ratingSd": 454.6,
+   "latentMean": 1847.5,
+   "ratingMinusLatent": -19.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.3,
+   "maxRating": 2845,
+   "divisionMoves": 432,
+   "mobility": 0.211,
+   "champions": [
+    "Milia Goldley"
+   ],
+   "top16MeanAge": 28.9
+  },
+  {
+   "season": 34,
+   "ms": 357,
+   "active": 2048,
+   "retired": 88,
+   "entrants": 88,
+   "ratingMean": 1828.8,
+   "ratingSd": 454.8,
+   "latentMean": 1848,
+   "ratingMinusLatent": -19.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.5,
+   "maxRating": 2840,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Nolan Hartford"
+   ],
+   "top16MeanAge": 29.9
+  },
+  {
+   "season": 35,
+   "ms": 448,
+   "active": 2048,
+   "retired": 114,
+   "entrants": 114,
+   "ratingMean": 1828.8,
+   "ratingSd": 453.7,
+   "latentMean": 1848.6,
+   "ratingMinusLatent": -19.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.3,
+   "maxRating": 2869,
+   "divisionMoves": 421,
+   "mobility": 0.206,
+   "champions": [
+    "Milia Goldley"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 36,
+   "ms": 342,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1829.7,
+   "ratingSd": 453,
+   "latentMean": 1850.7,
+   "ratingMinusLatent": -21,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.2,
+   "maxRating": 2874,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Rolan Fenton"
+   ],
+   "top16MeanAge": 29.8
+  },
+  {
+   "season": 37,
+   "ms": 335,
+   "active": 2048,
+   "retired": 80,
+   "entrants": 80,
+   "ratingMean": 1830.1,
+   "ratingSd": 453.3,
+   "latentMean": 1851.1,
+   "ratingMinusLatent": -21,
+   "corrRatingLatent": 0.984,
+   "meanRd": 78.8,
+   "maxRating": 2849,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Nolan Hartford"
+   ],
+   "top16MeanAge": 30.8
+  },
+  {
+   "season": 38,
+   "ms": 339,
+   "active": 2048,
+   "retired": 86,
+   "entrants": 86,
+   "ratingMean": 1830.9,
+   "ratingSd": 453,
+   "latentMean": 1851.1,
+   "ratingMinusLatent": -20.2,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.1,
+   "maxRating": 2903,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Nolan Hartford"
+   ],
+   "top16MeanAge": 31.1
+  },
+  {
+   "season": 39,
+   "ms": 399,
+   "active": 2048,
+   "retired": 128,
+   "entrants": 128,
+   "ratingMean": 1831.1,
+   "ratingSd": 453.3,
+   "latentMean": 1850.4,
+   "ratingMinusLatent": -19.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 83.8,
+   "maxRating": 2923,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Nolan Hartford"
+   ],
+   "top16MeanAge": 32.9
+  },
+  {
+   "season": 40,
+   "ms": 396,
+   "active": 2048,
+   "retired": 91,
+   "entrants": 91,
+   "ratingMean": 1831.9,
+   "ratingSd": 452.9,
+   "latentMean": 1849.8,
+   "ratingMinusLatent": -17.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.2,
+   "maxRating": 2893,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Nolan Hartford"
+   ],
+   "top16MeanAge": 32.3
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+ "id": "crown-sim-2",
+ "seasons": 4,
+ "seeds": [
+  1000,
+  2000,
+  3000
+ ],
+ "generatedAt": "2026-11-03T14:10:00.557Z",
+ "seconds": 0,
+ "results": []
+}

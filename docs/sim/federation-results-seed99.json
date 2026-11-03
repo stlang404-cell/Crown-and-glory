@@ -1,0 +1,814 @@
+{
+ "id": "crown-sim-fed-1",
+ "seed": 99,
+ "seasons": 40,
+ "seconds": 16,
+ "championTitles": 43,
+ "distinctChampions": 24,
+ "mostTitles": 5,
+ "results": [
+  {
+   "season": 1,
+   "ms": 554,
+   "active": 2048,
+   "retired": 56,
+   "entrants": 56,
+   "ratingMean": 1832.9,
+   "ratingSd": 451.7,
+   "latentMean": 1830.5,
+   "ratingMinusLatent": 2.4,
+   "corrRatingLatent": 0.986,
+   "meanRd": 91.6,
+   "maxRating": 2750,
+   "divisionMoves": 441,
+   "mobility": 0.215,
+   "champions": [
+    "Yako Everden",
+    "Wiella Mosscombe"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 2,
+   "ms": 465,
+   "active": 2048,
+   "retired": 84,
+   "entrants": 84,
+   "ratingMean": 1833.1,
+   "ratingSd": 451.1,
+   "latentMean": 1831.9,
+   "ratingMinusLatent": 1.2,
+   "corrRatingLatent": 0.986,
+   "meanRd": 84.1,
+   "maxRating": 2760,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Zetor Rookmere"
+   ],
+   "top16MeanAge": 29.8
+  },
+  {
+   "season": 3,
+   "ms": 425,
+   "active": 2048,
+   "retired": 103,
+   "entrants": 103,
+   "ratingMean": 1833.4,
+   "ratingSd": 451.3,
+   "latentMean": 1831.5,
+   "ratingMinusLatent": 1.9,
+   "corrRatingLatent": 0.985,
+   "meanRd": 82.8,
+   "maxRating": 2767,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Elvin Mossden"
+   ],
+   "top16MeanAge": 27.9
+  },
+  {
+   "season": 4,
+   "ms": 338,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1833,
+   "ratingSd": 451.3,
+   "latentMean": 1830.9,
+   "ratingMinusLatent": 2.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 82.5,
+   "maxRating": 2781,
+   "divisionMoves": 413,
+   "mobility": 0.202,
+   "champions": [
+    "Elren Hollowholt"
+   ],
+   "top16MeanAge": 29
+  },
+  {
+   "season": 5,
+   "ms": 316,
+   "active": 2048,
+   "retired": 90,
+   "entrants": 90,
+   "ratingMean": 1832.1,
+   "ratingSd": 451.8,
+   "latentMean": 1831.3,
+   "ratingMinusLatent": 0.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.1,
+   "maxRating": 2774,
+   "divisionMoves": 422,
+   "mobility": 0.206,
+   "champions": [
+    "Zetor Glenford"
+   ],
+   "top16MeanAge": 26.6
+  },
+  {
+   "season": 6,
+   "ms": 374,
+   "active": 2048,
+   "retired": 82,
+   "entrants": 82,
+   "ratingMean": 1832.5,
+   "ratingSd": 452.6,
+   "latentMean": 1831.2,
+   "ratingMinusLatent": 1.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 78.8,
+   "maxRating": 2778,
+   "divisionMoves": 436,
+   "mobility": 0.213,
+   "champions": [
+    "Elvin Mossden"
+   ],
+   "top16MeanAge": 26.4
+  },
+  {
+   "season": 7,
+   "ms": 345,
+   "active": 2048,
+   "retired": 91,
+   "entrants": 91,
+   "ratingMean": 1832.5,
+   "ratingSd": 452.8,
+   "latentMean": 1831.1,
+   "ratingMinusLatent": 1.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.6,
+   "maxRating": 2795,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Elra Duskmore"
+   ],
+   "top16MeanAge": 26.3
+  },
+  {
+   "season": 8,
+   "ms": 322,
+   "active": 2048,
+   "retired": 107,
+   "entrants": 107,
+   "ratingMean": 1832.8,
+   "ratingSd": 451.9,
+   "latentMean": 1831.4,
+   "ratingMinusLatent": 1.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.5,
+   "maxRating": 2814,
+   "divisionMoves": 421,
+   "mobility": 0.206,
+   "champions": [
+    "Elren Hollowholt"
+   ],
+   "top16MeanAge": 27.4
+  },
+  {
+   "season": 9,
+   "ms": 339,
+   "active": 2048,
+   "retired": 115,
+   "entrants": 115,
+   "ratingMean": 1832.8,
+   "ratingSd": 452,
+   "latentMean": 1831.2,
+   "ratingMinusLatent": 1.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.7,
+   "maxRating": 2840,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Elren Hollowholt"
+   ],
+   "top16MeanAge": 28.1
+  },
+  {
+   "season": 10,
+   "ms": 232,
+   "active": 2048,
+   "retired": 106,
+   "entrants": 106,
+   "ratingMean": 1834,
+   "ratingSd": 451.7,
+   "latentMean": 1833.9,
+   "ratingMinusLatent": 0.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.9,
+   "maxRating": 2826,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Josel Larkwood"
+   ],
+   "top16MeanAge": 28.9
+  },
+  {
+   "season": 11,
+   "ms": 488,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1834.4,
+   "ratingSd": 450.8,
+   "latentMean": 1835.2,
+   "ratingMinusLatent": -0.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.2,
+   "maxRating": 2844,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Elren Hollowholt"
+   ],
+   "top16MeanAge": 28.8
+  },
+  {
+   "season": 12,
+   "ms": 440,
+   "active": 2048,
+   "retired": 102,
+   "entrants": 102,
+   "ratingMean": 1834.7,
+   "ratingSd": 450.7,
+   "latentMean": 1836,
+   "ratingMinusLatent": -1.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.3,
+   "maxRating": 2835,
+   "divisionMoves": 418,
+   "mobility": 0.204,
+   "champions": [
+    "Josel Larkwood"
+   ],
+   "top16MeanAge": 29.3
+  },
+  {
+   "season": 13,
+   "ms": 374,
+   "active": 2048,
+   "retired": 105,
+   "entrants": 105,
+   "ratingMean": 1834.3,
+   "ratingSd": 451,
+   "latentMean": 1836.6,
+   "ratingMinusLatent": -2.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.6,
+   "maxRating": 2858,
+   "divisionMoves": 416,
+   "mobility": 0.203,
+   "champions": [
+    "Issha Northhurst"
+   ],
+   "top16MeanAge": 29.4
+  },
+  {
+   "season": 14,
+   "ms": 334,
+   "active": 2048,
+   "retired": 93,
+   "entrants": 93,
+   "ratingMean": 1834.8,
+   "ratingSd": 450.4,
+   "latentMean": 1839.3,
+   "ratingMinusLatent": -4.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.3,
+   "maxRating": 2877,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Josel Larkwood"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 15,
+   "ms": 406,
+   "active": 2048,
+   "retired": 77,
+   "entrants": 77,
+   "ratingMean": 1835.8,
+   "ratingSd": 450.6,
+   "latentMean": 1839.9,
+   "ratingMinusLatent": -4.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 78.2,
+   "maxRating": 2857,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Elren Hollowholt"
+   ],
+   "top16MeanAge": 31.1
+  },
+  {
+   "season": 16,
+   "ms": 362,
+   "active": 2048,
+   "retired": 105,
+   "entrants": 105,
+   "ratingMean": 1837,
+   "ratingSd": 449.2,
+   "latentMean": 1841.6,
+   "ratingMinusLatent": -4.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.1,
+   "maxRating": 2811,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Risel Thorngrave"
+   ],
+   "top16MeanAge": 32.4
+  },
+  {
+   "season": 17,
+   "ms": 404,
+   "active": 2048,
+   "retired": 99,
+   "entrants": 99,
+   "ratingMean": 1837.7,
+   "ratingSd": 449.4,
+   "latentMean": 1843.5,
+   "ratingMinusLatent": -5.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.8,
+   "maxRating": 2787,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Salan Quillmore"
+   ],
+   "top16MeanAge": 32.5
+  },
+  {
+   "season": 18,
+   "ms": 368,
+   "active": 2048,
+   "retired": 99,
+   "entrants": 99,
+   "ratingMean": 1838.7,
+   "ratingSd": 449.3,
+   "latentMean": 1844.5,
+   "ratingMinusLatent": -5.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.8,
+   "maxRating": 2787,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Orra Brackfield"
+   ],
+   "top16MeanAge": 32.3
+  },
+  {
+   "season": 19,
+   "ms": 354,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1839.4,
+   "ratingSd": 448.3,
+   "latentMean": 1845.5,
+   "ratingMinusLatent": -6.2,
+   "corrRatingLatent": 0.984,
+   "meanRd": 82,
+   "maxRating": 2808,
+   "divisionMoves": 432,
+   "mobility": 0.211,
+   "champions": [
+    "Uldan Quillby"
+   ],
+   "top16MeanAge": 33.1
+  },
+  {
+   "season": 20,
+   "ms": 396,
+   "active": 2048,
+   "retired": 95,
+   "entrants": 95,
+   "ratingMean": 1839.2,
+   "ratingSd": 448.2,
+   "latentMean": 1846.5,
+   "ratingMinusLatent": -7.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.5,
+   "maxRating": 2821,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Yasel Larkley"
+   ],
+   "top16MeanAge": 32.7
+  },
+  {
+   "season": 21,
+   "ms": 725,
+   "active": 2048,
+   "retired": 82,
+   "entrants": 82,
+   "ratingMean": 1839,
+   "ratingSd": 447.9,
+   "latentMean": 1845.1,
+   "ratingMinusLatent": -6.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 78.8,
+   "maxRating": 2805,
+   "divisionMoves": 434,
+   "mobility": 0.212,
+   "champions": [
+    "Zetis Northbury",
+    "Haren Westley"
+   ],
+   "top16MeanAge": 32.8
+  },
+  {
+   "season": 22,
+   "ms": 535,
+   "active": 2048,
+   "retired": 104,
+   "entrants": 104,
+   "ratingMean": 1839.3,
+   "ratingSd": 446.9,
+   "latentMean": 1847.5,
+   "ratingMinusLatent": -8.2,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.1,
+   "maxRating": 2804,
+   "divisionMoves": 432,
+   "mobility": 0.211,
+   "champions": [
+    "Nodov Glenbury"
+   ],
+   "top16MeanAge": 32.8
+  },
+  {
+   "season": 23,
+   "ms": 345,
+   "active": 2048,
+   "retired": 96,
+   "entrants": 96,
+   "ratingMean": 1838.9,
+   "ratingSd": 447.1,
+   "latentMean": 1847.9,
+   "ratingMinusLatent": -9.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.4,
+   "maxRating": 2806,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Haren Westley"
+   ],
+   "top16MeanAge": 32.7
+  },
+  {
+   "season": 24,
+   "ms": 386,
+   "active": 2048,
+   "retired": 111,
+   "entrants": 111,
+   "ratingMean": 1838.8,
+   "ratingSd": 447.1,
+   "latentMean": 1845.9,
+   "ratingMinusLatent": -7.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.1,
+   "maxRating": 2857,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Yasel Larkley"
+   ],
+   "top16MeanAge": 32.4
+  },
+  {
+   "season": 25,
+   "ms": 299,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1838.4,
+   "ratingSd": 447.6,
+   "latentMean": 1846.3,
+   "ratingMinusLatent": -7.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.2,
+   "maxRating": 2866,
+   "divisionMoves": 421,
+   "mobility": 0.206,
+   "champions": [
+    "Yasel Larkley"
+   ],
+   "top16MeanAge": 31.5
+  },
+  {
+   "season": 26,
+   "ms": 385,
+   "active": 2048,
+   "retired": 105,
+   "entrants": 105,
+   "ratingMean": 1837.9,
+   "ratingSd": 447.4,
+   "latentMean": 1846.8,
+   "ratingMinusLatent": -8.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.5,
+   "maxRating": 2887,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Yasel Larkley"
+   ],
+   "top16MeanAge": 29.5
+  },
+  {
+   "season": 27,
+   "ms": 322,
+   "active": 2048,
+   "retired": 99,
+   "entrants": 99,
+   "ratingMean": 1837.3,
+   "ratingSd": 447.3,
+   "latentMean": 1846.4,
+   "ratingMinusLatent": -9.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.9,
+   "maxRating": 2835,
+   "divisionMoves": 421,
+   "mobility": 0.206,
+   "champions": [
+    "Orise Dargrave"
+   ],
+   "top16MeanAge": 31.3
+  },
+  {
+   "season": 28,
+   "ms": 376,
+   "active": 2048,
+   "retired": 99,
+   "entrants": 99,
+   "ratingMean": 1836.9,
+   "ratingSd": 446.8,
+   "latentMean": 1846.9,
+   "ratingMinusLatent": -10,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.8,
+   "maxRating": 2844,
+   "divisionMoves": 434,
+   "mobility": 0.212,
+   "champions": [
+    "Yasel Larkley"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 29,
+   "ms": 386,
+   "active": 2048,
+   "retired": 86,
+   "entrants": 86,
+   "ratingMean": 1837,
+   "ratingSd": 447,
+   "latentMean": 1846.8,
+   "ratingMinusLatent": -9.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.3,
+   "maxRating": 2820,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Orise Dargrave"
+   ],
+   "top16MeanAge": 28.1
+  },
+  {
+   "season": 30,
+   "ms": 342,
+   "active": 2048,
+   "retired": 97,
+   "entrants": 97,
+   "ratingMean": 1836.7,
+   "ratingSd": 447.6,
+   "latentMean": 1849.4,
+   "ratingMinusLatent": -12.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.3,
+   "maxRating": 2816,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Neric Darwell"
+   ],
+   "top16MeanAge": 28.8
+  },
+  {
+   "season": 31,
+   "ms": 305,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1836.7,
+   "ratingSd": 447.1,
+   "latentMean": 1849.1,
+   "ratingMinusLatent": -12.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.9,
+   "maxRating": 2781,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Istis Marrbury"
+   ],
+   "top16MeanAge": 29
+  },
+  {
+   "season": 32,
+   "ms": 434,
+   "active": 2048,
+   "retired": 98,
+   "entrants": 98,
+   "ratingMean": 1836.9,
+   "ratingSd": 447.6,
+   "latentMean": 1848.1,
+   "ratingMinusLatent": -11.2,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.7,
+   "maxRating": 2845,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Netor Quillgrave"
+   ],
+   "top16MeanAge": 29.1
+  },
+  {
+   "season": 33,
+   "ms": 512,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1837.3,
+   "ratingSd": 448.3,
+   "latentMean": 1848.8,
+   "ratingMinusLatent": -11.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81,
+   "maxRating": 2815,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Neric Darwell"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 34,
+   "ms": 535,
+   "active": 2048,
+   "retired": 96,
+   "entrants": 96,
+   "ratingMean": 1837.6,
+   "ratingSd": 447.7,
+   "latentMean": 1850.4,
+   "ratingMinusLatent": -12.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.4,
+   "maxRating": 2801,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Orella Oakbury",
+    "Eltis Faircombe"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 35,
+   "ms": 483,
+   "active": 2048,
+   "retired": 103,
+   "entrants": 103,
+   "ratingMean": 1837.3,
+   "ratingSd": 447.6,
+   "latentMean": 1850,
+   "ratingMinusLatent": -12.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.1,
+   "maxRating": 2831,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Orise Dargrave"
+   ],
+   "top16MeanAge": 30.8
+  },
+  {
+   "season": 36,
+   "ms": 545,
+   "active": 2048,
+   "retired": 94,
+   "entrants": 94,
+   "ratingMean": 1837,
+   "ratingSd": 447,
+   "latentMean": 1849.7,
+   "ratingMinusLatent": -12.8,
+   "corrRatingLatent": 0.982,
+   "meanRd": 80.2,
+   "maxRating": 2857,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Neric Darwell"
+   ],
+   "top16MeanAge": 29.8
+  },
+  {
+   "season": 37,
+   "ms": 384,
+   "active": 2048,
+   "retired": 108,
+   "entrants": 108,
+   "ratingMean": 1837,
+   "ratingSd": 447.1,
+   "latentMean": 1851.1,
+   "ratingMinusLatent": -14.1,
+   "corrRatingLatent": 0.982,
+   "meanRd": 81.7,
+   "maxRating": 2864,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Neric Darwell"
+   ],
+   "top16MeanAge": 30.8
+  },
+  {
+   "season": 38,
+   "ms": 461,
+   "active": 2048,
+   "retired": 91,
+   "entrants": 91,
+   "ratingMean": 1836.7,
+   "ratingSd": 447.8,
+   "latentMean": 1850.4,
+   "ratingMinusLatent": -13.7,
+   "corrRatingLatent": 0.982,
+   "meanRd": 80,
+   "maxRating": 2897,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Neric Darwell"
+   ],
+   "top16MeanAge": 30.3
+  },
+  {
+   "season": 39,
+   "ms": 520,
+   "active": 2048,
+   "retired": 95,
+   "entrants": 95,
+   "ratingMean": 1835.8,
+   "ratingSd": 447.2,
+   "latentMean": 1851.9,
+   "ratingMinusLatent": -16.1,
+   "corrRatingLatent": 0.982,
+   "meanRd": 80.3,
+   "maxRating": 2878,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Salan Goldhurst"
+   ],
+   "top16MeanAge": 31.4
+  },
+  {
+   "season": 40,
+   "ms": 474,
+   "active": 2048,
+   "retired": 101,
+   "entrants": 101,
+   "ratingMean": 1835.4,
+   "ratingSd": 447.7,
+   "latentMean": 1850.9,
+   "ratingMinusLatent": -15.5,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.9,
+   "maxRating": 2879,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Salan Goldhurst"
+   ],
+   "top16MeanAge": 31.7
+  }
+ ]
+}

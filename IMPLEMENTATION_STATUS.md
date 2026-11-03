@@ -1,8 +1,8 @@
 # Implementation status
 
-Last updated: 2026-11-03 · app **0.3.0 (“The Living Federation”)** · rules crown-la6-v1 1.0.0 · engine crown-search-1 + crown-eval-3 ·
+Last updated: 2026-11-03 · app **0.4.0 (“The Grand Exchange”)** · rules crown-la6-v1 1.0.0 · engine crown-search-1 + crown-eval-3 ·
 levels crown-levels-2 · analysis crown-grade-v1-experimental / crown-accuracy-v1 · federation crown-federation-1 ·
-exchange crown-exchange-1 · economy crown-economy-1 · save schema DB v3
+exchange crown-exchange-2 · markets crown-markets-2 · forecasts crown-forecast-1 · economy crown-economy-1 (+ institutions) · save schema DB v4
 
 Legend: **Complete** = implemented and verified by the named evidence. **Partial** = works with stated gaps.
 **Not started** = planned only. Nothing is marked complete because it compiles or because a button exists.
@@ -24,6 +24,34 @@ calibrated (500 games) and a strict rated browser journey now passes.
 | E — intelligence lab | **Passed**: 100-game fixture history yields coherent, traceable dimensions with insufficient-evidence states; methodology separation verified. | docs/M2_INTELLIGENCE_METHODOLOGY.md, tests/history100.test.ts |
 | F — coach | **Passed with limits**: notes cite engine lines and positions; recurring patterns need ≥ 5 occurrences in ≥ 3 games; casual assistant (hint, candidates, threat check, evaluation, explanation) is refused by the game state in rated games and makes casual games permanently assisted. Explanations are template + motif based, not natural-language coaching. | src/academy/coach.ts, src/academy/lab.ts, tests/session.test.ts, e2e/run.mjs |
 | G — rated integrity | **Passed in Chromium**: eligible rated start, assistant locked, legal finish, single Glicko-2 update, duplicate finalization rejected, pool isolation, restart persistence, assisted game unrated. | e2e/run.mjs, docs/evidence/e2e-log.txt |
+
+## v0.4.0 — The Grand Exchange
+
+Status vocabulary (directive Part XI): **Verified complete** = implemented and verified by the named executed
+evidence · **Implemented, unverified** = code exists, not exercised end-to-end · **Partial** · **Not implemented**.
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Research reconciliation (167-row matrix) | Verified complete (document) | docs/M4_RESEARCH_RECONCILIATION.md |
+| Baseline audit | Verified complete | docs/M4_BASELINE_AUDIT.md |
+| Engine strength (M4-A) | ENGINE_STATUS | docs/M4_ENGINE_STRENGTH.md |
+| AI styles beyond the opening | STYLE_STATUS | docs/M4_ENGINE_STRENGTH.md, docs/V3_STYLES.md |
+| n-state LMSR with subset claims, payout vectors, prior funding | Verified complete | tests/exchange2.test.ts (randomized adversarial), docs/M4_EXCHANGE.md |
+| Market families: match, tournament champion (Open, Championship), promotion, qualification, season title, bounded conditional final four | Verified complete | tests/markets.test.ts (full season), e2e/m4-journey.mjs steps 14–19 |
+| Live in-play trading (move-by-move publication, windows, NPC reaction, resume) | Verified complete | tests/markets.test.ts, journey steps 15–17, docs/M4_EXCHANGE.md §3 |
+| NPC traders (8 strategies, exposure caps) | Verified complete (behaviour as specified; profitability not guaranteed) | tests, docs/M4_EXCHANGE.md §4 |
+| Forecasting companion (Brier/log, calibration, skill progression) | Verified complete | src/app/forecasting.ts, journey step 13 + Forecasts screen |
+| Sandbox Exchange (isolated ledger, prior-priced, back-yourself only) | Verified complete | tests/markets.test.ts, journey steps 20–21, docs/M4_EXCHANGE.md §6 |
+| Institutions: club levels (venue, Federation Club), sponsorship contracts | Verified complete | tests/markets.test.ts, journey steps 22–23 |
+| Censored games cancel markets; deterministic trade keys; stale-quote guard | Verified complete | tests |
+| Theme system (Obsidian & Crimson default, Midnight & Gold, Ivory & Slate; 5 board palettes; Settings) | Verified complete | docs/M4_THEMES.md, tests/theme.test.ts, journey steps 2–3, screenshots |
+| Federation news, championship history, season archive, rivalries | Verified complete | journey step 25 |
+| Save migration v0.3.0 → v0.4.0 (DB v4, mid-season family listing) | Verified complete | tests/storage.test.ts, journey step 1 (real v0.3.0 build) |
+| Player acceptance journey (28 steps) | JOURNEY_STATUS | docs/evidence/m4/journey-log.txt |
+| Economy simulations (9 strategies × 3 seeds × 4 seasons) and federation (3 seeds × 40 seasons) | SIM_STATUS | docs/M4_ECONOMY.md, docs/sim/ |
+| Player route into the Federation Open; group-stage championship format; rank titles | Not implemented | docs/M5_ROADMAP.md |
+| Tournament-winner in-event trading, forecast league with funded prizes | Not implemented | docs/M5_ROADMAP.md |
+| Windows launchers on Windows; physical iPhone | Not verified (no devices) | — |
 
 ## v0.3.0 phases
 

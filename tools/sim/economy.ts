@@ -154,7 +154,7 @@ async function run(s: Strategy, seed: number) {
 
 const results = [];
 const t0 = Date.now();
-const only = process.argv[4]?.split(',');
+const only = process.argv[4] ? process.argv[4].split(',') : undefined;
 const SEEDS = (process.argv[5] ?? '1000').split(',').map(Number);
 for (const [i, s] of STRATEGIES.entries()) if (!only || only.includes(s.id)) for (const sd of SEEDS) results.push({ seed: sd + i * 17, ...(await run(s, sd + i * 17)) });
 mkdirSync('docs/sim', { recursive: true });

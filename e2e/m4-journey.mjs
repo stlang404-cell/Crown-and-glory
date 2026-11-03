@@ -341,8 +341,8 @@ for (let guard = 0; guard < 25; guard++) {
 const promo = await market(page, `mk:promo:${S}`), pp = await myPos(page, `mk:promo:${S}`);
 const br = await market(page, `mk:bracket:${S}`);
 const bp = await myPos(page, `mk:bracket:${S}`);
-const brPay = bp ? bp.shares.reduce((a, x, i) => a, 0) : 0; void brPay;
-check(19, promo.status === 'settled' && pp.received === (promo.result === 0 ? 6e6 : 0) && bracketBought && br.status === 'settled' && bp.shares[8] === 4, `Promotion market settled (${promo.result === 0 ? 'Yes' : 'No'}; paid ${(pp.received / 1e6).toFixed(2)} ₵)${bracketBought ? `; conditional final-four market settled on path vector ${JSON.stringify(br.payout)}` : ''}`);
+const brExpected = await page.evaluate(id => { const m = window.__crown.fed.state.markets.get(id); const c = m.claims[8]; return Math.floor(4 * c.states.reduce((a, s) => a + m.payout[s], 0) * 1e6 + 1e-6); }, `mk:bracket:${S}`);
+check(19, promo.status === 'settled' && pp.received === (promo.result === 0 ? 6e6 : 0) && bracketBought && br.status === 'settled' && bp.shares[8] === 4 && bp.received === brExpected, `Promotion market settled (${promo.result === 0 ? 'Yes' : 'No'}; paid ${(pp.received / 1e6).toFixed(2)} ₵)${bracketBought ? `; conditional claim (4 shares) settled on path vector ${JSON.stringify(br.payout)}, paid ${(brExpected / 1e6).toFixed(2)} ₵` : ''}`);
 await page.goto(URL_ + '#/finance');
 await page.waitForSelector('[data-testid="networth"]');
 const fin = await fed(page);
