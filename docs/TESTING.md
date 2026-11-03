@@ -3,7 +3,7 @@
 Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22.23.4, Playwright headless Chromium).
 No Windows machine or physical iPhone was available.
 
-## Automated suites — `npx vitest run`: **135 / 135 passed** (15 files, 170 s)
+## Automated suites — `npx vitest run`: **139 / 139 passed** (16 files, 163 s; after the M3 gap pass)
 
 New in v0.3.0 (the M2 suites below still pass unchanged):
 
@@ -13,6 +13,8 @@ New in v0.3.0 (the M2 suites below still pass unchanged):
 | tests/exchange.test.ts | 12 | LMSR prices/gradient, log-sum-exp stability, no complete-set arbitrage, directed rounding, 4,500 random trades with solvency and bounded maker loss for every outcome, idempotent settlement, no shorting/unfunded buys, cancellation, sandbox/official isolation, quotes, NPC traders use only public forecasts |
 | tests/federationService.test.ts | 8 | creation/persistence, rated player fixture recorded once (contradicting retry ignored), trade → market closed before the game exists → settlement, full season (prizes from escrow, sponsors once, issuance only via mint entries, competitor expense sink, conservation and non-negativity every round), stale/duplicate commands and simulated crash leave state unchanged, assets/upkeep/net worth, mid-season backup export/import + tampered-ledger rejection, no forecast leakage from hidden strength |
 | tests/storage.test.ts | +1 | DB v2 → v3 migration keeps games, ratings and Academy data |
+| tests/styles.test.ts | 3 | every repertoire move legal and within 30 cp of the best; seeded choices stay in the book; universal/endgame never use it; only validated styles are played |
+| tests/federationService.test.ts | +1 | Training Hall sparring is unrated, uses the opponent's exact profile and never becomes a federation result |
 
 Typecheck (`tsc -b`): pass. Production build (`vite build`): pass.
 
@@ -20,7 +22,7 @@ Typecheck (`tsc -b`): pass. Production build (`vite build`): pass.
 
 | Script | Result | Evidence |
 | --- | --- | --- |
-| `e2e/federation.mjs` — **v0.3.0 player acceptance journey, all 18 steps**, starting from a save made by the real v0.2.0 build on the same origin | **PASS** | docs/evidence/v3/journey-log.txt, docs/evidence/v3/*.png (desktop + 390 px phone, no horizontal overflow) |
+| `e2e/federation.mjs` — **v0.3.0 / M3 player acceptance journey, all 18 steps** (+ Training Hall sparring and spectator thinking-time checks), starting from a save made by the real v0.2.0 build on the same origin | **PASS** | docs/evidence/v3/journey-log.txt, docs/evidence/v3/*.png (desktop + 390 px phone, no horizontal overflow) |
 | `e2e/run.mjs` — rated acceptance journey (Gate G) | **PASS** (re-run on v0.3.0) | docs/evidence/e2e-log.txt |
 | `e2e/academy.mjs` — Academy | **PASS** (re-run on v0.3.0) | docs/evidence/academy-log.txt |
 | `e2e/offline.mjs` — service worker, offline engine move | **PASS** (re-run on v0.3.0, Chromium) | docs/evidence/offline-log.txt |
@@ -33,7 +35,8 @@ reopens the browser and compares every federation, finance, rating and game valu
 
 `tools/sim/economy.ts` — 7 strategies × 6 seasons through the real service: conservation and non-negative
 balances in all 42 strategy-seasons; results and interpretation in docs/V3_ECONOMY.md.
-`tools/styles/validate.ts` — style behaviour/strength validation; results in docs/V3_STYLES.md.
+`tools/sim/federation.ts` — 40 seasons headless: rating stability, mobility, careers, champion diversity (docs/V3_FEDERATION.md §7).
+`tools/styles/validate.ts` — style behaviour/strength validation (400 walks + 48 parity games per style); results in docs/V3_STYLES.md.
 
 ---
 

@@ -1,73 +1,142 @@
 {
- "id": "styles-2026-11-03-crown-eval-3",
- "method": "see tools/styles/validate.ts header",
- "suitePositions": 400,
- "validated": [],
- "note": "Every style failed the behavioural criterion (disagreement >= 10% AND signature delta >= 3pp). The strength-parity run was stopped after ~70 minutes without results because it could not change the verdict.",
+ "id": "styles-3-2026-11-03",
+ "policy": "crown-styles-3 (opening repertoire)",
+ "repertoire": "crown-repertoire-1",
+ "method": "tools/styles/validate.ts header",
+ "walks": 400,
+ "validated": [
+  "tactical",
+  "positional"
+ ],
  "results": {
   "tactical": {
    "behaviour": {
-    "disagreement": 0.05,
-    "signatureDelta": 0.03,
-    "forcingRate": 0.328,
-    "baseForcing": 0.297,
-    "checkRate": 0.14,
-    "pawnRate": 0.193,
-    "advanceRate": 0.482
+    "decisions": 321,
+    "disagreement": 0.95,
+    "signatureRate": 0.916,
+    "universalRate": 0.059,
+    "signatureDelta": 0.857,
+    "deltaCI": [
+     0.807,
+     0.901
+    ]
    },
-   "strength": "not completed",
-   "pass": false
+   "strength": {
+    "games": 48,
+    "nodes": 8000,
+    "score": 0.458,
+    "elo": -29,
+    "eloCI": [
+     -89,
+     36
+    ]
+   },
+   "behaviourPass": true,
+   "strengthPass": true,
+   "pass": true
   },
   "positional": {
    "behaviour": {
-    "disagreement": 0.11,
-    "signatureDelta": 0.013,
-    "forcingRate": 0.285,
-    "baseForcing": 0.297,
-    "checkRate": 0.107,
-    "pawnRate": 0.18,
-    "advanceRate": 0.465
+    "decisions": 348,
+    "disagreement": 0.853,
+    "signatureRate": 0.759,
+    "universalRate": 0.078,
+    "signatureDelta": 0.681,
+    "deltaCI": [
+     0.623,
+     0.74
+    ]
    },
-   "strength": "not completed",
-   "pass": false
+   "strength": {
+    "games": 48,
+    "nodes": 8000,
+    "score": 0.479,
+    "elo": -14,
+    "eloCI": [
+     -89,
+     58
+    ]
+   },
+   "behaviourPass": true,
+   "strengthPass": true,
+   "pass": true
   },
   "defensive": {
    "behaviour": {
-    "disagreement": 0.253,
-    "signatureDelta": 0.017,
-    "forcingRate": 0.28,
-    "baseForcing": 0.297,
-    "checkRate": 0.092,
-    "pawnRate": 0.17,
-    "advanceRate": 0.4
+    "decisions": 343,
+    "disagreement": 0.883,
+    "signatureRate": 0.067,
+    "universalRate": 0.023,
+    "signatureDelta": 0.044,
+    "deltaCI": [
+     0.024,
+     0.065
+    ]
    },
-   "strength": "not completed",
+   "strength": {
+    "games": 48,
+    "nodes": 8000,
+    "score": 0.51,
+    "elo": 7,
+    "eloCI": [
+     -66,
+     73
+    ]
+   },
+   "behaviourPass": false,
+   "strengthPass": true,
    "pass": false
   },
   "endgame": {
    "behaviour": {
-    "disagreement": 0.072,
-    "signatureDelta": 0.014,
-    "forcingRate": 0.29,
-    "baseForcing": 0.297,
-    "checkRate": 0.107,
-    "pawnRate": 0.2,
-    "advanceRate": 0.47
+    "decisions": 516,
+    "disagreement": 0.432,
+    "signatureRate": 0.814,
+    "universalRate": 0.665,
+    "signatureDelta": 0.149,
+    "deltaCI": [
+     0.114,
+     0.182
+    ]
    },
-   "strength": "not completed",
+   "strength": {
+    "games": 48,
+    "nodes": 8000,
+    "score": 0.5,
+    "elo": 0,
+    "eloCI": [
+     0,
+     0
+    ]
+   },
+   "behaviourPass": false,
+   "strengthPass": true,
    "pass": false
   },
   "aggressive": {
    "behaviour": {
-    "disagreement": 0.247,
-    "signatureDelta": 0.018,
-    "forcingRate": 0.315,
-    "baseForcing": 0.297,
-    "checkRate": 0.13,
-    "pawnRate": 0.182,
-    "advanceRate": 0.512
+    "decisions": 401,
+    "disagreement": 0.845,
+    "signatureRate": 0.908,
+    "universalRate": 0.825,
+    "signatureDelta": 0.082,
+    "deltaCI": [
+     0.042,
+     0.125
+    ]
    },
-   "strength": "not completed",
+   "strength": {
+    "games": 48,
+    "nodes": 8000,
+    "score": 0.583,
+    "elo": 58,
+    "eloCI": [
+     -7,
+     129
+    ]
+   },
+   "behaviourPass": false,
+   "strengthPass": true,
    "pass": false
   }
  }

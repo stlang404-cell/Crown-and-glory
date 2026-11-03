@@ -53,7 +53,7 @@ export interface MoveRecord {
   clockAfterMs: number | null;
   elapsedMs: number;
   /** Engine move metadata (engine moves only). */
-  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample'; seed: number };
+  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample' | 'repertoire'; seed: number };
 }
 
 export interface AssistanceEvent {

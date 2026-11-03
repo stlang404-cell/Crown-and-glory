@@ -17,7 +17,7 @@ import { FederationService } from '../../src/app/federation';
 import { wdl } from '../../src/federation/resultModel';
 import { PLAYER_ID, ROUNDS_PER_SEASON } from '../../src/federation/model';
 import { MICRO } from '../../src/exchange/ledger';
-import { prices } from '../../src/exchange/lmsr';
+import { prices, cost } from '../../src/exchange/lmsr';
 import { rng01, hashSeed } from '../../src/federation/generator';
 import type { GameRecord } from '../../src/games/types';
 
@@ -99,7 +99,15 @@ async function run(s: Strategy, seed: number) {
     const corr = (() => { const xs = latents.map(c => c.latent), ys = latents.map(c => c.rating); const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length; let sxy = 0, sxx = 0, syy = 0; for (let i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; syy += (ys[i] - my) ** 2; } return sxy / Math.sqrt(sxx * syy); })();
     const settledMine = [...st.positions.values()].filter(p => p.holder === 'player:cash');
     tradeReceived = settledMine.reduce((a, p) => a + p.received, 0);
+    // wealth concentration among competitors (lifetime earnings) and market-maker results on settled markets
+    const earn = [...st.competitors.values()].map(c => c.earnings).sort((a, b) => a - b);
+    const gini = (() => { const n = earn.length, sum = earn.reduce((a, b) => a + b, 0); if (!sum) return 0; let acc = 0; earn.forEach((x, i) => { acc += (2 * (i + 1) - n - 1) * x; }); return acc / (n * sum); })();
+    const top1 = earn.slice(-Math.ceil(earn.length / 100)).reduce((a, b) => a + b, 0) / Math.max(1, earn.reduce((a, b) => a + b, 0));
+    const settled = [...st.markets.values()].filter(m => m.status === 'settled');
+    const makerPnl = settled.reduce((a, m) => a + (cost(m.q, m.b) - cost([0, 0, 0], m.b)) - m.q[m.result!], 0);
+    const worstMaker = settled.reduce((a, m) => Math.min(a, (cost(m.q, m.b) - cost([0, 0, 0], m.b)) - m.q[m.result!]), 0);
     seasons.push({
+      earningsGini: +gini.toFixed(3), top1pctEarningsShare: +top1.toFixed(3), settledMarkets: settled.length, makerPnlTotal: +makerPnl.toFixed(1), makerWorstMarket: +worstMaker.toFixed(1),
       season, playerDivision: st.world.player.division, cash: fin.cash / MICRO, netWorth: fin.netWorth / MICRO, assets: fin.owned.map(a => a.typeId + (a.suspended ? '(suspended)' : '')),
       titles: st.world.player.titles.filter(t => t.season === season).map(t => t.title),
       moneySupply: -svc.balance('mint') / MICRO, circulating: (-svc.balance('mint') - svc.balance('sink')) / MICRO, sink: svc.balance('sink') / MICRO, issuedThisSeason: (-svc.balance('mint') - supply0) / MICRO, treasury: svc.balance('treasury') / MICRO, fees: svc.balance('fees') / MICRO,

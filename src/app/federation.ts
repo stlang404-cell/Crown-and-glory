@@ -278,6 +278,29 @@ export class FederationService {
     return rec;
   }
 
+  /** Training Hall: an unrated practice game against a fixture opponent's exact profile (never a federation result). */
+  async sparringGameFor(fixtureId: string, humanColor: 'white' | 'black'): Promise<GameRecord> {
+    if (!this.ownsAsset('training')) throw new Error('Sparring needs a Training Hall');
+    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
+    if (!f || f.tier !== 1) throw new Error('Not one of your fixtures');
+    const c = this.state!.competitors.get(f.white === PLAYER_ID ? f.black : f.white)!;
+    const profile = profileForStrength(c.latent);
+    const { createGameRecord } = await import('../games/session');
+    const { TIME_CONTROLS } = await import('../games/types');
+    const { LEVELS_ID } = await import('../engine/levels');
+    const { SEARCH_ID } = await import('../engine/search');
+    const { EVAL_ID } = await import('../engine/evaluate');
+    const { playStyle, STYLE_LABEL } = await import('../engine/styles');
+    const style = playStyle(c.style);
+    return createGameRecord({
+      id: `spar-${fixtureId.replace(/:/g, '-')}-${Date.now().toString(36)}`, mode: 'casual', timeControl: TIME_CONTROLS.rapid, humanColor,
+      human: { kind: 'human', id: 'player', name: 'You', rating: null, rd: null },
+      engine: { kind: 'engine', id: `spar:${c.id}`, name: `${c.name} (sparring)`, rating: null, rd: null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-sparring', style: STYLE_LABEL[style], profile, styleId: style } },
+      engineSeed: (Date.now() % 2_147_483_647) >>> 0, nowIso: this.now(),
+      context: { kind: 'quick-match', eventName: `Sparring vs ${c.name}` },
+    });
+  }
+
   /** Called after a federation game has been finalized by the normal (atomic, rated) path. */
   async recordPlayerGame(game: GameRecord): Promise<void> {
     return this.run(async () => {

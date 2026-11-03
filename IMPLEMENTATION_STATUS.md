@@ -33,9 +33,10 @@ calibrated (500 games) and a strict rated browser journey now passes.
 | V3-A federation core (2,048 competitors, careers, tiered simulation, seasons) | **Complete** | tests/federation.test.ts, docs/V3_FEDERATION.md, docs/sim/economy-results.json |
 | V3-B competitive career (leagues, promotion/relegation, Swiss ×2, Championship, Club Weekend, rated federation games, prizes) | **Complete** | tests/federationService.test.ts (full season), e2e/federation.mjs steps 3–7, docs/V3_COMPETITION_RULES.md |
 | V3-C spectator | **Complete** | Live engine games with pause/speed/navigation/eval line, replays, result hidden until the end; e2e steps 8/12 |
-| V3-C AI personalities | **Not shipped — failed validation** | docs/V3_STYLES.md: no style passed the behavioural criterion; all play "Universal" |
+| V3-C AI personalities | **Partial — 2 of 5 validated** | Opening-repertoire styles: Tactical and Positional passed behaviour (+86 / +68 pp) and strength parity (−29 / −14 Elo, 48 games); Aggressive, Defensive, Endgame failed and play Universal. docs/V3_STYLES.md, tests/styles.test.ts |
+| M3 gap pass (Training Hall, spectator thinking-time clocks, 40-season federation simulation, wealth-concentration and market-maker metrics) | **Complete** | docs/M3_GAP_AUDIT.md, tests/federationService.test.ts, docs/sim/ |
 | V3-D Crown Exchange (LMSR, ledger, close-before-play, settlement, research, paper forecasts, NPC traders) | **Complete** | tests/exchange.test.ts, tests/federationService.test.ts (incl. leakage), e2e steps 9–14, docs/V3_EXCHANGE.md |
-| V3-D Sandbox Exchange | **Not started (documented blocker)** | docs/V3_EXCHANGE.md §8, docs/V4_PLAN.md §1; ledger isolation implemented and tested |
+| V3-D Sandbox Exchange | **Not started (documented blocker)** | docs/V3_EXCHANGE.md §8, docs/M4_PLAN.md §1; ledger isolation implemented and tested |
 | V3-E wealth & prestige (finance dashboard, assets with effects/upkeep, recovery, two prestige ladders) | **Complete** | e2e steps 14–16, tests (assets, conservation), docs/V3_ECONOMY.md |
 | V3-F integration (save upgrade, backups, persistence, simulations, docs) | **Complete** | e2e steps 1 and 17–18, tests/storage.test.ts v2→v3, 7-strategy × 6-season simulation |
 
@@ -68,7 +69,8 @@ calibrated (500 games) and a strict rated browser journey now passes.
 
 - No human playing data: level ratings, puzzle difficulty and grade thresholds are not calibrated on humans.
 - The engine remains roughly an order of magnitude less efficient per node than Fairy-Stockfish.
-- Opponent styles are not differentiated: the v0.3.0 style policies failed validation (docs/V3_STYLES.md).
+- Only two opponent styles (Tactical, Positional) are validated, and they shape the first six plies only (docs/V3_STYLES.md).
+- No tournament-winner markets and no in-match trading (docs/M4_PLAN.md).
 - Background (tier-3) federation results are summary results from a fitted model, not games.
 - Economy simulation samples player/featured results instead of playing them; 6 seasons, one seed per strategy.
 - Featured-game speed depends on hardware; an "Advance" with three unwatched featured games takes ~5–20 s.

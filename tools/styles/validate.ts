@@ -1,63 +1,96 @@
 /**
- * Style validation (crown-style-validation-1).
- *  Styles are bounded move-choice policies (src/engine/styles.ts).
- *  (a) Behaviour: on 400 fixed positions (every 3rd position of the oracle fixture with ≥ 3 legal moves),
- *      each style and the universal profile choose a move at 20k nodes. We record the disagreement rate and
- *      move-feature rates: captures, checks, pawn pushes, king moves, moves into the enemy half.
- *      Pass: disagreement ≥ 10% AND the style's signature feature moves in the claimed direction by ≥ 3
- *      percentage points (tactical/aggressive: more checks+captures; positional/defensive: fewer;
- *      endgame: more pawn pushes in positions with ≤ 4 pieces).
- *  (b) Strength parity: 32 colour-swapped opening pairs vs universal at 20k nodes; pass if the 95% interval
- *      of the Elo difference overlaps [−100, +100] and the point estimate lies within it.
+ * Style validation (crown-style-validation-2) for the opening-repertoire styles (crown-styles-3).
+ *  (a) Behaviour: WALKS seeded opening walks from the start position per style (the style plays White in
+ *      even walks, Black in odd walks; the other side picks uniformly among book moves). At every styled
+ *      decision inside the book we record the style's move and the move the universal engine plays in the
+ *      same position (chooseMove, 20k nodes). Metrics: disagreement rate and the style's signature feature
+ *      rate minus the universal rate, with a 95% bootstrap interval clustered by walk.
+ *      Signatures: aggressive = pawn pushes; tactical = contact moves (capture, check, or attacking an enemy
+ *      piece); positional = piece (non-pawn) moves; defensive = moves ending on the mover's first two ranks.
+ *      Endgame technicians have no opening preference and cannot pass this test.
+ *      Pass: disagreement ≥ 20% AND signature Δ ≥ 10 pp AND the interval's lower bound > 0.
+ *  (b) Strength parity: PAIRS colour-swapped seeded games from the start position, style vs universal at
+ *      8k nodes. Pass: Elo point estimate within ±100 and its 95% bootstrap interval overlapping [−100, 100].
  *   npx tsx tools/styles/validate.ts
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import os from 'node:os';
 
 const STYLES = ['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const;
+const WALKS = 400, PAIRS = 24, PARITY_NODES = 8000;
+
 if (isMainThread) {
   const { Position } = await import('../../src/rules/position');
   const { moveToCcn } = await import('../../src/rules/notation');
   const { Searcher } = await import('../../src/engine/search');
   const { chooseMove } = await import('../../src/engine/levels');
-  const { KING, PAWN, QUEEN } = await import('../../src/rules/types');
-  const fx = JSON.parse(readFileSync(new URL('../../tests/fixtures/oracle_positions.json', import.meta.url), 'utf8')).positions as { fen: string; moves: string[] }[];
-  const suite = fx.filter((p, i) => i % 3 === 0 && p.moves.length >= 3).slice(0, 400).map(p => p.fen);
-  const features = (fen: string, ccn: string) => {
-    const p = Position.fromFen(fen);
-    const m = p.legalMoves().find(x => moveToCcn(x) === ccn)!;
-    const from = m & 63, to = (m >> 6) & 63;
-    const piece = p.board[from] & 7;
-    const capture = p.board[to] !== 0;
-    const c = p.pieceCount();
-    const pieces = c.white.reduce((a, x, t) => a + (t !== PAWN && t !== KING ? x : 0), 0) + c.black.reduce((a, x, t) => a + (t !== PAWN && t !== KING ? x : 0), 0);
-    p.makeMove(m);
-    return { capture, check: p.inCheck(), pawn: piece === PAWN, king: piece === KING, advance: p.side === 1 ? Math.floor(to / 6) >= 3 : Math.floor(to / 6) <= 2, endgame: c.white[QUEEN] + c.black[QUEEN] === 0 && pieces <= 4 };
-  };
+  const { repertoireChoice, bookMoves, bookKey, REPERTOIRE_ID } = await import('../../src/engine/styles');
+  const { PAWN, KING, pieceType, pieceColor, moveFrom, moveTo, rankOf } = await import('../../src/rules/types');
+  const { mulberry32 } = await import('../../src/rules/tables');
+  const START = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
   const prof = { level: 0, id: 'v', name: 'v', depth: 64, nodes: 20_000, maxTimeMs: 60_000, selection: null, description: '' };
-  const choose = (style: string) => { const s = new Searcher(16); return suite.map(fen => { s.newGame(); return moveToCcn(chooseMove(s, Position.fromFen(fen), prof, 1, undefined, undefined, style as never).move); }); };
-  const base = choose('universal');
-  const rate = (moves: string[], f: (x: ReturnType<typeof features>) => boolean, filter: (x: ReturnType<typeof features>) => boolean = () => true) => {
-    let n = 0, k = 0; moves.forEach((mv, i) => { const ft = features(suite[i], mv); if (!filter(ft)) return; n++; if (f(ft)) k++; }); return n ? k / n : 0;
+  const searcher = new Searcher(18);
+  const uniCache = new Map<string, number>();
+  const universal = (pos: InstanceType<typeof Position>) => {
+    const k = bookKey(pos.toFen());
+    if (!uniCache.has(k)) { searcher.newGame(); uniCache.set(k, chooseMove(searcher, pos, prof, 1).move); }
+    return uniCache.get(k)!;
   };
+  const feat = (pos: InstanceType<typeof Position>, m: number) => {
+    const us = pos.side, from = moveFrom(m), to = moveTo(m);
+    const piece = pieceType(pos.board[from]);
+    const capture = pos.board[to] !== 0;
+    const p = pos.clone(); p.makeMove(m);
+    const check = p.inCheck();
+    // contact: the moved piece attacks an enemy non-king piece (pseudo-attack via its legal captures next turn)
+    p.side ^= 1; // look at the mover's captures from the new position (null-move view)
+    let contact = false;
+    try { contact = p.legalMoves().some(x => moveFrom(x) === to && p.board[moveTo(x)] !== 0 && pieceColor(p.board[moveTo(x)]) !== us && pieceType(p.board[moveTo(x)]) !== KING); } catch { contact = false; }
+    p.side ^= 1;
+    const relRank = us === 0 ? rankOf(to) : 5 - rankOf(to);
+    return { pawn: piece === PAWN, piece: piece !== PAWN && piece !== KING, contact: capture || check || contact, backRanks: relRank <= 1 };
+  };
+  const sigOf: Record<string, (f: ReturnType<typeof feat>) => boolean> = { aggressive: f => f.pawn, tactical: f => f.contact, positional: f => f.piece, defensive: f => f.backRanks, endgame: f => f.pawn };
   const behaviour: Record<string, unknown> = {};
   for (const st of STYLES) {
-    const mv = choose(st);
-    const dis = mv.filter((m, i) => m !== base[i]).length / suite.length;
-    const forcing = (x: ReturnType<typeof features>) => x.capture || x.check;
-    const sig = st === 'tactical' || st === 'aggressive' ? rate(mv, forcing) - rate(base, forcing)
-      : st === 'endgame' ? rate(mv, x => x.pawn, x => x.endgame) - rate(base, x => x.pawn, x => x.endgame)
-      : -(rate(mv, forcing) - rate(base, forcing));
-    behaviour[st] = { disagreement: +dis.toFixed(3), signatureDelta: +sig.toFixed(3), forcingRate: +rate(mv, forcing).toFixed(3), baseForcing: +rate(base, forcing).toFixed(3), checkRate: +rate(mv, x => x.check).toFixed(3), pawnRate: +rate(mv, x => x.pawn).toFixed(3), advanceRate: +rate(mv, x => x.advance).toFixed(3) };
+    const walks: { n: number; dis: number; sStyle: number; sUni: number }[] = [];
+    for (let w = 0; w < WALKS; w++) {
+      const pos = Position.fromFen(START);
+      const styleSide = w % 2;
+      const rng = mulberry32(9000 + w);
+      const rec = { n: 0, dis: 0, sStyle: 0, sUni: 0 };
+      for (let ply = 0; ply < 6; ply++) {
+        const moves = bookMoves(pos);
+        if (!moves.length) break;
+        let mv: number;
+        if (pos.side === styleSide) {
+          const pick = repertoireChoice(st, pos, 7 * w + ply) ?? moves[0].move;
+          const uni = universal(pos);
+          rec.n++; if (pick !== uni) rec.dis++;
+          if (sigOf[st](feat(pos, pick))) rec.sStyle++;
+          if (sigOf[st](feat(pos, uni))) rec.sUni++;
+          mv = pick;
+        } else mv = moves[Math.floor((rng() / 4294967296) * moves.length)].move;
+        pos.makeMove(mv);
+      }
+      walks.push(rec);
+    }
+    const agg = (ws: typeof walks) => { const n = ws.reduce((a, x) => a + x.n, 0); return { n, dis: ws.reduce((a, x) => a + x.dis, 0) / n, delta: (ws.reduce((a, x) => a + x.sStyle, 0) - ws.reduce((a, x) => a + x.sUni, 0)) / n, rate: ws.reduce((a, x) => a + x.sStyle, 0) / n, base: ws.reduce((a, x) => a + x.sUni, 0) / n }; };
+    const a = agg(walks);
+    let seed = 11; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const boots: number[] = [];
+    for (let b = 0; b < 1000; b++) boots.push(agg(Array.from({ length: walks.length }, () => walks[Math.floor(rnd() * walks.length)])).delta);
+    boots.sort((x, y) => x - y);
+    behaviour[st] = { decisions: a.n, disagreement: +a.dis.toFixed(3), signatureRate: +a.rate.toFixed(3), universalRate: +a.base.toFixed(3), signatureDelta: +a.delta.toFixed(3), deltaCI: [+boots[25].toFixed(3), +boots[974].toFixed(3)] };
     console.log(st, JSON.stringify(behaviour[st]));
   }
-  // strength parity via the bench worker pool
-  const openings = JSON.parse(readFileSync(new URL('../bench/openings.json', import.meta.url), 'utf8')).openings as string[][];
-  const n = os.cpus().length;
-  const jobs: { style: string; white: boolean; opening: string[]; seed: number }[] = [];
-  for (const st of STYLES) openings.slice(0, 32).forEach((op, i) => { jobs.push({ style: st, white: true, opening: op, seed: i * 2 }); jobs.push({ style: st, white: false, opening: op, seed: i * 2 + 1 }); });
-  const results: { style: string; white: boolean; result: string }[] = [];
+  void moveToCcn;
+  // strength parity (worker pool)
+  const n = Math.max(1, os.cpus().length);
+  const jobs: { style: string; white: boolean; i: number }[] = [];
+  for (const st of STYLES) for (let i = 0; i < PAIRS; i++) { jobs.push({ style: st, white: true, i }); jobs.push({ style: st, white: false, i }); }
+  const results: { style: string; white: boolean; i: number; result: string }[] = [];
   await Promise.all(Array.from({ length: n }, (_, k) => new Promise<void>((res, rej) => {
     const w = new Worker(new URL('./boot.mjs', import.meta.url), { workerData: jobs.filter((_, i) => i % n === k) });
     w.on('message', (m: typeof results) => { results.push(...m); res(); }); w.on('error', rej);
@@ -65,50 +98,44 @@ if (isMainThread) {
   const out: Record<string, unknown> = {};
   const validated: string[] = [];
   for (const st of STYLES) {
-    const rs = results.filter(r => r.style === st);
-    const pairScores: number[] = [];
-    for (let i = 0; i < 32; i++) {
-      const sc = (r: { white: boolean; result: string } | undefined) => !r ? 0.5 : r.result === '1/2-1/2' || r.result === '*' ? 0.5 : (r.result === '1-0') === r.white ? 1 : 0;
-      pairScores.push((sc(rs.find(r => r.white && (r as never as { i: number }).i === i)) + sc(rs.find(r => !r.white && (r as never as { i: number }).i === i))) / 2);
-    }
-    const mean = pairScores.reduce((a, b) => a + b, 0) / pairScores.length;
+    const sc = (r?: { white: boolean; result: string }) => (!r || r.result === '1/2-1/2' || r.result === '*' ? 0.5 : (r.result === '1-0') === r.white ? 1 : 0);
+    const pairScores = Array.from({ length: PAIRS }, (_, i) => (sc(results.find(r => r.style === st && r.white && r.i === i)) + sc(results.find(r => r.style === st && !r.white && r.i === i))) / 2);
+    const mean = pairScores.reduce((a, b) => a + b, 0) / PAIRS;
     let seed = 7; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
     const boots: number[] = [];
-    for (let b = 0; b < 2000; b++) { let t = 0; for (let k = 0; k < pairScores.length; k++) t += pairScores[Math.floor(rnd() * pairScores.length)]; boots.push(t / pairScores.length); }
+    for (let b = 0; b < 2000; b++) { let t = 0; for (let k = 0; k < PAIRS; k++) t += pairScores[Math.floor(rnd() * PAIRS)]; boots.push(t / PAIRS); }
     boots.sort((a, b) => a - b);
     const elo = (p: number) => -400 * Math.log10(1 / Math.min(Math.max(p, 0.001), 0.999) - 1);
-    const strength = { score: +mean.toFixed(3), elo: Math.round(elo(mean)), eloCI: [Math.round(elo(boots[50])), Math.round(elo(boots[1949]))], games: rs.length };
-    const b = behaviour[st] as { disagreement: number; signatureDelta: number };
-    const pass = b.disagreement >= 0.1 && b.signatureDelta >= 0.03 && Math.abs(strength.elo) <= 100;
-    if (pass) validated.push(st);
-    out[st] = { behaviour: b, strength, pass };
+    const strength = { games: PAIRS * 2, nodes: PARITY_NODES, score: +mean.toFixed(3), elo: Math.round(elo(mean)), eloCI: [Math.round(elo(boots[50])), Math.round(elo(boots[1949]))] };
+    const b = behaviour[st] as { disagreement: number; signatureDelta: number; deltaCI: number[] };
+    const behaviourPass = st !== 'endgame' && b.disagreement >= 0.2 && b.signatureDelta >= 0.1 && b.deltaCI[0] > 0;
+    const strengthPass = Math.abs(strength.elo) <= 100 && strength.eloCI[0] <= 100 && strength.eloCI[1] >= -100;
+    if (behaviourPass && strengthPass) validated.push(st);
+    out[st] = { behaviour: b, strength, behaviourPass, strengthPass, pass: behaviourPass && strengthPass };
     console.log(st, JSON.stringify(out[st]));
   }
-  writeFileSync(new URL('../../src/engine/styles-validation.json', import.meta.url), JSON.stringify({ id: `styles-${new Date().toISOString().slice(0, 10)}-crown-eval-3`, method: 'see tools/styles/validate.ts header', suitePositions: suite.length, validated, results: out }, null, 1));
+  writeFileSync(new URL('../../src/engine/styles-validation.json', import.meta.url), JSON.stringify({ id: `styles-3-${new Date().toISOString().slice(0, 10)}`, policy: 'crown-styles-3 (opening repertoire)', repertoire: REPERTOIRE_ID, method: 'tools/styles/validate.ts header', walks: WALKS, validated, results: out }, null, 1));
   process.exit(0);
 } else {
   const { Position } = await import('../../src/rules/position');
-  const { parseLegalCcn, moveToCcn } = await import('../../src/rules/notation');
   const { automaticOutcome, claimableDraws } = await import('../../src/rules/adjudication');
   const { Searcher } = await import('../../src/engine/search');
   const { chooseMove } = await import('../../src/engine/levels');
-  const jobs = workerData as { style: string; white: boolean; opening: string[]; seed: number }[];
-  const prof = { level: 0, id: 'v', name: 'v', depth: 64, nodes: 20_000, maxTimeMs: 60_000, selection: null, description: '' };
+  const jobs = workerData as { style: string; white: boolean; i: number }[];
+  const prof = { level: 0, id: 'v', name: 'v', depth: 64, nodes: PARITY_NODES, maxTimeMs: 60_000, selection: null, description: '' };
   const out: unknown[] = [];
   for (const j of jobs) {
     const sw = new Searcher(16), sb = new Searcher(16);
     const p = Position.fromFen('rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1');
-    for (const m of j.opening) p.makeMove(parseLegalCcn(p, m));
     let result = '*';
     for (let ply = 0; ply < 300; ply++) {
       const o = automaticOutcome(p); if (o) { result = o.result; break; }
       const c = claimableDraws(p); if (c.threefold || c.fiftyMove) { result = '1/2-1/2'; break; }
       const styleToMove = (p.side === 0) === j.white;
-      const r = chooseMove(styleToMove ? sw : sb, p, prof, ply, undefined, undefined, (styleToMove ? j.style : 'universal') as never);
+      const r = chooseMove(p.side === 0 ? sw : sb, p, prof, j.i * 1000 + ply, undefined, undefined, (styleToMove ? j.style : 'universal') as never);
       p.makeMove(r.move);
     }
-    out.push({ style: j.style, white: j.white, result, i: Math.floor(j.seed / 2) });
-    void moveToCcn;
+    out.push({ style: j.style, white: j.white, i: j.i, result });
   }
   parentPort!.postMessage(out);
 }

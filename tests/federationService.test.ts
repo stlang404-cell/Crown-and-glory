@@ -205,4 +205,20 @@ describe('federation service', () => {
       expect(await svc.worldGame(`wg:${fx.id}`)).toBeUndefined();
     }
   });
+
+  it('Training Hall: sparring is an unrated casual game vs the fixture opponent profile, never a federation result', async () => {
+    const { svc } = await make();
+    await svc.create(2, 77);
+    const [fx] = svc.playerFixtures();
+    await expect(svc.sparringGameFor(fx.id, 'white')).rejects.toThrow(/Training Hall/);
+    await svc.buyAsset('training');
+    const g = await svc.sparringGameFor(fx.id, 'white');
+    expect(g.rated).toBe(false);
+    expect(g.context.kind).toBe('quick-match');
+    const real = await svc.playerGameFor(fx.id, { rating: 1500, rd: 200 });
+    const opp = (x: typeof g) => (x.humanColor === 'white' ? x.black : x.white).engine!.profile;
+    expect(opp(g)).toEqual(opp(real));
+    await svc.recordPlayerGame({ ...g, result: '1-0', status: 'finalized' } as typeof g); // ignored: not a federation game
+    expect(svc.currentRound()!.fixtures.find(f => f.id === fx.id)!.result).toBeNull();
+  });
 });

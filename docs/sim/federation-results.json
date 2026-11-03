@@ -1,0 +1,812 @@
+{
+ "id": "crown-sim-fed-1",
+ "seed": 42,
+ "seasons": 40,
+ "seconds": 15,
+ "championTitles": 41,
+ "distinctChampions": 18,
+ "mostTitles": 7,
+ "results": [
+  {
+   "season": 1,
+   "ms": 472,
+   "active": 2048,
+   "retired": 49,
+   "entrants": 49,
+   "ratingMean": 1834.2,
+   "ratingSd": 448.2,
+   "latentMean": 1831.1,
+   "ratingMinusLatent": 3.1,
+   "corrRatingLatent": 0.986,
+   "meanRd": 91.1,
+   "maxRating": 2891,
+   "divisionMoves": 443,
+   "mobility": 0.216,
+   "champions": [
+    "Yatis Dargrave"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 2,
+   "ms": 339,
+   "active": 2048,
+   "retired": 79,
+   "entrants": 79,
+   "ratingMean": 1834.6,
+   "ratingSd": 447.9,
+   "latentMean": 1833,
+   "ratingMinusLatent": 1.6,
+   "corrRatingLatent": 0.985,
+   "meanRd": 83.6,
+   "maxRating": 2813,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Jodan Valemore"
+   ],
+   "top16MeanAge": 26.8
+  },
+  {
+   "season": 3,
+   "ms": 386,
+   "active": 2048,
+   "retired": 100,
+   "entrants": 100,
+   "ratingMean": 1835.1,
+   "ratingSd": 448.8,
+   "latentMean": 1834.5,
+   "ratingMinusLatent": 0.6,
+   "corrRatingLatent": 0.985,
+   "meanRd": 82.5,
+   "maxRating": 2784,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Lelan Glenbury"
+   ],
+   "top16MeanAge": 27.7
+  },
+  {
+   "season": 4,
+   "ms": 416,
+   "active": 2048,
+   "retired": 98,
+   "entrants": 98,
+   "ratingMean": 1835.3,
+   "ratingSd": 448.1,
+   "latentMean": 1834.7,
+   "ratingMinusLatent": 0.6,
+   "corrRatingLatent": 0.985,
+   "meanRd": 81.3,
+   "maxRating": 2770,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Jomira Darstead"
+   ],
+   "top16MeanAge": 26.5
+  },
+  {
+   "season": 5,
+   "ms": 426,
+   "active": 2048,
+   "retired": 103,
+   "entrants": 103,
+   "ratingMean": 1834.4,
+   "ratingSd": 447.7,
+   "latentMean": 1836.1,
+   "ratingMinusLatent": -1.7,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.4,
+   "maxRating": 2794,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Elnis Glenden"
+   ],
+   "top16MeanAge": 25.1
+  },
+  {
+   "season": 6,
+   "ms": 310,
+   "active": 2048,
+   "retired": 96,
+   "entrants": 96,
+   "ratingMean": 1834.7,
+   "ratingSd": 447.2,
+   "latentMean": 1836.3,
+   "ratingMinusLatent": -1.6,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.6,
+   "maxRating": 2812,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Noren Fenley"
+   ],
+   "top16MeanAge": 25.8
+  },
+  {
+   "season": 7,
+   "ms": 315,
+   "active": 2048,
+   "retired": 110,
+   "entrants": 110,
+   "ratingMean": 1835.3,
+   "ratingSd": 446.2,
+   "latentMean": 1837.7,
+   "ratingMinusLatent": -2.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.1,
+   "maxRating": 2803,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Jomira Darstead",
+    "Riella Darby"
+   ],
+   "top16MeanAge": 26.4
+  },
+  {
+   "season": 8,
+   "ms": 371,
+   "active": 2048,
+   "retired": 91,
+   "entrants": 91,
+   "ratingMean": 1835.2,
+   "ratingSd": 447.4,
+   "latentMean": 1838.2,
+   "ratingMinusLatent": -2.9,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.1,
+   "maxRating": 2854,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Ritor Craneworth"
+   ],
+   "top16MeanAge": 26.8
+  },
+  {
+   "season": 9,
+   "ms": 379,
+   "active": 2048,
+   "retired": 104,
+   "entrants": 104,
+   "ratingMean": 1836.1,
+   "ratingSd": 446.4,
+   "latentMean": 1839.2,
+   "ratingMinusLatent": -3.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.3,
+   "maxRating": 2918,
+   "divisionMoves": 432,
+   "mobility": 0.211,
+   "champions": [
+    "Ritor Craneworth"
+   ],
+   "top16MeanAge": 26.9
+  },
+  {
+   "season": 10,
+   "ms": 431,
+   "active": 2048,
+   "retired": 95,
+   "entrants": 95,
+   "ratingMean": 1835.1,
+   "ratingSd": 446.5,
+   "latentMean": 1840,
+   "ratingMinusLatent": -4.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80.4,
+   "maxRating": 2862,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Wisha Cranestead"
+   ],
+   "top16MeanAge": 27.3
+  },
+  {
+   "season": 11,
+   "ms": 437,
+   "active": 2048,
+   "retired": 88,
+   "entrants": 88,
+   "ratingMean": 1835.7,
+   "ratingSd": 446.6,
+   "latentMean": 1840.6,
+   "ratingMinusLatent": -4.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.5,
+   "maxRating": 2914,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Ritor Craneworth"
+   ],
+   "top16MeanAge": 28.1
+  },
+  {
+   "season": 12,
+   "ms": 394,
+   "active": 2048,
+   "retired": 93,
+   "entrants": 93,
+   "ratingMean": 1835.6,
+   "ratingSd": 446.8,
+   "latentMean": 1840.9,
+   "ratingMinusLatent": -5.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.9,
+   "maxRating": 2888,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 29.2
+  },
+  {
+   "season": 13,
+   "ms": 393,
+   "active": 2048,
+   "retired": 82,
+   "entrants": 82,
+   "ratingMean": 1836.4,
+   "ratingSd": 446.2,
+   "latentMean": 1841.2,
+   "ratingMinusLatent": -4.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 78.8,
+   "maxRating": 2844,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Wivin Hollowby"
+   ],
+   "top16MeanAge": 29.9
+  },
+  {
+   "season": 14,
+   "ms": 378,
+   "active": 2048,
+   "retired": 95,
+   "entrants": 95,
+   "ratingMean": 1837.1,
+   "ratingSd": 447.3,
+   "latentMean": 1841.2,
+   "ratingMinusLatent": -4.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.1,
+   "maxRating": 2881,
+   "divisionMoves": 434,
+   "mobility": 0.212,
+   "champions": [
+    "Ritor Craneworth"
+   ],
+   "top16MeanAge": 30.4
+  },
+  {
+   "season": 15,
+   "ms": 356,
+   "active": 2048,
+   "retired": 110,
+   "entrants": 110,
+   "ratingMean": 1837.2,
+   "ratingSd": 446.5,
+   "latentMean": 1842.8,
+   "ratingMinusLatent": -5.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.9,
+   "maxRating": 2908,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Ritor Craneworth"
+   ],
+   "top16MeanAge": 31
+  },
+  {
+   "season": 16,
+   "ms": 397,
+   "active": 2048,
+   "retired": 84,
+   "entrants": 84,
+   "ratingMean": 1837.9,
+   "ratingSd": 447.1,
+   "latentMean": 1842.1,
+   "ratingMinusLatent": -4.2,
+   "corrRatingLatent": 0.983,
+   "meanRd": 79.2,
+   "maxRating": 2860,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 33
+  },
+  {
+   "season": 17,
+   "ms": 359,
+   "active": 2048,
+   "retired": 100,
+   "entrants": 100,
+   "ratingMean": 1838,
+   "ratingSd": 446.9,
+   "latentMean": 1841.7,
+   "ratingMinusLatent": -3.6,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.7,
+   "maxRating": 2885,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 32.9
+  },
+  {
+   "season": 18,
+   "ms": 425,
+   "active": 2048,
+   "retired": 114,
+   "entrants": 114,
+   "ratingMean": 1838.8,
+   "ratingSd": 446.5,
+   "latentMean": 1843.6,
+   "ratingMinusLatent": -4.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 82.4,
+   "maxRating": 2892,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Rona Goldworth"
+   ],
+   "top16MeanAge": 33.8
+  },
+  {
+   "season": 19,
+   "ms": 465,
+   "active": 2048,
+   "retired": 104,
+   "entrants": 104,
+   "ratingMean": 1839.2,
+   "ratingSd": 446.4,
+   "latentMean": 1843.9,
+   "ratingMinusLatent": -4.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.5,
+   "maxRating": 2918,
+   "divisionMoves": 420,
+   "mobility": 0.205,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 34.3
+  },
+  {
+   "season": 20,
+   "ms": 466,
+   "active": 2048,
+   "retired": 79,
+   "entrants": 79,
+   "ratingMean": 1839.4,
+   "ratingSd": 446.5,
+   "latentMean": 1844.5,
+   "ratingMinusLatent": -5.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 78.6,
+   "maxRating": 2929,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 35.4
+  },
+  {
+   "season": 21,
+   "ms": 360,
+   "active": 2048,
+   "retired": 109,
+   "entrants": 109,
+   "ratingMean": 1839.5,
+   "ratingSd": 446.4,
+   "latentMean": 1845.3,
+   "ratingMinusLatent": -5.8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.6,
+   "maxRating": 2933,
+   "divisionMoves": 435,
+   "mobility": 0.212,
+   "champions": [
+    "Elnis Glenden"
+   ],
+   "top16MeanAge": 33.3
+  },
+  {
+   "season": 22,
+   "ms": 292,
+   "active": 2048,
+   "retired": 114,
+   "entrants": 114,
+   "ratingMean": 1839.2,
+   "ratingSd": 446.9,
+   "latentMean": 1847.3,
+   "ratingMinusLatent": -8,
+   "corrRatingLatent": 0.984,
+   "meanRd": 82.5,
+   "maxRating": 2873,
+   "divisionMoves": 428,
+   "mobility": 0.209,
+   "champions": [
+    "Casel Rookgrave"
+   ],
+   "top16MeanAge": 31.4
+  },
+  {
+   "season": 23,
+   "ms": 374,
+   "active": 2048,
+   "retired": 106,
+   "entrants": 106,
+   "ratingMean": 1839.7,
+   "ratingSd": 445.5,
+   "latentMean": 1847.7,
+   "ratingMinusLatent": -8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.8,
+   "maxRating": 2831,
+   "divisionMoves": 425,
+   "mobility": 0.208,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 28.6
+  },
+  {
+   "season": 24,
+   "ms": 393,
+   "active": 2048,
+   "retired": 108,
+   "entrants": 108,
+   "ratingMean": 1838.4,
+   "ratingSd": 445.2,
+   "latentMean": 1847.6,
+   "ratingMinusLatent": -9.2,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82,
+   "maxRating": 2807,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Kaden Hartby"
+   ],
+   "top16MeanAge": 28.1
+  },
+  {
+   "season": 25,
+   "ms": 386,
+   "active": 2048,
+   "retired": 103,
+   "entrants": 103,
+   "ratingMean": 1836.8,
+   "ratingSd": 445.8,
+   "latentMean": 1849.4,
+   "ratingMinusLatent": -12.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 81.3,
+   "maxRating": 2788,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Fath Ironridge"
+   ],
+   "top16MeanAge": 28.4
+  },
+  {
+   "season": 26,
+   "ms": 380,
+   "active": 2048,
+   "retired": 91,
+   "entrants": 91,
+   "ratingMean": 1836.6,
+   "ratingSd": 445.6,
+   "latentMean": 1850.8,
+   "ratingMinusLatent": -14.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80,
+   "maxRating": 2783,
+   "divisionMoves": 427,
+   "mobility": 0.208,
+   "champions": [
+    "Gath Mossbury"
+   ],
+   "top16MeanAge": 28.1
+  },
+  {
+   "season": 27,
+   "ms": 419,
+   "active": 2048,
+   "retired": 93,
+   "entrants": 93,
+   "ratingMean": 1837,
+   "ratingSd": 446.1,
+   "latentMean": 1850.6,
+   "ratingMinusLatent": -13.7,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80,
+   "maxRating": 2831,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Ulren Fairworth"
+   ],
+   "top16MeanAge": 28.9
+  },
+  {
+   "season": 28,
+   "ms": 453,
+   "active": 2048,
+   "retired": 117,
+   "entrants": 117,
+   "ratingMean": 1836.9,
+   "ratingSd": 446.8,
+   "latentMean": 1851.3,
+   "ratingMinusLatent": -14.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 82.6,
+   "maxRating": 2831,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Gath Mossbury"
+   ],
+   "top16MeanAge": 28.6
+  },
+  {
+   "season": 29,
+   "ms": 316,
+   "active": 2048,
+   "retired": 106,
+   "entrants": 106,
+   "ratingMean": 1837.1,
+   "ratingSd": 447.6,
+   "latentMean": 1853.2,
+   "ratingMinusLatent": -16.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.8,
+   "maxRating": 2846,
+   "divisionMoves": 429,
+   "mobility": 0.209,
+   "champions": [
+    "Kaden Hartby"
+   ],
+   "top16MeanAge": 29.4
+  },
+  {
+   "season": 30,
+   "ms": 289,
+   "active": 2048,
+   "retired": 90,
+   "entrants": 90,
+   "ratingMean": 1836.7,
+   "ratingSd": 447.9,
+   "latentMean": 1853.4,
+   "ratingMinusLatent": -16.7,
+   "corrRatingLatent": 0.984,
+   "meanRd": 80,
+   "maxRating": 2828,
+   "divisionMoves": 431,
+   "mobility": 0.21,
+   "champions": [
+    "Casel Rookgrave"
+   ],
+   "top16MeanAge": 29.2
+  },
+  {
+   "season": 31,
+   "ms": 338,
+   "active": 2048,
+   "retired": 97,
+   "entrants": 97,
+   "ratingMean": 1835.8,
+   "ratingSd": 448.5,
+   "latentMean": 1852.9,
+   "ratingMinusLatent": -17.1,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.5,
+   "maxRating": 2884,
+   "divisionMoves": 423,
+   "mobility": 0.207,
+   "champions": [
+    "Casel Rookgrave"
+   ],
+   "top16MeanAge": 29.3
+  },
+  {
+   "season": 32,
+   "ms": 329,
+   "active": 2048,
+   "retired": 81,
+   "entrants": 81,
+   "ratingMean": 1834.7,
+   "ratingSd": 448.3,
+   "latentMean": 1852.2,
+   "ratingMinusLatent": -17.4,
+   "corrRatingLatent": 0.983,
+   "meanRd": 78.7,
+   "maxRating": 2880,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Casel Rookgrave"
+   ],
+   "top16MeanAge": 30.1
+  },
+  {
+   "season": 33,
+   "ms": 307,
+   "active": 2048,
+   "retired": 75,
+   "entrants": 75,
+   "ratingMean": 1834.2,
+   "ratingSd": 448.6,
+   "latentMean": 1853.9,
+   "ratingMinusLatent": -19.7,
+   "corrRatingLatent": 0.984,
+   "meanRd": 77.7,
+   "maxRating": 2860,
+   "divisionMoves": 432,
+   "mobility": 0.211,
+   "champions": [
+    "Gath Mossbury"
+   ],
+   "top16MeanAge": 31.3
+  },
+  {
+   "season": 34,
+   "ms": 354,
+   "active": 2048,
+   "retired": 98,
+   "entrants": 98,
+   "ratingMean": 1834.5,
+   "ratingSd": 448.1,
+   "latentMean": 1853.1,
+   "ratingMinusLatent": -18.6,
+   "corrRatingLatent": 0.982,
+   "meanRd": 80.2,
+   "maxRating": 2868,
+   "divisionMoves": 422,
+   "mobility": 0.206,
+   "champions": [
+    "Casel Thornshaw"
+   ],
+   "top16MeanAge": 30.5
+  },
+  {
+   "season": 35,
+   "ms": 419,
+   "active": 2048,
+   "retired": 97,
+   "entrants": 97,
+   "ratingMean": 1833.8,
+   "ratingSd": 447.9,
+   "latentMean": 1852.6,
+   "ratingMinusLatent": -18.8,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.4,
+   "maxRating": 2859,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Nenis Wrenshaw"
+   ],
+   "top16MeanAge": 31.6
+  },
+  {
+   "season": 36,
+   "ms": 511,
+   "active": 2048,
+   "retired": 97,
+   "entrants": 97,
+   "ratingMean": 1833.9,
+   "ratingSd": 448,
+   "latentMean": 1851.2,
+   "ratingMinusLatent": -17.3,
+   "corrRatingLatent": 0.983,
+   "meanRd": 80.4,
+   "maxRating": 2865,
+   "divisionMoves": 422,
+   "mobility": 0.206,
+   "champions": [
+    "Gath Mossbury"
+   ],
+   "top16MeanAge": 31.3
+  },
+  {
+   "season": 37,
+   "ms": 390,
+   "active": 2048,
+   "retired": 78,
+   "entrants": 78,
+   "ratingMean": 1833.6,
+   "ratingSd": 447.7,
+   "latentMean": 1849.7,
+   "ratingMinusLatent": -16.1,
+   "corrRatingLatent": 0.984,
+   "meanRd": 78.3,
+   "maxRating": 2881,
+   "divisionMoves": 430,
+   "mobility": 0.21,
+   "champions": [
+    "Casel Rookgrave"
+   ],
+   "top16MeanAge": 30.9
+  },
+  {
+   "season": 38,
+   "ms": 338,
+   "active": 2048,
+   "retired": 89,
+   "entrants": 89,
+   "ratingMean": 1832.7,
+   "ratingSd": 447.4,
+   "latentMean": 1848.2,
+   "ratingMinusLatent": -15.5,
+   "corrRatingLatent": 0.984,
+   "meanRd": 79.3,
+   "maxRating": 2840,
+   "divisionMoves": 433,
+   "mobility": 0.211,
+   "champions": [
+    "Gath Mossbury"
+   ],
+   "top16MeanAge": 31.9
+  },
+  {
+   "season": 39,
+   "ms": 389,
+   "active": 2048,
+   "retired": 115,
+   "entrants": 115,
+   "ratingMean": 1832.1,
+   "ratingSd": 446.2,
+   "latentMean": 1847.4,
+   "ratingMinusLatent": -15.3,
+   "corrRatingLatent": 0.984,
+   "meanRd": 82.2,
+   "maxRating": 2871,
+   "divisionMoves": 424,
+   "mobility": 0.207,
+   "champions": [
+    "Nenis Wrenshaw"
+   ],
+   "top16MeanAge": 32.3
+  },
+  {
+   "season": 40,
+   "ms": 474,
+   "active": 2048,
+   "retired": 106,
+   "entrants": 106,
+   "ratingMean": 1831.5,
+   "ratingSd": 445.9,
+   "latentMean": 1846.4,
+   "ratingMinusLatent": -14.9,
+   "corrRatingLatent": 0.984,
+   "meanRd": 81.7,
+   "maxRating": 2916,
+   "divisionMoves": 426,
+   "mobility": 0.208,
+   "champions": [
+    "Nenis Wrenshaw"
+   ],
+   "top16MeanAge": 31.1
+  }
+ ]
+}

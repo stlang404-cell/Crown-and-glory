@@ -1,4 +1,4 @@
-# v0.4.0 plan — “The Open Market” (detailed)
+# M4 plan (v0.4.0) — “The Open Market”
 
 Starting point: v0.3.0 (this release). Every item below names its acceptance evidence; nothing ships as
 "complete" because a screen exists. Order is by dependency and player value.
@@ -16,15 +16,24 @@ official wealth, records or achievements.
 - Acceptance: unit tests for isolation (no official account ever changes), "cannot profit by losing" property
   test over random games, browser journey (grant → back yourself → win → settle → official finance unchanged).
 
-## 2. Validated personalities (v0.3.0 shipped none)
+## 2. More validated personalities
 
-v0.3.0 measured the bounded move-choice styles and none passed (docs/V3_STYLES.md). Next:
+M3 validated two opening-repertoire styles (Tactical, Positional; docs/V3_STYLES.md). Next:
 
-- Widen the candidate set adaptively (margin by depth and phase, e.g. 30–60 cp in quiet positions only)
-  and add style-specific *search* changes (e.g. aggressive: king-safety-weighted eval terms; defensive:
-  draw-score contempt), each tuned with the existing parity harness.
-- Behaviour suite: 1,000 positions, features with confidence intervals; strength parity on 128 pairs.
-- Acceptance: at least two styles pass both criteria at two node budgets; the UI shows only those.
+- Aggressive: redefine the preference around king-side pawn storms and queen activity (the engine already
+  pushes pawns, so pawn pushes are not a distinguishing signature); Defensive: draw-weighted contempt in search.
+- Middlegame character: style-specific search terms (contempt, king-safety weights) tuned with the parity harness.
+- Endgame technician: a separate endgame-position suite (behaviour = conversion rate in won endgames).
+- Bigger samples: 128 parity pairs and two node budgets; measure the book's effect on weak (L1–L4) competitors.
+- Acceptance: each new style passes behaviour (Δ ≥ 10 pp, CI > 0) and parity at both budgets.
+
+## 2b. Tournament-winner and in-match markets
+
+- Tournament-winner markets (Federation Open, Crown Championship): one LMSR over all entrants with funded
+  subsidy b·ln n; joint champions settle each share at 1/k; trading closes before round 1; property tests for
+  solvency with n up to 32 and leakage tests that no round result exists while trading is open.
+- In-match trading: only between featured games' moves when the game is generated move by move after the
+  previous trading window closes (no precomputed result); window and price-update rules to be specified.
 
 ## 3. Deeper federation life
 

@@ -13,7 +13,7 @@ import { Position } from '../rules/position';
 import { Move } from '../rules/types';
 import { Searcher, SearchResult, isMateScore } from './search';
 import type { EvalWeights } from './evaluate';
-import { STYLE_MARGIN_CP, stylePreference } from './styles';
+import { repertoireChoice } from './styles';
 import type { StyleId } from '../federation/model';
 import { mulberry32 } from '../rules/tables';
 
@@ -67,7 +67,7 @@ export interface ChooseResult {
   search: SearchResult;
   /** Exact scores of candidate moves when bounded selection was used. */
   candidates?: { move: Move; score: number }[];
-  selected: 'best' | 'bounded-sample';
+  selected: 'best' | 'bounded-sample' | 'repertoire';
 }
 
 /**
@@ -81,19 +81,10 @@ export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthP
     stopOnSingleMove: true,
     weights: evalWeights,
   });
-  if (!profile.selection && style !== 'universal' && !isMateScore(search.score) && search.depth >= 3) {
-    // bounded style choice among near-equal moves (src/engine/styles.ts)
-    const legal = pos.legalMoves();
-    if (legal.length > 1) {
-      const scored = searcher.scoreRootMoves(pos, legal, Math.max(1, search.depth - 2), { weights: evalWeights }).filter(x => Number.isFinite(x.score));
-      const best = Math.max(...scored.map(x => x.score));
-      const near = scored.filter(x => x.score >= best - STYLE_MARGIN_CP && !isMateScore(x.score));
-      if (near.length > 1 && near.some(x => x.move === search.bestMove)) {
-        let pick = search.bestMove, pickPref = stylePreference(style, pos, search.bestMove);
-        for (const x of near) { const pr = stylePreference(style, pos, x.move); if (pr > pickPref) { pick = x.move; pickPref = pr; } }
-        return { move: pick, search, candidates: scored, selected: pick === search.bestMove ? 'best' : 'bounded-sample' };
-      }
-    }
+  // styled opening repertoire (src/engine/styles.ts): only book moves within 30 cp of the best at depth 7
+  if (style !== 'universal') {
+    const book = repertoireChoice(style, pos, seed);
+    if (book !== null) return { move: book, search, selected: book === search.bestMove ? 'best' : 'repertoire' };
   }
   if (!profile.selection || isMateScore(search.score)) return { move: search.bestMove, search, selected: 'best' };
   const legal = pos.legalMoves();

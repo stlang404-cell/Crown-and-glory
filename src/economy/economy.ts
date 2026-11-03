@@ -37,7 +37,7 @@ export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number 
   'champ-qualified': { label: 'Championship qualification', amount: C(300) },
 };
 
-export interface AssetType { id: string; name: string; kind: 'club' | 'analyst' | 'scouting' | 'trophy'; price: number; bond: number; resale: number; upkeep: number; effect: string; unique: boolean }
+export interface AssetType { id: string; name: string; kind: 'club' | 'analyst' | 'scouting' | 'training' | 'trophy'; price: number; bond: number; resale: number; upkeep: number; effect: string; unique: boolean }
 export const ASSETS: AssetType[] = [
   { id: 'club', name: 'Starter Chess Club', kind: 'club', price: C(500), bond: C(300), resale: 0, upkeep: C(40), unique: true,
     effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club. Upkeep usually exceeds Club Weekend income: a prestige purchase, not an investment.' },
@@ -45,6 +45,8 @@ export const ASSETS: AssetType[] = [
     effect: 'Exchange research desk: full forecast breakdown (expected score, rating uncertainty, draw model), price history charts and your forecast track record. Uses public information only.' },
   { id: 'scouting', name: 'Scouting Department', kind: 'scouting', price: C(200), bond: 0, resale: C(100), upkeep: C(15), unique: true,
     effect: 'Unlimited competitor watchlist (3 without it) and an automatic dossier on your next league opponent: rating trend, form, results against common opponents and their recorded games.' },
+  { id: 'training', name: 'Training Hall', kind: 'training', price: C(250), bond: 0, resale: C(125), upkeep: C(20), unique: true,
+    effect: 'Sparring: unlimited unrated practice games against your next federation opponent, using their exact engine strength profile and style. Practice only: sparring games never count for ratings, standings or prizes.' },
   { id: 'trophy-cabinet', name: 'Walnut Trophy Cabinet', kind: 'trophy', price: C(120), bond: 0, resale: C(60), upkeep: 0, unique: true, effect: 'Displays your titles on your Passport. Cosmetic.' },
   { id: 'brass-clock', name: 'Brass Tournament Clock', kind: 'trophy', price: C(80), bond: 0, resale: C(40), upkeep: 0, unique: true, effect: 'A collectible for your study. Cosmetic.' },
 ];

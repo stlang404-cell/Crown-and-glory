@@ -81,6 +81,12 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   const p = market ? prices(market.q, market.b) : null;
   const nav = (to: number) => { setFollow(to >= revealed); setPly(Math.max(0, Math.min(revealed, to))); };
   const style = (s: typeof w) => (s ? (isValidatedStyle(s.style) ? STYLE_LABEL[s.style] : 'Universal') : '');
+  // engine thinking time used so far by each side (featured games are node-limited, not played on a clock)
+  const think = [0, 0];
+  moves.slice(0, ply).forEach((m, i) => { think[i % 2] += m.ms; });
+  const fmtT = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}.${Math.floor((ms % 1000) / 100)}`;
+  const sideToMove = ply % 2; // 0 = White
+  const Clock = ({ side }: { side: 0 | 1 }) => <span className={`chip mono ${sideToMove === side && isLive && ply === revealed ? 'gold' : ''}`} title="Engine thinking time used (node-limited game, no game clock)" data-testid={`think-${side ? 'black' : 'white'}`}>⏱ {fmtT(think[side])}</span>;
 
   return (
     <div>
@@ -92,9 +98,9 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
       {err && <div className="notice warn" role="alert">{err}</div>}
       <div className="play-layout">
         <div className="stack">
-          {[orientation === 'white' ? b : w].map(c => c && <div key={c.id} className="row small"><Portrait seed={c.portraitSeed} size={28} /><strong>{c.name}</strong> <span className="muted">{Math.round(c.rating)} · {style(c)}</span></div>)}
+          {[orientation === 'white' ? b : w].map(c => c && <div key={c.id} className="row small"><Portrait seed={c.portraitSeed} size={28} /><strong>{c.name}</strong> <span className="muted">{Math.round(c.rating)} · {style(c)}</span><span className="spacer" /><Clock side={orientation === 'white' ? 1 : 0} /></div>)}
           <Board fen={fen} orientation={orientation} lastMove={last} label={`${w?.name} versus ${b?.name}`} />
-          {[orientation === 'white' ? w : b].map(c => c && <div key={c.id} className="row small"><Portrait seed={c.portraitSeed} size={28} /><strong>{c.name}</strong> <span className="muted">{Math.round(c.rating)} · {style(c)}</span></div>)}
+          {[orientation === 'white' ? w : b].map(c => c && <div key={c.id} className="row small"><Portrait seed={c.portraitSeed} size={28} /><strong>{c.name}</strong> <span className="muted">{Math.round(c.rating)} · {style(c)}</span><span className="spacer" /><Clock side={orientation === 'white' ? 0 : 1} /></div>)}
           <div className="row" role="group" aria-label="Move navigation">
             <button className="btn small" aria-label="First move" onClick={() => nav(0)}><Icon name="first" /></button>
             <button className="btn small" aria-label="Previous move" onClick={() => nav(ply - 1)}><Icon name="prev" /></button>
@@ -125,6 +131,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
               </div>
               <div className="small muted">{isLive ? `Engine has played ${moves.length} plies; showing ${revealed}.` : `${moves.length} plies recorded.`} {game && `Termination: ${game.termination.replace(/-/g, ' ')}.`}</div>
               <ScoreTrack moves={moves} shown={revealed} onSelect={nav} />
+              <div className="small muted">⏱ = engine thinking time actually used by each side (featured games are node-limited, so there is no game clock).</div>
               <div className="small muted">Line: the engine's own expected score for White from its search at each move (not a postgame analysis).</div>
               {ply > 0 && moves[ply - 1] && <div className="small mono">{moves[ply - 1].san} · eval {formatScore(moves[ply - 1].score)} · depth {moves[ply - 1].depth} · {moves[ply - 1].nodes.toLocaleString('en')} nodes</div>}
               <div className="small" style={{ maxHeight: 160, overflow: 'auto', lineHeight: 1.8 }}>

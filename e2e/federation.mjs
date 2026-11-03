@@ -155,6 +155,7 @@ const statusLive = await page.evaluate(id => window.__crown.fed.state.markets.ge
 check(statusLive === 'closed', '   market closed the moment the live match started (before any move exists)');
 await page.waitForTimeout(6000);
 await page.screenshot({ path: OUT + '06-spectator-live.png' });
+check(await page.locator('[data-testid="think-white"]').count() === 1 && await page.locator('[data-testid="think-black"]').count() === 1, '   spectator shows each side\'s engine thinking time');
 const finalBeforeEnd = await page.locator('[data-testid="final-result"]').count();
 check(finalBeforeEnd === 0, '   no result shown while the match is in progress');
 await page.getByRole('button', { name: 'Instant', exact: true }).click();
@@ -182,6 +183,25 @@ await page.locator('[data-testid="confirm-buy-analyst"]').click();
 await page.waitForSelector('text=Bought Analyst Office');
 const afterBuy = await fedState(page);
 check(afterBuy.owned.includes('analyst') && afterSettle.cash - afterBuy.cash === 300e6 && afterBuy.netWorth === afterSettle.netWorth - 150e6, '15. bought the Analyst Office (300 ₵; book value 150 ₵ in net worth)');
+
+// Training Hall: unrated sparring against the next opponent's exact profile
+await page.locator('[data-testid="buy-training"]').click();
+await page.locator('[data-testid="confirm-buy-training"]').click();
+await page.waitForSelector('text=Bought Training Hall');
+await nav(page, 'Federation');
+const evBefore = (await ratingOf(page)).events;
+await page.locator('[data-testid="spar-fixture"]').first().click();
+await page.waitForSelector('[data-testid="match"]');
+const spar = await page.evaluate(async () => { const g = (await window.__crown.db.unfinishedGames())[0]; return { rated: g.rated, kind: g.context.kind, opp: (g.humanColor === 'white' ? g.black : g.white).name }; });
+await page.getByRole('button', { name: /Resign/ }).click();
+await page.getByRole('button', { name: 'Yes, resign' }).click();
+await page.waitForSelector('.result-overlay');
+const evAfter = (await ratingOf(page)).events;
+const pending = await page.evaluate(() => window.__crown.fed.playerFixtures().length);
+check(!spar.rated && spar.kind === 'quick-match' && evAfter === evBefore && pending === 1, `   Training Hall sparring vs ${spar.opp}: unrated, no rating event, federation fixture still pending`);
+await page.screenshot({ path: OUT + '08b-sparring-result.png' });
+await page.goto(URL_ + '#/world');
+await page.waitForSelector('[data-testid="advance-round"]');
 
 // 5–7: rated federation games, round by round, until the Challenger Open pays its prizes (after round 8)
 const r0 = await ratingOf(page);

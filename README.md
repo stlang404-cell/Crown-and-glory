@@ -7,11 +7,11 @@ Web Workers, IndexedDB, installable PWA. No accounts, servers, paid APIs or real
 
 Status: **v0.3.0 — “The Living Federation”** — see [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 The loop: **Play → Analyse → Train → Compete → Forecast → Build → play again.**
-v0.4.0 is planned in [docs/V4_PLAN.md](docs/V4_PLAN.md); the binding research specification is in [docs/research](docs/research).
+M4 (v0.4.0) is planned in [docs/M4_PLAN.md](docs/M4_PLAN.md); the binding research specification is in [docs/research](docs/research).
 
 v0.3 reports: [baseline audit](docs/V3_BASELINE_AUDIT.md) · [federation architecture](docs/V3_FEDERATION.md) ·
 [competition rules](docs/V3_COMPETITION_RULES.md) · [exchange math & accounting](docs/V3_EXCHANGE.md) ·
-[economy & simulations](docs/V3_ECONOMY.md) · [AI personality validation](docs/V3_STYLES.md) ·
+[economy & simulations](docs/V3_ECONOMY.md) · [AI personality validation](docs/V3_STYLES.md) · [M3 directive audit](docs/M3_GAP_AUDIT.md) ·
 [save format & migration](docs/SAVE_FORMAT.md) · [testing](docs/TESTING.md).
 M2 reports: [engine strength](docs/M2_ENGINE_STRENGTH.md) · [analysis calibration](docs/M2_ANALYSIS_CALIBRATION.md) ·
 [Academy validation](docs/M2_ACADEMY_VALIDATION.md) · [intelligence methodology](docs/M2_INTELLIGENCE_METHODOLOGY.md).
@@ -104,14 +104,16 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
 - **Seasons**: 15-round division leagues with promotion/relegation, the Federation Open and Challenger Open
   (Swiss), the 16-player Crown Championship (two-game knockout matches with rapid/blitz tiebreaks) and a
   Club Weekend for club owners. Your federation games are real rated games.
-- **Spectator**: watch featured AI-vs-AI games played live by the engine (pause, speed, navigation, the
-  engine's own evaluation line), or replay them. Background results are summary results and are labelled so.
+- **Spectator**: watch featured AI-vs-AI games played live by the engine (pause, speed, navigation, each
+  side's thinking time, the engine's own evaluation line), or replay them. Background results are summary results and are labelled so.
+- **Validated AI personalities**: Tactical attackers and Positional strategists play measurably different
+  openings (opening repertoire, strength parity tested); other listed styles failed and play Universal.
 - **Crown Exchange**: forecast markets on featured AI matches (LMSR market maker, integer double-entry
   ledger, 1% fee, markets close before the game exists, idempotent settlement), match research with model
   probability vs market price, paper forecasts with Brier scores.
 - **Economy**: escrowed prize pools, sponsorship milestones, a Finance page (net worth = cash + assets +
   positions − liabilities, ledger, history), functional assets (Starter Chess Club, Analyst Office, Scouting
-  Department) and collectibles with upkeep, recovery without debt, and two separate prestige ladders
+  Department, Training Hall for unrated sparring against your next opponent) and collectibles with upkeep, recovery without debt, and two separate prestige ladders
   (chess vs financial — money never buys chess titles).
 
 All money is fictional crowns (₵) with no real-world value.

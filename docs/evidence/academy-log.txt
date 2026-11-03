@@ -1,5 +1,5 @@
 Tactical puzzle solved by clicking the verified line: status=solved
-second puzzle loaded (solution starts d2b1); squares rendered: 36
+second puzzle loaded (solution starts d6e6); squares rendered: 36
 Solution reveal: status=failed
 Puzzle Rush first puzzle: playing; score chip: Score 1 · strikes 0/3
 After restart: 3 stored attempts

@@ -56,6 +56,21 @@ strength 0.983–0.987.
 
 Supply: circulating money (minted − sink) 164k → 186k, growing **0.6%** in season 6 (converging).
 
+### Wealth concentration and market-maker reserves (added in the M3 pass)
+
+| Measure (after season 6) | Range across the 7 runs |
+| --- | --- |
+| Gini of competitors' lifetime earnings | 0.760 – 0.767 |
+| Share of earnings held by the top 1% (21 competitors) | 17.4 – 21.4% |
+| Settled markets | 264 per run |
+| Market-maker P&L, all markets (before fees) | −0.1 to −3,616 ₵ (≈ 0 to −14 ₵ per market) |
+| Worst single market | −120.2 ₵ (theoretical bound −b·ln 3 = −131.8 ₵, funded in advance) |
+
+The high Gini is structural: prize pools fall geometrically from 2,000 ₵ (Crown Division) to 120 ₵ (Open
+Division), so the top divisions earn most — by design, as in real sport. Market-maker losses are the price of
+liquidity, paid from pre-funded subsidies; the treasury stays at 24.8–26.5k ₵ in every run.
+Long-horizon federation stability (40 seasons) is reported in docs/V3_FEDERATION.md §7.
+
 ## 4. Interpretation (honest)
 
 - **Chess results drive wealth.** The strongest player earns the most; winning is the main income.

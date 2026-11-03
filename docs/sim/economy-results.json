@@ -1,14 +1,19 @@
 {
  "id": "crown-sim-1",
  "seasons": 6,
- "generatedAt": "2026-11-03T05:54:36.044Z",
- "seconds": 338,
+ "generatedAt": "2026-11-03T06:46:16.157Z",
+ "seconds": 313,
  "results": [
   {
    "strategy": "chess-only",
    "label": "Chess only (1600-strength player, no trading, no assets)",
    "seasons": [
     {
+     "earningsGini": 0.914,
+     "top1pctEarningsShare": 0.265,
+     "settledMarkets": 44,
+     "makerPnlTotal": 400.9,
+     "makerWorstMarket": -83.2,
      "season": 1,
      "playerDivision": 7,
      "cash": 1435,
@@ -34,6 +39,11 @@
      "retired": 49
     },
     {
+     "earningsGini": 0.859,
+     "top1pctEarningsShare": 0.219,
+     "settledMarkets": 88,
+     "makerPnlTotal": 340.1,
+     "makerWorstMarket": -87.5,
      "season": 2,
      "playerDivision": 6,
      "cash": 1693.7,
@@ -57,6 +67,11 @@
      "retired": 120
     },
     {
+     "earningsGini": 0.819,
+     "top1pctEarningsShare": 0.193,
+     "settledMarkets": 132,
+     "makerPnlTotal": 394.2,
+     "makerWorstMarket": -90.5,
      "season": 3,
      "playerDivision": 6,
      "cash": 1668.7,
@@ -80,6 +95,11 @@
      "retired": 231
     },
     {
+     "earningsGini": 0.793,
+     "top1pctEarningsShare": 0.19,
+     "settledMarkets": 176,
+     "makerPnlTotal": 186.7,
+     "makerWorstMarket": -90.5,
      "season": 4,
      "playerDivision": 6,
      "cash": 1643.7,
@@ -103,6 +123,11 @@
      "retired": 325
     },
     {
+     "earningsGini": 0.774,
+     "top1pctEarningsShare": 0.191,
+     "settledMarkets": 220,
+     "makerPnlTotal": -77.6,
+     "makerWorstMarket": -90.5,
      "season": 5,
      "playerDivision": 6,
      "cash": 1618.7,
@@ -126,6 +151,11 @@
      "retired": 427
     },
     {
+     "earningsGini": 0.764,
+     "top1pctEarningsShare": 0.187,
+     "settledMarkets": 264,
+     "makerPnlTotal": -0.1,
+     "makerWorstMarket": -90.5,
      "season": 6,
      "playerDivision": 6,
      "cash": 1593.7,
@@ -163,6 +193,11 @@
    "label": "Successful competitor (2100 strength)",
    "seasons": [
     {
+     "earningsGini": 0.912,
+     "top1pctEarningsShare": 0.269,
+     "settledMarkets": 44,
+     "makerPnlTotal": -588,
+     "makerWorstMarket": -120.2,
      "season": 1,
      "playerDivision": 7,
      "cash": 1715,
@@ -189,6 +224,11 @@
      "retired": 37
     },
     {
+     "earningsGini": 0.858,
+     "top1pctEarningsShare": 0.224,
+     "settledMarkets": 88,
+     "makerPnlTotal": -1860.7,
+     "makerWorstMarket": -120.2,
      "season": 2,
      "playerDivision": 6,
      "cash": 2268.5,
@@ -214,6 +254,11 @@
      "retired": 106
     },
     {
+     "earningsGini": 0.823,
+     "top1pctEarningsShare": 0.206,
+     "settledMarkets": 132,
+     "makerPnlTotal": -2836.9,
+     "makerWorstMarket": -120.2,
      "season": 3,
      "playerDivision": 5,
      "cash": 2727.5,
@@ -239,6 +284,11 @@
      "retired": 171
     },
     {
+     "earningsGini": 0.791,
+     "top1pctEarningsShare": 0.191,
+     "settledMarkets": 176,
+     "makerPnlTotal": -3221.8,
+     "makerWorstMarket": -120.2,
      "season": 4,
      "playerDivision": 5,
      "cash": 2862.7,
@@ -262,6 +312,11 @@
      "retired": 266
     },
     {
+     "earningsGini": 0.772,
+     "top1pctEarningsShare": 0.187,
+     "settledMarkets": 220,
+     "makerPnlTotal": -3610.5,
+     "makerWorstMarket": -120.2,
      "season": 5,
      "playerDivision": 4,
      "cash": 3527.2,
@@ -287,6 +342,11 @@
      "retired": 377
     },
     {
+     "earningsGini": 0.76,
+     "top1pctEarningsShare": 0.189,
+     "settledMarkets": 264,
+     "makerPnlTotal": -3521.6,
+     "makerWorstMarket": -120.2,
      "season": 6,
      "playerDivision": 4,
      "cash": 3727,
@@ -324,6 +384,11 @@
    "label": "Losing player (800 strength)",
    "seasons": [
     {
+     "earningsGini": 0.915,
+     "top1pctEarningsShare": 0.275,
+     "settledMarkets": 44,
+     "makerPnlTotal": 109.7,
+     "makerWorstMarket": -49.9,
      "season": 1,
      "playerDivision": 8,
      "cash": 1025,
@@ -347,6 +412,11 @@
      "retired": 66
     },
     {
+     "earningsGini": 0.86,
+     "top1pctEarningsShare": 0.22,
+     "settledMarkets": 88,
+     "makerPnlTotal": -287.8,
+     "makerWorstMarket": -97.6,
      "season": 2,
      "playerDivision": 8,
      "cash": 1000,
@@ -370,6 +440,11 @@
      "retired": 138
     },
     {
+     "earningsGini": 0.82,
+     "top1pctEarningsShare": 0.193,
+     "settledMarkets": 132,
+     "makerPnlTotal": -90.1,
+     "makerWorstMarket": -97.6,
      "season": 3,
      "playerDivision": 8,
      "cash": 975,
@@ -393,6 +468,11 @@
      "retired": 237
     },
     {
+     "earningsGini": 0.789,
+     "top1pctEarningsShare": 0.18,
+     "settledMarkets": 176,
+     "makerPnlTotal": -465.7,
+     "makerWorstMarket": -97.6,
      "season": 4,
      "playerDivision": 8,
      "cash": 950,
@@ -416,6 +496,11 @@
      "retired": 321
     },
     {
+     "earningsGini": 0.771,
+     "top1pctEarningsShare": 0.17,
+     "settledMarkets": 220,
+     "makerPnlTotal": -505.6,
+     "makerWorstMarket": -97.6,
      "season": 5,
      "playerDivision": 8,
      "cash": 925,
@@ -439,6 +524,11 @@
      "retired": 424
     },
     {
+     "earningsGini": 0.76,
+     "top1pctEarningsShare": 0.174,
+     "settledMarkets": 264,
+     "makerPnlTotal": -843.1,
+     "makerWorstMarket": -97.6,
      "season": 6,
      "playerDivision": 8,
      "cash": 900,
@@ -476,6 +566,11 @@
    "label": "Conservative trader (1300 strength; 5 shares when model − price ≥ 5 pts)",
    "seasons": [
     {
+     "earningsGini": 0.913,
+     "top1pctEarningsShare": 0.268,
+     "settledMarkets": 44,
+     "makerPnlTotal": 160.7,
+     "makerWorstMarket": -83.9,
      "season": 1,
      "playerDivision": 8,
      "cash": 1163.22747,
@@ -499,6 +594,11 @@
      "retired": 55
     },
     {
+     "earningsGini": 0.862,
+     "top1pctEarningsShare": 0.229,
+     "settledMarkets": 88,
+     "makerPnlTotal": -187.4,
+     "makerWorstMarket": -95.3,
      "season": 2,
      "playerDivision": 8,
      "cash": 1170.318375,
@@ -522,6 +622,11 @@
      "retired": 119
     },
     {
+     "earningsGini": 0.822,
+     "top1pctEarningsShare": 0.216,
+     "settledMarkets": 132,
+     "makerPnlTotal": -823.1,
+     "makerWorstMarket": -95.3,
      "season": 3,
      "playerDivision": 8,
      "cash": 1170.161765,
@@ -545,6 +650,11 @@
      "retired": 206
     },
     {
+     "earningsGini": 0.798,
+     "top1pctEarningsShare": 0.219,
+     "settledMarkets": 176,
+     "makerPnlTotal": -1941.8,
+     "makerWorstMarket": -99.6,
      "season": 4,
      "playerDivision": 8,
      "cash": 1168.04692,
@@ -568,6 +678,11 @@
      "retired": 321
     },
     {
+     "earningsGini": 0.778,
+     "top1pctEarningsShare": 0.208,
+     "settledMarkets": 220,
+     "makerPnlTotal": -2671.6,
+     "makerWorstMarket": -107.8,
      "season": 5,
      "playerDivision": 7,
      "cash": 1583.006372,
@@ -593,6 +708,11 @@
      "retired": 424
     },
     {
+     "earningsGini": 0.767,
+     "top1pctEarningsShare": 0.204,
+     "settledMarkets": 264,
+     "makerPnlTotal": -3615.8,
+     "makerWorstMarket": -107.8,
      "season": 6,
      "playerDivision": 7,
      "cash": 1591.217992,
@@ -630,6 +750,11 @@
    "label": "Aggressive trader (1300 strength; 60 shares on the largest model edge, every market)",
    "seasons": [
     {
+     "earningsGini": 0.912,
+     "top1pctEarningsShare": 0.261,
+     "settledMarkets": 44,
+     "makerPnlTotal": -547,
+     "makerWorstMarket": -88.6,
      "season": 1,
      "playerDivision": 8,
      "cash": 1251.041087,
@@ -653,6 +778,11 @@
      "retired": 45
     },
     {
+     "earningsGini": 0.859,
+     "top1pctEarningsShare": 0.229,
+     "settledMarkets": 88,
+     "makerPnlTotal": -1088.9,
+     "makerWorstMarket": -95.4,
      "season": 2,
      "playerDivision": 7,
      "cash": 1380.906425,
@@ -676,6 +806,11 @@
      "retired": 122
     },
     {
+     "earningsGini": 0.821,
+     "top1pctEarningsShare": 0.213,
+     "settledMarkets": 132,
+     "makerPnlTotal": -1411.7,
+     "makerWorstMarket": -105.9,
      "season": 3,
      "playerDivision": 7,
      "cash": 1553.040897,
@@ -699,6 +834,11 @@
      "retired": 222
     },
     {
+     "earningsGini": 0.791,
+     "top1pctEarningsShare": 0.209,
+     "settledMarkets": 176,
+     "makerPnlTotal": -1901.5,
+     "makerWorstMarket": -105.9,
      "season": 4,
      "playerDivision": 7,
      "cash": 1416.383241,
@@ -722,6 +862,11 @@
      "retired": 320
     },
     {
+     "earningsGini": 0.774,
+     "top1pctEarningsShare": 0.217,
+     "settledMarkets": 220,
+     "makerPnlTotal": -2154.4,
+     "makerWorstMarket": -105.9,
      "season": 5,
      "playerDivision": 7,
      "cash": 1730.350423,
@@ -745,6 +890,11 @@
      "retired": 406
     },
     {
+     "earningsGini": 0.762,
+     "top1pctEarningsShare": 0.214,
+     "settledMarkets": 264,
+     "makerPnlTotal": -2963,
+     "makerWorstMarket": -105.9,
      "season": 6,
      "playerDivision": 7,
      "cash": 1762.812664,
@@ -782,6 +932,11 @@
    "label": "Hybrid (1700 strength, conservative trading, Analyst Office)",
    "seasons": [
     {
+     "earningsGini": 0.912,
+     "top1pctEarningsShare": 0.267,
+     "settledMarkets": 44,
+     "makerPnlTotal": -599.8,
+     "makerWorstMarket": -112.3,
      "season": 1,
      "playerDivision": 7,
      "cash": 1131.492102,
@@ -809,6 +964,11 @@
      "retired": 44
     },
     {
+     "earningsGini": 0.861,
+     "top1pctEarningsShare": 0.223,
+     "settledMarkets": 88,
+     "makerPnlTotal": -801.8,
+     "makerWorstMarket": -112.3,
      "season": 2,
      "playerDivision": 6,
      "cash": 1529.872257,
@@ -836,6 +996,11 @@
      "retired": 143
     },
     {
+     "earningsGini": 0.822,
+     "top1pctEarningsShare": 0.205,
+     "settledMarkets": 132,
+     "makerPnlTotal": -1132.4,
+     "makerWorstMarket": -112.3,
      "season": 3,
      "playerDivision": 6,
      "cash": 1490.062432,
@@ -861,6 +1026,11 @@
      "retired": 234
     },
     {
+     "earningsGini": 0.796,
+     "top1pctEarningsShare": 0.198,
+     "settledMarkets": 176,
+     "makerPnlTotal": -1514.9,
+     "makerWorstMarket": -112.3,
      "season": 4,
      "playerDivision": 6,
      "cash": 1454.625161,
@@ -886,6 +1056,11 @@
      "retired": 337
     },
     {
+     "earningsGini": 0.781,
+     "top1pctEarningsShare": 0.198,
+     "settledMarkets": 220,
+     "makerPnlTotal": -1747.3,
+     "makerWorstMarket": -112.3,
      "season": 5,
      "playerDivision": 5,
      "cash": 1727.17621,
@@ -911,6 +1086,11 @@
      "retired": 440
     },
     {
+     "earningsGini": 0.765,
+     "top1pctEarningsShare": 0.194,
+     "settledMarkets": 264,
+     "makerPnlTotal": -2622,
+     "makerWorstMarket": -112.3,
      "season": 6,
      "playerDivision": 6,
      "cash": 1697.611983,
@@ -950,6 +1130,11 @@
    "label": "Business owner (1500 strength; club + scouting + analyst)",
    "seasons": [
     {
+     "earningsGini": 0.913,
+     "top1pctEarningsShare": 0.269,
+     "settledMarkets": 44,
+     "makerPnlTotal": 410.5,
+     "makerWorstMarket": -110.9,
      "season": 1,
      "playerDivision": 7,
      "cash": 761,
@@ -975,6 +1160,11 @@
      "retired": 53
     },
     {
+     "earningsGini": 0.86,
+     "top1pctEarningsShare": 0.222,
+     "settledMarkets": 88,
+     "makerPnlTotal": 107.2,
+     "makerWorstMarket": -110.9,
      "season": 2,
      "playerDivision": 6,
      "cash": 895.5,
@@ -1003,6 +1193,11 @@
      "retired": 148
     },
     {
+     "earningsGini": 0.82,
+     "top1pctEarningsShare": 0.206,
+     "settledMarkets": 132,
+     "makerPnlTotal": 169.3,
+     "makerWorstMarket": -110.9,
      "season": 3,
      "playerDivision": 6,
      "cash": 505.5,
@@ -1030,6 +1225,11 @@
      "retired": 257
     },
     {
+     "earningsGini": 0.794,
+     "top1pctEarningsShare": 0.198,
+     "settledMarkets": 176,
+     "makerPnlTotal": -337.3,
+     "makerWorstMarket": -110.9,
      "season": 4,
      "playerDivision": 6,
      "cash": 380.5,
@@ -1057,6 +1257,11 @@
      "retired": 350
     },
     {
+     "earningsGini": 0.776,
+     "top1pctEarningsShare": 0.198,
+     "settledMarkets": 220,
+     "makerPnlTotal": -928.2,
+     "makerWorstMarket": -110.9,
      "season": 5,
      "playerDivision": 6,
      "cash": 260.5,
@@ -1084,6 +1289,11 @@
      "retired": 446
     },
     {
+     "earningsGini": 0.765,
+     "top1pctEarningsShare": 0.202,
+     "settledMarkets": 264,
+     "makerPnlTotal": -866,
+     "makerWorstMarket": -110.9,
      "season": 6,
      "playerDivision": 6,
      "cash": 269.1,

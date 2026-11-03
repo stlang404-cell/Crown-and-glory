@@ -100,6 +100,11 @@ export function WorldScreen() {
                   if (!(await services.db.getGame(g.id))) await services.saveGame(g);
                   go({ name: 'match', gameId: g.id });
                 })}>Play</button>
+                {fed.ownsAsset('training') && <button className="btn small" data-testid="spar-fixture" disabled={!!busy} title="Unrated practice against this opponent's exact engine profile (Training Hall)" onClick={() => act('spar', async () => {
+                  const g = await fed.sparringGameFor(f.id, f.white === PLAYER_ID ? 'white' : 'black');
+                  await services.saveGame(g);
+                  go({ name: 'match', gameId: g.id });
+                })}>Spar</button>}
                 {confirmForfeit === f.id
                   ? <><button className="btn danger small" onClick={() => act('forfeit', () => fed.forfeit(f.id)).then(() => setConfirmForfeit(null))}>Confirm forfeit</button><button className="btn small" onClick={() => setConfirmForfeit(null)}>Keep</button></>
                   : <button className="btn ghost small" onClick={() => setConfirmForfeit(f.id)}>Forfeit</button>}

@@ -86,3 +86,17 @@ registered) — 5-round Swiss; rounds 10–11 Club Weekend (club owners); rounds
 A full season (19 rounds, ≈ 19,500 games of which ≈ 19,400 summary results) processes in ≈ 0.3 s headless;
 in the app each "Advance" additionally plays up to three featured engine games in a Web Worker (typically
 5–20 s). Storage: rounds keep compact tier-3 tuples `[event, white, black, result]`.
+
+## 7. Long-horizon stability (40 seasons)
+
+`npx tsx tools/sim/federation.ts 40 42` runs the shipped world code headless for 40 seasons (without the
+player; `docs/sim/federation-results.json`, 15 s in total, at most 0.51 s per season):
+
+| Measure | Result |
+| --- | --- |
+| Mean public rating | 1,831.5 – 1,839.7 in every season (no inflation or deflation trend) |
+| Rating spread (SD) | 445 – 449 (stable) |
+| Public rating vs hidden strength | correlation ≥ 0.982 every season; mean rating − mean strength drifts to −20 at most as the aging model slowly raises average strength while Glicko-2 stays zero-sum |
+| League mobility | 20.5 – 21.6% of competitors change division each season |
+| Careers | ≈ 96 retirements and as many entrants per season; active population constant at 2,048 |
+| Champions | 41 Crown titles (joint titles count twice), 18 different champions, at most 7 by one competitor |
