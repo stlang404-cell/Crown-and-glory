@@ -3,7 +3,7 @@
  * the opponent's move. Cancellation terminates the worker and bumps the generation; late replies
  * from terminated or superseded requests are discarded.
  */
-import type { MoveRequest, AnalyzeRequest, WorkerReply } from './protocol';
+import type { MoveRequest, AnalyzeRequest, AssistRequest, AssistCandidate, WorkerReply } from './protocol';
 import type { AnalysisReport, PlyAnalysis } from '../analysis/types';
 
 type MoveResult = Extract<WorkerReply, { type: 'move-result' }>;
@@ -44,7 +44,7 @@ export class EngineChannel {
 
   get busy(): boolean { return this.pending !== null; }
 
-  private send<T extends WorkerReply>(req: Omit<MoveRequest, 'requestId' | 'generation'> | Omit<AnalyzeRequest, 'requestId' | 'generation'>, onPly?: (p: PlyAnalysis, i: number, n: number) => void): Promise<T> {
+  private send<T extends WorkerReply>(req: Omit<MoveRequest, 'requestId' | 'generation'> | Omit<AnalyzeRequest, 'requestId' | 'generation'> | Omit<AssistRequest, 'requestId' | 'generation'>, onPly?: (p: PlyAnalysis, i: number, n: number) => void): Promise<T> {
     if (this.pending) this.cancel();
     const gen = ++this.generation;
     const id = `${this.role}-${++this.seq}`;
@@ -57,6 +57,11 @@ export class EngineChannel {
 
   move(req: Omit<MoveRequest, 'type' | 'requestId' | 'generation'>): Promise<MoveResult> {
     return this.send<MoveResult>({ type: 'move', ...req });
+  }
+
+  async assist(req: Omit<AssistRequest, 'type' | 'requestId' | 'generation'>): Promise<{ candidates: AssistCandidate[]; depth: number }> {
+    const r = await this.send<Extract<WorkerReply, { type: 'assist-result' }>>({ type: 'assist', ...req });
+    return { candidates: r.candidates, depth: r.depth };
   }
 
   async analyze(req: Omit<AnalyzeRequest, 'type' | 'requestId' | 'generation'>, onPly?: (p: PlyAnalysis, i: number, n: number) => void): Promise<AnalysisReport> {

@@ -233,14 +233,18 @@ export class GameSession {
     return this.finish(resignationOutcome(color), nowIso);
   }
 
-  markAssisted(kind: 'hint' | 'takeback' | 'analysis-during-play', nowIso: string): void {
+  /** Whether engine assistance may be offered at all (never in rated games). */
+  get assistanceAllowed(): boolean { return !this.record.rated && !this.isOver; }
+
+  /**
+   * Record an assistance event. Rated games refuse assistance outright (integrity is enforced in game
+   * state, not only by hiding buttons); any assisted game is unrated permanently.
+   */
+  markAssisted(kind: 'hint' | 'takeback' | 'analysis-during-play' | 'candidates' | 'threat' | 'evaluation' | 'explanation', nowIso: string): boolean {
+    if (this.record.rated) return false;
     this.record.assistance.push({ ply: this.plies, kind, at: nowIso });
-    if (this.record.rated) {
-      // Engine assistance makes a game ineligible for rating.
-      this.record.rated = false;
-      this.record.mode = 'casual';
-      this.record.pool = null;
-    }
+    this.record.pool = null;
+    return true;
   }
 
   private finish(o: Outcome, nowIso: string): Outcome {

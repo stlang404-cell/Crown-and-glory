@@ -1,107 +1,87 @@
-import { useEffect, useState } from 'react';
-import { useServices } from './App';
-import type { AnalysisReport, PlyAnalysis } from '../analysis/types';
+import { useEffect, useMemo, useState } from 'react';
+import { useApp, useServices } from './App';
+import type { AnalysisReport } from '../analysis/types';
 import type { GameRecord } from '../games/types';
-import { mulberry32 } from '../rules/tables';
+import type { RatingEvent } from '../ratings/ledger';
+import { Attempt, Puzzle, TrainingRun, loadPuzzleSet } from '../academy/academy';
+import { computeDimensions, computeTrend, recurringPatterns, Evidence, LAB_ID } from '../academy/lab';
+import { TOPICS } from '../academy/coach';
 
-/**
- * Chess intelligence laboratory — M1 foundation (lab policy crown-lab-0).
- * Only descriptive, sourced rates from engine reports of the player's own moves are shown, with
- * opportunity counts and game-clustered bootstrap intervals. These are chess-specific performance
- * summaries, not IQ or validated psychometric scores. Dimensions without a defined M1 rubric say so.
- */
-interface Evidence { games: number; n: number; s: number; rate: number | null; ci: [number, number] | null; perGame: { s: number; n: number }[] }
+const pct = (x: number | null) => (x === null ? '—' : `${Math.round(x * 100)}%`);
 
-function clusterBootstrap(perGame: { s: number; n: number }[], iters = 1000): [number, number] | null {
-  const tot = perGame.reduce((a, g) => a + g.n, 0);
-  if (perGame.length < 3 || tot < 10) return null;
-  const r = mulberry32(12345);
-  const vals: number[] = [];
-  for (let i = 0; i < iters; i++) {
-    let s = 0, n = 0;
-    for (let j = 0; j < perGame.length; j++) { const g = perGame[Math.floor((r() / 4294967296) * perGame.length)]; s += g.s; n += g.n; }
-    vals.push(n ? s / n : 0);
-  }
-  vals.sort((a, b) => a - b);
-  return [vals[Math.floor(iters * 0.025)], vals[Math.floor(iters * 0.975)]];
-}
-
-function measure(items: { gameId: string; plies: PlyAnalysis[] }[], opp: (p: PlyAnalysis) => boolean, success: (p: PlyAnalysis) => boolean): Evidence {
-  const perGame: { s: number; n: number }[] = [];
-  for (const it of items) {
-    const ps = it.plies.filter(opp);
-    if (ps.length) perGame.push({ n: ps.length, s: ps.filter(success).length });
-  }
-  const n = perGame.reduce((a, g) => a + g.n, 0), s = perGame.reduce((a, g) => a + g.s, 0);
-  return { games: perGame.length, n, s, rate: n ? s / n : null, ci: clusterBootstrap(perGame), perGame };
+function EvidenceLine({ e }: { e: Evidence }) {
+  const label = e.source === 'games' ? 'Games' : e.source === 'puzzles' ? 'Practice puzzles (first try)' : 'Held-out assessments';
+  return (
+    <div className="small" style={{ marginTop: 4 }}>
+      <strong>{label}:</strong>{' '}
+      {e.status === 'measured' ? <>{pct(e.rate)} <span className="muted">(95% {pct(e.ci![0])}–{pct(e.ci![1])})</span> · </> : <span className="muted">insufficient evidence · </span>}
+      {e.s}/{e.n} {e.source === 'games' ? `opportunities in ${e.games} game${e.games === 1 ? '' : 's'}` : 'puzzles'}
+    </div>
+  );
 }
 
 export function LabScreen() {
   const services = useServices();
-  const [data, setData] = useState<{ reports: AnalysisReport[]; games: GameRecord[] } | null>(null);
-  useEffect(() => { void Promise.all([services.db.allReports(), services.db.allGames()]).then(([reports, games]) => setData({ reports, games })); }, [services, services.revision]);
-  if (!data) return <p className="muted">Loading…</p>;
-
-  // Latest complete report per game; only one methodology is aggregated at a time.
-  const byGame = new Map<string, AnalysisReport>();
-  for (const r of data.reports) if (r.status === 'complete') { const c = byGame.get(r.gameId); if (!c || r.completedAt > c.completedAt) byGame.set(r.gameId, r); }
-  const methods = new Map<string, number>();
-  for (const r of byGame.values()) { const k = `${r.methodology.gradingId} / ${r.engine.buildId} / ${r.settings.id}`; methods.set(k, (methods.get(k) ?? 0) + 1); }
-  const method = [...methods.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-  const gameById = new Map(data.games.map(g => [g.id, g]));
-  const items = [...byGame.values()].filter(r => `${r.methodology.gradingId} / ${r.engine.buildId} / ${r.settings.id}` === method).map(r => {
-    const g = gameById.get(r.gameId)!;
-    return { gameId: r.gameId, game: g, plies: r.plies.filter(p => g && p.color === g.humanColor && !p.forced && p.loss !== null) };
-  }).filter(x => x.game && x.game.mode !== 'training');
-  const excluded = byGame.size - items.length;
-
-  const critical = measure(items, p => p.critical, p => (p.loss ?? 1) <= 0.05);
-  const blunderFree = measure(items, () => true, p => p.grade !== 'blunder' && p.grade !== 'mistake');
-  const safety = measure(items, () => true, p => !p.notes.some(n => n.kind === 'hanging-piece' || n.kind === 'allowed-tactic' || n.kind === 'allowed-mate'));
-  const endgame = measure(items, p => p.phase === 'endgame', p => (p.loss ?? 1) <= 0.05);
-  const opening = measure(items, p => p.phase === 'opening', p => (p.loss ?? 1) <= 0.05);
-  const missed = measure(items, p => p.notes.some(n => n.kind === 'missed-win' || n.kind === 'missed-mate') || (p.critical && p.best.ccn === p.ccn), p => p.best.ccn === p.ccn);
-  // time management: mean seconds spent on critical vs other decisions (timed games, descriptive)
-  let tc = 0, tcn = 0, to = 0, ton = 0;
-  for (const it of items) if (it.game.clocks) for (const p of it.plies) {
-    const ms = it.game.moves[p.ply - 1]?.elapsedMs ?? 0;
-    if (p.critical) { tc += ms; tcn++; } else { to += ms; ton++; }
-  }
-
-  const dims: { name: string; rubric: string; ev: Evidence | null; note?: string }[] = [
-    { name: 'Tactical vision', rubric: 'Found the engine-best move where a material-winning or mating line existed (coach-verified opportunities).', ev: missed },
-    { name: 'Calculation', rubric: 'Requires held-out multi-ply exercises with verified solutions.', ev: null, note: 'Not measured in M1 — held-out assessments arrive in M2.' },
-    { name: 'Positional judgment', rubric: 'Requires stable multi-budget evaluation of non-forcing positions.', ev: null, note: 'Not measured in M1.' },
-    { name: 'Endgame technique', rubric: 'Endgame-phase decisions with expected-score loss ≤ 0.05.', ev: endgame },
-    { name: 'Defensive awareness', rubric: 'Moves that did not allow an engine-verified material-winning reply or mate.', ev: safety },
-    { name: 'Opening understanding', rubric: 'Opening-phase decisions with loss ≤ 0.05 (no 6×6 opening theory exists yet).', ev: opening },
-    { name: 'Time management', rubric: 'Time spent on critical vs ordinary decisions (descriptive only).', ev: null, note: tcn >= 5 ? `Critical: ${(tc / tcn / 1000).toFixed(1)} s avg over ${tcn} decisions · other: ${(to / Math.max(1, ton) / 1000).toFixed(1)} s over ${ton}. Speed alone is not skill.` : 'Insufficient timed critical decisions.' },
-    { name: 'Consistency', rubric: 'Share of decisions without a Mistake or Blunder grade.', ev: blunderFree },
-    { name: 'Threat detection', rubric: 'Handling of critical positions (best-vs-next gap ≥ 0.10): loss ≤ 0.05.', ev: critical },
-    { name: 'Adaptability', rubric: 'Improvement against novel motifs after exposure; needs longitudinal held-out data.', ev: null, note: 'Not measured in M1.' },
-  ];
-
+  const { go } = useApp();
+  const [data, setData] = useState<{ games: GameRecord[]; reports: AnalysisReport[]; attempts: Attempt[]; puzzles: Puzzle[]; runs: TrainingRun[]; events: RatingEvent[] } | null>(null);
+  useEffect(() => {
+    void (async () => {
+      const [games, reports, attempts, runs, events, set] = await Promise.all([services.db.allGames(), services.db.allReports(), services.db.getAll<Attempt>('attempts'), services.db.getAll<TrainingRun>('trainingRuns'), services.db.ratingEvents(), loadPuzzleSet()]);
+      setData({ games, reports, attempts, runs, events, puzzles: set.puzzles });
+    })();
+  }, [services, services.revision]);
+  const computed = useMemo(() => data && { dims: computeDimensions(data), trend: computeTrend(data), patterns: recurringPatterns(data) }, [data]);
+  if (!data || !computed) return <p className="muted">Loading…</p>;
+  const { dims, trend, patterns } = computed;
+  const measured = dims.dimensions.map(d => ({ d, e: d.evidence.find(e => e.status === 'measured') })).filter(x => x.e);
+  const strongest = [...measured].sort((a, b) => b.e!.ci![0] - a.e!.ci![0])[0];
+  const weakest = [...measured].sort((a, b) => a.e!.ci![1] - b.e!.ci![1])[0];
+  const W = 600, H = 120;
+  const pts = trend.perGame;
   return (
     <div>
       <h1>Chess Intelligence Lab</h1>
       <div className="notice" style={{ marginBottom: 14 }}>
-        Chess-specific performance summaries from engine reports of your own moves — not IQ, not general intelligence and not validated psychometrics.
-        Estimates appear only with ≥ 10 opportunities across ≥ 3 games; intervals are 95% game-clustered bootstrap ranges. Methodology {method ?? '—'} · {items.length} games{excluded ? ` · ${excluded} report(s) with a different methodology or training games kept separate` : ''}.
+        Chess-specific performance summaries ({LAB_ID}) — not IQ, not general intelligence, not validated psychometrics. Each figure is a success rate on defined opportunities with its count and a 95% interval;
+        game evidence needs ≥ 10 opportunities across ≥ 3 games, puzzle evidence ≥ 8 first-try attempts. Methodology {dims.method ?? '—'} · {dims.gamesUsed} games used{dims.excluded ? ` · ${dims.excluded} excluded (other analysis version, training or assisted)` : ''}.
       </div>
+      {measured.length >= 2 && strongest && weakest && strongest.d.id !== weakest.d.id && (
+        <div className="grid-2" style={{ marginBottom: 14 }}>
+          <div className="panel stat"><span className="k">Strongest measured</span><span className="v" style={{ fontSize: '1.3rem' }}>{strongest.d.name}</span><span className="small muted">highest lower interval bound</span></div>
+          <div className="panel stat"><span className="k">Weakest measured</span><span className="v" style={{ fontSize: '1.3rem' }}>{weakest.d.name}</span><span className="small muted">lowest upper interval bound · <button className="btn ghost small" onClick={() => go({ name: 'academy' })}>Train in the Academy</button></span></div>
+        </div>
+      )}
       <div className="grid-2">
-        {dims.map(d => (
-          <div key={d.name} className="panel" data-testid="lab-dimension">
+        {dims.dimensions.map(d => (
+          <div key={d.id} className="panel" data-testid="lab-dimension">
             <div className="panel-title"><h3 style={{ margin: 0 }}>{d.name}</h3>
-              {d.ev && d.ev.ci ? <span className="chip gold">{Math.round(d.ev.rate! * 100)}%</span> : <span className="chip">insufficient evidence</span>}
+              {d.status === 'measured' ? <span className="chip gold">measured</span> : <span className="chip">insufficient evidence</span>}
             </div>
             <div className="small muted">{d.rubric}</div>
-            {d.ev && (
-              <div className="small" style={{ marginTop: 6 }}>
-                {d.ev.ci ? <>Rate {Math.round(d.ev.rate! * 100)}% (95% range {Math.round(d.ev.ci[0] * 100)}–{Math.round(d.ev.ci[1] * 100)}%) · </> : null}
-                {d.ev.s}/{d.ev.n} opportunities in {d.ev.games} game{d.ev.games === 1 ? '' : 's'}
-              </div>
-            )}
-            {d.note && <div className="small" style={{ marginTop: 6 }}>{d.note}</div>}
+            {d.evidence.map((e, i) => <EvidenceLine key={i} e={e} />)}
+          </div>
+        ))}
+      </div>
+      <div className="panel" style={{ marginTop: 14 }}>
+        <h3>Accuracy trend</h3>
+        {pts.length >= 2 ? (
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Per-game accuracy for ${pts.length} analysed games`}>
+            <rect width={W} height={H} fill="#1d2532" />
+            {[25, 50, 75].map(v => <line key={v} x1="0" x2={W} y1={H - (v / 100) * H} y2={H - (v / 100) * H} stroke="#2e3a4d" />)}
+            <path d={pts.map((p, i) => `${i ? 'L' : 'M'}${(i / (pts.length - 1)) * W},${H - ((p.accuracy ?? 0) / 100) * H}`).join(' ')} fill="none" stroke="var(--accent)" strokeWidth="2" />
+          </svg>
+        ) : <p className="muted small">Appears after two analysed games of the same methodology.</p>}
+        <p className="small">{trend.recent && trend.earlier ? <>Recent {trend.recent.games} games: {trend.recent.accuracy!.toFixed(1)} · earlier {trend.earlier.games}: {trend.earlier.accuracy!.toFixed(1)} · difference {trend.difference!.value >= 0 ? '+' : ''}{trend.difference!.value.toFixed(1)} (95% {trend.difference!.ci[0].toFixed(1)} to {trend.difference!.ci[1].toFixed(1)}) · velocity {trend.velocity!.perTenGames.toFixed(2)} per 10 games (95% {trend.velocity!.ci[0].toFixed(2)} to {trend.velocity!.ci[1].toFixed(2)}).</> : null}</p>
+        <p className="small muted">{trend.note}</p>
+      </div>
+      <div className="panel" style={{ marginTop: 14 }}>
+        <h3>Recurring patterns (coach)</h3>
+        {patterns.length === 0 ? <p className="muted small">No engine-verified error patterns yet.</p> : patterns.slice(0, 6).map(p => (
+          <div key={p.topic} className="coach" style={{ marginBottom: 8 }}>
+            <div><strong>{TOPICS[p.topic] ?? p.topic}</strong> — {p.status === 'established' ? <span className="chip neg">established pattern</span> : <span className="chip">tentative</span>}</div>
+            <div className="small">{p.occurrences} occurrence{p.occurrences === 1 ? '' : 's'} in {p.games} game{p.games === 1 ? '' : 's'}{p.status === 'tentative' ? ' (needs ≥ 5 across ≥ 3 games before it is called a pattern)' : ''}.
+              {' '}Examples: {p.refs.slice(0, 3).map(r => <button key={`${r.gameId}-${r.ply}`} className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: r.gameId, ply: r.ply })}>ply {r.ply}</button>)}</div>
+            {p.effectiveness && <div className="small muted">Training check: {p.effectiveness}</div>}
           </div>
         ))}
       </div>

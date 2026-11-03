@@ -6,7 +6,7 @@
   "cores": 4,
   "searchId": "crown-search-1",
   "evalId": "crown-eval-3",
-  "date": "2026-11-03T03:15:03.536Z"
+  "date": "2026-11-03T03:23:57.902Z"
  },
  "pairsPerMatch": 32,
  "openings": "tools/bench/openings.json",
@@ -48,6 +48,84 @@
     "checkmate": 43,
     "bare-kings": 4,
     "fifty-move-claim": 3
+   }
+  },
+  {
+   "a": "rookHi40k",
+   "b": "full40k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 25,
+   "draws": 21,
+   "losses": 18,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.5546875,
+   "scoreCI": [
+    0.4765625,
+    0.6328125
+   ],
+   "eloDiff": 38,
+   "eloCI": [
+    -16,
+    95
+   ],
+   "avgDepth": {
+    "rookHi40k": 8.97,
+    "full40k": 9.03
+   },
+   "avgNodes": {
+    "rookHi40k": 37154,
+    "full40k": 37216
+   },
+   "avgMs": {
+    "rookHi40k": 190,
+    "full40k": 189
+   },
+   "reasons": {
+    "bare-kings": 4,
+    "checkmate": 43,
+    "threefold-claim": 16,
+    "fifty-move-claim": 1
+   }
+  },
+  {
+   "a": "pawnStruct40k",
+   "b": "full40k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 17,
+   "draws": 25,
+   "losses": 22,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.4609375,
+   "scoreCI": [
+    0.375,
+    0.5390625
+   ],
+   "eloDiff": -27,
+   "eloCI": [
+    -89,
+    27
+   ],
+   "avgDepth": {
+    "pawnStruct40k": 9.74,
+    "full40k": 9.52
+   },
+   "avgNodes": {
+    "pawnStruct40k": 37652,
+    "full40k": 37686
+   },
+   "avgMs": {
+    "pawnStruct40k": 202,
+    "full40k": 201
+   },
+   "reasons": {
+    "threefold-claim": 16,
+    "checkmate": 39,
+    "fifty-move-claim": 5,
+    "bare-kings": 4
    }
   }
  ]

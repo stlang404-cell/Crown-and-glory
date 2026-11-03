@@ -28,7 +28,19 @@ export interface AnalyzeRequest {
   settings: AnalysisSettings;
 }
 
-export type WorkerRequest = MoveRequest | AnalyzeRequest | { type: 'ping'; requestId: string; generation: number };
+export interface AssistRequest {
+  type: 'assist';
+  requestId: string;
+  generation: number;
+  initialFen: string;
+  setupMoves?: string[];
+  moves: string[];
+  depth: number;
+}
+
+export interface AssistCandidate { ccn: string; san: string; score: EngineScore; pv: string[]; pvSan: string[] }
+
+export type WorkerRequest = MoveRequest | AnalyzeRequest | AssistRequest | { type: 'ping'; requestId: string; generation: number };
 
 export interface IterationMsg { depth: number; score: EngineScore; pv: string[]; nodes: number; timeMs: number }
 
@@ -37,5 +49,6 @@ export type WorkerReply =
   | { type: 'move-result'; requestId: string; generation: number; move: string; score: EngineScore; depth: number; nodes: number; timeMs: number; pv: string[]; selected: 'best' | 'bounded-sample'; stopReason: string }
   | { type: 'ply'; requestId: string; generation: number; index: number; total: number; ply: PlyAnalysis }
   | { type: 'analysis-result'; requestId: string; generation: number; report: AnalysisReport }
+  | { type: 'assist-result'; requestId: string; generation: number; candidates: AssistCandidate[]; depth: number }
   | { type: 'error'; requestId: string; generation: number; message: string }
   | { type: 'pong'; requestId: string; generation: number; engine: string };

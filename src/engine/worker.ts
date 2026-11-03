@@ -5,7 +5,7 @@
  * termination (the search is synchronous); the client discards any reply from an older generation.
  */
 import { Position } from '../rules/position';
-import { moveToCcn, parseLegalCcn } from '../rules/notation';
+import { moveToCcn, parseLegalCcn, moveToSan, ccnLineToSan } from '../rules/notation';
 import { Searcher } from './search';
 import { chooseMove, getLevel } from './levels';
 import { analyzeGame, typedScore, ENGINE_BUILD } from '../analysis/analyzer';
@@ -35,6 +35,20 @@ self.onmessage = (ev: MessageEvent<WorkerRequest>) => {
         type: 'move-result', ...base, move: moveToCcn(r.move), score: typedScore(r.search.score, pov), depth: r.search.depth,
         nodes: r.search.nodes, timeMs: Math.round(r.search.timeMs), pv: r.search.pv.map(moveToCcn), selected: r.selected, stopReason: r.search.stopReason,
       });
+      return;
+    }
+    if (req.type === 'assist') {
+      const pos = Position.fromFen(req.initialFen);
+      for (const s of [...(req.setupMoves ?? []), ...req.moves]) pos.makeMove(parseLegalCcn(pos, s));
+      const pov = pos.side === 0 ? 'white' : 'black';
+      const legal = pos.legalMoves();
+      const screen = searcher.scoreRootMoves(pos, legal, Math.min(3, req.depth)).sort((a, b) => b.score - a.score).slice(0, 3);
+      const exact = searcher.scoreRootMoves(pos, screen.map(x => x.move), req.depth).sort((a, b) => b.score - a.score);
+      const candidates = exact.map(c => {
+        const pv = c.pv.map(moveToCcn);
+        return { ccn: moveToCcn(c.move), san: moveToSan(pos, c.move, legal), score: typedScore(c.score, pov), pv, pvSan: ccnLineToSan(pos.toFen(), pv) };
+      });
+      post({ type: 'assist-result', ...base, candidates, depth: req.depth });
       return;
     }
     if (req.type === 'analyze') {

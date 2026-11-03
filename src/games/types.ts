@@ -58,7 +58,7 @@ export interface MoveRecord {
 
 export interface AssistanceEvent {
   ply: number;
-  kind: 'hint' | 'takeback' | 'analysis-during-play';
+  kind: 'hint' | 'takeback' | 'analysis-during-play' | 'candidates' | 'threat' | 'evaluation' | 'explanation';
   at: string;
 }
 

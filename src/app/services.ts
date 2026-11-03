@@ -26,6 +26,7 @@ export interface AnalysisProgress {
 export class AppServices {
   readonly play = new EngineChannel(undefined, 'play');
   readonly analysis = new EngineChannel(undefined, 'analysis');
+  readonly assist = new EngineChannel(undefined, 'assist');
   private listeners = new Set<Listener>();
   progress: AnalysisProgress | null = null;
   matchActive = false;

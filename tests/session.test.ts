@@ -64,9 +64,14 @@ describe('game session', () => {
     expect(mk(TIME_CONTROLS.untimed).record.rated).toBe(false);
     const s = mk();
     expect(s.record.rated).toBe(true);
-    s.markAssisted('hint', 'T');
-    expect(s.record.rated).toBe(false);
-    expect(s.record.pool).toBeNull();
+    expect(s.assistanceAllowed).toBe(false);
+    expect(s.markAssisted('hint', 'T')).toBe(false); // refused in rated games
+    expect(s.record.rated).toBe(true);
+    expect(s.record.assistance).toHaveLength(0);
+    const c = mk(TIME_CONTROLS.rapid, 'casual');
+    expect(c.markAssisted('hint', 'T')).toBe(true);
+    expect(c.record.assistance).toHaveLength(1);
+    expect(c.record.rated).toBe(false);
   });
   it('draw agreement only after 20 plies; resignation', () => {
     const s = mk(TIME_CONTROLS.untimed, 'casual');

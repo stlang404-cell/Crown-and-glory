@@ -16,6 +16,9 @@ import type { RatingEvent, PoolState } from '../ratings/ledger';
 import { explainEvent } from '../ratings/ledger';
 import type { EngineScore } from '../analysis/types';
 import { formatScore } from './Charts';
+import type { AssistCandidate } from '../engine/protocol';
+import { motifsForLine, threatsAgainst, MOTIF_LABEL } from '../academy/motifs';
+import { parseLegalCcn } from '../rules/notation';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtClock = (ms: number) => {
@@ -182,6 +185,8 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const [confirmResign, setConfirmResign] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [final, setFinal] = useState<{ game: GameRecord; event: RatingEvent | null } | null>(null);
+  const [assist, setAssist] = useState<{ kind: string; text: string; candidates?: AssistCandidate[]; hint?: string } | null>(null);
+  const [assistBusy, setAssistBusy] = useState(false);
   const engineScore = useRef<EngineScore | null>(null);
   const finalizing = useRef(false);
 
@@ -282,6 +287,41 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     });
   }, [session, session?.plies, session?.paused, thinking, engineColor, services, finalize]);
 
+  useEffect(() => { setAssist(null); }, [session?.plies]);
+
+  const askAssist = async (kind: 'hint' | 'candidates' | 'threat' | 'evaluation' | 'explanation') => {
+    if (!session || !session.assistanceAllowed || session.sideToMove !== session.humanColor) return;
+    if (!session.markAssisted(kind, new Date().toISOString())) return;
+    void services.saveGame(session.snapshot());
+    force();
+    if (kind === 'threat') {
+      const t = threatsAgainst(session.pos, session.humanColor as 0 | 1);
+      setAssist({ kind, text: t.mateInOne ? 'Warning: your opponent threatens mate in one.' : t.bestGain >= 100 ? `Your opponent threatens to win about ${Math.round(t.bestGain / 100)} pawn(s) of material on ${squareName(t.square)} (static exchange).` : 'No immediate material or mate-in-one threat (static check; deeper threats are possible).' });
+      return;
+    }
+    setAssistBusy(true);
+    try {
+      const rec = session.record;
+      const r = await services.assist.assist({ initialFen: rec.initialFen, setupMoves: rec.setupMoves, moves: rec.moves.map(m => m.ccn), depth: 6 });
+      const best = r.candidates[0];
+      const pov = session.humanColor === 0 ? 'white' : 'black';
+      if (kind === 'hint') setAssist({ kind, text: `Consider moving the piece on ${best.ccn.slice(0, 2)}.`, hint: best.ccn.slice(0, 2) });
+      else if (kind === 'evaluation') setAssist({ kind, text: `Engine evaluation (depth ${r.depth}, your view): ${formatScore(best.score, pov)}.` });
+      else if (kind === 'candidates') setAssist({ kind, text: `Top engine candidates at depth ${r.depth}:`, candidates: r.candidates });
+      else {
+        const line = best.pv;
+        const start = session.pos.clone();
+        const moves: number[] = [];
+        const tmp = start.clone();
+        for (const c of line) { const mv = parseLegalCcn(tmp, c); if (mv < 0) break; moves.push(mv); tmp.makeMove(mv); }
+        const motifs = motifsForLine(start, moves, best.score.kind === 'mate' && best.score.plies > 0);
+        setAssist({ kind, text: `The engine prefers ${best.san} (${formatScore(best.score, pov)}), line ${best.pvSan.slice(0, 6).join(' ')}.${motifs.length ? ` Features found on that line: ${motifs.map(m => MOTIF_LABEL[m.motif].toLowerCase()).join(', ')}.` : ' No specific tactical motif detected; it is a positional preference at this depth.'}` });
+      }
+    } catch (e) {
+      if (!(e instanceof CancelledError)) setAssist({ kind, text: `Assistant unavailable: ${(e as Error).message}` });
+    } finally { setAssistBusy(false); }
+  };
+
   const onMove = (ccn: string) => {
     if (!session) return;
     const r = session.applyMove(ccn, Date.now(), new Date().toISOString());
@@ -354,7 +394,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     <div className="match" data-testid="match" data-fen={fen} data-turn={session.isOver ? 'over' : humanToMove ? (session.paused ? 'paused' : 'human') : 'engine'} data-human={humanColor === 0 ? 'w' : 'b'}>
       <div className="board-col">
         {bar(top as 0 | 1)}
-        <Board fen={fen} orientation={orientation} legal={legal} onMove={onMove} lastMove={last} checkSquare={check} label={`Game against ${opp.name}`} />
+        <Board fen={fen} orientation={orientation} legal={legal} onMove={onMove} lastMove={last} checkSquare={check} label={`Game against ${opp.name}`} highlights={assist?.hint ? [assist.hint] : []} />
         {bar(bottom)}
         <div className="sr-only" aria-live="polite">{last ? `Last move ${rec.moves.at(-1)!.san}` : 'Game started'}{session.isOver && rec.termination ? `. ${TERMINATION_LABEL[rec.termination]}` : ''}</div>
       </div>
@@ -396,6 +436,27 @@ export function MatchScreen({ gameId }: { gameId: string }) {
           </div>
           {toast && <div className="notice" role="status" onClick={() => setToast(null)}>{toast}</div>}
           {session.paused && <div className="notice warn">Clocks are paused while the app is in the background. Pauses are recorded with the game.</div>}
+          {rec.rated ? (
+            <div className="small" data-testid="assist-locked">Rated game: the assistant is locked. Engine help is never available in rated play.</div>
+          ) : (
+            <div className="stack" data-testid="assist-panel">
+              <div className="row small"><strong>Assistant</strong>{rec.assistance.length > 0 && <span className="chip">Assisted · {rec.assistance.length}</span>}<span className="muted">casual game — never rated</span></div>
+              <div className="row">
+                {(['hint', 'candidates', 'threat', 'evaluation', 'explanation'] as const).map(k => (
+                  <button key={k} className="btn small" disabled={!humanToMove || assistBusy || session.paused} onClick={() => void askAssist(k)}>
+                    {{ hint: 'Hint', candidates: 'Candidate moves', threat: 'Threat check', evaluation: 'Evaluation', explanation: 'Explain best move' }[k]}
+                  </button>
+                ))}
+              </div>
+              {assistBusy && <div className="small muted">Thinking…</div>}
+              {assist && (
+                <div className="coach" role="status">
+                  <div>{assist.text}</div>
+                  {assist.candidates && <ul className="small" style={{ margin: '4px 0 0' }}>{assist.candidates.map(c => <li key={c.ccn}><strong>{c.san}</strong> {formatScore(c.score, rec.humanColor)} · <span className="mono">{c.pvSan.slice(1, 6).join(' ')}</span></li>)}</ul>}
+                </div>
+              )}
+            </div>
+          )}
           <div className="small muted">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}. No engine help is available during play; analysis opens after the game.</div>
         </div>
       </div>
