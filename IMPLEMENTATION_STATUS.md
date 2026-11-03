@@ -34,8 +34,10 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 | --- | --- | --- |
 | Research reconciliation (167-row matrix) | Verified complete (document) | docs/M4_RESEARCH_RECONCILIATION.md |
 | Baseline audit | Verified complete | docs/M4_BASELINE_AUDIT.md |
-| Engine strength (M4-A) | ENGINE_STATUS | docs/M4_ENGINE_STRENGTH.md |
-| AI styles beyond the opening | STYLE_STATUS | docs/M4_ENGINE_STRENGTH.md, docs/V3_STYLES.md |
+| Engine strength (M4-A): crown-eval-4 fitted evaluation + forward futility/delta pruning for play; levels recalibrated (crown-levels-3, L8 strongest) | Verified complete | docs/M4_ENGINE_STRENGTH.md: +374 [255, 545] Elo vs the M3 engine at 100 ms/move; vs the Fairy-Stockfish reference setting 45.3% → 75.0%; held-out-opening and equal-time checks |
+| Analysis on the new engine | Not implemented (deliberate) | analysis, puzzle verification and the assistant stay on the pinned M3 engine because the outcome map and fixtures were measured on it; moving requires refitting (M5) |
+| Fairy-Stockfish WASM backend | Evaluated, not integrated | GPL-3.0, needs cross-origin isolation (SharedArrayBuffer), 128 MiB initial memory; docs/M4_ENGINE_STRENGTH.md |
+| AI styles beyond the opening | Not achieved (pilot failed; machinery present, disabled) | docs/M4_ENGINE_STRENGTH.md: evaluation-weight styles changed 17–29% of moves but shifted signatures only −8…+4 pp (< 10 pp required); Tactical/Positional opening repertoires remain; their parity was measured on the M3 engine and not re-run |
 | n-state LMSR with subset claims, payout vectors, prior funding | Verified complete | tests/exchange2.test.ts (randomized adversarial), docs/M4_EXCHANGE.md |
 | Market families: match, tournament champion (Open, Championship), promotion, qualification, season title, bounded conditional final four | Verified complete | tests/markets.test.ts (full season), e2e/m4-journey.mjs steps 14–19 |
 | Live in-play trading (move-by-move publication, windows, NPC reaction, resume) | Verified complete | tests/markets.test.ts, journey steps 15–17, docs/M4_EXCHANGE.md §3 |
@@ -47,8 +49,8 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 | Theme system (Obsidian & Crimson default, Midnight & Gold, Ivory & Slate; 5 board palettes; Settings) | Verified complete | docs/M4_THEMES.md, tests/theme.test.ts, journey steps 2–3, screenshots |
 | Federation news, championship history, season archive, rivalries | Verified complete | journey step 25 |
 | Save migration v0.3.0 → v0.4.0 (DB v4, mid-season family listing) | Verified complete | tests/storage.test.ts, journey step 1 (real v0.3.0 build) |
-| Player acceptance journey (28 steps) | JOURNEY_STATUS | docs/evidence/m4/journey-log.txt |
-| Economy simulations (9 strategies × 3 seeds × 4 seasons) and federation (3 seeds × 40 seasons) | SIM_STATUS | docs/M4_ECONOMY.md, docs/sim/ |
+| Player acceptance journey (28 steps) | Verified complete — 28/28 passed in Chromium on the final build, starting from a real v0.3.0 save | docs/evidence/m4/journey-log.txt, journey-results.json |
+| Economy simulations (9 strategies × 3 seeds × 4 seasons) and federation (3 seeds × 40 seasons) | Verified complete (results reported; balance not claimed) | docs/M4_ECONOMY.md, docs/sim/ |
 | Player route into the Federation Open (divisions 2–4) with the market conflict rule | Verified complete | tests/markets.test.ts |
 | Group-stage championship format; rank titles | Not implemented | docs/M5_ROADMAP.md |
 | Tournament-winner in-event trading, forecast league with funded prizes | Not implemented | docs/M5_ROADMAP.md |

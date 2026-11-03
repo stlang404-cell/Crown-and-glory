@@ -54,6 +54,14 @@ and after the first six plies everyone plays the common engine. The style is the
 character**, not a middlegame personality — the profile and research pages show "Tactical attacker" /
 "Positional strategist" only for these two.
 
+## v0.4.0 update
+
+The M4 engine work piloted full-game styles through style-specific evaluation weights: 17–29% of moves changed,
+but signature shifts were only −8 to +4 percentage points (below the +10 pp threshold), so none ship
+(docs/M4_ENGINE_STRENGTH.md). Play now uses the stronger crown-eval-4 engine; the Tactical/Positional opening
+repertoires (book moves within 30 cp at depth 7 of the M3 engine) still apply, but their strength parity was
+measured with the M3 engine and has not been re-run on the new one.
+
 ## Limits
 
 - 48 parity games per style give wide intervals (the tactical lower bound, −89 Elo, is close to the −100 limit).

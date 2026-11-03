@@ -47,9 +47,10 @@ async function open(viewport = { width: 1366, height: 900 }) {
 }
 const nav = (page, name) => page.locator('nav.rail').getByRole('button', { name, exact: true }).click();
 const robot = new Searcher(18);
-async function playOut(page, nodes = 8000) {
+async function playOut(page, nodes = 40000) {
   await page.waitForSelector('[data-testid="match"]');
-  for (let guard = 0; guard < 600; guard++) {
+  const deadline = Date.now() + 30 * 60_000; // time budget, not a poll count
+  while (Date.now() < deadline) {
     const turn = await page.getAttribute('[data-testid="match"]', 'data-turn');
     if (turn === 'over') break;
     if (turn !== 'human') { await page.waitForTimeout(120); continue; }

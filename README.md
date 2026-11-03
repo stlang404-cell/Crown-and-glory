@@ -112,7 +112,11 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
 - **News & history**, championship history with final replays, rivalries and a season archive.
 - **New look**: Obsidian & Crimson (default), Midnight & Gold and Ivory & Slate themes, five board palettes,
   reduced-motion control, all in Settings.
-- Engine and AI-style work: see [docs/M4_ENGINE_STRENGTH.md](docs/M4_ENGINE_STRENGTH.md).
+- **A much stronger engine for play**: a new evaluation fitted on 88,699 positions (crown-eval-4) plus forward
+  futility/delta pruning — +374 Elo [255, 545] against the M3 engine at equal time on the internal scale, and 75% against
+  the fixed Fairy-Stockfish reference setting (was 45%); levels recalibrated. Not FIDE ratings. Analysis stays on the
+  M3 engine whose calibration it uses. Full-game AI styles were tried and failed validation
+  ([docs/M4_ENGINE_STRENGTH.md](docs/M4_ENGINE_STRENGTH.md)).
 
 ## What v0.3.0 adds
 

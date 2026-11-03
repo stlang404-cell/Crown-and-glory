@@ -3,7 +3,7 @@
 Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22, Playwright headless Chromium). No Windows machine
 or physical iPhone was available. Every result below was executed in this session.
 
-## Automated suites — `npx vitest run`: **VITEST_COUNT**
+## Automated suites — `npx vitest run`: **160 / 160 passed** (20 files, after merging the engine work)
 
 New or extended in v0.4.0:
 
@@ -21,8 +21,8 @@ Typecheck (`tsc -b`): pass. Production build (`vite build`): pass. Contrast audi
 
 | Script | Result | Evidence |
 | --- | --- | --- |
-| `e2e/m4-journey.mjs` — **v0.4.0 player acceptance journey, 28 steps**, from a save made by the real v0.3.0 build on the same origin | JOURNEY_RESULT | docs/evidence/m4/journey-log.txt, journey-results.json, screenshots (desktop + 390 px phone, no horizontal overflow) |
-| `e2e/federation.mjs` (v0.3.0 journey), `e2e/run.mjs`, `e2e/academy.mjs`, `e2e/offline.mjs` | REGRESSION_RESULT | docs/evidence/ |
+| `e2e/m4-journey.mjs` — **v0.4.0 player acceptance journey, 28 steps**, from a save made by the real v0.3.0 build on the same origin | **28 / 28 PASS** (final build) | docs/evidence/m4/journey-log.txt, journey-results.json, screenshots (desktop + 390 px phone, no horizontal overflow) |
+| `e2e/federation.mjs` (v0.3.0 journey), `e2e/run.mjs`, `e2e/academy.mjs`, `e2e/offline.mjs` | **PASS** on the final build (rated Gate G, Academy, offline, and the v0.3.0 18-step journey from a real v0.2.0 save). The first re-run of the v0.3.0 journey **failed step 7**: its scripted robot (8k nodes) lost two Challenger Open games to opponents now playing the stronger M4 engine, so it earned no prize — correct game behaviour, not a regression; with the robot at 40k nodes the journey passes | docs/evidence/ |
 | `e2e/m4-themes.mjs` — every theme × key screens × desktop/phone | pass (theme workstream) | docs/evidence/m4-themes/ |
 
 ## Simulations

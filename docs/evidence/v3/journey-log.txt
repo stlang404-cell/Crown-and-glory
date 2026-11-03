@@ -1,55 +1,55 @@
-[2026-11-03T06:46:29.022Z] v0.2.0 build served from /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/dist-v020
-[2026-11-03T06:46:32.653Z] v0.2.0 game finished (Victory); save: {"games":[{"id":"g-20261103064629-m42bwg","status":"finalized","result":"1-0","moves":37}],"rating":1512,"events":1}
-[2026-11-03T06:46:34.122Z] v0.3.0 build served on the same origin
-[2026-11-03T06:46:34.150Z] PASS: 1. v0.2.0 save intact after the update (games, rating events, rating identical)
-[2026-11-03T06:46:34.654Z] PASS: 2. persistent federation of 2048 competitors (2047 active; the player displaced one into reserve)
-[2026-11-03T06:46:34.655Z] PASS:    ledger conserved at creation (sum of balances 0, no negative account)
-[2026-11-03T06:46:35.022Z] PASS: 3. division standings shown (16 rows)
-[2026-11-03T06:46:35.925Z]    competitor profile opened from the federation ranking
-[2026-11-03T06:46:36.068Z] PASS: 4. registered for the Challenger Open (25 ₵ entry fee debited: cash 975 ₵)
-[2026-11-03T06:46:36.264Z] 9. market research page: ratings, form, head-to-head, model probability vs market price
-[2026-11-03T06:46:36.626Z] PASS: 10. bought 10 × White wins for 5.30 ₵ (cash debited exactly)
-[2026-11-03T06:46:36.721Z] PASS: 11. position visible in the portfolio; net worth = cash + assets + positions
-[2026-11-03T06:46:37.306Z] PASS:    market closed the moment the live match started (before any move exists)
-[2026-11-03T06:46:43.413Z] PASS:    spectator shows each side's engine thinking time
-[2026-11-03T06:46:43.416Z] PASS:    no result shown while the match is in progress
-[2026-11-03T06:46:43.613Z] PASS: 8/12. watched a complete legal AI match live (76 plies, 0-1, checkmate; every move re-verified legal)
-[2026-11-03T06:46:43.616Z] PASS: 13. market settled on outcome 2: payout 0 ₵ credited exactly; ledger conserved
-[2026-11-03T06:46:43.702Z] PASS: 14. finance updated: cash 969.70 ₵, net worth 969.70 ₵
-[2026-11-03T06:46:44.126Z] PASS: 15. bought the Analyst Office (300 ₵; book value 150 ₵ in net worth)
-[2026-11-03T06:46:44.691Z] PASS:    Training Hall sparring vs Qutor Thornley (sparring): unrated, no rating event, federation fixture still pending
-[2026-11-03T06:46:50.125Z]    round 1: game 1 "Victory" · rapid rating 1512 → 1652 (one rating event)
-[2026-11-03T06:46:50.351Z] PASS: 5/6. played a legal rated federation match; rapid rating updated exactly once (1512 → 1652)
-[2026-11-03T06:46:53.582Z]    advanced to round 2 · cash 469.70 ₵ · conserved
-[2026-11-03T06:46:55.704Z]    round 2: game 2 "Victory" · rapid rating 1652 → 1662 (one rating event)
-[2026-11-03T06:47:03.091Z]    advanced to round 3 · cash 469.70 ₵ · conserved
-[2026-11-03T06:47:05.907Z]    round 3: game 3 "Victory" · rapid rating 1662 → 1671 (one rating event)
-[2026-11-03T06:47:12.828Z]    advanced to round 4 · cash 469.70 ₵ · conserved
-[2026-11-03T06:47:14.989Z]    round 4: game 4 "Victory" · rapid rating 1671 → 1684 (one rating event)
-[2026-11-03T06:47:19.399Z]    round 4: game 5 "Victory" · rapid rating 1684 → 1823 (one rating event)
-[2026-11-03T06:47:34.278Z]    advanced to round 5 · cash 469.70 ₵ · conserved
-[2026-11-03T06:47:36.933Z]    round 5: game 6 "Victory" · rapid rating 1823 → 1828 (one rating event)
-[2026-11-03T06:47:40.726Z]    round 5: game 7 "Victory" · rapid rating 1828 → 1933 (one rating event)
-[2026-11-03T06:47:56.771Z]    advanced to round 6 · cash 469.70 ₵ · conserved
-[2026-11-03T06:48:00.606Z]    round 6: game 8 "Victory" · rapid rating 1933 → 1939 (one rating event)
-[2026-11-03T06:48:06.514Z]    round 6: game 9 "Victory" · rapid rating 1939 → 2014 (one rating event)
-[2026-11-03T06:48:25.374Z]    advanced to round 7 · cash 469.70 ₵ · conserved
-[2026-11-03T06:48:27.628Z]    round 7: game 10 "Victory" · rapid rating 2014 → 2015 (one rating event)
-[2026-11-03T06:48:33.118Z]    round 7: game 11 "Victory" · rapid rating 2015 → 2085 (one rating event)
-[2026-11-03T06:48:47.173Z]    advanced to round 8 · cash 469.70 ₵ · conserved
-[2026-11-03T06:48:53.151Z]    round 8: game 12 "Victory" · rapid rating 2085 → 2087 (one rating event)
-[2026-11-03T06:49:01.232Z]    round 8: game 13 "Victory" · rapid rating 2087 → 2127 (one rating event)
-[2026-11-03T06:49:11.071Z]    advanced to round 9 · cash 749.70 ₵ · conserved
-[2026-11-03T06:49:11.084Z]    player prize/sponsor entries: [{"id":"prize-pay:1:challenger","kind":"prize","memo":"Challenger Open prizes","amount":180000000},{"id":"sponsor:1:swiss-top8","kind":"sponsor","memo":"Sponsor milestone: Swiss event top eight","amount":100000000},{"id":"sponsor:1:first-federation-win","kind":"sponsor","memo":"Sponsor milestone: First federation win","amount":50000000}]
-[2026-11-03T06:49:11.088Z] PASS: 7. legitimate prize received from the event's escrowed pool (180.00 ₵, Challenger Open prizes); titles []
-[2026-11-03T06:49:12.062Z] 16. Passport shows the federation career and the two separate prestige ladders
-[2026-11-03T06:49:12.153Z] 17. browser closed
-[2026-11-03T06:49:12.833Z] 17. reopened with the same profile
-[2026-11-03T06:49:12.891Z] PASS: 18. federation (S1 R9), tournament registration, finances (749.70 ₵), assets ["analyst","training"], ratings (2127), 15 games persisted identically
-[2026-11-03T06:49:12.892Z] PASS:    original v0.2.0 game still in the library
-[2026-11-03T06:49:14.708Z]    mobile #/world: horizontal overflow no
-[2026-11-03T06:49:15.714Z]    mobile #/exchange: horizontal overflow no
-[2026-11-03T06:49:16.691Z]    mobile #/finance: horizontal overflow no
-[2026-11-03T06:49:17.752Z]    mobile #/tournaments: horizontal overflow no
-[2026-11-03T06:49:18.718Z]    mobile #/exchange/mk%3A1%3A1%3Aleague%3A0%3A1%3Af7: horizontal overflow no
-[2026-11-03T06:49:18.899Z] ACCEPTANCE JOURNEY COMPLETE
+[2026-11-03T15:50:37.286Z] v0.2.0 build served from /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/dist-v020
+[2026-11-03T15:50:40.774Z] v0.2.0 game finished (Victory); save: {"games":[{"id":"g-20261103155037-pl42ne","status":"finalized","result":"1-0","moves":19}],"rating":1512,"events":1}
+[2026-11-03T15:50:42.359Z] v0.3.0 build served on the same origin
+[2026-11-03T15:50:42.386Z] PASS: 1. v0.2.0 save intact after the update (games, rating events, rating identical)
+[2026-11-03T15:50:43.675Z] PASS: 2. persistent federation of 2048 competitors (2047 active; the player displaced one into reserve)
+[2026-11-03T15:50:43.676Z] PASS:    ledger conserved at creation (sum of balances 0, no negative account)
+[2026-11-03T15:50:44.065Z] PASS: 3. division standings shown (16 rows)
+[2026-11-03T15:50:45.001Z]    competitor profile opened from the federation ranking
+[2026-11-03T15:50:45.131Z] PASS: 4. registered for the Challenger Open (25 ₵ entry fee debited: cash 975 ₵)
+[2026-11-03T15:50:45.341Z] 9. market research page: ratings, form, head-to-head, model probability vs market price
+[2026-11-03T15:50:45.703Z] PASS: 10. bought 10 × White wins for 8.42 ₵ (cash debited exactly)
+[2026-11-03T15:50:45.779Z] PASS: 11. position visible in the portfolio; net worth = cash + assets + positions
+[2026-11-03T15:50:46.332Z] PASS:    market closed the moment the live match started (before any move exists)
+[2026-11-03T15:50:52.458Z] PASS:    spectator shows each side's engine thinking time
+[2026-11-03T15:50:52.461Z] PASS:    no result shown while the match is in progress
+[2026-11-03T15:50:52.657Z] PASS: 8/12. watched a complete legal AI match live (53 plies, 1-0, checkmate; every move re-verified legal)
+[2026-11-03T15:50:52.662Z] PASS: 13. market settled on outcome 0: payout 10 ₵ credited exactly; ledger conserved
+[2026-11-03T15:50:52.755Z] PASS: 14. finance updated: cash 976.58 ₵, net worth 976.58 ₵
+[2026-11-03T15:50:53.181Z] PASS: 15. bought the Analyst Office (300 ₵; book value 150 ₵ in net worth)
+[2026-11-03T15:50:53.647Z] PASS:    Training Hall sparring vs Ismar Darshaw (sparring): unrated, no rating event, federation fixture still pending
+[2026-11-03T15:50:58.269Z]    round 1: game 1 "Victory" · rapid rating 1512 → 1680 (one rating event)
+[2026-11-03T15:50:58.464Z] PASS: 5/6. played a legal rated federation match; rapid rating updated exactly once (1512 → 1680)
+[2026-11-03T15:51:04.291Z]    advanced to round 2 · cash 476.58 ₵ · conserved
+[2026-11-03T15:51:09.289Z]    round 2: game 2 "Victory" · rapid rating 1680 → 1689 (one rating event)
+[2026-11-03T15:51:18.321Z]    advanced to round 3 · cash 476.58 ₵ · conserved
+[2026-11-03T15:51:20.894Z]    round 3: game 3 "Victory" · rapid rating 1689 → 1703 (one rating event)
+[2026-11-03T15:51:31.989Z]    advanced to round 4 · cash 476.58 ₵ · conserved
+[2026-11-03T15:51:35.954Z]    round 4: game 4 "Victory" · rapid rating 1703 → 1718 (one rating event)
+[2026-11-03T15:51:43.579Z]    round 4: game 5 "Victory" · rapid rating 1718 → 1860 (one rating event)
+[2026-11-03T15:51:58.730Z]    advanced to round 5 · cash 476.58 ₵ · conserved
+[2026-11-03T15:52:03.357Z]    round 5: game 6 "Victory" · rapid rating 1860 → 1865 (one rating event)
+[2026-11-03T15:52:09.095Z]    round 5: game 7 "Draw" · rapid rating 1865 → 1917 (one rating event)
+[2026-11-03T15:52:23.360Z]    advanced to round 6 · cash 476.58 ₵ · conserved
+[2026-11-03T15:52:28.572Z]    round 6: game 8 "Victory" · rapid rating 1917 → 1924 (one rating event)
+[2026-11-03T15:52:34.043Z]    round 6: game 9 "Victory" · rapid rating 1924 → 2017 (one rating event)
+[2026-11-03T15:52:49.438Z]    advanced to round 7 · cash 476.58 ₵ · conserved
+[2026-11-03T15:52:53.389Z]    round 7: game 10 "Victory" · rapid rating 2017 → 2020 (one rating event)
+[2026-11-03T15:52:58.571Z]    round 7: game 11 "Victory" · rapid rating 2020 → 2061 (one rating event)
+[2026-11-03T15:53:11.337Z]    advanced to round 8 · cash 476.58 ₵ · conserved
+[2026-11-03T15:53:14.149Z]    round 8: game 12 "Victory" · rapid rating 2061 → 2066 (one rating event)
+[2026-11-03T15:53:20.548Z]    round 8: game 13 "Victory" · rapid rating 2066 → 2112 (one rating event)
+[2026-11-03T15:53:33.117Z]    advanced to round 9 · cash 756.58 ₵ · conserved
+[2026-11-03T15:53:33.130Z]    player prize/sponsor entries: [{"id":"prize-pay:1:challenger","kind":"prize","memo":"Challenger Open prizes","amount":180000000},{"id":"sponsor:1:swiss-top8","kind":"sponsor","memo":"Sponsor milestone: Swiss event top eight","amount":100000000},{"id":"sponsor:1:first-federation-win","kind":"sponsor","memo":"Sponsor milestone: First federation win","amount":50000000}]
+[2026-11-03T15:53:33.134Z] PASS: 7. legitimate prize received from the event's escrowed pool (180.00 ₵, Challenger Open prizes); titles []
+[2026-11-03T15:53:34.246Z] 16. Passport shows the federation career and the two separate prestige ladders
+[2026-11-03T15:53:34.371Z] 17. browser closed
+[2026-11-03T15:53:34.830Z] 17. reopened with the same profile
+[2026-11-03T15:53:34.873Z] PASS: 18. federation (S1 R9), tournament registration, finances (756.58 ₵), assets ["analyst","training"], ratings (2112), 15 games persisted identically
+[2026-11-03T15:53:34.874Z] PASS:    original v0.2.0 game still in the library
+[2026-11-03T15:53:36.612Z]    mobile #/world: horizontal overflow no
+[2026-11-03T15:53:37.597Z]    mobile #/exchange: horizontal overflow no
+[2026-11-03T15:53:38.604Z]    mobile #/finance: horizontal overflow no
+[2026-11-03T15:53:39.657Z]    mobile #/tournaments: horizontal overflow no
+[2026-11-03T15:53:40.577Z]    mobile #/exchange/mk%3A1%3A1%3Aleague%3A0%3A1%3Af0: horizontal overflow no
+[2026-11-03T15:53:40.772Z] ACCEPTANCE JOURNEY COMPLETE

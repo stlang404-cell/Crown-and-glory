@@ -41,6 +41,9 @@ entries below record implementation decisions and conflicts resolved during M0/M
 | I34 | Sponsorship stipends are priced at ≥ 30% of the competitor's average season prize earnings (and ≥ 10% of their division pool), repriced at renewal; share 25%. | First sim showed contracts on top players were a passive-profit machine; now profit requires outperforming history. |
 | I35 | Club upgrades escrow half their cost (refundable, counted in book value) and spend half. | Upgrades must be real choices with costs; book value never counts spent money. |
 | I36 | Theme system: Obsidian & Crimson default, Midnight & Gold, Ivory & Slate; independent board palettes; preferences in localStorage (per-device convenience, not game state). | Directive Part VI; preferences are not career data and need no migration. |
+| I37 | Play uses crown-search-2 + crown-eval-4; analysis, puzzle verification and the assistant keep the pinned crown-search-1 + crown-eval-3. | The new engine is far stronger (+374 [255, 545] at equal time), but the analysis outcome map, grade corpus and puzzle verification were measured on the M3 engine; switching them requires a refit, not a silent change. Game records label the engine that actually played. |
+| I38 | Fairy-Stockfish WASM evaluated and not integrated. | GPL-3.0 vs an UNLICENSED repository (owner's decision), SharedArrayBuffer/COOP-COEP unavailable from file:// and the PowerShell server, no single-thread build, 128 MiB initial memory. |
+| I39 | Full-game evaluation-weight styles not shipped. | Pilot: 17–29% move changes but signature shifts −8…+4 pp, below the pre-registered +10 pp; machinery left disabled. |
 
 ## Conflicts noted
 
