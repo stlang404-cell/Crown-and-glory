@@ -81,7 +81,7 @@ export function App({ services }: { services: AppServices }) {
             </button>
           ))}
           <div className="rail-foot">
-            Offline · local saves · fictional money only<br />v{'0.1.0'} · crown-la6-v1
+            Offline · local saves · fictional money only<br />v{'0.2.0'} · crown-la6-v1
           </div>
         </nav>
         <main className="main" id="main">

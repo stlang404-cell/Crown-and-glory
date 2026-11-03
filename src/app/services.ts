@@ -10,7 +10,7 @@ import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.2.0';
 
 type Listener = () => void;
 
