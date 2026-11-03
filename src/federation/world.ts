@@ -103,8 +103,14 @@ export function joinPlayer(ctx: Ctx, region: number): { displaced: string } {
 }
 
 /** Register the player for the Challenger Open (before its first round); replaces the lowest seed. */
+/** Register the player for the Swiss event of their division band: Federation Open (divisions 2–4) or
+ *  Challenger Open (5–8). The player takes the place of the lowest seed. Crown Division players qualify through
+ *  their league instead. */
+export const swissEventFor = (division: number): 'open' | 'challenger' | null => (division >= 5 ? 'challenger' : division >= 2 ? 'open' : null);
 export function registerChallenger(ctx: Ctx): { replaced: string } {
-  const sw = ctx.plan.swiss.find(x => x.event === 'challenger')!;
+  const ev = swissEventFor(ctx.world.player.division);
+  if (!ev) throw new Error('Crown Division players qualify for the Championship through their league');
+  const sw = ctx.plan.swiss.find(x => x.event === ev)!;
   if (!ctx.world.player.joined) throw new Error('Join the federation first');
   if (ctx.world.round > SWISS_ROUNDS[0] - 1 && ctx.world.round !== SWISS_ROUNDS[0]) throw new Error('Registration is closed');
   if (sw.rounds.length) throw new Error('Registration is closed');

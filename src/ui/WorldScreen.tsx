@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
-import { leagueTable, swissTable } from '../federation/world';
+import { leagueTable, swissTable, swissEventFor } from '../federation/world';
 import { gamesOf } from '../federation/driver';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
@@ -63,8 +63,9 @@ export function WorldScreen() {
   const table = myCircuit ? leagueTable(myCircuit, games) : [];
   const mine = fed.playerFixtures();
   const featured = fed.featuredFixtures();
-  const challenger = st.plan.swiss.find(s => s.event === 'challenger')!;
-  const registered = challenger.entrants.includes(PLAYER_ID);
+  const myEvent = swissEventFor(w.player.division);
+  const mySwiss = st.plan.swiss.find(s => s.event === (myEvent ?? 'challenger'))!;
+  const registered = st.plan.swiss.some(s => s.entrants.includes(PLAYER_ID));
   const cash = fed.balance('player:cash');
 
   return (
@@ -147,14 +148,14 @@ export function WorldScreen() {
           <h3>Season calendar</h3>
           <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · Promotion/relegation at season end (top/bottom two).</div>
           <div className="panel" style={{ background: 'transparent' }}>
-            <strong>Challenger Open</strong> — divisions 5–8, 32 players, five Swiss rounds, prizes 600 ₵.
-            <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.</div>
-            {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && w.player.division >= 5 ? (
+            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'divisions 2–4, 32 players, five Swiss rounds, prizes 1,500 ₵; the top 8 qualify for the Crown Championship' : 'divisions 5–8, 32 players, five Swiss rounds, prizes 600 ₵'}.
+            <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market at 1/32 per share (published conflict rule).' : ''}</div>
+            {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && myEvent ? (
               <div className="row" style={{ marginTop: 6 }}>
                 <button className="btn small" disabled={!!busy || cash < CHALLENGER_FEE} onClick={() => act('reg', () => fed.registerChallenger(false))}>Register ({fmtCrowns(CHALLENGER_FEE, 0)})</button>
                 {cash < RECOVERY_THRESHOLD && <button className="btn small" disabled={!!busy || st.extra.vouchers.includes(w.season)} onClick={() => act('reg', () => fed.registerChallenger(true))}>Use recovery voucher</button>}
               </div>
-            ) : <span className="chip">{w.player.division < 5 ? 'Not eligible (division 1–4)' : 'Registration closed'}</span>}
+            ) : <span className="chip">{!myEvent ? 'Crown Division: qualify through your league' : 'Registration closed'}</span>}
           </div>
           {w.player.titles.length > 0 && <div><strong>Your titles</strong><ul className="small">{w.player.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul></div>}
         </div>

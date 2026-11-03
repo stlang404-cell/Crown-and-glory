@@ -49,7 +49,8 @@ evidence · **Implemented, unverified** = code exists, not exercised end-to-end 
 | Save migration v0.3.0 → v0.4.0 (DB v4, mid-season family listing) | Verified complete | tests/storage.test.ts, journey step 1 (real v0.3.0 build) |
 | Player acceptance journey (28 steps) | JOURNEY_STATUS | docs/evidence/m4/journey-log.txt |
 | Economy simulations (9 strategies × 3 seeds × 4 seasons) and federation (3 seeds × 40 seasons) | SIM_STATUS | docs/M4_ECONOMY.md, docs/sim/ |
-| Player route into the Federation Open; group-stage championship format; rank titles | Not implemented | docs/M5_ROADMAP.md |
+| Player route into the Federation Open (divisions 2–4) with the market conflict rule | Verified complete | tests/markets.test.ts |
+| Group-stage championship format; rank titles | Not implemented | docs/M5_ROADMAP.md |
 | Tournament-winner in-event trading, forecast league with funded prizes | Not implemented | docs/M5_ROADMAP.md |
 | Windows launchers on Windows; physical iPhone | Not verified (no devices) | — |
 

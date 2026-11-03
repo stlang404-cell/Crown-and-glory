@@ -21,7 +21,7 @@ Every item names its acceptance evidence. Nothing is "done" because a screen exi
 
 ## 3. Federation
 
-- Player route into the Federation Open (divisions 2–4), regional champions qualifier, and the research's group
+- Regional champions qualifier, and the research's group
   stage + 8-player knockout championship format as an option (documented deviation in v0.3/v0.4).
 - Rank titles tied to federation results (crown-rank-1), replacing rating bands.
 - Broadcast requests: let the player choose which match is featured before the round opens.

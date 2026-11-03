@@ -18,7 +18,9 @@ Scoring: win 1, draw ½, loss 0. Forfeit: the forfeiting side scores 0 (no game,
 
 ## Swiss events (rounds 4–8)
 
-- **Federation Open** — the 32 highest-rated active competitors of divisions 2–4 at season start.
+- **Federation Open** — the 32 highest-rated active competitors of divisions 2–4 at season start; since v0.4.0 a
+  player in divisions 2–4 may register (25 ₵ or a recovery voucher) and takes the place of the 32nd seed — their
+  entry cancels the Open champion market on its published 1/32 vector (conflict rule).
   **Challenger Open** — the 32 highest-rated of divisions 5–8; if the player registers (entry 25 ₵, or a
   recovery voucher; registration closes before round 4) they take the place of the 32nd seed and are seeded
   by rating. Both fields are 32 (no byes unless the field changes); byes are supported by the pairing code.

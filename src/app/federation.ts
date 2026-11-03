@@ -9,7 +9,7 @@
  */
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed } from '../federation/generator';
-import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
+import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId } from '../federation/model';
 import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
@@ -428,8 +428,19 @@ export class FederationService {
         if (cash < CHALLENGER_FEE) throw new Error('Not enough cash for the entry fee (a recovery voucher is available below 100 ₵)');
         this.post(st, [entryFeeJournal(st.world.season, this.now())], posted);
       }
+      // conflict procedure: entering an event cancels its open market on the published 1/n vector first
+      const cancelled: Market[] = [], cancelledPos: Position[] = [];
+      if (swissEventFor(st.world.player.division) === 'open') {
+        const m = st.markets.get(`mk:open-winner:${st.world.season}`);
+        if (m && (m.status === 'open' || m.status === 'closed')) {
+          const c = cancelMarket(m, [...st.positions.values()].filter(p => p.marketId === m.id), this.now(), st.balances.get(acct(m, 'collateral')) ?? 0);
+          this.post(st, [c.journal], posted);
+          st.markets.set(m.id, c.market); cancelled.push(c.market);
+          for (const p of c.positions) { st.positions.set(p.id, p); cancelledPos.push(p); }
+        }
+      }
       registerChallengerPure(this.ctxOf(st, await this.playerRating()));
-      await this.commit(st, posted, { plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      await this.commit(st, posted, { plans: [st.plan], markets: cancelled, positions: cancelledPos }, { season: st.world.season, round: st.world.round });
     });
   }
 

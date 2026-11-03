@@ -236,3 +236,24 @@ describe('v0.3.0 saves migrated mid-season', () => {
     expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
   }, 60_000);
 });
+
+describe('player route into the Federation Open', () => {
+  it('a division 2–4 player can enter the Open; their entry cancels the Open champion market on the published 1/n vector', async () => {
+    const svc = await make();
+    await svc.create(6, 6060);
+    await svc.trade('mk:open-winner:1', 3, 10, 'buy');
+    const paid = svc.state!.positions.get('mk:open-winner:1|player:cash')!.spent;
+    (svc.state!.world.player as { division: number }).division = 3; // promoted player (test shortcut on the cached state)
+    const cash0 = svc.balance('player:cash');
+    await svc.registerChallenger(false);
+    const open = svc.state!.plan.swiss.find(s => s.event === 'open')!;
+    expect(open.entrants).toContain(PLAYER_ID);
+    expect(open.entrants).toHaveLength(32);
+    const m = svc.state!.markets.get('mk:open-winner:1')!;
+    expect(m.status).toBe('cancelled');
+    // 10 shares × 1/32 crown, minus the 25 ₵ entry fee
+    expect(svc.balance('player:cash') - cash0).toBe(Math.floor(10 / 32 * 1e6 + 1e-6) - 25_000_000);
+    expect(paid).toBeGreaterThan(0);
+    expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
+  }, 60_000);
+});

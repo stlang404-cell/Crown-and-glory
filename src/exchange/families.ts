@@ -176,7 +176,7 @@ export function normaliseModel(xs: number[], floor = 0.002): number[] {
 // ---------------------------------------------------------------- published rules
 export const RULES: Record<string, string> = {
   match: 'States: White wins / Draw / Black wins. Trading: from round opening until the match starts; if you watch it live, also in-play between moves (after each move is published, before the next is computed). Closure: the final move. Settlement: the result. Cancellation (match never played): 1/3 per share.',
-  winner: 'States: every entrant. Trading: until the event\'s first round is processed or its first game starts. Settlement: the champion; joint champions split each share equally. Cancellation: 1/n per share.',
+  winner: 'States: every entrant. Trading: until the event\'s first round is processed or its first game starts. Settlement: the champion; joint champions split each share equally. Cancellation: 1/n per share — published conflict rule: if you (the player) enter this event, the market is cancelled at 1/n before your entry takes effect.',
   promotion: 'States: Yes (finishes top two of the division and is promoted) / No. Trading: until the last league round starts. Settlement: the promotion list at season end. Cancellation: ½ per share.',
   qualification: 'States: Yes (qualifies for the Crown Championship as one of the 8 best regional Crown Division winners) / No. Trading: until the last league round starts. Settlement: the Championship field. Cancellation: ½ per share.',
   season: 'States: every member of the division. Trading: until the last league round starts. Settlement: the division title holder (league order: points, head-to-head, Sonneborn–Berger, seed). Cancellation: 1/16 per share.',
