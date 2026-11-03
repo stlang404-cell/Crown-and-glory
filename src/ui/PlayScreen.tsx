@@ -471,7 +471,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
               )}
             </div>
           )}
-          <div className="small muted">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}. No engine help is available during play; analysis opens after the game.</div>
+          <div className="small muted">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}. {rec.rated ? 'No engine help is available in rated play; analysis opens after the game.' : 'Full engine analysis opens after the game.'}</div>
         </div>
       </div>
       {final && <ResultOverlay final={final} onClose={() => setFinal(null)} />}
