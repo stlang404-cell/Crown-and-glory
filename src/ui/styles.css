@@ -41,7 +41,7 @@
   --line-soft: color-mix(in srgb, var(--line) 70%, transparent);
   --surface-hi: color-mix(in srgb, var(--text) 4%, transparent);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, .18);
-  --sq-last: color-mix(in srgb, var(--sq-hl) 38%, transparent);
+  --sq-last: color-mix(in srgb, var(--sq-hl) 32%, transparent);
   --sq-last-to: color-mix(in srgb, var(--sq-hl) 50%, transparent);
   --sq-sel: color-mix(in srgb, var(--sq-hl) 64%, transparent);
   --sq-hint: rgba(16, 18, 24, 0.36);
