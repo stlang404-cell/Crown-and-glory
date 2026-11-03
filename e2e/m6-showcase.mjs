@@ -3,14 +3,14 @@
  * acceptance journeys (no seeded or edited data). Each career lives in its own browser profile and origin, so each
  * is served on the port its journey used. Profiles are copied first, so the journeys' evidence stays untouched.
  *   npm run build && node e2e/m6-showcase.mjs
- * Output: docs/screenshots/m6/*.png, docs/screenshots/m6/live-arena.webm (+ .gif if ffmpeg exists), INDEX.md data.
+ * Output: docs/screenshots/grandmaster-polish/*.png, docs/screenshots/m6/live-arena.webm (+ .gif if ffmpeg exists), INDEX.md data.
  */
 import { createRequire } from 'node:module';
 import { cpSync, mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
-const SHOTS = new URL('../docs/screenshots/m6/', import.meta.url).pathname;
+const SHOTS = new URL('../docs/screenshots/grandmaster-polish/', import.meta.url).pathname;
 const TMP = new URL('./artifacts/tmp/showcase/', import.meta.url).pathname;
 mkdirSync(SHOTS, { recursive: true });
 rmSync(TMP, { recursive: true, force: true }); mkdirSync(TMP, { recursive: true });

@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 const PORT = +(process.argv[2] ?? 4299);
 const URL_ = `http://127.0.0.1:${PORT}/`;
 const OUT = new URL('../docs/evidence/m6-arena/', import.meta.url).pathname;
-const SHOTS = new URL('../docs/screenshots/m6/', import.meta.url).pathname;
+const SHOTS = new URL('../docs/screenshots/grandmaster-polish/', import.meta.url).pathname;
 const PROFILE = new URL('./artifacts/tmp/m6-profile', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true }); mkdirSync(SHOTS, { recursive: true });
 rmSync(PROFILE, { recursive: true, force: true });
