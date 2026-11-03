@@ -48,7 +48,7 @@ export function AcademyScreen() {
       <div className="grid-3" style={{ marginBottom: 14 }}>
         <div className="panel stat"><span className="k">Puzzles solved (first try, no hint)</span><span className="v">{first.filter(a => a.clean).length}</span><span className="small muted">{cleanRate === null ? 'no attempts yet' : `${Math.round(cleanRate * 100)}% of ${first.length} first attempts`}</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush best</span><span className="v">{rushBest}</span><span className="small muted">{data.runs.filter(r => r.mode === 'rush').length} runs</span></div>
-        <div className="panel stat"><span className="k">Verified puzzles</span><span className="v">{data.puzzles.length}</span><span className="small muted">{data.puzzles.filter(p => p.split === 'heldout').length} reserved for held-out assessment</span></div>
+        <div className="panel stat"><span className="k">Verified puzzles</span><span className="v">{data.puzzles.filter(p => !p.retired).length}</span><span className="small muted">{data.puzzles.filter(p => p.split === 'heldout' && !p.retired).length} reserved for held-out assessment{data.puzzles.some(p => p.retired) ? ` · ${data.puzzles.filter(p => p.retired).length} retired after canonical re-verification` : ''}</span></div>
       </div>
       <div className="panel" style={{ marginBottom: 14 }}>
         <div className="panel-title"><h3 style={{ margin: 0 }}>Recommended next</h3><span className="chip gold">Adaptive</span></div>

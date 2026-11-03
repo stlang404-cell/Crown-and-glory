@@ -6,19 +6,23 @@
  * labels accuracy and grades as experimental.
  */
 import type { EngineScore, Grade, Phase, Pov } from './types';
-import { logisticU, mapV1 } from './outcomeMap';
+import { logisticU, mapV1, mapV2 } from './outcomeMap';
 
 /**
  * Versions: v0 used the research placeholder logistic s = 200 cp. v1 (M2) uses crown-outcome-map-v1, an
  * isotonic expected-score map validated on held-out opening families (docs/M2_ANALYSIS_CALIBRATION.md).
  * Grade bins and accuracy k are unchanged and remain experimental.
  */
-export const GRADING_ID = 'crown-grade-v1-experimental';
-export const ACCURACY_ID = 'crown-accuracy-v1';
-export const LEGACY_IDS = { grading: 'crown-grade-v0-experimental', accuracy: 'crown-accuracy-v0-experimental' };
+export const GRADING_ID = 'crown-grade-v2-experimental';
+export const ACCURACY_ID = 'crown-accuracy-v2';
+/** Earlier methodologies, kept so historical reports display with their own map and are reproducible. */
+export const LEGACY_IDS = {
+  grading: 'crown-grade-v0-experimental', accuracy: 'crown-accuracy-v0-experimental',
+  v1: { grading: 'crown-grade-v1-experimental', accuracy: 'crown-accuracy-v1', calibration: 'expected-score map crown-outcome-map-v1 (isotonic, held-out validated on engine games); grade bins and k=4 are uncalibrated placeholders' },
+};
 export const PHASE_ID = 'crown-phase-1';
 export const CRITICAL_ID = 'crown-critical-1';
-export const CALIBRATION = 'expected-score map crown-outcome-map-v1 (isotonic, held-out validated on engine games); grade bins and k=4 are uncalibrated placeholders';
+export const CALIBRATION = 'expected-score map crown-outcome-map-v2 (isotonic, refitted for the canonical engine crown-search-2+crown-eval-4, held-out validated by opening family); grade bins and k=4 unchanged and experimental';
 
 export const S_CP = 200;
 export const K_ACC = 4;
@@ -34,11 +38,16 @@ export const LOSS_BINS: { grade: Grade; max: number }[] = [
   { grade: 'blunder', max: 1 },
 ];
 export const GREAT_GAP = 0.1;
+/** v2: Great/Brilliant need a position that is not already lost after the move (expected score ≥ 0.25) and not
+ * already trivially won before it (best alternative ≤ 0.97): an "only move" that still loses, or one of many
+ * winning moves, earns no special credit. */
+export const GREAT_MIN_U = 0.25;
+export const GREAT_MAX_SECOND_U = 0.97;
 export const CRITICAL_GAP = 0.1;
 
 /** Bounded expected score of a typed score for the score's own POV, under a methodology's map. */
 export function expectedU(s: EngineScore, accuracyId: string = ACCURACY_ID): number {
-  if (s.kind === 'cp') return accuracyId === LEGACY_IDS.accuracy ? logisticU(s.value, S_CP) : mapV1(s.value);
+  if (s.kind === 'cp') return accuracyId === LEGACY_IDS.accuracy ? logisticU(s.value, S_CP) : accuracyId === LEGACY_IDS.v1.accuracy ? mapV1(s.value) : mapV2(s.value);
   if (s.kind === 'mate') return s.plies > 0 ? 1 : 0;
   return s.outcome === 'win' ? 1 : s.outcome === 'draw' ? 0.5 : 0;
 }
@@ -71,6 +80,8 @@ export interface GradeInput {
   sacrifice: { material: number; verified: boolean; recapture: boolean } | null;
   /** Second-best alternative at depth-1 (for gap stability). */
   uSecondPrev: number | null;
+  /** Apply the v2 Great/Brilliant guards (GREAT_MIN_U, GREAT_MAX_SECOND_U). */
+  v2?: boolean;
 }
 
 export interface GradeOutput {
@@ -117,7 +128,8 @@ export function gradeMove(i: GradeInput): GradeOutput {
     }
   }
   let grade = gradeForLoss(L);
-  if (grade === 'best' && !uncertain && !i.mateInvolved) {
+  const greatAllowed = !i.v2 || (i.uBest >= GREAT_MIN_U && (i.uSecond === null || i.uSecond <= GREAT_MAX_SECOND_U));
+  if (grade === 'best' && !uncertain && !i.mateInvolved && greatAllowed) {
     const gap = i.uSecond !== null ? i.uBest - i.uSecond : 0;
     const gapPrev = i.uSecondPrev !== null && i.uBestPrev !== null ? i.uBestPrev - i.uSecondPrev : null;
     const stable = i.playedIsBest && i.playedIsBestPrev && gapPrev !== null && gapPrev >= GREAT_GAP - TOL;

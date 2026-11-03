@@ -41,8 +41,8 @@ export function crownConfig(id: string, nodes: number, features: Partial<SearchF
 }
 
 export function crownLevel(level: number, timeCapMs?: number): Player {
-  const s = new Searcher(18);
   const profile = { ...getLevel(level) };
+  const s = new Searcher(profile.ttBits ?? 18);
   if (timeCapMs) profile.maxTimeMs = timeCapMs;
   return {
     id: `crown-${profile.id}`,

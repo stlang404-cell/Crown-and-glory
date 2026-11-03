@@ -5,13 +5,17 @@
  * is scored by the Crown engine with a fixed policy (depth 6 full search, fresh TT per game) from the
  * side-to-move perspective and labelled with the final game result for that side (1 / ½ / 0).
  *   npx tsx tools/calibration/build_corpus.ts [depth]
+ * v2 (CORPUS=v2): scored by the canonical engine crown-search-2 + crown-eval-4 (PLAY_FEATURES/PLAY_WEIGHTS)
+ * and extended with near-equal M4/v0.5 engine matches (tools/bench/results/match-*.json, |Elo diff| < 75).
+ * Output: corpus-v2.json (v1 corpus.json is left untouched for historical reports).
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import os from 'node:os';
 
 const RES = new URL('../bench/results/', import.meta.url);
-const OUT = new URL('./corpus.json', import.meta.url);
+const V2 = process.env.CORPUS === 'v2';
+const OUT = new URL(V2 ? './corpus-v2.json' : './corpus.json', import.meta.url);
 interface G { white: string; black: string; opening: string[]; moves: string[]; result: string; reason: string }
 
 if (isMainThread) {
@@ -30,23 +34,33 @@ if (isMainThread) {
       gs.forEach((g, i) => { if (g.result !== '*') games.push({ ...g, gameId: `${f}:${key}:${i}` }); });
     }
   }
+  if (V2) {
+    const { readdirSync } = await import('node:fs');
+    for (const f of readdirSync(RES).filter(x => /^match-.*(m4|v5calib).*\.json$/.test(x) && !x.includes('fairy'))) {
+      const m = JSON.parse(readFileSync(new URL(f, RES), 'utf8')) as { summary: { eloDiff: number | null }; games: G[] };
+      if (m.summary?.eloDiff === null || m.summary?.eloDiff === undefined || Math.abs(m.summary.eloDiff) >= 75) continue;
+      m.games.forEach((g, i) => { if (g.result !== '*') games.push({ ...g, gameId: `${f}:${i}` }); });
+    }
+  }
   console.log('games', games.length);
   const n = Math.max(1, os.cpus().length);
   const chunks = Array.from({ length: n }, (_, k) => games.filter((_, i) => i % n === k));
   const results = await Promise.all(chunks.map(chunk => new Promise<unknown[]>((res, rej) => {
-    const w = new Worker(new URL('./boot.mjs', import.meta.url), { workerData: { chunk, depth } });
+    const w = new Worker(new URL('./boot.mjs', import.meta.url), { workerData: { chunk, depth, v2: V2 } });
     w.on('message', res); w.on('error', rej);
   })));
   const positions = results.flat();
-  writeFileSync(OUT, JSON.stringify({ id: 'crown-calib-corpus-1', depth, games: games.length, positions: positions.length, createdAt: new Date().toISOString(), data: positions }));
+  writeFileSync(OUT, JSON.stringify({ id: V2 ? 'crown-calib-corpus-2' : 'crown-calib-corpus-1', engine: V2 ? 'crown-search-2+crown-eval-4' : 'crown-search-1+crown-eval-3', depth, games: games.length, positions: positions.length, createdAt: new Date().toISOString(), data: positions }));
   console.log('positions', positions.length);
   process.exit(0);
 } else {
   const { Position } = await import('../../src/rules/position');
   const { parseLegalCcn } = await import('../../src/rules/notation');
-  const { Searcher, isMateScore, mateInPlies } = await import('../../src/engine/search');
+  const { Searcher, isMateScore, mateInPlies, PLAY_FEATURES } = await import('../../src/engine/search');
+  const { PLAY_WEIGHTS } = await import('../../src/engine/evaluate');
   const { QUEEN, KING, PAWN } = await import('../../src/rules/types');
-  const { chunk, depth } = workerData as { chunk: (G & { gameId: string })[]; depth: number };
+  const { chunk, depth, v2 } = workerData as { chunk: (G & { gameId: string })[]; depth: number; v2: boolean };
+  const canon = v2 ? { features: PLAY_FEATURES, weights: PLAY_WEIGHTS } : {};
   const s = new Searcher(18);
   const out: unknown[] = [];
   for (const g of chunk) {
@@ -55,7 +69,7 @@ if (isMainThread) {
     const whiteScore = g.result === '1-0' ? 1 : g.result === '0-1' ? 0 : 0.5;
     for (let i = 0; i < g.moves.length; i++) {
       if (i >= 6 && i % 3 === 0 && i < g.moves.length - 1 && p.legalMoves().length > 1) {
-        const r = s.search(p, { limits: { depth } });
+        const r = s.search(p, { limits: { depth }, ...canon });
         const c = p.pieceCount();
         const pieces = c.white.reduce((a, x, t) => a + (t !== PAWN && t !== KING ? x : 0), 0) + c.black.reduce((a, x, t) => a + (t !== PAWN && t !== KING ? x : 0), 0);
         out.push({

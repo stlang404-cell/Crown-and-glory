@@ -11,9 +11,12 @@
  * Mate-scored positions are excluded from the cp mapping and reported separately.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { mapV1 } from '../../src/analysis/outcomeMap';
+/** CORPUS=v2: canonical-engine corpus; adds candidate V1 = the published v1 map applied unchanged. */
+const V2 = process.env.CORPUS === 'v2';
 
 interface P { g: string; fam: string; ply: number; stm: number; cp: number | null; mate: number | null; y: number; queens: number; pieces: number }
-const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8')) as { depth: number; games: number; data: P[] };
+const corpus = JSON.parse(readFileSync(new URL(V2 ? './corpus-v2.json' : './corpus.json', import.meta.url), 'utf8')) as { depth: number; games: number; data: P[] };
 const all = corpus.data;
 const cpPos = all.filter(p => p.cp !== null).map(p => ({ ...p, cp: Math.max(-2000, Math.min(2000, p.cp!)) }));
 const matePos = all.filter(p => p.mate !== null);
@@ -58,8 +61,8 @@ function fitIsotonic(train: { cp: number; y: number }[]): Model {
   };
 }
 
-const names = ['P0', 'L1', 'L2', 'ISO'] as const;
-const oof: Record<string, number[]> = { P0: [], L1: [], L2: [], ISO: [] };
+const names = (V2 ? ['P0', 'V1', 'L1', 'L2', 'ISO'] : ['P0', 'L1', 'L2', 'ISO']) as readonly string[];
+const oof: Record<string, number[]> = { P0: [], V1: [], L1: [], L2: [], ISO: [] };
 const fitted: Record<string, { s: number; a: number }[]> = { L1: [], L2: [] };
 const order: P[] = [];
 for (const fam of fams) {
@@ -68,7 +71,7 @@ for (const fam of fams) {
   fitted.L1.push({ s: l1.s, a: 0 }); fitted.L2.push({ s: l2.s, a: l2.a });
   for (const p of test) {
     order.push(p as P);
-    oof.P0.push(sig(p.cp / 200)); oof.L1.push(l1.model(p)); oof.L2.push(l2.model(p)); oof.ISO.push(iso(p));
+    oof.P0.push(sig(p.cp / 200)); oof.V1.push(mapV1(p.cp)); oof.L1.push(l1.model(p)); oof.L2.push(l2.model(p)); oof.ISO.push(iso(p));
   }
 }
 const ys = order.map(p => p.y);
@@ -110,12 +113,12 @@ const metrics = Object.fromEntries(names.map(n => {
 const full1 = fitLogistic(cpPos, false), full2 = fitLogistic(cpPos, true);
 const mateWins = matePos.filter(p => p.mate! > 0), mateLoss = matePos.filter(p => p.mate! < 0);
 const out = {
-  id: 'crown-calib-fit-1', corpus: { depth: corpus.depth, games: corpus.games, positions: all.length, cpPositions: cpPos.length, matePositions: matePos.length, families: fams },
+  id: V2 ? 'crown-calib-fit-2' : 'crown-calib-fit-1', corpus: { depth: corpus.depth, games: corpus.games, positions: all.length, cpPositions: cpPos.length, matePositions: matePos.length, families: fams },
   metrics,
   foldParams: fitted,
   fullFit: { L1: { s: full1.s }, L2: { s: full2.s, a: full2.a } },
   mate: { favourable: { n: mateWins.length, meanOutcome: mateWins.reduce((a, p) => a + p.y, 0) / Math.max(1, mateWins.length) }, unfavourable: { n: mateLoss.length, meanOutcome: mateLoss.reduce((a, p) => a + p.y, 0) / Math.max(1, mateLoss.length) } },
 };
-writeFileSync(new URL('./fit-results.json', import.meta.url), JSON.stringify(out, null, 1));
+writeFileSync(new URL(V2 ? './fit-results-v2.json' : './fit-results.json', import.meta.url), JSON.stringify(out, null, 1));
 for (const n of names) console.log(n, 'brier', metrics[n].brier.toFixed(5), 'CI', metrics[n].brierCI.map(x => x.toFixed(5)).join('–'), 'Δ vs P0', metrics[n].brierMinusP0CI.map(x => x.toFixed(5)).join('–'), 'logloss', metrics[n].logloss.toFixed(4), 'ece', metrics[n].ece.toFixed(4));
 console.log('full fit L1 s', full1.s.toFixed(1), 'L2', full2.s.toFixed(1), full2.a.toFixed(3), 'mate', JSON.stringify(out.mate));

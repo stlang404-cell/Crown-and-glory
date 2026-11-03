@@ -36,7 +36,9 @@ export interface ParticipantSnapshot {
   rating: number | null;
   rd: number | null;
   /** Engine opponents only. */
-  engine?: { profileId: string; level: number; levelsId: string; searchId: string; evalId: string; calibrationId: string; style: string; profile?: import('../engine/levels').StrengthProfile; styleId?: import('../federation/model').StyleId };
+  engine?: { profileId: string; level: number; levelsId: string; searchId: string; evalId: string; calibrationId: string; style: string; profile?: import('../engine/levels').StrengthProfile; styleId?: import('../federation/model').StyleId;
+    /** v0.5: exact engine configuration used for this game (rules, backend, build, memory, budget). */
+    config?: { rules: string; backend: string; build: string; intel: string; ttBits: number; maxTimeMs: number; nodes: number | null; selection: 'best' | 'bounded' } };
 }
 
 export interface MoveRecord {
@@ -53,7 +55,9 @@ export interface MoveRecord {
   clockAfterMs: number | null;
   elapsedMs: number;
   /** Engine move metadata (engine moves only). */
-  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample' | 'repertoire'; seed: number };
+  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample' | 'repertoire'; seed: number;
+    /** v0.5 provenance: score (side to move's view), stop reason and build of the search that chose the move. */
+    score?: { kind: 'cp' | 'mate'; value: number }; stopReason?: string; build?: string };
 }
 
 export interface AssistanceEvent {

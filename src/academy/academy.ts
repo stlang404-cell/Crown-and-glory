@@ -31,6 +31,12 @@ export interface Puzzle {
   source?: 'corpus' | 'mistake';
   sourceGameId?: string;
   sourcePly?: number;
+  /** v0.5 canonical re-verification (crown-puzzle-verify-2). */
+  canonical?: { verifyId: string; engine: string; ok: boolean; gap: number; steps: number };
+  /** Retired puzzles are never served; they stay in the set so earlier attempts keep their meaning. */
+  retired?: { verifyId: string; reason: string };
+  /** Original line when a puzzle was shortened to its verified prefix. */
+  revisedFrom?: { solution: string[]; playerMoves: number; reason: string };
 }
 
 export type AcademyMode = 'tactics' | 'rush' | 'calculation' | 'defense' | 'endgame' | 'mistakes' | 'adaptive' | 'assessment';
@@ -85,6 +91,7 @@ export const MODE_INFO: Record<AcademyMode, { title: string; blurb: string }> = 
 };
 
 export function modeFilter(mode: AcademyMode, p: Puzzle): boolean {
+  if (p.retired) return false;
   if (p.split !== 'training' && mode !== 'assessment') return false;
   switch (mode) {
     case 'calculation': return p.playerMoves >= 2;

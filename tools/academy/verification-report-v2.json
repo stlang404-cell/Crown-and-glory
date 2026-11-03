@@ -1,0 +1,11 @@
+{
+ "verifyId": "crown-puzzle-verify-2",
+ "engine": "crown-search-2+crown-eval-4",
+ "total": 484,
+ "active": 405,
+ "retired": 79,
+ "truncated": 12,
+ "defenceRejections": 8,
+ "seconds": 57,
+ "at": "2026-11-03T18:23:47.549Z"
+}

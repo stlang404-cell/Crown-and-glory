@@ -11,10 +11,10 @@ import { Position } from '../rules/position';
 import { parseLegalCcn, moveToCcn, moveToSan, ccnLineToSan } from '../rules/notation';
 import { automaticOutcome } from '../rules/adjudication';
 import { Color, KING, PAWN, QUEEN, RULES_VERSION, VARIANT_ID, WHITE, moveTo } from '../rules/types';
-import { Searcher, SEARCH_ID, isMateScore, mateInPlies, see } from '../engine/search';
-import { EVAL_ID } from '../engine/evaluate';
+import { Searcher, isMateScore, mateInPlies, see } from '../engine/search';
+import { CANON_BUILD, CANON_EVAL_ID, CANON_OPTS, CANON_SEARCH_ID } from '../engine/canonical';
 import {
-  ACCURACY_ID, CALIBRATION, CRITICAL_GAP, CRITICAL_ID, GRADING_ID, PHASE_ID, accuracyFromLosses, expectedU, gradeMove, nextPhase, toPov,
+  ACCURACY_ID, CALIBRATION, CRITICAL_GAP, CRITICAL_ID, GRADING_ID, LEGACY_IDS, PHASE_ID, accuracyFromLosses, expectedU, gradeMove, nextPhase, toPov,
 } from './methodology';
 import { COACH_ID, TOPICS, coachNotes, sacrificedMaterial } from '../academy/coach';
 import type {
@@ -22,7 +22,17 @@ import type {
 } from './types';
 import { GRADES } from './types';
 
-export const ENGINE_BUILD = `${SEARCH_ID}+${EVAL_ID}`;
+/** Analysis runs on the canonical foundation (crown-intel-1); historical reports keep their own build id. */
+export const ENGINE_BUILD = CANON_BUILD;
+/** 'legacy-v1' reproduces pre-v0.5 reports exactly (crown-search-1 + crown-eval-3, grading v1); never used for new reports. */
+export type AnalysisEngine = 'canonical' | 'legacy-v1';
+const LEGACY_BUILD = 'crown-search-1+crown-eval-3';
+interface Profile { opts: typeof CANON_OPTS | Record<string, never>; build: string; searchId: string; evalId: string; gradingId: string; accuracyId: string; calibration: string; v2: boolean }
+function profileOf(e: AnalysisEngine): Profile {
+  return e === 'legacy-v1'
+    ? { opts: {}, build: LEGACY_BUILD, searchId: 'crown-search-1', evalId: 'crown-eval-3', gradingId: LEGACY_IDS.v1.grading, accuracyId: LEGACY_IDS.v1.accuracy, calibration: LEGACY_IDS.v1.calibration, v2: false }
+    : { opts: CANON_OPTS, build: CANON_BUILD, searchId: CANON_SEARCH_ID, evalId: CANON_EVAL_ID, gradingId: GRADING_ID, accuracyId: ACCURACY_ID, calibration: CALIBRATION, v2: true };
+}
 
 export const ANALYSIS_PRESETS: AnalysisSettings[] = [
   { id: 'quick-d5', label: 'Quick (depth 5)', depth: 5, screenDepth: 2, verifyExtra: 2, candidates: 3 },
@@ -56,8 +66,9 @@ export interface AnalyzeCallbacks {
   now?(): number;
 }
 
-export function reportId(gameId: string, checksum: string, settings: AnalysisSettings): string {
-  return `report:${gameId}:${checksum.slice(0, 12)}:${ENGINE_BUILD}:${settings.id}:${GRADING_ID}`;
+export function reportId(gameId: string, checksum: string, settings: AnalysisSettings, engine: AnalysisEngine = 'canonical'): string {
+  const pr = profileOf(engine);
+  return `report:${gameId}:${checksum.slice(0, 12)}:${pr.build}:${settings.id}:${pr.gradingId}`;
 }
 
 function terminalScoreAfter(pos: Position, mover: Color): EngineScore | null {
@@ -68,7 +79,10 @@ function terminalScoreAfter(pos: Position, mover: Color): EngineScore | null {
   return { kind: 'terminal', outcome: o.winner === mover ? 'win' : 'loss', pov };
 }
 
-export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb: AnalyzeCallbacks = {}, searcher = new Searcher(18)): AnalysisReport {
+export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb: AnalyzeCallbacks = {}, searcher = new Searcher(18), engine: AnalysisEngine = 'canonical'): AnalysisReport {
+  const PR = profileOf(engine);
+  const O = PR.opts;
+  const eu = (s: EngineScore) => expectedU(s, PR.accuracyId);
   const now = cb.now ?? (() => Date.now());
   const t0 = now();
   const startedAt = new Date().toISOString();
@@ -100,16 +114,16 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
     const preHash = pos.hashKey();
     const D = settings.depth;
     // (1) screen
-    const screen = legal.length > 1 ? searcher.scoreRootMoves(pos, legal, Math.min(settings.screenDepth, D)) : [];
+    const screen = legal.length > 1 ? searcher.scoreRootMoves(pos, legal, Math.min(settings.screenDepth, D), O) : [];
     screen.sort((a, b) => b.score - a.score);
     // (2) full search
-    const full = searcher.search(pos, { limits: { depth: D } });
+    const full = searcher.search(pos, { limits: { depth: D }, ...O });
     const set = new Set<number>([playedMove, full.bestMove, ...screen.slice(0, settings.candidates).map(s => s.move)]);
     if (legal.length === 1) set.add(legal[0]);
     const moves = [...set].filter(m => legal.includes(m));
     // (3) exact scores at D and D-1
-    const atD = searcher.scoreRootMoves(pos, moves, D);
-    const atPrev = D > 1 ? searcher.scoreRootMoves(pos, moves, D - 1) : null;
+    const atD = searcher.scoreRootMoves(pos, moves, D, O);
+    const atPrev = D > 1 ? searcher.scoreRootMoves(pos, moves, D - 1, O) : null;
     const nodes = full.nodes + atD.reduce((a, b) => a + b.nodes, 0) + (atPrev?.reduce((a, b) => a + b.nodes, 0) ?? 0);
 
     const legalForSan = legal;
@@ -125,16 +139,16 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
       const pv = d.pv.map(moveToCcn);
       let pvSan: string[] = [];
       try { pvSan = ccnLineToSanFrom(pos, pv); } catch { pvSan = []; }
-      return { ccn: moveToCcn(m), san: moveToSan(pos, m, legalForSan), score, scorePrev, u: expectedU(score), pv, pvSan };
+      return { ccn: moveToCcn(m), san: moveToSan(pos, m, legalForSan), score, scorePrev, u: eu(score), pv, pvSan };
     };
     const cands = moves.map(mk).sort((a, b) => b.u - a.u || cpOf(b.score) - cpOf(a.score));
     const best = cands[0];
     const played = cands.find(c => c.ccn === ccn)!;
     const second = cands.find(c => c.ccn !== best.ccn) ?? null;
-    const prevSorted = cands.filter(c => c.scorePrev).map(c => ({ c, u: expectedU(c.scorePrev!) })).sort((a, b) => b.u - a.u);
+    const prevSorted = cands.filter(c => c.scorePrev).map(c => ({ c, u: eu(c.scorePrev!) })).sort((a, b) => b.u - a.u);
     const bestPrev = prevSorted[0] ?? null;
     const uBestPrev = bestPrev ? bestPrev.u : null;
-    const uPlayedPrev = played.scorePrev ? expectedU(played.scorePrev) : null;
+    const uPlayedPrev = played.scorePrev ? eu(played.scorePrev) : null;
     const uSecondPrev = prevSorted.find(x => x.c.ccn !== (bestPrev?.c.ccn))?.u ?? null;
     const mateInvolved = best.score.kind === 'mate' || played.score.kind === 'mate';
     const mateStable = [best, played].every(c => c.score.kind !== 'mate' || (c.scorePrev?.kind === 'mate' && Math.sign(c.scorePrev.plies) === Math.sign(c.score.plies)));
@@ -142,7 +156,7 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
     const baseInput = {
       legalCount: legal.length, uBest: best.u, uPlayed: played.u, uSecond: second?.u ?? null,
       uBestPrev, uPlayedPrev, playedIsBest: best.ccn === ccn, playedIsBestPrev: bestPrev?.c.ccn === ccn,
-      mateInvolved, mateStable, sacrifice: null, uSecondPrev,
+      mateInvolved, mateStable, sacrifice: null, uSecondPrev, v2: PR.v2,
     };
     let g = gradeMove(baseInput);
     // A capture that simply wins material on the spot (positive static exchange) is the obvious move,
@@ -157,9 +171,9 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
       if (invested >= 200) {
         const recapture = moveTo(playedMove) === prevCaptureSquare;
         const verifyMoves = second ? [playedMove, parseLegalCcn(pos, second.ccn)] : [playedMove];
-        const ver = searcher.scoreRootMoves(pos, verifyMoves, D + settings.verifyExtra);
-        const uP = expectedU(typedScore(ver[0].score, pov));
-        const uS = ver[1] ? expectedU(typedScore(ver[1].score, pov)) : 0;
+        const ver = searcher.scoreRootMoves(pos, verifyMoves, D + settings.verifyExtra, O);
+        const uP = eu(typedScore(ver[0].score, pov));
+        const uS = ver[1] ? eu(typedScore(ver[1].score, pov)) : 0;
         const verified = uP >= 0.5 && uP - uS >= CRITICAL_GAP;
         g = gradeMove({ ...baseInput, sacrifice: { material: invested, verified, recapture } });
         if (!verified) g.reasons.push(`Material investment of ~${invested} cp was not confirmed at depth ${D + settings.verifyExtra}; Brilliant withheld.`);
@@ -191,7 +205,7 @@ export function analyzeGame(input: AnalyzeInput, settings: AnalysisSettings, cb:
     plies.push(pa);
     cb.onPly?.(pa, i, input.moves.length);
   }
-  return buildReport(input, settings, plies, status, startedAt, now() - t0);
+  return buildReport(input, settings, plies, status, startedAt, now() - t0, engine);
 }
 
 /** Total order key for typed scores: faster wins first, slower losses last. */
@@ -247,9 +261,10 @@ export function summarizeSide(plies: PlyAnalysis[], pov: Pov, totalMoves: number
   };
 }
 
-export function buildReport(input: AnalyzeInput, settings: AnalysisSettings, plies: PlyAnalysis[], status: 'complete' | 'partial', startedAt: string, elapsedMs: number): AnalysisReport {
+export function buildReport(input: AnalyzeInput, settings: AnalysisSettings, plies: PlyAnalysis[], status: 'complete' | 'partial', startedAt: string, elapsedMs: number, engine: AnalysisEngine = 'canonical'): AnalysisReport {
+  const PR = profileOf(engine);
   const total = input.moves.length;
-  const state = (s: EngineScore) => { const u = expectedU(s); return u > 0.65 ? 1 : u < 0.35 ? -1 : 0; };
+  const state = (s: EngineScore) => { const u = expectedU(s, PR.accuracyId); return u > 0.65 ? 1 : u < 0.35 ? -1 : 0; };
   const turningPoints: number[] = [];
   let prev = 0;
   for (const p of plies) {
@@ -265,15 +280,15 @@ export function buildReport(input: AnalyzeInput, settings: AnalysisSettings, pli
     return !a || (p.grade === 'brilliant' && a.grade !== 'brilliant') || gap > ga ? p : a;
   }, null);
   return {
-    id: reportId(input.gameId, input.checksum, settings),
+    id: reportId(input.gameId, input.checksum, settings, engine),
     schemaVersion: 1,
     gameId: input.gameId,
     gameChecksum: input.checksum,
     variantId: VARIANT_ID,
     rulesVersion: RULES_VERSION,
-    engine: { searchId: SEARCH_ID, evalId: EVAL_ID, buildId: ENGINE_BUILD },
+    engine: { searchId: PR.searchId, evalId: PR.evalId, buildId: PR.build },
     settings,
-    methodology: { gradingId: GRADING_ID, accuracyId: ACCURACY_ID, phaseId: PHASE_ID, criticalId: CRITICAL_ID, coachId: COACH_ID, calibration: CALIBRATION, experimental: true },
+    methodology: { gradingId: PR.gradingId, accuracyId: PR.accuracyId, phaseId: PHASE_ID, criticalId: CRITICAL_ID, coachId: COACH_ID, calibration: PR.calibration, experimental: true },
     status,
     coverage: { analysed: plies.length, total },
     plies,

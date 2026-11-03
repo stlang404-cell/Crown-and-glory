@@ -5,6 +5,9 @@ import { RULES_VERSION } from '../rules/types';
 import { PieceSvg } from './Pieces';
 import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS, ENGINE_BUILD } from '../analysis/analyzer';
 import SPEED from '../analysis/analysis-speed.json';
+import { EngineDiagnostics } from './EngineDiagnostics';
+import { PREMIUM_BOARDS } from './theme';
+import { useServices } from './App';
 import { BOARDS, MOTIONS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
 
 function usePrefs() {
@@ -31,6 +34,7 @@ function MiniBoard({ label }: { label?: string }) {
 
 export function SettingsScreen() {
   const prefs = usePrefs();
+  const services = useServices();
   const reduced = prefersReducedMotion(prefs);
   let systemReduced = false;
   try { systemReduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no matchMedia */ }
@@ -66,14 +70,14 @@ export function SettingsScreen() {
       <section className="panel" aria-labelledby="set-board">
         <div className="panel-title"><h2 id="set-board" style={{ margin: 0 }}>Board colours</h2><span className="small muted">Independent of the theme</span></div>
         <div className="pick-grid boards" role="radiogroup" aria-labelledby="set-board">
-          {BOARDS.map(b => (
-            <label key={b.id} className="pick" data-testid={`board-${b.id}`}>
-              <input type="radio" name="board" value={b.id} checked={prefs.board === b.id} onChange={() => setBoard(b.id as BoardId)} />
+          {BOARDS.map(b => { const locked = !!PREMIUM_BOARDS[b.id] && !(services.fed?.ready && services.fed.hasCosmetic(PREMIUM_BOARDS[b.id])); return (
+            <label key={b.id} className="pick" data-testid={`board-${b.id}`} style={locked ? { opacity: 0.6 } : undefined}>
+              <input type="radio" name="board" value={b.id} checked={prefs.board === b.id} disabled={locked} onChange={() => setBoard(b.id as BoardId)} />
               <span style={{ display: 'block' }} data-board={b.id} data-theme={b.id === 'theme' ? prefs.theme : undefined}><MiniBoard /></span>
               <span className="pick-name">{b.name}<span className="tick" aria-hidden /></span>
-              <span className="pick-blurb">{b.blurb}</span>
+              <span className="pick-blurb">{locked ? 'Locked — ' : ''}{b.blurb}</span>
             </label>
-          ))}
+          ); })}
         </div>
       </section>
 
@@ -98,6 +102,8 @@ export function SettingsScreen() {
         </table>
         <p className="small muted" style={{ marginBottom: 0 }}>*Measured with tools/bench/analysis_speed.ts on three engine games in Node on a 4-core cloud machine ({SPEED.measuredAt.slice(0, 10)}); phones are usually slower. Deeper search finds more, but no setting is a grandmaster: the grade thresholds are internal and experimental, not FIDE-calibrated.</p>
       </section>
+
+      <EngineDiagnostics />
 
       <section className="panel about" aria-labelledby="set-about">
         <div className="panel-title"><h2 id="set-about" style={{ margin: 0 }}>About</h2>

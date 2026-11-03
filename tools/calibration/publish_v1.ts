@@ -4,8 +4,10 @@
  * interpolated linearly (src/analysis/outcomeMap.ts). Held-out evidence: tools/calibration/fit-results.json.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
-const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8')) as { data: { cp: number | null; y: number }[]; depth: number };
-const fit = JSON.parse(readFileSync(new URL('./fit-results.json', import.meta.url), 'utf8'));
+/** CORPUS=v2 publishes crown-outcome-map-v2 (canonical engine) from corpus-v2.json / fit-results-v2.json. */
+const V2 = process.env.CORPUS === 'v2';
+const corpus = JSON.parse(readFileSync(new URL(V2 ? './corpus-v2.json' : './corpus.json', import.meta.url), 'utf8')) as { data: { cp: number | null; y: number }[]; depth: number };
+const fit = JSON.parse(readFileSync(new URL(V2 ? './fit-results-v2.json' : './fit-results.json', import.meta.url), 'utf8'));
 const pts = corpus.data.filter(p => p.cp !== null).map(p => ({ cp: Math.max(-2000, Math.min(2000, p.cp!)), y: p.y })).sort((a, b) => a.cp - b.cp);
 const blocks: { lo: number; hi: number; sum: number; n: number }[] = [];
 for (const p of pts) {
@@ -20,11 +22,12 @@ let knots = blocks.map(b => [Math.round((b.lo + b.hi) / 2), +(b.sum / b.n).toFix
 const out: [number, number][] = [];
 for (const k of knots) { if (out.length && k[0] - out[out.length - 1][0] < 10) { out[out.length - 1] = [out[out.length - 1][0], Math.max(out[out.length - 1][1], k[1])]; continue; } if (!out.length || k[1] > out[out.length - 1][1]) out.push(k); }
 knots = out.map(([c, u]) => [c, Math.min(0.995, Math.max(0.005, u))]);
-writeFileSync(new URL('../../src/analysis/outcome-map-v1.json', import.meta.url), JSON.stringify({
-  id: 'crown-outcome-map-v1',
+writeFileSync(new URL(V2 ? '../../src/analysis/outcome-map-v2.json' : '../../src/analysis/outcome-map-v1.json', import.meta.url), JSON.stringify({
+  id: V2 ? 'crown-outcome-map-v2' : 'crown-outcome-map-v1',
+  engine: V2 ? 'crown-search-2+crown-eval-4' : 'crown-search-1+crown-eval-3',
   method: 'Isotonic regression (pool-adjacent-violators) of game result for the side to move on Crown evaluation (depth ' + corpus.depth + '), monotone knots, linear interpolation, clamped to [-2000, 2000] cp.',
   corpusPositions: pts.length,
-  heldOut: { brierP0: fit.metrics.P0.brier, brierIso: fit.metrics.ISO.brier, brierDiffCI: fit.metrics.ISO.brierMinusP0CI, eceP0: fit.metrics.P0.ece, eceIso: fit.metrics.ISO.ece, validation: 'leave-one-opening-family-out, game-cluster bootstrap' },
+  heldOut: { ...(V2 ? { brierV1Unchanged: fit.metrics.V1.brier, eceV1Unchanged: fit.metrics.V1.ece } : {}), brierP0: fit.metrics.P0.brier, brierIso: fit.metrics.ISO.brier, brierDiffCI: fit.metrics.ISO.brierMinusP0CI, eceP0: fit.metrics.P0.ece, eceIso: fit.metrics.ISO.ece, validation: 'leave-one-opening-family-out, game-cluster bootstrap' },
   caveat: 'Fitted on engine-vs-engine games (~40k nodes per move). Human games may convert advantages differently.',
   knots,
 }));

@@ -247,6 +247,31 @@
   --frame-rim-2: #1c1c1c;
 }
 
+[data-board="marble"] {
+  --sq-light: #f3efe6;
+  --sq-dark: #8a8f99;
+  --sq-hl: #e9c46a;
+  --sq-check: #ff5a3a;
+  --coord-light: #4b505a;
+  --coord-dark: #ffffff;
+  --frame-a: #d9d4c8;
+  --frame-b: #6f6a60;
+  --frame-rim: #b8b2a4;
+  --frame-rim-2: #4d4840;
+}
+[data-board="crimson"] {
+  --sq-light: #f1d9d6;
+  --sq-dark: #8e2f3a;
+  --sq-hl: #f2c14e;
+  --sq-check: #ffb03a;
+  --coord-light: #6d1f29;
+  --coord-dark: #fff4f2;
+  --frame-a: #4a141b;
+  --frame-b: #1e0709;
+  --frame-rim: #8c3a44;
+  --frame-rim-2: #2a0b0f;
+}
+
 /* Analysis grade colours: identical in every theme (grades also carry symbols and labels). */
 :root {
   --g-brilliant: #5fd3d9;

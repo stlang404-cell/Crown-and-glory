@@ -13,6 +13,10 @@ import { PrestigeLadders } from './FinanceScreen';
 import { Emblem } from './Emblem';
 import { rankEmblem, titleEmblem } from '../heraldry/catalog';
 import { divisionLabel, REGION_NAMES } from '../federation/model';
+import { CareerStanding } from './CareerStanding';
+import { Trophy } from './Emblem';
+import { TROPHY_FOR } from '../heraldry/catalog';
+import { titleKind } from './HallScreen';
 
 const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
 
@@ -126,6 +130,7 @@ export function ProfileScreen() {
         {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}. The Crown Champion title is earned only by winning the Crown Championship.</p>
           : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {Math.round(e.after.rating)}, game {e.gameId})</li>)}</ul>}
       </div>
+      <CareerStanding rating={s.rating} rd={s.rd} games={s.games} peak={s.peak} />
       <FederationCareer peak={s.peak} />
       <Passport games={games} events={events} reports={reports} attempts={attempts} runs={runs} filters={{ fOpp, setFOpp, fTc, setFTc, fRes, setFRes, fFrom, setFFrom, fTo, setFTo }} />
     </div>
@@ -230,7 +235,7 @@ function FederationCareer({ peak }: { peak: number | null }) {
         {w.player.history.length > 0 && <table className="small"><thead><tr><th>Season</th><th>Division</th><th>Rank</th><th>Points</th></tr></thead><tbody>{w.player.history.map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division}</td><td>{h.rank}</td><td>{h.points}</td></tr>)}</tbody></table>}
         <h3>{cabinet ? 'Walnut trophy cabinet' : 'Titles'}</h3>
         {w.player.titles.length === 0 ? <p className="small muted">No titles yet. Titles come only from results (league titles, Swiss events, the Crown Championship); they can never be bought.</p>
-          : <div className="row" style={{ flexWrap: 'wrap' }}>{w.player.titles.map((t, i) => <span key={i} className={`chip ${cabinet ? 'gold' : ''}`}>{cabinet ? '🏆 ' : ''}{t.title}</span>)}</div>}
+          : <div className="row" style={{ flexWrap: 'wrap' }}>{w.player.titles.map((t, i) => <span key={i} className={`chip ${cabinet ? 'gold' : ''}`}>{cabinet && <Trophy kind={TROPHY_FOR[titleKind(t.title)]} size="sm" title={t.title} />} {t.title}</span>)}</div>}
       </div>
       <PrestigeLadders bestRating={peak} />
     </div>

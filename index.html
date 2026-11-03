@@ -12,7 +12,7 @@
         var themes = { obsidian: '#111318', midnight: '#10151e', ivory: '#f2efe8' };
         var t = themes[p.theme] ? p.theme : 'obsidian';
         d.setAttribute('data-theme', t);
-        d.setAttribute('data-board', /^(theme|walnut|slate|green|mono)$/.test(p.board) ? p.board : 'theme');
+        d.setAttribute('data-board', /^(theme|walnut|slate|green|mono|marble|crimson)$/.test(p.board) ? p.board : 'theme');
         d.setAttribute('data-motion', /^(system|reduce|full)$/.test(p.motion) ? p.motion : 'system');
         var m = document.querySelector('meta[name="theme-color"]');
         if (m) m.setAttribute('content', themes[t]);

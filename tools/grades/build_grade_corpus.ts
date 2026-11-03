@@ -1,5 +1,5 @@
 /**
- * Grade regression corpus (crown-grade-corpus-1): real positions (Academy puzzle starts and positions
+ * Grade regression corpus (crown-grade-corpus-2 since v0.5: canonical engine; the frozen corpus-1 is tests/fixtures/grades-v1.json): real positions (Academy puzzle starts and positions
  * from benchmark games) analysed with the production analyser at the standard policy. For each label we
  * keep up to 3 examples where the grade was produced; plus negative fixtures:
  *  - a recapture that is the best move must NOT be Brilliant,
@@ -80,5 +80,5 @@ for (const pz of puzzles) {
 const forcedFen = 'k1Q3/6/6/6/6/5K b - - 0 1';
 const fp = Position.fromFen(forcedFen);
 if (fp.legalMoves().length === 1) { const mv = moveToCcn(fp.legalMoves()[0]); const pl = analyse(forcedFen, mv); negForced = true; out.push({ fen: forcedFen, move: mv, grade: pl.grade, kind: 'forced', note: 'single legal move' }); }
-writeFileSync(new URL('../../tests/fixtures/grades.json', import.meta.url), JSON.stringify({ id: 'crown-grade-corpus-1', settings: settings.id, missing: Object.entries(want).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`), negatives: { recapture: negRecapture, unsound: negUnsound, forced: negForced }, fixtures: out }, null, 1));
+writeFileSync(new URL('../../tests/fixtures/grades.json', import.meta.url), JSON.stringify({ id: 'crown-grade-corpus-2', engine: 'crown-search-2+crown-eval-4', grading: 'crown-grade-v2-experimental', settings: settings.id, missing: Object.entries(want).filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`), negatives: { recapture: negRecapture, unsound: negUnsound, forced: negForced }, fixtures: out }, null, 1));
 console.log('fixtures', out.length, 'missing', JSON.stringify(want), { negRecapture, negUnsound, negForced });

@@ -219,9 +219,11 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
               <div className="small muted" style={{ marginTop: 8 }}>
                 Phase accuracy (you): opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} ({mine.phaseAccuracy.opening.eligible}) · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} ({mine.phaseAccuracy.middlegame.eligible}) · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} ({mine.phaseAccuracy.endgame.eligible}). “—” means the phase did not occur.<br />
                 Critical positions handled: {mine.critical.handled}/{mine.critical.total}. Best-move frequency: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}. Avg. loss on cp-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
-                {report.methodology.accuracyId === 'crown-accuracy-v1'
-                  ? 'Accuracy = 100·exp(−4·mean expected-score loss). The expected-score map (crown-outcome-map-v1) is fitted and validated on held-out 6×6 engine games; the grade boundaries and k = 4 remain experimental.'
-                  : 'Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp (methodology v0). These parameters are uncalibrated research placeholders; re-analyse to get a v1 report.'}
+                {report.methodology.accuracyId === 'crown-accuracy-v2'
+                  ? 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100. It measures move quality in this game against the engine — it is not a rating or an IQ. The expected-score map (crown-outcome-map-v2) was refitted for the canonical engine and validated on held-out opening families; the grade boundaries and k = 4 remain experimental.'
+                  : report.methodology.accuracyId === 'crown-accuracy-v1'
+                  ? 'Historical report (engine crown-search-1 + crown-eval-3, map crown-outcome-map-v1). Accuracy = 100·exp(−4·mean expected-score loss). Re-analyse to get a report from the current canonical engine; this one is kept unchanged.'
+                  : 'Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp (methodology v0). These parameters are uncalibrated research placeholders; re-analyse to get a current report.'}
               </div>
               <ClockPressure game={game} plies={plies} />
               <div className="row" style={{ marginTop: 10 }}>

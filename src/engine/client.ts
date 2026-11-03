@@ -13,10 +13,17 @@ export const defaultFactory: WorkerFactory = () => new Worker(new URL('./worker.
 
 export class CancelledError extends Error { constructor() { super('cancelled'); } }
 
+/** Engine events across all channels (crown-engine-events-1), newest last, bounded. Shown in Settings. */
+export interface EngineEvent { at: number; role: string; requestId: string; generation: number; kind: string; event: 'start' | 'done' | 'cancelled' | 'stale-discarded' | 'error' | 'crash'; ms?: number; detail?: string }
+export const ENGINE_EVENTS: EngineEvent[] = [];
+const MAX_EVENTS = 300;
+function logEvent(e: EngineEvent): void { ENGINE_EVENTS.push(e); if (ENGINE_EVENTS.length > MAX_EVENTS) ENGINE_EVENTS.splice(0, ENGINE_EVENTS.length - MAX_EVENTS); }
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
 export class EngineChannel {
   private worker: Worker | null = null;
   private generation = 0;
-  private pending: { id: string; gen: number; resolve: (r: WorkerReply) => void; reject: (e: unknown) => void; onPly?: (p: PlyAnalysis, i: number, n: number) => void; onMove?: (m: Extract<WorkerReply, { type: 'selfplay-move' }>) => void } | null = null;
+  private pending: { id: string; gen: number; kind: string; t0: number; resolve: (r: WorkerReply) => void; reject: (e: unknown) => void; onPly?: (p: PlyAnalysis, i: number, n: number) => void; onMove?: (m: Extract<WorkerReply, { type: 'selfplay-move' }>) => void } | null = null;
   private seq = 0;
   constructor(private factory: WorkerFactory = defaultFactory, readonly role = 'engine') {}
 
@@ -26,17 +33,22 @@ export class EngineChannel {
     w.onmessage = (ev: MessageEvent<WorkerReply>) => {
       const m = ev.data;
       const p = this.pending;
-      if (!p || m.requestId !== p.id || m.generation !== p.gen) return; // stale reply: discard
+      if (!p || m.requestId !== p.id || m.generation !== p.gen) { // stale reply: discard
+        if (m.type !== 'progress' && m.type !== 'ply' && m.type !== 'selfplay-move') logEvent({ at: Date.now(), role: this.role, requestId: m.requestId, generation: m.generation, kind: m.type, event: 'stale-discarded' });
+        return;
+      }
       if (m.type === 'ply') { p.onPly?.(m.ply, m.index, m.total); return; }
       if (m.type === 'selfplay-move') { p.onMove?.(m); return; }
       if (m.type === 'progress') return;
       this.pending = null;
+      logEvent({ at: Date.now(), role: this.role, requestId: p.id, generation: p.gen, kind: p.kind, event: m.type === 'error' ? 'error' : 'done', ms: Math.round(nowMs() - p.t0), detail: m.type === 'error' ? m.message : undefined });
       if (m.type === 'error') p.reject(new Error(m.message)); else p.resolve(m);
     };
     w.onerror = ev => {
       const p = this.pending;
       this.pending = null;
       this.terminate();
+      if (p) logEvent({ at: Date.now(), role: this.role, requestId: p.id, generation: p.gen, kind: p.kind, event: 'crash', ms: Math.round(nowMs() - p.t0), detail: ev.message });
       p?.reject(new Error(`Engine worker crashed: ${ev.message}`));
     };
     this.worker = w;
@@ -51,7 +63,8 @@ export class EngineChannel {
     const id = `${this.role}-${++this.seq}`;
     const w = this.ensure();
     return new Promise<T>((resolve, reject) => {
-      this.pending = { id, gen, resolve: resolve as (r: WorkerReply) => void, reject, onPly, onMove };
+      this.pending = { id, gen, kind: req.type, t0: nowMs(), resolve: resolve as (r: WorkerReply) => void, reject, onPly, onMove };
+      logEvent({ at: Date.now(), role: this.role, requestId: id, generation: gen, kind: req.type, event: 'start' });
       w.postMessage({ ...req, requestId: id, generation: gen });
     });
   }
@@ -79,7 +92,9 @@ export class EngineChannel {
     const p = this.pending;
     this.pending = null;
     this.generation++;
+    const t = nowMs();
     this.terminate();
+    if (p) logEvent({ at: Date.now(), role: this.role, requestId: p.id, generation: p.gen, kind: p.kind, event: 'cancelled', ms: Math.round(nowMs() - t), detail: `after ${Math.round(t - p.t0)} ms` });
     p?.reject(new CancelledError());
   }
 

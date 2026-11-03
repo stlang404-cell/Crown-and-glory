@@ -17,7 +17,11 @@ export const BOARDS = [
   { id: 'slate', name: 'Slate', blurb: 'Cool blue-grey stone.' },
   { id: 'green', name: 'Green', blurb: 'Classic tournament green and cream.' },
   { id: 'mono', name: 'Monochrome', blurb: 'Neutral greys; the strongest square contrast.' },
+  { id: 'marble', name: 'Royal Marble', blurb: 'Ivory and veined grey marble (unlock in Finance → Cosmetics).' },
+  { id: 'crimson', name: 'Crimson Court', blurb: 'Rose stone and oxblood (unlock in Finance → Cosmetics).' },
 ] as const;
+/** Board palettes that must be owned (cosmetic id) before they can be chosen. */
+export const PREMIUM_BOARDS: Record<string, string> = { marble: 'board-marble', crimson: 'board-crimson' };
 
 export const MOTIONS = [
   { id: 'system', name: 'Follow system' },

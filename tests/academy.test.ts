@@ -48,15 +48,22 @@ describe(`Academy puzzle bank (${puzzles.length} puzzles)`, () => {
   it('adaptive training only claims a weakness with enough attempts', () => {
     expect(adaptiveThemes([], puzzles, [], []).themes).toEqual([]);
   });
-  it('a sample of puzzles re-verifies: first move is uniquely best for the Crown engine (depth 8)', () => {
+  it('a sample of active puzzles re-verifies with the canonical engine (crown-puzzle-verify-2, best defences)', () => {
     const s = new Searcher(18);
-    const sample = puzzles.filter((_, i) => i % Math.max(1, Math.floor(puzzles.length / 12)) === 0).slice(0, 12);
+    const active = puzzles.filter(p => !p.retired);
+    const sample = active.filter((_, i) => i % Math.max(1, Math.floor(active.length / 12)) === 0).slice(0, 12);
     for (const p of sample) {
       const v = verifyPuzzle(s, p);
       expect(v.ok).toBe(true);
-      expect(v.gap).toBeCloseTo(p.verification.gap, 3);
+      expect(v.gap).toBeCloseTo(p.canonical!.gap, 3);
     }
-  }, 120_000);
+  }, 180_000);
+  it('retired puzzles are kept (history) but never served; every active puzzle carries a canonical verification', () => {
+    const retired = puzzles.filter(p => p.retired);
+    expect(retired.length).toBeGreaterThan(0);
+    for (const m of ['tactics', 'rush', 'calculation', 'defense', 'endgame', 'adaptive', 'assessment'] as const) for (const p of retired) expect(modeFilter(m, p)).toBe(false);
+    for (const p of puzzles.filter(x => !x.retired)) { expect(p.canonical?.ok).toBe(true); expect(p.canonical?.verifyId).toBe('crown-puzzle-verify-2'); }
+  });
 });
 
 describe('motif detectors', () => {

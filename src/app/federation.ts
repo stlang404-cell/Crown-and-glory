@@ -21,6 +21,8 @@ import { normaliseModel } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
+import { cosmetic, cosmeticJournal, earned, emptyCosmetics, AVATAR_SEEDS, type CosmeticKind, type CosmeticState } from '../economy/cosmetics';
+import { FED_TITLES } from '../heraldry/catalog';
 import { ensureFeatured, trackPeaks, awardNorms, eventGames, NORM_EVENTS, clubFinances, seasonCeremonies } from './heraldry';
 import { validateIdentity, type ClubIdentity } from '../heraldry/clubs';
 import {
@@ -51,7 +53,9 @@ export interface Contract { id: string; competitorId: string; signedSeason: numb
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
   forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[];
   /** v0.5: ceremonies to present (titles, promotions, championships); `seen` once dismissed. */
-  ceremonies?: Ceremony[]; favorites?: string[] }
+  ceremonies?: Ceremony[]; favorites?: string[];
+  /** v0.5: owned and equipped cosmetics (crown-cosmetics-1). */
+  cosmetics?: CosmeticState }
 export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
@@ -1160,6 +1164,44 @@ export class FederationService {
       st.assets.delete(id);
       this.snapshotFinance(st);
       await this.commit(st, posted, { delAssets: [id], contracts: ended }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  // ------------------------------------------------------------------ cosmetics (crown-cosmetics-1)
+  cosmetics(): CosmeticState { return this.state?.extra.cosmetics ?? emptyCosmetics(); }
+  /** Owned by purchase, or unlocked by a recorded accomplishment. */
+  hasCosmetic(id: string): boolean {
+    const c = cosmetic(id); const st = this.state;
+    if (!c || !st) return false;
+    if (c.earn) return earned(c, { fedTitle: st.world.player.fedTitle ?? null, titles: st.world.player.titles.map(t => t.title) }, FED_TITLES);
+    return (st.extra.cosmetics?.owned ?? []).includes(id);
+  }
+  async buyCosmetic(id: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const c = cosmetic(id);
+      if (!c) throw new Error('Unknown item');
+      if (c.price === null) throw new Error('This item is earned through results and cannot be bought');
+      const cs = st.extra.cosmetics ?? emptyCosmetics();
+      if (cs.owned.includes(id)) throw new Error('Already owned');
+      if ((st.balances.get('player:cash') ?? 0) < c.price) throw new Error('Not enough cash');
+      const posted: Journal[] = [];
+      this.post(st, [cosmeticJournal(c, st.world.season, this.now())], posted);
+      st.extra.cosmetics = { ...cs, owned: [...cs.owned, id], equipped: { ...cs.equipped, [c.kind]: id } };
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+  async equipCosmetic(kind: CosmeticKind, id: string | null, avatarSeed?: number): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      if (id && (!this.hasCosmetic(id) || cosmetic(id)?.kind !== kind)) throw new Error('Not available');
+      if (avatarSeed !== undefined && (!this.hasCosmetic('avatar-portraits') || !AVATAR_SEEDS.includes(avatarSeed))) throw new Error('Portrait studio not owned');
+      const cs = st.extra.cosmetics ?? emptyCosmetics();
+      const equipped = { ...cs.equipped };
+      if (id) equipped[kind] = id; else delete equipped[kind];
+      st.extra.cosmetics = { ...cs, equipped, ...(avatarSeed !== undefined ? { avatarSeed } : {}) };
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }
 

@@ -5,7 +5,7 @@ import { PieceSvg, PieceKind } from './Pieces';
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
 import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
-import { getLevel } from '../engine/levels';
+import { getLevel, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
 import { CancelledError } from '../engine/client';
 import { GameSession, createGameRecord } from '../games/session';
 import { TIME_CONTROLS, TimeControlId, GameRecord, poolFor } from '../games/types';
@@ -48,7 +48,10 @@ export function PlayScreen() {
   const [unfinished, setUnfinished] = useState<GameRecord[]>([]);
   const [recent, setRecent] = useState<GameRecord | null>(null);
   const [pool, setPool] = useState<PoolState | null>(null);
-  const calibrated = levelRating(opp.level) !== null;
+  const [budget, setBudget] = useState<number>(MAX_RATED_BUDGET_S);
+  const isMax = opp.level === MAX_LEVEL;
+  // Sovereign Max is calibrated only at its rated budget; other budgets are casual
+  const calibrated = levelRating(opp.level) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
   const ratedAllowed = calibrated && tc !== 'untimed';
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export function PlayScreen() {
     const record = createGameRecord({
       id: newId(), mode: rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS[tc], humanColor,
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
-      engine: opponentSnapshot(opp), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
+      engine: opponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
     await services.saveGame(record);
     go({ name: 'match', gameId: record.id });
@@ -72,7 +75,7 @@ export function PlayScreen() {
   return (
     <div>
       <section className="hero">
-        <Portrait seed={opp.portraitSeed} size={84} crown={opp.level === 8} />
+        <Portrait seed={opp.portraitSeed} size={84} crown={opp.level >= 8} />
         <div>
           <h1>Six squares. Every move remembered.</h1>
           <p className="muted" style={{ margin: 0 }}>Play the crown-la6-v1 variant against a genuine local engine. Every game is saved, rated games update your Glicko-2 rating once, and each finished game gets a full engine report.</p>
@@ -112,7 +115,7 @@ export function PlayScreen() {
               const cal = levelRating(o.level);
               return (
                 <button key={o.id} className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)}>
-                  <Portrait seed={o.portraitSeed} size={48} crown={o.level === 8} />
+                  <Portrait seed={o.portraitSeed} size={48} crown={o.level >= 8} />
                   <div style={{ flex: 1 }}>
                     <div className="row" style={{ gap: 6 }}><strong>{o.name}</strong><span className="chip gold">L{o.level} {getLevel(o.level).name}</span></div>
                     <div className="small muted">{o.club} · {getLevel(o.level).description}</div>
@@ -134,6 +137,15 @@ export function PlayScreen() {
               {(Object.keys(TIME_CONTROLS) as TimeControlId[]).map(id => <button key={id} aria-pressed={tc === id} onClick={() => setTc(id)}>{TIME_CONTROLS[id].label}</button>)}
             </div>
           </div>
+          {isMax && (
+            <div data-testid="max-budget">
+              <div className="small muted">Sovereign Max thinking budget (per move, at most)</div>
+              <div className="seg" role="group" aria-label="Thinking budget">
+                {MAX_BUDGETS_S.map(b => <button key={b} aria-pressed={budget === b} onClick={() => setBudget(b)}>{b} s</button>)}
+              </div>
+              <div className="small muted" style={{ marginTop: 4 }}>Engine: {maxProfile(budget).description.split(':')[0]} · canonical crown-search-2 + crown-eval-4 · {(1 << (maxProfile(budget).ttBits ?? 18)) * 11 / 1048576 | 0} MB table · no random choices, no handicap. The clock can shorten a move; it never lengthens it. Rated games use {MAX_RATED_BUDGET_S} s.</div>
+            </div>
+          )}
           <div>
             <div className="small muted">Mode</div>
             <div className="seg" role="group" aria-label="Mode">
@@ -141,7 +153,7 @@ export function PlayScreen() {
               <button aria-pressed={mode === 'casual' || !ratedAllowed} onClick={() => setMode('casual')}>Casual</button>
             </div>
             <div className="small muted" style={{ marginTop: 4 }}>
-              {!calibrated ? 'This opponent has no measured calibration yet, so games are casual.' : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play. One result updates your rating once.' : 'Casual: saved and analysed, never rated.'}
+              {!calibrated ? (isMax && levelRating(opp.level) ? `Only the ${MAX_RATED_BUDGET_S} s budget is calibrated, so this budget is casual.` : 'This opponent has no measured calibration yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play. One result updates your rating once.' : 'Casual: saved and analysed, never rated.'}
             </div>
           </div>
           <div>
@@ -294,7 +306,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     }).then(r => {
       setThinking(false);
       engineScore.current = r.score;
-      const res = session.applyMove(r.move, Date.now(), new Date().toISOString(), { depth: r.depth, nodes: r.nodes, timeMs: r.timeMs, selected: r.selected, seed: (rec.engineSeed + ply * 7919) >>> 0 });
+      const res = session.applyMove(r.move, Date.now(), new Date().toISOString(), { depth: r.depth, nodes: r.nodes, timeMs: r.timeMs, selected: r.selected, seed: (rec.engineSeed + ply * 7919) >>> 0, score: r.score.kind === 'mate' ? { kind: 'mate', value: r.score.plies } : r.score.kind === 'cp' ? { kind: 'cp', value: r.score.value } : undefined, stopReason: r.stopReason, build: r.provenance?.build });
       if (!res.ok && !res.outcome) setError(`Engine move rejected: ${res.error}`);
       void services.saveGame(session.snapshot());
       if (session.isOver) void finalize(session);
@@ -381,7 +393,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     const adv = c === 0 ? cap.advantage : -cap.advantage;
     return (
       <div className={`player-bar${session.sideToMove === c && !session.isOver ? ' to-move' : ''}`} data-testid={isHuman ? 'human-bar' : 'engine-bar'}>
-        {isHuman ? <div className="portrait" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center' }}><PieceSvg kind="k" color={c === 0 ? 'w' : 'b'} /></div> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={oppMeta?.level === 8} />}
+        {isHuman ? <div className="portrait" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center' }}><PieceSvg kind="k" color={c === 0 ? 'w' : 'b'} /></div> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
         <div style={{ minWidth: 0 }}>
           <div className="player-name">{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</div>
           <div className="player-meta">

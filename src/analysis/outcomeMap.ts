@@ -1,14 +1,20 @@
 /** Expected-score maps by methodology version. Old reports are always displayed with their own map. */
 import v1 from './outcome-map-v1.json';
+import v2 from './outcome-map-v2.json';
 
 const KNOTS = (v1 as unknown as { knots: [number, number][] }).knots;
+const KNOTS2 = (v2 as unknown as { knots: [number, number][] }).knots;
 
 export function logisticU(cp: number, s = 200): number {
   return 1 / (1 + Math.exp(-cp / s));
 }
 
 /** crown-outcome-map-v1: monotone piecewise-linear interpolation of the isotonic fit. */
-export function mapV1(cp: number): number {
+export function mapV1(cp: number): number { return interp(KNOTS, cp); }
+/** crown-outcome-map-v2: the same construction refitted on canonical-engine (crown-eval-4) evaluations. */
+export function mapV2(cp: number): number { return interp(KNOTS2, cp); }
+
+function interp(KNOTS: [number, number][], cp: number): number {
   const x = Math.max(-2000, Math.min(2000, cp));
   if (x <= KNOTS[0][0]) return KNOTS[0][1];
   if (x >= KNOTS[KNOTS.length - 1][0]) return KNOTS[KNOTS.length - 1][1];
@@ -19,3 +25,4 @@ export function mapV1(cp: number): number {
 }
 
 export const OUTCOME_MAP_V1 = (v1 as { id: string }).id;
+export const OUTCOME_MAP_V2 = (v2 as { id: string }).id;

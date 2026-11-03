@@ -7,7 +7,8 @@
  * The federation module (M3) will grow this into 2,048 identities with tiered simulation.
  */
 import calibration from '../engine/calibration.json';
-import { LEVELS_ID, getLevel } from '../engine/levels';
+import { LEVELS_ID, getLevel, maxProfile, MAX_LEVEL, MAX_RATED_BUDGET_S } from '../engine/levels';
+import { CANON_BUILD, RULES_FINGERPRINT, CANON_BACKEND, INTEL_ID } from '../engine/canonical';
 import { PLAY_SEARCH_ID } from '../engine/search';
 import { PLAY_EVAL_ID } from '../engine/evaluate';
 import type { ParticipantSnapshot } from '../games/types';
@@ -33,20 +34,29 @@ export const ROSTER: Opponent[] = [
   { id: 'opp-oskar', name: 'Oskar Brandt', title: 'District player', club: 'Harbor Gate Circle', level: 4, portraitSeed: 41, bio: 'Calculates short forcing lines well.' },
   { id: 'opp-lena', name: 'Lena Ashgrove', title: 'Regional player', club: 'Observatory Hill', level: 5, portraitSeed: 59, bio: 'Full search on a modest budget.' },
   { id: 'opp-dario', name: 'Dario Quill', title: 'National player', club: 'Observatory Hill', level: 6, portraitSeed: 67, bio: 'Deep, patient searcher.' },
-  { id: 'opp-sable', name: 'Sable Marchetti', title: 'Master', club: 'The Brass Meridian', level: 7, portraitSeed: 73, bio: 'One million nodes of calculation per move.' },
-  { id: 'opp-crown', name: 'The Crown Engine', title: 'Crown', club: 'Federation Reference', level: 8, portraitSeed: 97, bio: 'The strongest configuration: full search limited only by the clock.' },
+  { id: 'opp-sable', name: 'Sable Marchetti', title: 'Master', club: 'The Brass Meridian', level: 7, portraitSeed: 73, bio: 'Full search on 30,000 nodes per move.' },
+  { id: 'opp-crown', name: 'The Crown Engine', title: 'Crown', club: 'Federation Reference', level: 8, portraitSeed: 97, bio: 'Full search limited only by the clock (up to 6 s per move).' },
+  { id: 'opp-sovereign', name: 'The Sovereign', title: 'Sovereign Max', club: 'Federation Reference', level: MAX_LEVEL, portraitSeed: 131, bio: 'The strongest validated configuration: no handicap, a larger memory table and the thinking time you choose.' },
 ];
 
 export function levelRating(level: number): LevelCalibration | null {
   return CAL.find(c => c.level === level) ?? null;
 }
 
-export function opponentSnapshot(o: Opponent): ParticipantSnapshot {
-  const cal = levelRating(o.level);
-  const p = getLevel(o.level);
+/** Snapshot of an opponent for a game record. Sovereign Max carries its exact profile (thinking budget) and the
+ * engine configuration actually used, so the game's provenance is self-contained. */
+export function opponentSnapshot(o: Opponent, maxBudgetS: number = MAX_RATED_BUDGET_S): ParticipantSnapshot {
+  const isMax = o.level === MAX_LEVEL;
+  const p = isMax ? maxProfile(maxBudgetS) : getLevel(o.level);
+  // only the rated budget is calibrated; other Max budgets are casual and unrated
+  const cal = isMax && p.maxTimeMs !== MAX_RATED_BUDGET_S * 1000 ? null : levelRating(o.level);
   return {
     kind: 'engine', id: o.id, name: o.name, rating: cal?.rating ?? null, rd: cal?.rd ?? null,
-    engine: { profileId: p.id, level: o.level, levelsId: LEVELS_ID, searchId: PLAY_SEARCH_ID, evalId: PLAY_EVAL_ID, calibrationId: CALIBRATION_ID, style: 'standard (no distinct style yet)' },
+    engine: {
+      profileId: p.id, level: o.level, levelsId: LEVELS_ID, searchId: PLAY_SEARCH_ID, evalId: PLAY_EVAL_ID, calibrationId: CALIBRATION_ID, style: 'standard (no distinct style yet)',
+      ...(isMax ? { profile: p } : {}),
+      config: { rules: RULES_FINGERPRINT, backend: CANON_BACKEND, build: CANON_BUILD, intel: INTEL_ID, ttBits: p.ttBits ?? 18, maxTimeMs: p.maxTimeMs, nodes: Number.isFinite(p.nodes) ? p.nodes : null, selection: p.selection ? 'bounded' : 'best' },
+    },
   };
 }
 
