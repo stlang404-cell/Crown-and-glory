@@ -56,6 +56,7 @@ const G = {
   prev: { f: ['M15.25 7v10l-7.5-5z'] },
   next: { f: ['M8.75 7v10l7.5-5z'] },
   last: { s: ['M17.5 6v12'], f: ['M6.5 7v10l7.5-5z'] },
+  pause: { f: ['M7.5 6.5h3v11h-3z', 'M13.5 6.5h3v11h-3z'] },
 } satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof G;

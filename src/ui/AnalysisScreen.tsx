@@ -3,14 +3,15 @@ import { useEffect, useMemo, useState, KeyboardEvent } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
 import { EvalGraph, formatScore, whiteU } from './Charts';
-import { Icon } from './Icons';
-import { resultText } from './PlayScreen';
+import { fmtClock, resultText } from './PlayScreen';
+import { Captured, Clock, GRADE_LABEL, GradeIcon, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar } from './MatchCenter';
+import { Portrait } from './Portrait';
 import { Position } from '../rules/position';
 import { parseLegalCcn } from '../rules/notation';
 import { squareName } from '../rules/types';
 import { TERMINATION_LABEL } from '../rules/adjudication';
 import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS } from '../analysis/analyzer';
-import type { AnalysisReport, Candidate, Grade, PlyAnalysis, SideSummary } from '../analysis/types';
+import type { AnalysisReport, Candidate, PlyAnalysis, SideSummary } from '../analysis/types';
 import { GRADES } from '../analysis/types';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
@@ -20,15 +21,10 @@ import { getOpponent, opponentSnapshot } from '../federation/roster';
 import { TIME_CONTROLS } from '../games/types';
 import { exportGame } from '../storage/backup';
 
-export const GRADE_LABEL: Record<Grade, string> = {
-  brilliant: 'Brilliant', great: 'Great', best: 'Best', excellent: 'Excellent', good: 'Good', inaccuracy: 'Inaccuracy', mistake: 'Mistake', blunder: 'Blunder',
-};
-const GRADE_SYMBOL: Record<Grade, string> = { brilliant: '!!', great: '!', best: '★', excellent: '✓', good: '·', inaccuracy: '?!', mistake: '?', blunder: '??' };
+export { GRADE_LABEL, GradeIcon } from './MatchCenter';
 
-export function GradeIcon({ grade, provisional }: { grade: Grade | null; provisional?: boolean }) {
-  if (!grade) return <span className="grade-icon grade-none" title="Not graded">–</span>;
-  return <span className={`grade-icon grade-${grade}`} title={`${GRADE_LABEL[grade]}${provisional ? ' (provisional)' : ''}`} aria-label={GRADE_LABEL[grade]}>{GRADE_SYMBOL[grade]}</span>;
-}
+/** Replay autoplay speeds (Match Center replay control). */
+const REPLAY_SPEEDS = [{ label: 'Slow', ms: 2000 }, { label: 'Normal', ms: 1100 }, { label: 'Fast', ms: 450 }] as const;
 
 const fmtAcc = (a: number | null) => (a === null ? '—' : a.toFixed(1));
 
@@ -76,6 +72,19 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     return out;
   }, [game]);
 
+  // replay autoplay (Match Center): play/pause and speed, stops at the last move or when a variation is explored.
+  // Declared before the loading return so the hook order never changes between renders.
+  const [auto, setAuto] = useState(false);
+  const [speedIdx, setSpeedIdx] = useState(1);
+  const [tab, setTab] = useState<'moves' | 'summary'>('moves');
+  const total = game?.moves.length ?? 0;
+  useEffect(() => {
+    if (!auto) return;
+    if (variation || ply >= total) { setAuto(false); return; }
+    const t = setTimeout(() => setPly(x => Math.min(total, x + 1)), REPLAY_SPEEDS[speedIdx].ms);
+    return () => clearTimeout(t);
+  }, [auto, ply, total, speedIdx, variation]);
+
   if (!game) return <p className="muted">Loading game…</p>;
   const report = reports[reportIdx] ?? null;
   const live = services.progress?.gameId === gameId ? services.progress : null;
@@ -103,15 +112,6 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   })() : [];
 
   const goPly = (k: number) => { setVariation(null); setPly(Math.max(0, Math.min(n, k))); };
-  // replay autoplay (Match Center): play/pause and speed, stops at the last move or when a variation is explored
-  const [auto, setAuto] = useState(false);
-  const [autoMs, setAutoMs] = useState(1100);
-  useEffect(() => {
-    if (!auto) return;
-    if (variation || ply >= n) { setAuto(false); return; }
-    const t = setTimeout(() => setPly(x => Math.min(n, x + 1)), autoMs);
-    return () => clearTimeout(t);
-  }, [auto, ply, n, autoMs, variation]);
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1); }
@@ -153,140 +153,167 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const theirs: SideSummary | undefined = summary?.[humanPov === 'white' ? 'black' : 'white'];
   const status = report ? report.status : live ? 'running' : jobStatus;
 
-  return (
-    <div onKeyDown={onKey} tabIndex={-1} style={{ outline: 'none' }}>
-      <div className="row" style={{ marginBottom: 12 }}>
-        <button className="btn ghost small" onClick={() => go({ name: 'library' })}>← Library</button>
-        <h1 style={{ margin: 0 }}>{resultText(game)} vs {opp.name}</h1>
-        <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'Unfinished'}</span>
-        <span className="chip">{game.timeControl.label}</span>
-        <span className={`chip ${game.rated ? 'pos' : ''}`}>{game.mode === 'training' ? 'Training' : game.rated ? 'Rated' : 'Casual'}</span>
-        <span className="spacer" />
-        <button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export Game</button>
+  const startsWithBlack = fens.length > 0 && Position.fromFen(fens[0]).side === 1;
+  const stepBack = () => (variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1));
+  const stepForward = () => (variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1));
+  // clock of each side after its last move up to the shown ply (recorded games only; untimed games have none)
+  const clockAt = (color: 'white' | 'black'): number | null => {
+    if (!game.clocks) return null;
+    for (let i = ply - 1; i >= 0; i--) {
+      const mover = (i + (startsWithBlack ? 1 : 0)) % 2 === 0 ? 'white' : 'black';
+      if (mover === color) return game.moves[i].clockAfterMs;
+    }
+    return game.timeControl.initialMs;
+  };
+  const sideToMove = posNow.side === 0 ? 'white' : 'black';
+  const bar = (color: 'white' | 'black') => {
+    const p = color === 'white' ? game.white : game.black;
+    const isHuman = color === game.humanColor;
+    const meta = getOpponent(p.id);
+    const ms = clockAt(color);
+    return (
+      <PlayerBar color={color} active={!variation && ply < n && sideToMove === color}
+        avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={meta?.portraitSeed ?? 1} size={40} crown={(meta?.level ?? 0) >= 8} />}
+        name={p.name} meta={p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+        aside={ms !== null && Number.isFinite(ms) ? <Clock text={fmtClock(ms)} label={`${p.name} clock after this move`} /> : undefined}>
+        <Captured fen={fen} color={color} name={p.name} />
+      </PlayerBar>
+    );
+  };
+  const topColor = orientation === 'white' ? 'black' : 'white';
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+
+  const board = (
+    <>
+      {bar(topColor)}
+      <Board fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
+      {bar(topColor === 'white' ? 'black' : 'white')}
+      <MoveNav onFirst={() => goPly(0)} onPrev={stepBack} onNext={stepForward} onLast={() => goPly(n)} onFlip={() => setFlipped(f => !f)}
+        indicator={<span className="chip mono" data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>}
+        replay={{ playing: auto, onToggle: () => { if (ply >= n) setPly(0); setAuto(a => !a); }, testId: 'replay-play', speeds: REPLAY_SPEEDS, speed: speedIdx, onSpeed: setSpeedIdx }} />
+      <div className="row" style={{ justifyContent: 'center' }}>
+        <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark Position'}</button>
+        <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable Move' : '♔ Mark Memorable'}</button>
+        {bookmarks.length > 0 && <span className="small muted">Saved: {[...new Set(bookmarks.map(b => b.ply))].sort((a, b) => a - b).map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>{k}</button>)}</span>}
       </div>
-      <div className="analysis">
-        <div className="board-col">
-          <Board fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
-          <div className="navbar" role="group" aria-label="Move navigation">
-            <button className="btn" onClick={() => goPly(0)} aria-label="First Position"><Icon name="first" /></button>
-            <button className="btn" onClick={() => variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1)} aria-label="Previous Move"><Icon name="prev" /></button>
-            <span className="chip mono" style={{ alignSelf: 'center' }} data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>
-            <button className="btn" onClick={() => variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1)} aria-label="Next Move"><Icon name="next" /></button>
-            <button className="btn" onClick={() => goPly(n)} aria-label="Last Position"><Icon name="last" /></button>
-            <button className="btn" data-testid="replay-play" aria-pressed={auto} onClick={() => { if (ply >= n) setPly(0); setAuto(a => !a); }}>{auto ? 'Pause' : 'Play'}</button>
-            <select aria-label="Replay Speed" value={autoMs} onChange={e => setAutoMs(+e.target.value)} className="small">
-              <option value={2000}>Slow</option><option value={1100}>Normal</option><option value={450}>Fast</option>
-            </select>
-            <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip Board"><Icon name="flip" /></button>
-          </div>
-          <div className="row" style={{ justifyContent: 'center' }}>
-            <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark Position'}</button>
-            <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable Move' : '♔ Mark Memorable'}</button>
-            {bookmarks.length > 0 && <span className="small muted">Saved: {[...new Set(bookmarks.map(b => b.ply))].sort((a, b) => a - b).map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>{k}</button>)}</span>}
-          </div>
-          {variation && (
-            <div className="notice">
-              Exploring {variation.label}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
-              <button className="btn small" onClick={() => setVariation(null)}>Return to Main Line</button>
-            </div>
-          )}
-          <div className="panel">
-            <div className="panel-title"><h3>Evaluation</h3><span className="small muted">Higher is better for White</span></div>
-            {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet. The graph appears as the analysis finishes.</p>}
-          </div>
+      {variation && (
+        <div className="notice">
+          Exploring {variation.label}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
+          <button className="btn small" onClick={() => setVariation(null)}>Return to Main Line</button>
         </div>
-        <div className="side-col">
-          <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
-          {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId} /> : (
-            <div className="panel"><h3>{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h3><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
-          )}
-          <div className="panel">
-            <h3>Moves</h3>
-            <div className="moves" aria-label="Analysed move list">
-              {Array.from({ length: Math.ceil(n / 2) + (fens.length && Position.fromFen(fens[0]).side === 1 ? 1 : 0) }).map((_, row) => {
-                const startBlack = Position.fromFen(fens[0]).side === 1;
-                const wPly = startBlack ? row * 2 : row * 2 + 1;
-                const cells = [wPly, wPly + 1].map(k => {
-                  if (k < 1 || k > n) return <span key={k} />;
-                  const pa = plies.find(p => p.ply === k);
-                  return (
-                    <button key={k} className={ply === k && !variation ? 'cur' : ''} onClick={() => goPly(k)} data-ply={k}>
-                      <GradeIcon grade={pa?.grade ?? null} provisional={pa?.gradeProvisional} /> {game.moves[k - 1].san}
-                    </button>
-                  );
-                });
-                return <div key={row} style={{ display: 'contents' }}><span className="n">{row + 1}.</span>{cells}</div>;
-              })}
-            </div>
-          </div>
+      )}
+    </>
+  );
+
+  const movesPanel = (
+    <>
+      <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
+      {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId} /> : (
+        <div className="panel"><h3>{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h3><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
+      )}
+      <div className="panel">
+        <h3>Moves</h3>
+        <NotationList label="Analysed move list" startsWithBlack={startsWithBlack} current={variation ? 0 : ply} onSelect={goPly}
+          moves={game.moves.map((m, i) => { const pa = plies.find(p => p.ply === i + 1); return { san: m.san, grade: pa?.grade ?? null, provisional: pa?.gradeProvisional }; })} />
+      </div>
+      <div className="panel">
+        <div className="panel-title"><h3>Evaluation</h3><span className="small muted">Higher is better for White</span></div>
+        {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet. The graph appears as the analysis finishes.</p>}
+      </div>
+    </>
+  );
+
+  const summaryPanel = (
+    <>
           {report && mine && theirs && (
-            <div className="panel">
-              <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
-              <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                <div className="stat"><span className="k">Your Accuracy</span><span className="v" data-testid="accuracy">{fmtAcc(mine.accuracy)}</span><span className="small muted">{mine.eligible} graded moves · {mine.forced} forced moves skipped</span></div>
-                <div className="stat"><span className="k">{opp.name}</span><span className="v">{fmtAcc(theirs.accuracy)}</span><span className="small muted">{theirs.eligible} graded moves</span></div>
-              </div>
-              <table style={{ marginTop: 10 }}>
-                <thead><tr><th>Grade</th><th>You</th><th>{opp.name.split(' ')[0]}</th></tr></thead>
-                <tbody>{GRADES.map(g => <tr key={g}><td><GradeIcon grade={g} /> {GRADE_LABEL[g]}</td><td>{mine.counts[g]}</td><td>{theirs.counts[g]}</td></tr>)}</tbody>
-              </table>
-              <div className="small muted" style={{ marginTop: 8 }}>
-                Your accuracy by phase: opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} (“—” means the game never reached that phase).<br />
-                Critical moments handled: {mine.critical.handled}/{mine.critical.total} · Best moves: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}.<br />
-                Accuracy runs from 0 to 100 and shows how close your moves were to the engine's in this game. It is not a rating or an IQ.
-                {report.methodology.accuracyId === 'crown-accuracy-v2'
-                  ? null
-                  : report.methodology.accuracyId === 'crown-accuracy-v1'
-                  ? ' Historical report: made with an older engine and kept unchanged. Analyse again for an up-to-date report.'
-                  : ' This report uses early, untuned settings. Analyse again for an up-to-date report.'}
-              </div>
-              <details className="small">
-                <summary>Details</summary>
-                <div className="muted">
-                  Graded moves by phase: opening {mine.phaseAccuracy.opening.eligible} · middlegame {mine.phaseAccuracy.middlegame.eligible} · endgame {mine.phaseAccuracy.endgame.eligible}.<br />
-                  Average loss on centipawn-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
-                  {report.methodology.accuracyId === 'crown-accuracy-v2'
-                    ? 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100. The expected-score map (crown-outcome-map-v2) was refitted for the current engine and validated on held-out opening families; the grade boundaries and k = 4 remain experimental.'
-                    : report.methodology.accuracyId === 'crown-accuracy-v1'
-                    ? 'Engine crown-search-1 + crown-eval-3, map crown-outcome-map-v1. Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100.'
-                    : 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100; logistic scale s = 200 cp (methodology v0, uncalibrated placeholders).'}
-                  <br />Calibration: {report.methodology.calibration}
-                </div>
-              </details>
-              <ClockPressure game={game} plies={plies} />
-              <div className="row" style={{ marginTop: 10 }}>
-                {report.highlights.worstMistake && <button className="btn small" onClick={() => goPly(report.highlights.worstMistake!)}>Biggest Mistake (Move {Math.ceil(report.highlights.worstMistake / 2)})</button>}
-                {report.highlights.biggestMiss && <button className="btn small" onClick={() => goPly(report.highlights.biggestMiss!)}>Missed Chance (Move {Math.ceil(report.highlights.biggestMiss / 2)})</button>}
-                {report.highlights.bestTactic && <button className="btn small" onClick={() => goPly(report.highlights.bestTactic!)}>Best Find (Move {Math.ceil(report.highlights.bestTactic / 2)})</button>}
-              </div>
-              {report.turningPoints.length > 0 && <div className="small muted" style={{ marginTop: 6 }}>Turning points: {report.turningPoints.map(t => <button key={t} className="btn ghost small" onClick={() => goPly(t)}>{t}</button>)}</div>}
+        <div className="panel">
+          <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
+          <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+            <div className="stat"><span className="k">Your Accuracy</span><span className="v" data-testid="accuracy">{fmtAcc(mine.accuracy)}</span><span className="small muted">{mine.eligible} graded moves · {mine.forced} forced moves skipped</span></div>
+            <div className="stat"><span className="k">{opp.name}</span><span className="v">{fmtAcc(theirs.accuracy)}</span><span className="small muted">{theirs.eligible} graded moves</span></div>
+          </div>
+          <table style={{ marginTop: 10 }}>
+            <thead><tr><th>Grade</th><th>You</th><th>{opp.name.split(' ')[0]}</th></tr></thead>
+            <tbody>{GRADES.map(g => <tr key={g}><td><GradeIcon grade={g} /> {GRADE_LABEL[g]}</td><td>{mine.counts[g]}</td><td>{theirs.counts[g]}</td></tr>)}</tbody>
+          </table>
+          <div className="small muted" style={{ marginTop: 8 }}>
+            Your accuracy by phase: opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} (“—” means the game never reached that phase).<br />
+            Critical moments handled: {mine.critical.handled}/{mine.critical.total} · Best moves: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}.<br />
+            Accuracy runs from 0 to 100 and shows how close your moves were to the engine's in this game. It is not a rating or an IQ.
+            {report.methodology.accuracyId === 'crown-accuracy-v2'
+              ? null
+              : report.methodology.accuracyId === 'crown-accuracy-v1'
+              ? ' Historical report: made with an older engine and kept unchanged. Analyse again for an up-to-date report.'
+              : ' This report uses early, untuned settings. Analyse again for an up-to-date report.'}
+          </div>
+          <details className="small">
+            <summary>Details</summary>
+            <div className="muted">
+              Graded moves by phase: opening {mine.phaseAccuracy.opening.eligible} · middlegame {mine.phaseAccuracy.middlegame.eligible} · endgame {mine.phaseAccuracy.endgame.eligible}.<br />
+              Average loss on centipawn-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
+              {report.methodology.accuracyId === 'crown-accuracy-v2'
+                ? 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100. The expected-score map (crown-outcome-map-v2) was refitted for the current engine and validated on held-out opening families; the grade boundaries and k = 4 remain experimental.'
+                : report.methodology.accuracyId === 'crown-accuracy-v1'
+                ? 'Engine crown-search-1 + crown-eval-3, map crown-outcome-map-v1. Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100.'
+                : 'Accuracy = 100·exp(−4·mean expected-score loss), always between 0 and 100; logistic scale s = 200 cp (methodology v0, uncalibrated placeholders).'}
+              <br />Calibration: {report.methodology.calibration}
             </div>
-          )}
-          {report && report.recommendations.length > 0 && (
-            <div className="panel">
-              <h3>Training Focus</h3>
-              {report.recommendations.slice(0, 3).map(r => (
-                <div key={r.topic} className="coach" style={{ marginBottom: 8 }}>
-                  <strong>{r.label}</strong>
-                  <div className="small muted">{r.basis}</div>
-                  {r.plies.length > 0 && <div className="small">Moments: {r.plies.map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>move {Math.ceil(k / 2)}</button>)}</div>}
-                </div>
-              ))}
-            </div>
-          )}
-          {event && (
-            <div className="panel">
-              <h3>Rating Change</h3>
-              <div className={`delta ${event.delta >= 0 ? 'up' : 'down'}`}>{event.delta >= 0 ? '+' : ''}{event.delta.toFixed(1)}</div>
-              <p className="small">{explainEvent(event)}</p>
-              <details className="small">
-                <summary>Details</summary>
-                <span className="muted">Glicko-2 (rating/RD/volatility): {Math.round(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {Math.round(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</span>
-              </details>
-            </div>
-          )}
+          </details>
+          <ClockPressure game={game} plies={plies} />
+          <div className="row" style={{ marginTop: 10 }}>
+            {report.highlights.worstMistake && <button className="btn small" onClick={() => goPly(report.highlights.worstMistake!)}>Biggest Mistake (Move {Math.ceil(report.highlights.worstMistake / 2)})</button>}
+            {report.highlights.biggestMiss && <button className="btn small" onClick={() => goPly(report.highlights.biggestMiss!)}>Missed Chance (Move {Math.ceil(report.highlights.biggestMiss / 2)})</button>}
+            {report.highlights.bestTactic && <button className="btn small" onClick={() => goPly(report.highlights.bestTactic!)}>Best Find (Move {Math.ceil(report.highlights.bestTactic / 2)})</button>}
+          </div>
+          {report.turningPoints.length > 0 && <div className="small muted" style={{ marginTop: 6 }}>Turning points: {report.turningPoints.map(t => <button key={t} className="btn ghost small" onClick={() => goPly(t)}>{t}</button>)}</div>}
         </div>
-      </div>
+      )}
+      {report && report.recommendations.length > 0 && (
+        <div className="panel">
+          <h3>Training Focus</h3>
+          {report.recommendations.slice(0, 3).map(r => (
+            <div key={r.topic} className="coach" style={{ marginBottom: 8 }}>
+              <strong>{r.label}</strong>
+              <div className="small muted">{r.basis}</div>
+              {r.plies.length > 0 && <div className="small">Moments: {r.plies.map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>move {Math.ceil(k / 2)}</button>)}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+      {event && (
+        <div className="panel">
+          <h3>Rating Change</h3>
+          <div className={`delta ${event.delta >= 0 ? 'up' : 'down'}`}>{event.delta >= 0 ? '+' : ''}{event.delta.toFixed(1)}</div>
+          <p className="small">{explainEvent(event)}</p>
+          <details className="small">
+            <summary>Details</summary>
+            <span className="muted">Glicko-2 (rating/RD/volatility): {Math.round(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {Math.round(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</span>
+          </details>
+        </div>
+      )}
+      {!(report && mine && theirs) && !(report && report.recommendations.length > 0) && !event && (
+        <div className="panel"><h3>Summary</h3><p className="muted small">The game summary appears when the analysis is complete.</p></div>
+      )}
+    </>
+  );
+
+  return (
+    <div className="mc analysis-screen" onKeyDown={onKey} tabIndex={-1} style={{ outline: 'none' }}>
+      <MatchHeader
+        back={{ label: '← Library', onClick: () => go({ name: 'library' }) }}
+        kicker={game.context.eventName ?? 'Game Review'}
+        title={`${resultText(game)} vs ${opp.name}`}
+        status={<>
+          <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'Unfinished'}</span>
+          <span className="chip">{game.timeControl.label}</span>
+          <span className={`chip ${game.rated ? 'pos' : ''}`}>{game.mode === 'training' ? 'Training' : game.rated ? 'Rated' : 'Casual'}</span>
+        </>}
+        actions={<button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export Game</button>}
+        white={{ name: game.white.name, rating: rating(game.white) }}
+        black={{ name: game.black.name, rating: rating(game.black) }}
+        result={game.result ?? null} />
+      <MatchLayout board={board} active={tab} onActive={t => setTab(t as typeof tab)} tabsLabel="Analysis Panels"
+        panels={[{ id: 'moves', label: 'Moves & Eval', content: movesPanel }, { id: 'summary', label: 'Summary', content: summaryPanel }]} />
     </div>
   );
 }

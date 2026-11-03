@@ -164,8 +164,7 @@ tr.clickable:focus-visible { outline-offset: -2px; }
 tr.me td { background: var(--accent-soft); }
 tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 
-/* Match layout */
-.match { display: grid; grid-template-columns: minmax(300px, 640px) minmax(280px, 380px); gap: var(--sp-6); align-items: start; justify-content: center; }
+/* Match layout: shared Match Center grid in src/ui/match-center.css */
 .board-col { display: flex; flex-direction: column; gap: 10px; }
 .side-col { display: flex; flex-direction: column; gap: var(--sp-3); }
 .player-bar { display: flex; align-items: center; gap: var(--sp-3); padding: 8px 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-soft); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
@@ -310,7 +309,7 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 
 @media (max-width: 980px) {
-  .match, .analysis { grid-template-columns: 1fr; }
+  .analysis { grid-template-columns: 1fr; }
   .board-col { max-width: 640px; margin: 0 auto; width: 100%; }
 }
 @media (max-width: 760px) {
@@ -375,19 +374,4 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .icon-pick button { padding: 4px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
 .icon-pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, transparent); }
 
-/* ---------- Sovereign Live Arena (crown-arena-1) ---------- */
-.arena-grid { display: grid; gap: 14px; grid-template-columns: minmax(340px, 1.05fr) minmax(300px, 1fr) minmax(300px, 1fr); align-items: start; }
-.arena-grid .arena-board { grid-column: 1; grid-row: 1 / span 2; }
-.arena-tabs { display: none; }
-.arena-moves { max-height: 180px; overflow: auto; line-height: 1.9; }
-.arena-moves .grade-icon { margin-left: 2px; }
-.arena-player { gap: 8px; }
-@media (max-width: 1180px) {
-  .arena-grid { grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr); }
-}
-@media (max-width: 760px) {
-  .arena-grid { grid-template-columns: 1fr; }
-  .arena-grid .arena-board { grid-row: auto; }
-  .arena-tabs { display: flex; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 4px 0; }
-  .arena-tab-off, .arena-m-off { display: none; }
-}
+/* Sovereign Live Arena (crown-arena-1): layout in src/ui/match-center.css (shared) and src/ui/arena.css */

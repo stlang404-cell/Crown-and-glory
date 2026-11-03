@@ -43,6 +43,7 @@ hidden from assistive technology. Unknown names render a small diamond instead o
 | flag | Resign |
 | handshake | Offer draw |
 | first · prev · next · last | Move navigation (filled for legibility in small buttons) |
+| pause | Pause a replay (paired with play) |
 
 ## Chess pieces (`src/ui/Pieces.tsx`) and board (`src/ui/Board.tsx`)
 

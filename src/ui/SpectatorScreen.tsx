@@ -15,11 +15,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
-import { Icon } from './Icons';
 import { whiteU, formatScore } from './Charts';
 import { Portrait } from './Portrait';
 import { Emblem } from './Emblem';
-import { GradeIcon, GRADE_LABEL } from './AnalysisScreen';
+import { GradeIcon, GRADE_LABEL, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar, moveKeys } from './MatchCenter';
 import { eventName, WorldGame } from '../app/federation';
 import type { SelfplayMove } from '../engine/selfplay';
 import { OUTCOMES, claimPrices, claimsOf, liquidationValue, revisionOf } from '../exchange/market';
@@ -163,24 +162,21 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     const club = clubOf(c.id, c.region);
     const active = sideToMove === side && isLive && ply === revealed;
     return (
-      <div className={`row small arena-player ${active ? 'is-active' : ''}`} data-testid={`arena-player-${side ? 'black' : 'white'}`}>
-        <span className={`arena-pip ${side ? 'black' : 'white'}`} aria-hidden />
-        <Portrait seed={c.portraitSeed} size={34} crown={c.titles.some(t => /Crown Champion/.test(t.title))} />
-        <span className="arena-player-id">
-          <button className="btn ghost small arena-player-name" onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button>
-          <span className="muted arena-player-meta">
-            <span className="mono">{Math.round(c.rating)} ±{Math.round(c.rd)}</span>
-            <Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} />
-            {c.fedTitle && <Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={`Federation Title: ${c.fedTitle}`} />}
-            <span>{isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'} · {side ? 'Black' : 'White'}</span>
+      <PlayerBar color={side ? 'black' : 'white'} active={active} testId={`arena-player-${side ? 'black' : 'white'}`}
+        avatar={<Portrait seed={c.portraitSeed} size={34} crown={c.titles.some(t => /Crown Champion/.test(t.title))} />}
+        name={<button className="btn ghost small arena-player-name" onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button>}
+        meta={<>
+          <span className="mono">{Math.round(c.rating)} ±{Math.round(c.rd)}</span>
+          <Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} />
+          {c.fedTitle && <Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={`Federation Title: ${c.fedTitle}`} />}
+          <span>{isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'} · {side ? 'Black' : 'White'}</span>
+        </>}
+        aside={
+          <span className={`chip mono arena-think ${active ? 'gold' : ''}`} title="Engine thinking time used. Featured games have no game clock." data-testid={`think-${side ? 'black' : 'white'}`}>
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden focusable="false"><circle cx="8" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M8 5.5V9l2.2 1.6M6.5 1.5h3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            {fmtT(think[side])}
           </span>
-        </span>
-        <span className="spacer" />
-        <span className={`chip mono arena-think ${active ? 'gold' : ''}`} title="Engine thinking time used. Featured games have no game clock." data-testid={`think-${side ? 'black' : 'white'}`}>
-          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden focusable="false"><circle cx="8" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M8 5.5V9l2.2 1.6M6.5 1.5h3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-          {fmtT(think[side])}
-        </span>
-      </div>
+        } />
     );
   };
 
@@ -201,17 +197,6 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     </div>
   );
 
-  const moveButton = (m: SelfplayMove, i: number) => {
-    const g = postReady ? report!.plies[i]?.grade ?? null : undefined;
-    const on = i + 1 === ply;
-    return (
-      <button key={i} className={`arena-mv ${on ? 'on' : ''}`} aria-current={on ? 'step' : undefined} onClick={() => nav(i + 1)} data-testid="arena-move"
-        aria-label={`${Math.floor(i / 2) + 1}. ${i % 2 ? 'Black' : 'White'} ${m.san}${g ? `, ${GRADE_LABEL[g]}` : g === null ? ', not graded' : ''}`}>
-        <span className="arena-mv-san">{m.san}</span>{g !== undefined && <GradeIcon grade={g} />}
-      </button>
-    );
-  };
-
   const analysisPanel = (
     <div className="panel stack" data-testid="arena-analysis">
       <div className="panel-title"><h3 style={{ margin: 0 }}>Moves &amp; Evaluation</h3><span className="small muted mono">Move {ply} of {revealed}</span></div>
@@ -221,20 +206,9 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
         {postCurve && <span><i style={{ background: '#6aa7ff' }} />Match Analysis</span>}
       </div>
       {cur && <div className="small mono arena-current" data-testid="arena-current" title={`Search depth ${cur.depth} · ${cur.nodes.toLocaleString('en')} nodes`}>{Math.ceil(ply / 2)}{ply % 2 ? '.' : '…'} {cur.san} · Eval {formatScore(cur.score)}{curPost ? ` · ${curPost.grade ? GRADE_LABEL[curPost.grade] : 'Not graded'}` : ''}</div>}
-      <div className="small arena-moves" data-testid="arena-moves">
-        {shownMoves.length === 0 ? <p className="muted" style={{ margin: 0 }}>Moves appear here as they are played.</p> : (
-          <>
-            <div className="arena-move-row arena-move-head" aria-hidden><span /><span>White</span><span>Black</span></div>
-            {Array.from({ length: Math.ceil(shownMoves.length / 2) }, (_, r) => (
-              <div key={r} className="arena-move-row">
-                <span className="arena-mv-no mono" aria-hidden>{r + 1}.</span>
-                {moveButton(shownMoves[2 * r], 2 * r)}
-                {2 * r + 1 < shownMoves.length ? moveButton(shownMoves[2 * r + 1], 2 * r + 1) : <span />}
-              </div>
-            ))}
-          </>
-        )}
-      </div>
+      {/* grade icons only once Match Analysis is allowed and ready (after settlement); before that no grade is passed */}
+      <NotationList moves={shownMoves.map((m, i) => ({ san: m.san, grade: postReady ? report!.plies[i]?.grade ?? null : undefined }))} current={ply} onSelect={nav}
+        label="Move list" testId="arena-moves" itemTestId="arena-move" empty="Moves appear here as they are played." />
       {postReady && (
         <div className="small" data-testid="arena-grade-summary">{(['brilliant', 'great', 'best', 'excellent', 'good', 'inaccuracy', 'mistake', 'blunder'] as const).map(gr => { const nW = report!.plies.filter((p, i) => i % 2 === 0 && p.grade === gr).length, nB = report!.plies.filter((p, i) => i % 2 === 1 && p.grade === gr).length; return nW + nB ? <span key={gr} className="chip" style={{ marginRight: 4 }}><GradeIcon grade={gr} /> {GRADE_LABEL[gr]} {nW}/{nB}</span> : null; })} <span className="muted">(White/Black)</span></div>
       )}
@@ -319,13 +293,6 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           <div className="seg" role="group" aria-label="Trading Window">{WINDOWS.map((x, i) => <button key={x.label} aria-pressed={windowIdx === i} onClick={() => setWindowIdx(i)}>{x.label}</button>)}</div>
         </div>
       )}
-      {!inPlay && (isLive || game) && (
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <button className="btn small" data-testid="replay-pause" onClick={() => setPaused(x => !x)} disabled={revealed >= moves.length && generationDone}>{paused ? 'Resume' : 'Pause'}</button>
-          <div className="seg" role="group" aria-label="Speed">{SPEEDS.map((s, i) => <button key={s.label} aria-pressed={speed === i} onClick={() => setSpeed(i)}>{s.label}</button>)}</div>
-          <span className="small muted">{isLive ? `The engine has played ${moves.length} moves; showing ${revealed}.` : `${moves.length} moves recorded${game ? ` · ${game.termination.replace(/-/g, ' ')}` : ''}.`}</span>
-        </div>
-      )}
       {finalShown && <div className="notice" data-testid="final-result"><strong>Final result: {finalShown}</strong> · {game!.termination.replace(/-/g, ' ')}</div>}
       {fixture.result === null && !isLive && !game && (
         <div className="stack">
@@ -340,58 +307,43 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     </div>
   );
 
-  const ScoreSide = ({ c, side }: { c: typeof w; side: 0 | 1 }) => (
-    <div className={`arena-sb-side ${side ? 'black' : 'white'}`}>
-      <span className={`arena-pip ${side ? 'black' : 'white'}`} aria-hidden />
-      <span className="arena-sb-name">{c?.name ?? '—'}</span>
-      {c && <span className="arena-sb-rating mono">{Math.round(c.rating)}</span>}
-    </div>
+  const replaying = !inPlay && (isLive || !!game);
+  const lastNav = () => { setFollow(true); setPly(revealed); };
+  const board = (
+    <>
+      <PlayerCard id={orientation === 'white' ? fixture.black : fixture.white} side={orientation === 'white' ? 1 : 0} />
+      <Board fen={fen} orientation={orientation} lastMove={last} label={`${w?.name} vs ${b?.name}, after ${ply} moves`} />
+      <PlayerCard id={orientation === 'white' ? fixture.white : fixture.black} side={orientation === 'white' ? 0 : 1} />
+      <MoveNav onFirst={() => nav(0)} onPrev={() => nav(ply - 1)} onNext={() => nav(ply + 1)} onLast={lastNav} lastLabel="Latest Move"
+        onFlip={() => setOrientation(o => (o === 'white' ? 'black' : 'white'))}
+        replay={replaying ? { playing: !paused, onToggle: () => setPaused(x => !x), testId: 'replay-pause', playLabel: 'Resume', disabled: revealed >= moves.length && generationDone, speeds: SPEEDS, speed, onSpeed: setSpeed } : undefined}>
+        {replaying && <span className="small muted">{isLive ? `The engine has played ${moves.length} moves; showing ${revealed}.` : `${moves.length} moves recorded${game ? ` · ${game.termination.replace(/-/g, ' ')}` : ''}.`}</span>}
+      </MoveNav>
+      {controls}
+    </>
   );
 
   return (
-    <div className="arena" data-testid="arena">
-      <header className="arena-head">
-        <div className="arena-head-top">
-          <button className="btn ghost small" onClick={() => go({ name: 'world' })}>← Federation</button>
-          <div className="arena-title">
-            <span className="arena-kicker">Live Arena</span>
-            <h1>{eventName(fixture.event)}{fixture.stage ? ` · ${fixture.stage}` : ''}</h1>
-            <span className="small muted">Season {fixture.season} · Round {fixture.round}</span>
-          </div>
-          <span className="spacer" />
+    <div className="mc arena" data-testid="arena" onKeyDown={moveKeys({ first: () => nav(0), prev: () => nav(ply - 1), next: () => nav(ply + 1), last: lastNav })}>
+      <MatchHeader
+        back={{ label: '← Federation', onClick: () => go({ name: 'world' }) }}
+        kicker="Live Arena"
+        title={`${eventName(fixture.event)}${fixture.stage ? ` · ${fixture.stage}` : ''}`}
+        subtitle={`Season ${fixture.season} · Round ${fixture.round}`}
+        status={<>
           <span className={`chip arena-status ${status.startsWith('LIVE') ? 'neg is-live' : status.startsWith('REPLAY') ? 'info' : ''}`} data-testid="spectator-status">{status}</span>
           {postAllowed && !postReady && <span className="chip">Match Analysis {services.progress?.gameId === `wg:${fixtureId}` ? `${services.progress.done}/${services.progress.total}` : 'Queued'}</span>}
-        </div>
-        <div className="arena-scoreboard" role="group" aria-label={`${w?.name ?? 'White'} (White) vs ${b?.name ?? 'Black'} (Black)${finalShown ? `, final result ${finalShown}` : ''}`}>
-          <ScoreSide c={w} side={0} />
-          <div className="arena-sb-mid mono" aria-hidden>{finalShown ?? 'vs'}</div>
-          <ScoreSide c={b} side={1} />
-        </div>
-      </header>
+        </>}
+        white={{ name: w?.name ?? '—', rating: w ? String(Math.round(w.rating)) : null }}
+        black={{ name: b?.name ?? '—', rating: b ? String(Math.round(b.rating)) : null }}
+        result={finalShown} />
       {err && <div className="notice warn" role="alert">{err}</div>}
-      <div className="arena-grid">
-        <div className="stack arena-board">
-          <PlayerCard id={orientation === 'white' ? fixture.black : fixture.white} side={orientation === 'white' ? 1 : 0} />
-          <Board fen={fen} orientation={orientation} lastMove={last} label={`${w?.name} vs ${b?.name}, after ${ply} moves`} />
-          <PlayerCard id={orientation === 'white' ? fixture.white : fixture.black} side={orientation === 'white' ? 0 : 1} />
-          <div className="row arena-nav" role="group" aria-label="Move Navigation">
-            <button className="btn small" aria-label="First Move" onClick={() => nav(0)}><Icon name="first" /></button>
-            <button className="btn small" aria-label="Previous Move" onClick={() => nav(ply - 1)}><Icon name="prev" /></button>
-            <button className="btn small" aria-label="Next Move" onClick={() => nav(ply + 1)}><Icon name="next" /></button>
-            <button className="btn small" aria-label="Latest Move" onClick={() => { setFollow(true); setPly(revealed); }}><Icon name="last" /></button>
-            <button className="btn small" aria-label="Flip Board" onClick={() => setOrientation(o => (o === 'white' ? 'black' : 'white'))}><Icon name="flip" /></button>
-          </div>
-          {controls}
-        </div>
-        <div className="seg arena-tabs" role="tablist" aria-label="Arena Panels">
-          {(['analysis', 'market', 'portfolio'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} aria-pressed={tab === t} onClick={() => setTab(t)}>{{ analysis: 'Moves & Eval', market: 'Market', portfolio: 'Portfolio' }[t]}</button>)}
-        </div>
-        <div className={`stack arena-col arena-tab-${tab === 'analysis' ? 'on' : 'off'}`}>{analysisPanel}</div>
-        <div className={`stack arena-col arena-tab-${tab === 'analysis' ? 'off' : 'on'}`}>
-          <div className={tab === 'market' ? 'arena-m-on' : 'arena-m-off'}>{marketPanel}</div>
-          <div className={tab === 'portfolio' ? 'arena-m-on' : 'arena-m-off'}>{portfolioPanel}</div>
-        </div>
-      </div>
+      <MatchLayout className="arena-layout" columns={2} board={board} active={tab} onActive={t => setTab(t as typeof tab)} tabsLabel="Arena Panels"
+        panels={[
+          { id: 'analysis', label: 'Moves & Eval', content: analysisPanel, column: 0 },
+          { id: 'market', label: 'Market', content: marketPanel, column: 1 },
+          { id: 'portfolio', label: 'Portfolio', content: portfolioPanel, column: 1 },
+        ]} />
     </div>
   );
 }
