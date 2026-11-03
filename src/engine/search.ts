@@ -31,6 +31,10 @@ export interface SearchFeatures {
   seePruning: boolean;
   checkExtension: boolean;
   futility: boolean;
+  /** Logarithmic late-move reductions (experiment). */
+  lmrLog: boolean;
+  /** Late-move pruning of quiet moves near the leaves (experiment). */
+  lmp: boolean;
 }
 
 export const DEFAULT_FEATURES: SearchFeatures = {
@@ -44,6 +48,8 @@ export const DEFAULT_FEATURES: SearchFeatures = {
   seePruning: true,
   checkExtension: true,
   futility: true,
+  lmrLog: false,
+  lmp: false,
 };
 
 export interface SearchLimits {
@@ -401,10 +407,21 @@ export class Searcher {
         if (legal === 1) {
           s = -this.searchNode(depth - 1, -beta, -alpha, ply + 1, pvNode, false);
         } else {
+          const quiet = !inCheck && !givesCheck && !isCapture && !isPromo && scores[i] < 800000;
+          if (this.features.lmp && quiet && !pvNode && depth <= 3 && legal > 3 + depth * depth * 2 && bestScore > -MATE_BOUND) {
+            continue; // pruned (the finally block unmakes the move)
+          }
           let reduction = 0;
-          if (this.features.lmr && depth >= 3 && legal > 3 && !inCheck && !givesCheck && !isCapture && !isPromo && scores[i] < 800000) {
-            reduction = legal > 8 ? 2 : 1;
-            if (pvNode) reduction = Math.max(0, reduction - 1);
+          if (this.features.lmr && depth >= 3 && legal > 3 && quiet) {
+            if (this.features.lmrLog) {
+              reduction = Math.floor(0.75 + (Math.log(depth) * Math.log(legal)) / 2.25);
+              if (pvNode) reduction--;
+              if (scores[i] >= 850000) reduction--; // killers
+              reduction = Math.max(0, Math.min(reduction, depth - 2));
+            } else {
+              reduction = legal > 8 ? 2 : 1;
+              if (pvNode) reduction = Math.max(0, reduction - 1);
+            }
           }
           s = -this.searchNode(depth - 1 - reduction, -alpha - 1, -alpha, ply + 1, false, false);
           if (s > alpha && reduction > 0) s = -this.searchNode(depth - 1, -alpha - 1, -alpha, ply + 1, false, false);

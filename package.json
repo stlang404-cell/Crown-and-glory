@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Crown & Calculation: The Six-Square Federation — offline-first 6x6 chess (crown-la6-v1) with a local engine, Glicko-2 ratings and engine-based game analysis.",
   "type": "module",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -13,7 +13,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "node --experimental-strip-types --no-warnings tools/bench/run.ts",
+    "bench": "tsx tools/bench/run.ts",
     "e2e": "node e2e/run.mjs"
   },
   "dependencies": {

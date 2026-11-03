@@ -1,0 +1,27 @@
+[
+  {
+    "board": "RNQK.RP.PP.P.n..PN.....pppppp.rnqk.r",
+    "side": 1,
+    "half": 0
+  },
+  {
+    "board": ".NQK.RR.Pn.PP....N.p...pp.pp..rnqk.r",
+    "side": 1,
+    "half": 0
+  },
+  {
+    "board": "..Q.KRR.Pn.PP....N.p.p.ppqpN..rn..kr",
+    "side": 1,
+    "half": 2
+  },
+  {
+    "board": "..Q.KR..P..P.....NPp.pnp.qpN.rrn..k.",
+    "side": 1,
+    "half": 0
+  },
+  {
+    "board": "K.............R...........q........k",
+    "side": 1,
+    "half": 0
+  }
+]

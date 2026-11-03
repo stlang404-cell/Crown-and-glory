@@ -35,6 +35,12 @@ export const REGISTRY: Record<string, Spec> = {
   noSee40k: { kind: 'config', id: 'noSee40k', nodes: 40_000, features: { seePruning: false } },
   noQ40k: { kind: 'config', id: 'noQ40k', nodes: 40_000, features: { quiescence: false } },
   full160k: { kind: 'config', id: 'full160k', nodes: 160_000 },
+  lmrLog40k: { kind: 'config', id: 'lmrLog40k', nodes: 40_000, features: { lmrLog: true } },
+  lmp40k: { kind: 'config', id: 'lmp40k', nodes: 40_000, features: { lmp: true } },
+  matAlt40k: { kind: 'config', id: 'matAlt40k', nodes: 40_000, weights: { material: [0, 100, 300, 500, 950, 0], materialEg: [0, 120, 290, 540, 1000, 0] } },
+  passedHi40k: { kind: 'config', id: 'passedHi40k', nodes: 40_000, weights: { passedMg: [0, 0, 15, 40, 80, 0], passedEg: [0, 0, 40, 85, 160, 0] } },
+  mobHi40k: { kind: 'config', id: 'mobHi40k', nodes: 40_000, weights: { mobility: [0, 0, 6, 5, 3, 0] } },
+  both40k: { kind: 'config', id: 'both40k', nodes: 40_000, features: { lmrLog: true, lmp: true } },
   fairy1k: { kind: 'fairy', id: 'fairy-n1k', limit: 'nodes 1000' },
   fairy4k: { kind: 'fairy', id: 'fairy-n4k', limit: 'nodes 4000' },
   fairy16k: { kind: 'fairy', id: 'fairy-n16k', limit: 'nodes 16000' },
@@ -191,6 +197,8 @@ async function main() {
       const pairs = +(pairsArg ?? 20);
       const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
+        : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
+        : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]
         : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L3', 'L1'], ['L4', 'L2'], ['L5', 'L3'], ['L6', 'L4'], ['L7', 'L6', 12], ['L7', 'L5', 8], ['L8', 'L7', 8], ['L8', 'L6', 6]]
         : [];

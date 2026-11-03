@@ -6,7 +6,7 @@
   "cores": 4,
   "searchId": "crown-search-1",
   "evalId": "crown-eval-2",
-  "date": "2026-11-03T02:42:16.505Z"
+  "date": "2026-11-03T02:51:30.816Z"
  },
  "pairsPerMatch": 32,
  "openings": "tools/bench/openings.json",
@@ -127,6 +127,83 @@
     "checkmate": 62,
     "bare-kings": 1,
     "fifty-move-claim": 1
+   }
+  },
+  {
+   "a": "full160k",
+   "b": "fairy-n16k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 13,
+   "draws": 16,
+   "losses": 35,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.328125,
+   "scoreCI": [
+    0.234375,
+    0.421875
+   ],
+   "eloDiff": -124,
+   "eloCI": [
+    -206,
+    -55
+   ],
+   "avgDepth": {
+    "full160k": 11.61,
+    "fairy-n16k": 22.93
+   },
+   "avgNodes": {
+    "full160k": 146412,
+    "fairy-n16k": 15686
+   },
+   "avgMs": {
+    "full160k": 356,
+    "fairy-n16k": 21
+   },
+   "reasons": {
+    "checkmate": 48,
+    "threefold-claim": 5,
+    "fifty-move-claim": 6,
+    "bare-kings": 5
+   }
+  },
+  {
+   "a": "full160k",
+   "b": "fairy-n64k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 4,
+   "draws": 3,
+   "losses": 57,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.0859375,
+   "scoreCI": [
+    0.03125,
+    0.1484375
+   ],
+   "eloDiff": -411,
+   "eloCI": [
+    -597,
+    -303
+   ],
+   "avgDepth": {
+    "full160k": 10.35,
+    "fairy-n64k": 35.64
+   },
+   "avgNodes": {
+    "full160k": 138744,
+    "fairy-n64k": 60547
+   },
+   "avgMs": {
+    "full160k": 442,
+    "fairy-n64k": 101
+   },
+   "reasons": {
+    "checkmate": 61,
+    "threefold-claim": 2,
+    "bare-kings": 1
    }
   }
  ]

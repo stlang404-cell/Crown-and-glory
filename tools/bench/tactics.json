@@ -1,0 +1,703 @@
+{
+ "generator": "Fairy-Stockfish 031126 depth 14 MultiPV 2; unique best (mate, or >=250cp gap)",
+ "scanned": 672,
+ "count": 87,
+ "items": [
+  {
+   "fen": "1R4/4k1/3N2/6/4K1/6 w - - 14 29",
+   "best": [
+    "e2d3"
+   ],
+   "kind": "mate-in-9",
+   "gapCp": null
+  },
+  {
+   "fen": "rn1k1r/ppqppp/2pnP1/P4P/1PPP2/RNQKNR b - - 0 4",
+   "best": [
+    "f5e4"
+   ],
+   "kind": "material",
+   "gapCp": 329
+  },
+  {
+   "fen": "1k2r1/pp2p1/6/P1P3/1P1K2/1Rn2r w - - 0 22",
+   "best": [
+    "d2c2"
+   ],
+   "kind": "material",
+   "gapCp": 281
+  },
+  {
+   "fen": "6/kp3K/p5/PPP3/6/2R3 w - - 1 29",
+   "best": [
+    "b3b4"
+   ],
+   "kind": "mate-in-4",
+   "gapCp": null
+  },
+  {
+   "fen": "r1qknr/pp1pp1/5p/2NN1P/PPPKPR/R3Q1 b - - 0 6",
+   "best": [
+    "b5b4"
+   ],
+   "kind": "material",
+   "gapCp": 308
+  },
+  {
+   "fen": "r1k1nr/3pN1/qp3p/1PP2P/P3PR/R2K2 b - - 0 13",
+   "best": [
+    "c6d6"
+   ],
+   "kind": "material",
+   "gapCp": 391
+  },
+  {
+   "fen": "1r2nr/6/k1Np1P/2p3/P4p/R1K3 b - - 1 20",
+   "best": [
+    "f2f1q"
+   ],
+   "kind": "mate-in-5",
+   "gapCp": null
+  },
+  {
+   "fen": "r1qknr/ppp2p/3p2/1P1p1P/PQPNP1/R1K1NR w - - 0 8",
+   "best": [
+    "e1d3"
+   ],
+   "kind": "material",
+   "gapCp": 308
+  },
+  {
+   "fen": "rq1knr/p1p2p/Q2p2/1P1p1P/P1P1P1/R1K2R b - - 3 11",
+   "best": [
+    "d3e2"
+   ],
+   "kind": "material",
+   "gapCp": 315
+  },
+  {
+   "fen": "r2knr/pqp2p/3p2/1P3P/P2KPR/R1r3 w - - 2 15",
+   "best": [
+    "d2c1"
+   ],
+   "kind": "material",
+   "gapCp": 654
+  },
+  {
+   "fen": "r4r/2nk2/p4p/1P1K1P/P5/R5 w - - 0 22",
+   "best": [
+    "d3c3"
+   ],
+   "kind": "material",
+   "gapCp": 551
+  },
+  {
+   "fen": "4nr/3k2/PR3p/P4r/6/4K1 w - - 0 29",
+   "best": [
+    "b4b6"
+   ],
+   "kind": "material",
+   "gapCp": 4825
+  },
+  {
+   "fen": "rnqknr/2pp1p/pp4/3PQp/PPPKPP/RN2R1 b - - 1 5",
+   "best": [
+    "f5f4"
+   ],
+   "kind": "material",
+   "gapCp": 384
+  },
+  {
+   "fen": "r1qk1r/2np1p/ppn3/3P1P/PPPKRP/RN4 w - - 2 9",
+   "best": [
+    "d3c4"
+   ],
+   "kind": "material",
+   "gapCp": 617
+  },
+  {
+   "fen": "rn1k1r/3p1p/pp4/2qP1P/PPR2P/R1K3 b - - 1 12",
+   "best": [
+    "c3e1"
+   ],
+   "kind": "mate-in-1",
+   "gapCp": null
+  },
+  {
+   "fen": "rn1k2/3p1p/1p4/p2P1P/PP3P/1R1Kr1 w - - 2 16",
+   "best": [
+    "d1e1"
+   ],
+   "kind": "material",
+   "gapCp": 973
+  },
+  {
+   "fen": "3k2/r2p1p/3P1P/4n1/1p3P/nR1K2 w - - 2 23",
+   "best": [
+    "f2e3"
+   ],
+   "kind": "material",
+   "gapCp": 5629
+  },
+  {
+   "fen": "3k2/3p1p/3r1P/4n1/1Rn2P/2K3 b - - 1 26",
+   "best": [
+    "d4d1"
+   ],
+   "kind": "mate-in-1",
+   "gapCp": null
+  },
+  {
+   "fen": "6/2kp1p/r1n2P/1R3P/2n3/2K3 w - - 5 30",
+   "best": [
+    "c1c2"
+   ],
+   "kind": "material",
+   "gapCp": 318
+  },
+  {
+   "fen": "4k1/3p1p/1K3P/1R3P/3r2/6 w - - 11 37",
+   "best": [
+    "b4c3"
+   ],
+   "kind": "material",
+   "gapCp": 859
+  },
+  {
+   "fen": "1n1k2/6/6/1K4/5p/6 b - - 6 40",
+   "best": [
+    "f2f1q"
+   ],
+   "kind": "mate-in-7",
+   "gapCp": null
+  },
+  {
+   "fen": "rnqk1r/ppppN1/3npp/N5/PPPPPP/R1QK1R w - - 2 4",
+   "best": [
+    "e5c6"
+   ],
+   "kind": "material",
+   "gapCp": 477
+  },
+  {
+   "fen": "4k1/rNppr1/4pp/1nn2P/P2PP1/1RQK1R w - - 0 11",
+   "best": [
+    "c1c3"
+   ],
+   "kind": "material",
+   "gapCp": 689
+  },
+  {
+   "fen": "6/3p2/rP2kp/4P1/5K/5R b - - 0 21",
+   "best": [
+    "f4e3"
+   ],
+   "kind": "mate-in-6",
+   "gapCp": null
+  },
+  {
+   "fen": "3R2/2k3/6/3p2/6/5K b - - 3 35",
+   "best": [
+    "c5d6"
+   ],
+   "kind": "material",
+   "gapCp": 5286
+  },
+  {
+   "fen": "r1q1n1/3kpr/2p2p/pPp3/2K1PP/R1N2R w - - 0 13",
+   "best": [
+    "c2b1"
+   ],
+   "kind": "material",
+   "gapCp": 1034
+  },
+  {
+   "fen": "5r/4p1/2k1qp/pRp2P/N3n1/3KR1 w - - 0 20",
+   "best": [
+    "f3e4"
+   ],
+   "kind": "material",
+   "gapCp": 724
+  },
+  {
+   "fen": "3R2/4p1/1qk2p/p1p2P/N3K1/5R b - - 2 23",
+   "best": [
+    "b4d6"
+   ],
+   "kind": "material",
+   "gapCp": 472
+  },
+  {
+   "fen": "6/4p1/5p/3k1P/6/r1R1K1 b - - 1 30",
+   "best": [
+    "a1c1"
+   ],
+   "kind": "mate-in-5",
+   "gapCp": null
+  },
+  {
+   "fen": "rnqk1r/ppNppp/6/6/PPPPnP/RNQK1R w - - 0 3",
+   "best": [
+    "d1e2"
+   ],
+   "kind": "material",
+   "gapCp": 263
+  },
+  {
+   "fen": "Nn1k1r/pp1ppp/6/6/PqPPKP/RN1Q1R b - - 1 6",
+   "best": [
+    "b2a1"
+   ],
+   "kind": "material",
+   "gapCp": 254
+  },
+  {
+   "fen": "2rk1r/p2pN1/PPp2p/3P2/2nKPP/1N3R w - - 1 12",
+   "best": [
+    "e5c6"
+   ],
+   "kind": "material",
+   "gapCp": 257
+  },
+  {
+   "fen": "3k1r/pP1p2/P2N2/n2pPp/3K1P/1N3R b - - 0 15",
+   "best": [
+    "a3c4"
+   ],
+   "kind": "material",
+   "gapCp": 562
+  },
+  {
+   "fen": "1Nk3/p2p1N/P4r/n2pPp/3K1P/1N1R2 w - - 3 19",
+   "best": [
+    "e3f4"
+   ],
+   "kind": "material",
+   "gapCp": 414
+  },
+  {
+   "fen": "k3K1/N5/P4P/5p/3n2/6 w - - 3 33",
+   "best": [
+    "a5c4"
+   ],
+   "kind": "material",
+   "gapCp": 678
+  },
+  {
+   "fen": "1nqk1r/r2p1p/pp1Q1P/p1PP2/1P3K/RN1R2 b - - 1 14",
+   "best": [
+    "c6c5"
+   ],
+   "kind": "material",
+   "gapCp": 413
+  },
+  {
+   "fen": "2q2Q/r1kp2/ppn2P/2PP2/1P3K/Rn1R2 w - - 0 18",
+   "best": [
+    "c3b4"
+   ],
+   "kind": "material",
+   "gapCp": 789
+  },
+  {
+   "fen": "6/rk1p2/ppn2P/1RPP2/6/3RK1 b - - 2 21",
+   "best": [
+    "a4b3"
+   ],
+   "kind": "material",
+   "gapCp": 710
+  },
+  {
+   "fen": "rn2k1/3p2/p5/Prq3/1P1R2/3K2 b - - 13 23",
+   "best": [
+    "b3b2"
+   ],
+   "kind": "mate-in-10",
+   "gapCp": null
+  },
+  {
+   "fen": "1n3k/3Qrp/6/3p1p/rPK2P/1R2R1 w - - 0 22",
+   "best": [
+    "d5d3"
+   ],
+   "kind": "material",
+   "gapCp": 1685
+  },
+  {
+   "fen": "rn4/6/3k1p/3p1p/1P1K1P/4R1 w - - 6 29",
+   "best": [
+    "e1b1"
+   ],
+   "kind": "material",
+   "gapCp": 4577
+  },
+  {
+   "fen": "1n4/4k1/5p/3p1p/1P1K1P/r5 b - - 3 32",
+   "best": [
+    "e5d4"
+   ],
+   "kind": "mate-in-3",
+   "gapCp": null
+  },
+  {
+   "fen": "rnqk1r/ppp1Np/3p1n/6/PPPPPP/RNQK1R w - - 1 3",
+   "best": [
+    "e5c6"
+   ],
+   "kind": "material",
+   "gapCp": 966
+  },
+  {
+   "fen": "rn3r/Nppk1p/3p2/3P2/PQP1PP/RN1K1R b - - 0 6",
+   "best": [
+    "a6a5"
+   ],
+   "kind": "material",
+   "gapCp": 678
+  },
+  {
+   "fen": "r1q3/1pp1pk/1P2p1/Qn2P1/4P1/R2KN1 w - - 4 14",
+   "best": [
+    "a3a6"
+   ],
+   "kind": "material",
+   "gapCp": 1071
+  },
+  {
+   "fen": "Q3r1/4pk/1p2p1/4P1/3KP1/1R2N1 w - - 6 28",
+   "best": [
+    "a6b5"
+   ],
+   "kind": "mate-in-8",
+   "gapCp": null
+  },
+  {
+   "fen": "Q2rk1/4p1/4p1/1p2P1/R3P1/2K1N1 b - - 1 31",
+   "best": [
+    "e6f5"
+   ],
+   "kind": "material",
+   "gapCp": 4991
+  },
+  {
+   "fen": "1k1r2/4p1/4p1/Q3P1/4P1/2K1N1 w - - 3 35",
+   "best": [
+    "a3d6"
+   ],
+   "kind": "mate-in-5",
+   "gapCp": null
+  },
+  {
+   "fen": "3k2/4p1/1N1Pp1/1K4/4P1/6 w - - 1 42",
+   "best": [
+    "d4d5"
+   ],
+   "kind": "material",
+   "gapCp": 444
+  },
+  {
+   "fen": "r1qk1r/p1p2p/1p3p/3P2/P1n1P1/RN1KNR w - - 0 8",
+   "best": [
+    "e1c2"
+   ],
+   "kind": "material",
+   "gapCp": 430
+  },
+  {
+   "fen": "3r1r/p2k2/3p1P/p5/5R/3K2 w - - 3 22",
+   "best": [
+    "f2a2"
+   ],
+   "kind": "material",
+   "gapCp": 4905
+  },
+  {
+   "fen": "rnqk2/p1p1p1/1N3r/3K2/PPPP1P/RQ2R1 w - - 2 10",
+   "best": [
+    "b4c6"
+   ],
+   "kind": "material",
+   "gapCp": 1363
+  },
+  {
+   "fen": "6/1k4/1R4/2p3/2P3/2K3 b - - 3 55",
+   "best": [
+    "b5b4"
+   ],
+   "kind": "material",
+   "gapCp": 5538
+  },
+  {
+   "fen": "2k3/6/K1P3/6/6/6 b - - 2 76",
+   "best": [
+    "c6c5"
+   ],
+   "kind": "material",
+   "gapCp": 5802
+  },
+  {
+   "fen": "5r/1nk1Np/1Ppp1n/r5/2P1PP/RN1K1R b - - 0 15",
+   "best": [
+    "c5b4"
+   ],
+   "kind": "material",
+   "gapCp": 497
+  },
+  {
+   "fen": "1rN3/2k2p/2pp1n/5R/2P1PP/1N1KR1 b - - 6 22",
+   "best": [
+    "b6b1"
+   ],
+   "kind": "material",
+   "gapCp": 927
+  },
+  {
+   "fen": "4R1/3k1p/5P/1K4/6/6 b - - 2 57",
+   "best": [
+    "d5e6"
+   ],
+   "kind": "material",
+   "gapCp": 6046
+  },
+  {
+   "fen": "1r1k1r/2pp1p/6/Pp1PP1/R5/2K1R1 b - - 0 17",
+   "best": [
+    "b3a2"
+   ],
+   "kind": "material",
+   "gapCp": 728
+  },
+  {
+   "fen": "3k1r/1p1P1p/r1p3/N1P2N/P3n1/RK2R1 w - - 2 16",
+   "best": [
+    "a3b5"
+   ],
+   "kind": "material",
+   "gapCp": 263
+  },
+  {
+   "fen": "rk4/1N1P1p/r1p3/N1P3/P3n1/RK2R1 b - - 0 19",
+   "best": [
+    "e2c3"
+   ],
+   "kind": "material",
+   "gapCp": 272
+  },
+  {
+   "fen": "1k4/rN3p/r1p1Rn/N1P3/P5/RK4 w - - 4 23",
+   "best": [
+    "e4f4"
+   ],
+   "kind": "material",
+   "gapCp": 359
+  },
+  {
+   "fen": "2k3/6/1Pp3/1N3R/5K/6 w - - 3 37",
+   "best": [
+    "b3d4"
+   ],
+   "kind": "mate-in-9",
+   "gapCp": null
+  },
+  {
+   "fen": "4N1/6/6/6/kp4/3K2 w - - 0 58",
+   "best": [
+    "e6f4"
+   ],
+   "kind": "material",
+   "gapCp": 5578
+  },
+  {
+   "fen": "2q2r/1pppp1/r3k1/2P1PR/PnNP2/RN1K2 w - - 3 11",
+   "best": [
+    "d1e2"
+   ],
+   "kind": "material",
+   "gapCp": 2444
+  },
+  {
+   "fen": "3q2/1pppp1/4k1/2PnP1/P1KP2/RN4 w - - 0 18",
+   "best": [
+    "a2a3"
+   ],
+   "kind": "material",
+   "gapCp": 555
+  },
+  {
+   "fen": "3q2/1pppp1/1P2k1/6/P1KP2/RN4 b - - 1 21",
+   "best": [
+    "c5b4"
+   ],
+   "kind": "material",
+   "gapCp": 339
+  },
+  {
+   "fen": "6/q2pp1/1p3k/p5/P2P2/RK4 b - - 1 28",
+   "best": [
+    "a5c5"
+   ],
+   "kind": "mate-in-3",
+   "gapCp": null
+  },
+  {
+   "fen": "rnq1nr/p1kp1p/1pN3/2Pp2/PP2PP/RNQK1R w - - 0 6",
+   "best": [
+    "c3b4"
+   ],
+   "kind": "material",
+   "gapCp": 571
+  },
+  {
+   "fen": "rnq1nr/p2p1p/k4Q/N1pp2/PP2PP/RN1K1R b - - 3 9",
+   "best": [
+    "e6f4"
+   ],
+   "kind": "material",
+   "gapCp": 1005
+  },
+  {
+   "fen": "r4R/1k1n2/p3n1/P1P3/6/5K b - - 0 30",
+   "best": [
+    "a6f6"
+   ],
+   "kind": "mate-in-8",
+   "gapCp": null
+  },
+  {
+   "fen": "6/1k4/p5/P5/6/nK4 w - - 2 48",
+   "best": [
+    "b1a1"
+   ],
+   "kind": "material",
+   "gapCp": 6004
+  },
+  {
+   "fen": "rn1k1r/6/p1qp1p/P4P/1P1K1R/4R1 w - - 1 15",
+   "best": [
+    "e1c1"
+   ],
+   "kind": "material",
+   "gapCp": 584
+  },
+  {
+   "fen": "rn4/3k2/p4p/P4P/4K1/2r3 b - - 11 32",
+   "best": [
+    "b6c4"
+   ],
+   "kind": "mate-in-4",
+   "gapCp": null
+  },
+  {
+   "fen": "6/1P1k2/5p/5P/p3K1/6 w - - 1 50",
+   "best": [
+    "b5b6q"
+   ],
+   "kind": "material",
+   "gapCp": 346
+  },
+  {
+   "fen": "6/1R4/5p/2k2P/5K/q5 b - - 3 53",
+   "best": [
+    "a1a2"
+   ],
+   "kind": "mate-in-6",
+   "gapCp": null
+  },
+  {
+   "fen": "6/R5/1k3p/5P/5K/2q3 w - - 10 57",
+   "best": [
+    "a5a2"
+   ],
+   "kind": "material",
+   "gapCp": 335
+  },
+  {
+   "fen": "1r4/1p3k/3p2/P4n/2PQ1P/R4K b - - 2 20",
+   "best": [
+    "f3d2"
+   ],
+   "kind": "material",
+   "gapCp": 1471
+  },
+  {
+   "fen": "6/6/1rK2k/6/6/6 w - - 11 45",
+   "best": [
+    "c4b4"
+   ],
+   "kind": "material",
+   "gapCp": 4174
+  },
+  {
+   "fen": "1rq1kr/pp1ppp/6/P1p2N/1QPP1P/R2K1R b - - 1 8",
+   "best": [
+    "c3b2"
+   ],
+   "kind": "material",
+   "gapCp": 623
+  },
+  {
+   "fen": "2q1kr/p2pp1/5p/P1P2N/1rP2P/1R1K1R w - - 2 12",
+   "best": [
+    "b1b2"
+   ],
+   "kind": "material",
+   "gapCp": 577
+  },
+  {
+   "fen": "4k1/p1qpNr/6/P1P2p/2K2P/4RR w - - 2 19",
+   "best": [
+    "e5d3"
+   ],
+   "kind": "material",
+   "gapCp": 587
+  },
+  {
+   "fen": "2N1k1/p2p1r/6/P1PK1p/5q/4RR b - - 1 22",
+   "best": [
+    "e6d6"
+   ],
+   "kind": "material",
+   "gapCp": 4639
+  },
+  {
+   "fen": "2k3/p3R1/3K2/6/p5/6 w - - 0 30",
+   "best": [
+    "e5a5"
+   ],
+   "kind": "mate-in-8",
+   "gapCp": null
+  },
+  {
+   "fen": "rn2kr/1p3p/p2pP1/P1NPR1/1Pq3/R3QK b - - 1 14",
+   "best": [
+    "f5e4"
+   ],
+   "kind": "mate-in-3",
+   "gapCp": null
+  },
+  {
+   "fen": "rnqknr/1ppp1p/4p1/p2P1P/PPPNP1/R1QKNR w - - 0 4",
+   "best": [
+    "f3e4"
+   ],
+   "kind": "material",
+   "gapCp": 378
+  },
+  {
+   "fen": "1nqk1r/1p1p2/r1pn1p/1NK2N/1QP1P1/1R3R w - - 0 11",
+   "best": [
+    "b3d4"
+   ],
+   "kind": "material",
+   "gapCp": 451
+  },
+  {
+   "fen": "1nqk1r/1p1p2/3n1p/1Q1K1N/2r1P1/R4R b - - 1 14",
+   "best": [
+    "d4b3"
+   ],
+   "kind": "mate-in-2",
+   "gapCp": null
+  }
+ ]
+}

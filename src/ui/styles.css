@@ -14,7 +14,7 @@
   --negative: #ed9b9b;
   --info: #8fc3ee;
   --sq-light: #e9dcc0;
-  --sq-dark: #6f8296;
+  --sq-dark: #5a6c80;
   --sq-sel: rgba(216, 181, 108, 0.72);
   --sq-last: rgba(216, 181, 108, 0.38);
   --sq-check: rgba(237, 120, 120, 0.85);
@@ -141,8 +141,8 @@ tr.clickable:hover td { background: rgba(255, 255, 255, .025); }
 .sq .coord { position: absolute; font-size: 12px; font-weight: 700; z-index: 2; pointer-events: none; opacity: .85; }
 .sq .coord.file { right: 4px; bottom: 2px; }
 .sq .coord.rank { left: 4px; top: 2px; }
-.sq.light .coord { color: #6f8296; }
-.sq.dark .coord { color: #e9dcc0; }
+.sq.light .coord { color: #3d4b5a; }
+.sq.dark .coord { color: #ffffff; }
 .piece { position: absolute; inset: 4%; z-index: 4; pointer-events: none; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .35)); }
 .piece.moving { animation: slide .18s ease-out; }
 .piece.dragging { opacity: .25; }
