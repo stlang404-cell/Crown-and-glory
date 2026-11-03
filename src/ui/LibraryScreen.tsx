@@ -6,6 +6,7 @@ import type { AnalysisReport } from '../analysis/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { exportBundle, importBundle } from '../storage/backup';
 import { APP_VERSION, requestPersistentStorage } from '../app/services';
+import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS } from '../analysis/analyzer';
 
 const PAGE = 25;
 
@@ -53,6 +54,7 @@ export function LibraryScreen() {
   const [msg, setMsg] = useState<string | null>(null);
   const [storage, setStorage] = useState<Awaited<ReturnType<typeof requestPersistentStorage>> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [batch, setBatch] = useState(DEFAULT_ANALYSIS.id);
 
   useEffect(() => {
     void (async () => {
@@ -102,6 +104,9 @@ export function LibraryScreen() {
         <h1 style={{ margin: 0 }}>Chess Library</h1>
         <span className="chip">{rows.length} games</span>
         <span className="spacer" />
+        <select value={batch} onChange={e => setBatch(e.target.value)} aria-label="Batch analysis settings">{ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
+        <button className="btn small" disabled={services.readOnly} onClick={async () => { const n = await services.batchReanalyze(ANALYSIS_PRESETS.find(p => p.id === batch)!); setMsg(n ? `Queued ${n} game(s) for analysis with ${batch}. Existing reports are kept as separate versions.` : 'Every finished game already has a complete report with these settings.'); }}>Batch analyse</button>
+        {services.progress && <button className="btn small" onClick={() => void services.cancelAllAnalysis()}>Cancel analysis queue</button>}
         <button className="btn small" onClick={doExport}>Export backup</button>
         <button className="btn small" onClick={() => fileRef.current?.click()} disabled={services.readOnly}>Import backup</button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) void doImport(f); e.target.value = ''; }} />

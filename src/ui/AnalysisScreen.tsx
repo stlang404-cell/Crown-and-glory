@@ -43,6 +43,14 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const [preset, setPreset] = useState(DEFAULT_ANALYSIS.id);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
   const [flipped, setFlipped] = useState(false);
+  const [bookmarks, setBookmarks] = useState<{ id: string; gameId: string; ply: number; memorable: boolean; note: string; at: string }[]>([]);
+  useEffect(() => { void services.db.getAll<{ id: string; gameId: string; ply: number; memorable: boolean; note: string; at: string }>('bookmarks').then(b => setBookmarks(b.filter(x => x.gameId === gameId))); }, [gameId, services, services.revision]);
+  const toggleBookmark = async (memorable: boolean) => {
+    const id = `${gameId}:${ply}:${memorable ? 'm' : 'b'}`;
+    if (bookmarks.some(b => b.id === id)) await services.db.remove('bookmarks', id);
+    else await services.db.put('bookmarks', { id, gameId, ply, memorable, note: '', at: new Date().toISOString() });
+    services.notify();
+  };
 
   useEffect(() => {
     void (async () => {
@@ -157,6 +165,11 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
             <button className="btn" onClick={() => goPly(n)} aria-label="Last position"><Icon name="last" /></button>
             <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip board"><Icon name="flip" /></button>
           </div>
+          <div className="row" style={{ justifyContent: 'center' }}>
+            <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark position'}</button>
+            <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable move' : '♔ Mark memorable'}</button>
+            {bookmarks.length > 0 && <span className="small muted">Saved: {[...new Set(bookmarks.map(b => b.ply))].sort((a, b) => a - b).map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>{k}</button>)}</span>}
+          </div>
           {variation && (
             <div className="notice">
               Exploring {variation.label} from ply {variation.origin}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
@@ -208,6 +221,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
                 Critical positions handled: {mine.critical.handled}/{mine.critical.total}. Best-move frequency: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}. Avg. loss on cp-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
                 Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp. These parameters are uncalibrated research placeholders for 6×6 chess.
               </div>
+              <ClockPressure game={game} plies={plies} />
               <div className="row" style={{ marginTop: 10 }}>
                 {report.highlights.worstMistake && <button className="btn small" onClick={() => goPly(report.highlights.worstMistake!)}>Biggest mistake (ply {report.highlights.worstMistake})</button>}
                 {report.highlights.biggestMiss && <button className="btn small" onClick={() => goPly(report.highlights.biggestMiss!)}>Missed opportunity (ply {report.highlights.biggestMiss})</button>}
@@ -321,6 +335,23 @@ function MovePanel({ p, onExplore, onRetry, humanPov }: { p: PlyAnalysis; onExpl
         </div>
       </div>
       {p.color === humanPov && p.loss !== null && p.loss > 0.05 && <button className="btn" onClick={onRetry}>Retry from this position (unrated training)</button>}
+    </div>
+  );
+}
+
+function ClockPressure({ game, plies }: { game: GameRecord; plies: PlyAnalysis[] }) {
+  if (!game.clocks) return <div className="small muted" style={{ marginTop: 6 }}>Clock pressure: untimed game.</div>;
+  const limit = game.timeControl.initialMs * 0.2;
+  const mine = plies.filter(p => p.color === game.humanColor && !p.forced && p.loss !== null);
+  const low = mine.filter(p => (game.moves[p.ply - 1]?.clockBeforeMs ?? Infinity) < limit);
+  const rest = mine.filter(p => !low.includes(p));
+  const mean = (a: PlyAnalysis[]) => (a.length ? a.reduce((x, p) => x + p.loss!, 0) / a.length : null);
+  const think = mine.map(p => game.moves[p.ply - 1]?.elapsedMs ?? 0);
+  const longest = mine.reduce<PlyAnalysis | null>((a, p) => (!a || (game.moves[p.ply - 1]?.elapsedMs ?? 0) > (game.moves[a.ply - 1]?.elapsedMs ?? 0) ? p : a), null);
+  return (
+    <div className="small" style={{ marginTop: 6 }} data-testid="clock-pressure">
+      <strong>Clock:</strong> {low.length ? <>{low.length} decision{low.length === 1 ? '' : 's'} with under 20% of your starting time (average loss {mean(low)!.toFixed(3)} vs {mean(rest)?.toFixed(3) ?? '—'} otherwise; single game, descriptive only).</> : 'you never dropped below 20% of your starting time.'}
+      {think.length > 0 && longest && <> Longest think: {Math.round((game.moves[longest.ply - 1].elapsedMs) / 1000)} s on {longest.san} (ply {longest.ply}{longest.critical ? ', a critical position' : ''}).</>}
     </div>
   );
 }

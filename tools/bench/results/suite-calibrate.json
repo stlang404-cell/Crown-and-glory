@@ -6,7 +6,7 @@
   "cores": 4,
   "searchId": "crown-search-1",
   "evalId": "crown-eval-3",
-  "date": "2026-11-03T03:24:37.017Z"
+  "date": "2026-11-03T03:25:05.703Z"
  },
  "pairsPerMatch": 20,
  "openings": "tools/bench/openings.json",
@@ -47,6 +47,79 @@
     "checkmate": 38,
     "stalemate": 1,
     "bare-kings": 1
+   }
+  },
+  {
+   "a": "crown-L3",
+   "b": "crown-L2",
+   "pairs": 20,
+   "games": 40,
+   "wins": 40,
+   "draws": 0,
+   "losses": 0,
+   "capped": 0,
+   "illegal": 0,
+   "score": 1,
+   "scoreCI": [
+    1,
+    1
+   ],
+   "eloDiff": null,
+   "eloCI": [
+    null,
+    null
+   ],
+   "avgDepth": {
+    "crown-L3": 3,
+    "crown-L2": 1.94
+   },
+   "avgNodes": {
+    "crown-L3": 607,
+    "crown-L2": 221
+   },
+   "avgMs": {
+    "crown-L3": 5,
+    "crown-L2": 2
+   },
+   "reasons": {
+    "checkmate": 40
+   }
+  },
+  {
+   "a": "crown-L4",
+   "b": "crown-L3",
+   "pairs": 20,
+   "games": 40,
+   "wins": 38,
+   "draws": 2,
+   "losses": 0,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.975,
+   "scoreCI": [
+    0.9375,
+    1
+   ],
+   "eloDiff": 636,
+   "eloCI": [
+    470,
+    null
+   ],
+   "avgDepth": {
+    "crown-L4": 3.95,
+    "crown-L3": 2.9
+   },
+   "avgNodes": {
+    "crown-L4": 1601,
+    "crown-L3": 678
+   },
+   "avgMs": {
+    "crown-L4": 9,
+    "crown-L3": 4
+   },
+   "reasons": {
+    "checkmate": 38,
+    "threefold-claim": 2
    }
   }
  ]

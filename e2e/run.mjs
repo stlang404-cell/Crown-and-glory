@@ -106,7 +106,7 @@ await page.getByRole('button', { name: 'Return to main line' }).click();
 const acc = await page.textContent('[data-testid="accuracy"]');
 step(`Variation explored and returned; accuracy shown: ${acc}`);
 
-await page.getByRole('button', { name: 'Career' }).first().click();
+await page.getByRole('button', { name: 'Passport' }).first().click();
 if (expectRated) await page.waitForSelector('[data-testid="rating-event"]');
 const ratingShown = await page.textContent('[data-testid="current-rating"]');
 step(`Career shows rating ${ratingShown} and ${await page.locator('[data-testid="rating-event"]').count()} rating event(s)`);

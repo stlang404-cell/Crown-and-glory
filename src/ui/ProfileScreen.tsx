@@ -5,6 +5,10 @@ import type { PoolId, GameRecord } from '../games/types';
 import type { PoolState, RatingEvent } from '../ratings/ledger';
 import { explainEvent, newPoolState, RANKS, rankFor, RANK_POLICY } from '../ratings/ledger';
 import { isProvisional } from '../ratings/glicko2';
+import { personalRecords } from '../academy/lab';
+import type { AnalysisReport } from '../analysis/types';
+import type { Attempt, TrainingRun } from '../academy/academy';
+import { resultText } from './PlayScreen';
 
 const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
 
@@ -16,6 +20,14 @@ export function ProfileScreen() {
   const [events, setEvents] = useState<RatingEvent[]>([]);
   const [games, setGames] = useState<GameRecord[]>([]);
   const [window_, setWindow] = useState<'10' | '30' | '100' | 'all'>('all');
+  const [reports, setReports] = useState<AnalysisReport[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [runs, setRuns] = useState<TrainingRun[]>([]);
+  const [fOpp, setFOpp] = useState('all');
+  const [fTc, setFTc] = useState('all');
+  const [fRes, setFRes] = useState('all');
+  const [fFrom, setFFrom] = useState('');
+  const [fTo, setFTo] = useState('');
 
   useEffect(() => {
     void (async () => {
@@ -23,6 +35,9 @@ export function ProfileScreen() {
       setStates(Object.fromEntries(st.map(s => [s.pool, s])));
       setEvents(await services.db.ratingEvents());
       setGames(await services.db.allGames());
+      setReports(await services.db.allReports());
+      setAttempts(await services.db.getAll<Attempt>('attempts'));
+      setRuns(await services.db.getAll<TrainingRun>('trainingRuns'));
     })();
   }, [services, services.revision]);
 
@@ -51,7 +66,7 @@ export function ProfileScreen() {
 
   return (
     <div>
-      <h1>Career</h1>
+      <h1>Chess Passport</h1>
       <div className="seg" role="group" aria-label="Rating pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
@@ -107,6 +122,90 @@ export function ProfileScreen() {
         {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}. Crown Champion is earned only through federation championships (M3).</p>
           : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {Math.round(e.after.rating)}, game {e.gameId})</li>)}</ul>}
       </div>
+      <Passport games={games} events={events} reports={reports} attempts={attempts} runs={runs} filters={{ fOpp, setFOpp, fTc, setFTc, fRes, setFRes, fFrom, setFFrom, fTo, setFTo }} />
     </div>
+  );
+}
+
+type F = { fOpp: string; setFOpp: (v: string) => void; fTc: string; setFTc: (v: string) => void; fRes: string; setFRes: (v: string) => void; fFrom: string; setFFrom: (v: string) => void; fTo: string; setFTo: (v: string) => void };
+
+function Passport({ games, events, reports, attempts, runs, filters }: { games: GameRecord[]; events: RatingEvent[]; reports: AnalysisReport[]; attempts: Attempt[]; runs: TrainingRun[]; filters: F }) {
+  const { go } = useApp();
+  const rec = personalRecords({ games, reports, attempts, puzzles: [], runs, events });
+  const finished = games.filter(g => g.status === 'finalized' && g.mode !== 'training').sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const oppName = (g: GameRecord) => (g.humanColor === 'white' ? g.black.name : g.white.name);
+  // timeline: first game, first win, rank changes, established peak, puzzle milestones (all from stored records)
+  const timeline: { at: string; text: string; gameId?: string }[] = [];
+  if (finished[0]) timeline.push({ at: finished[0].startedAt, text: `First game, against ${oppName(finished[0])}`, gameId: finished[0].id });
+  const firstWin = finished.find(g => resultText(g) === 'Victory');
+  if (firstWin) timeline.push({ at: firstWin.startedAt, text: `First win, against ${oppName(firstWin)}`, gameId: firstWin.id });
+  for (const e of events) if (e.rankBefore !== e.rankAfter) timeline.push({ at: e.at, text: `${e.pool}: ${e.rankBefore} → ${e.rankAfter} (${Math.round(e.after.rating)})`, gameId: e.gameId });
+  const clean = attempts.filter(a => a.clean && a.exposure === 0).sort((a, b) => a.at.localeCompare(b.at));
+  for (const m of [1, 10, 50, 100, 250]) if (clean.length >= m) timeline.push({ at: clean[m - 1].at, text: `${m} puzzle${m === 1 ? '' : 's'} solved cleanly` });
+  timeline.sort((a, b) => b.at.localeCompare(a.at));
+  // opponent history
+  const opp = new Map<string, { w: number; d: number; l: number; last: string }>();
+  for (const g of finished) {
+    const k = oppName(g); const o = opp.get(k) ?? { w: 0, d: 0, l: 0, last: '' };
+    const r = resultText(g); if (r === 'Victory') o.w++; else if (r === 'Draw') o.d++; else o.l++;
+    o.last = g.startedAt; opp.set(k, o);
+  }
+  const greatest = finished.filter(g => resultText(g) === 'Victory').map(g => ({ g, r: (g.humanColor === 'white' ? g.black : g.white).rating ?? 0 })).sort((a, b) => b.r - a.r).slice(0, 5);
+  const list = finished.filter(g =>
+    (filters.fOpp === 'all' || oppName(g) === filters.fOpp) && (filters.fTc === 'all' || g.timeControl.id === filters.fTc) &&
+    (filters.fRes === 'all' || resultText(g).toLowerCase() === filters.fRes) && (!filters.fFrom || g.startedAt >= filters.fFrom) && (!filters.fTo || g.startedAt.slice(0, 10) <= filters.fTo)).reverse();
+  const evBy = new Map(events.map(e => [e.gameId, e]));
+  const exportCsv = () => {
+    const rows = [['date', 'game_id', 'opponent', 'colour', 'result', 'termination', 'time_control', 'rated', 'moves', 'rating_before', 'rating_after', 'opening']];
+    for (const g of list) { const e = evBy.get(g.id); rows.push([g.startedAt, g.id, oppName(g), g.humanColor, g.result ?? '', g.termination ?? '', g.timeControl.id, String(g.rated), String(g.moves.length), e ? e.before.rating.toFixed(1) : '', e ? e.after.rating.toFixed(1) : '', g.opening?.name ?? '']); }
+    const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'crown-game-history.csv'; a.click();
+  };
+  return (
+    <>
+      <div className="grid-3" style={{ marginTop: 14 }}>
+        <div className="panel stat"><span className="k">Best accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>open game</button>}</div>
+        <div className="panel stat"><span className="k">Strongest win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${Math.round(rec.strongestWin.rating)})` : '—'}</span></div>
+        <div className="panel stat"><span className="k">Longest win streak</span><span className="v">{rec.longestWinStreak}</span></div>
+        <div className="panel stat"><span className="k">Established peak</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${Math.round(rec.peakRating.rating)} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">provisional ratings excluded</span></div>
+        <div className="panel stat"><span className="k">Puzzle Rush best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
+      </div>
+      <div className="grid-2" style={{ marginTop: 14 }}>
+        <div className="panel">
+          <h3>Career timeline</h3>
+          {timeline.length === 0 ? <p className="muted small">Your milestones appear here as you play and train.</p> : (
+            <ul className="small" style={{ paddingLeft: 18 }}>{timeline.slice(0, 20).map((t, i) => <li key={i}>{new Date(t.at).toLocaleDateString()} — {t.gameId ? <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: t.gameId! })}>{t.text}</button> : t.text}</li>)}</ul>
+          )}
+        </div>
+        <div className="panel">
+          <h3>Memorable moves & greatest wins</h3>
+          {rec.memorable.length === 0 && greatest.length === 0 ? <p className="muted small">Great and Brilliant moves from your analysed games, and your wins against the strongest opponents, appear here.</p> : null}
+          {rec.memorable.slice(0, 6).map(m => <div key={`${m.gameId}-${m.ply}`} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: m.gameId, ply: m.ply })}>{m.grade === 'brilliant' ? '!!' : '!'} {m.san} (ply {m.ply})</button></div>)}
+          {greatest.map(({ g, r }) => <div key={g.id} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: g.id })}>Win vs {oppName(g)} ({Math.round(r)}) · {new Date(g.startedAt).toLocaleDateString()}</button></div>)}
+        </div>
+      </div>
+      <div className="panel" style={{ marginTop: 14 }}>
+        <h3>Opponent history</h3>
+        {opp.size === 0 ? <p className="muted small">No finished games yet.</p> : (
+          <table><thead><tr><th>Opponent</th><th>W</th><th>D</th><th>L</th><th>Last played</th></tr></thead>
+            <tbody>{[...opp.entries()].map(([k, o]) => <tr key={k}><td>{k}</td><td>{o.w}</td><td>{o.d}</td><td>{o.l}</td><td>{new Date(o.last).toLocaleDateString()}</td></tr>)}</tbody></table>
+        )}
+        <p className="small muted">Rivalries (M3) will be derived from repeated consequential games recorded here.</p>
+      </div>
+      <div className="panel" style={{ marginTop: 14 }}>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Game history ({list.length})</h3><button className="btn small" onClick={exportCsv}>Export CSV</button></div>
+        <div className="row" style={{ marginBottom: 8 }}>
+          <select value={filters.fOpp} onChange={e => filters.setFOpp(e.target.value)} aria-label="Opponent"><option value="all">All opponents</option>{[...opp.keys()].map(k => <option key={k}>{k}</option>)}</select>
+          <select value={filters.fTc} onChange={e => filters.setFTc(e.target.value)} aria-label="Time control"><option value="all">All controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
+          <select value={filters.fRes} onChange={e => filters.setFRes(e.target.value)} aria-label="Result"><option value="all">All results</option><option value="victory">Wins</option><option value="draw">Draws</option><option value="defeat">Losses</option></select>
+          <input type="date" value={filters.fFrom} onChange={e => filters.setFFrom(e.target.value)} aria-label="From date" />
+          <input type="date" value={filters.fTo} onChange={e => filters.setFTo(e.target.value)} aria-label="To date" />
+        </div>
+        <table><thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th className="hide-sm">Control</th><th>Rating</th></tr></thead>
+          <tbody>{list.slice(0, 50).map(g => { const e = evBy.get(g.id); return (
+            <tr key={g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: g.id })}><td>{new Date(g.startedAt).toLocaleDateString()}</td><td>{oppName(g)}</td><td>{resultText(g)}</td><td className="hide-sm">{g.timeControl.label}</td><td>{e ? `${Math.round(e.after.rating)} (${e.delta >= 0 ? '+' : ''}${e.delta.toFixed(1)})` : 'unrated'}</td></tr>); })}</tbody></table>
+        {list.length > 50 && <p className="small muted">Showing 50 of {list.length}; the Library pages through everything.</p>}
+      </div>
+    </>
   );
 }

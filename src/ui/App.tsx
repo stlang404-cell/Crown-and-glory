@@ -49,7 +49,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'play', label: 'Play', icon: 'play' },
   { id: 'library', label: 'Library', icon: 'library' },
   { id: 'academy', label: 'Academy', icon: 'academy' },
-  { id: 'profile', label: 'Career', icon: 'profile' },
+  { id: 'profile', label: 'Passport', icon: 'profile' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
   { id: 'federation', label: 'Federation', icon: 'world' },
 ];

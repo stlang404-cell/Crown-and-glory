@@ -93,6 +93,30 @@ export class AppServices {
     void this.processQueue();
   }
 
+  /** Queue re-analysis of every finalized game lacking a complete report with these settings. */
+  async batchReanalyze(settings: AnalysisSettings): Promise<number> {
+    const [games, reports] = await Promise.all([this.db.allGames(), this.db.allReports()]);
+    const have = new Set(reports.filter(r => r.settings.id === settings.id && r.status === 'complete').map(r => r.gameId));
+    let n = 0;
+    for (const g of games) if (g.status === 'finalized' && !have.has(g.id)) {
+      const id = `job:${g.id}:${settings.id}`;
+      const ex = await this.db.getJob(id);
+      if (ex && (ex.status === 'queued' || ex.status === 'running')) continue;
+      const now = new Date().toISOString();
+      await this.db.putJob({ id, gameId: g.id, settingsId: settings.id, status: 'queued', createdAt: now, updatedAt: now, progress: 0, total: g.moves.length, generation: (ex?.generation ?? 0) + 1 });
+      n++;
+    }
+    this.notify();
+    void this.processQueue();
+    return n;
+  }
+
+  /** Cancel the running job and every queued job. Completed reports are untouched. */
+  async cancelAllAnalysis(): Promise<void> {
+    for (const j of await this.db.allJobs()) if (j.status === 'queued') await this.db.putJob({ ...j, status: 'cancelled', updatedAt: new Date().toISOString() });
+    await this.cancelAnalysis();
+  }
+
   async cancelAnalysis(): Promise<void> {
     const p = this.progress;
     this.analysis.cancel();

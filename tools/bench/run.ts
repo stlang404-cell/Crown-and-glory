@@ -210,6 +210,9 @@ async function main() {
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
         : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]
+        : name === 'pilot' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5']]
+        : name === 'pilot3' ? [['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
+        : name === 'pilot2' ? [['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
         : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L3', 'L1'], ['L4', 'L2'], ['L5', 'L3'], ['L6', 'L4'], ['L7', 'L6', 12], ['L7', 'L5', 8], ['L8', 'L7', 8], ['L8', 'L6', 6]]
         : [];
       if (!plan.length) throw new Error('unknown suite');

@@ -14,7 +14,7 @@ import { Move } from '../rules/types';
 import { Searcher, SearchResult, isMateScore } from './search';
 import { mulberry32 } from '../rules/tables';
 
-export const LEVELS_ID = 'crown-levels-1';
+export const LEVELS_ID = 'crown-levels-2';
 
 export interface StrengthProfile {
   level: number;
@@ -32,13 +32,13 @@ export interface StrengthProfile {
 }
 
 export const LEVELS: StrengthProfile[] = [
-  { level: 1, id: 'L1', name: 'Novice', depth: 1, nodes: 2_000, maxTimeMs: 400, selection: { marginCp: 300, temperatureCp: 140 }, description: '1-ply search with quiescence; picks among moves within 3 pawns of its best.' },
-  { level: 2, id: 'L2', name: 'Apprentice', depth: 2, nodes: 6_000, maxTimeMs: 500, selection: { marginCp: 180, temperatureCp: 90 }, description: '2-ply search; picks among moves within 1.8 pawns of its best.' },
-  { level: 3, id: 'L3', name: 'Club', depth: 3, nodes: 20_000, maxTimeMs: 700, selection: { marginCp: 90, temperatureCp: 45 }, description: '3-ply search; picks among moves within 0.9 pawns of its best.' },
-  { level: 4, id: 'L4', name: 'District', depth: 4, nodes: 60_000, maxTimeMs: 1_000, selection: { marginCp: 40, temperatureCp: 18 }, description: '4-ply search; small bounded variety.' },
-  { level: 5, id: 'L5', name: 'Regional', depth: 64, nodes: 60_000, maxTimeMs: 1_200, selection: null, description: 'Full search, 60k nodes per move.' },
-  { level: 6, id: 'L6', name: 'National', depth: 64, nodes: 250_000, maxTimeMs: 2_000, selection: null, description: 'Full search, 250k nodes per move.' },
-  { level: 7, id: 'L7', name: 'Master', depth: 64, nodes: 1_000_000, maxTimeMs: 4_000, selection: null, description: 'Full search, 1M nodes per move.' },
+  { level: 1, id: 'L1', name: 'Novice', depth: 1, nodes: 2_000, maxTimeMs: 400, selection: { marginCp: 320, temperatureCp: 200 }, description: '1-ply search; picks among moves within 3.2 pawns of its best, often loosely.' },
+  { level: 2, id: 'L2', name: 'Apprentice', depth: 1, nodes: 2_000, maxTimeMs: 400, selection: { marginCp: 200, temperatureCp: 110 }, description: '1-ply search with quiescence; picks among moves within 2 pawns of its best.' },
+  { level: 3, id: 'L3', name: 'Club', depth: 2, nodes: 6_000, maxTimeMs: 500, selection: { marginCp: 130, temperatureCp: 70 }, description: '2-ply search; picks among moves within 1.3 pawns of its best.' },
+  { level: 4, id: 'L4', name: 'District', depth: 2, nodes: 8_000, maxTimeMs: 600, selection: { marginCp: 70, temperatureCp: 35 }, description: '2-ply search; picks among moves within 0.7 pawns of its best.' },
+  { level: 5, id: 'L5', name: 'Regional', depth: 64, nodes: 2_500, maxTimeMs: 600, selection: null, description: 'Full search, 2.5k nodes per move.' },
+  { level: 6, id: 'L6', name: 'National', depth: 64, nodes: 12_000, maxTimeMs: 1_000, selection: null, description: 'Full search, 12k nodes per move.' },
+  { level: 7, id: 'L7', name: 'Master', depth: 64, nodes: 60_000, maxTimeMs: 2_000, selection: null, description: 'Full search, 60k nodes per move.' },
   { level: 8, id: 'L8', name: 'Crown', depth: 64, nodes: Infinity, maxTimeMs: 6_000, selection: null, description: 'Strongest configuration: full search limited only by the clock (up to 6 s per move).' },
 ];
 
