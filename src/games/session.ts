@@ -72,6 +72,9 @@ export class GameSession {
   /** Wall-clock timestamp (ms) at which the side to move's clock started running; null when paused/untimed. */
   private runningSince: number | null = null;
   outcome: Outcome | null = null;
+  /** Mover's clock value when the current turn began (for per-move elapsed time). */
+  private turnClockStart: number | null = null;
+  private turnWallStart = 0;
 
   constructor(record: GameRecord) {
     this.record = record;
@@ -93,7 +96,11 @@ export class GameSession {
   get plies(): number { return this.record.moves.length; }
 
   start(nowMs: number): void {
-    if (this.timed && !this.isOver) this.runningSince = nowMs;
+    this.turnWallStart = nowMs;
+    if (this.timed && !this.isOver) {
+      this.runningSince = nowMs;
+      this.turnClockStart = this.pos.side === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
+    }
   }
 
   pause(nowMs: number, reason: 'visibility' | 'manual' | 'reload', nowIso: string): void {
@@ -110,6 +117,7 @@ export class GameSession {
     if (last && !last.resumedAt) last.resumedAt = nowIso;
     this.record.status = 'active';
     if (this.timed) this.runningSince = nowMs;
+    this.turnWallStart = nowMs;
   }
 
   get paused(): boolean { return this.timed && this.runningSince === null && !this.isOver; }
@@ -152,16 +160,23 @@ export class GameSession {
     if (this.isOver) return { ok: false, error: 'Game is over' };
     if (this.paused) return { ok: false, error: 'Game is paused' };
     const mover = this.pos.side;
-    let elapsed = 0;
+    let elapsed = Math.max(0, nowMs - this.turnWallStart);
     let clockBefore: number | null = null;
     if (this.timed) {
-      clockBefore = mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
-      elapsed = this.chargeRunning(nowMs);
-      const left = mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
-      if (left <= 0) return { ok: false, error: 'Flag fell', outcome: this.finish(timeoutOutcome(this.pos, mover), nowIso) };
+      // Flag check first: a move submitted after the flag fell does not count.
+      if (this.remaining(mover, nowMs) <= 0) {
+        this.chargeRunning(nowMs);
+        return { ok: false, error: 'Flag fell', outcome: this.finish(timeoutOutcome(this.pos, mover), nowIso) };
+      }
     }
     const m = parseLegalCcn(this.pos, ccn);
     if (m < 0) return { ok: false, error: `Illegal move ${ccn}` };
+    if (this.timed) {
+      clockBefore = this.turnClockStart ?? (mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs);
+      this.chargeRunning(nowMs);
+      const left = mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
+      elapsed = clockBefore - left;
+    }
     const preHash = this.pos.hashKey();
     const san = moveToSan(this.pos, m);
     this.pos.makeMove(m);
@@ -171,7 +186,9 @@ export class GameSession {
       if (mover === WHITE) this.record.clocks!.whiteMs += inc; else this.record.clocks!.blackMs += inc;
       clockAfter = mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
       this.runningSince = nowMs;
+      this.turnClockStart = mover === WHITE ? this.record.clocks!.blackMs : this.record.clocks!.whiteMs;
     }
+    this.turnWallStart = nowMs;
     const rec: MoveRecord = {
       ply: this.record.moves.length + 1,
       ccn: moveToCcn(m), san, preHash, postHash: this.pos.hashKey(), fenAfter: this.pos.toFen(),

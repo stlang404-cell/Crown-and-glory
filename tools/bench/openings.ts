@@ -1,5 +1,5 @@
 /**
- * Deterministic opening corpus: all 2-ply openings (100) filtered by a Fairy-Stockfish depth-12
+ * Deterministic opening corpus: all 2-ply openings (100) filtered by a Fairy-Stockfish depth-10
  * evaluation within ±80 cp, generated once into tools/bench/openings.json.
  */
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
@@ -21,13 +21,13 @@ export async function buildOpenings(): Promise<string[][]> {
     p.makeMove(a);
     for (const b of p.legalMoves()) {
       const line = [moveToCcn(a), moveToCcn(b)];
-      const r = await e.go(START, line, 'depth 12');
+      const r = await e.go(START, line, 'depth 10');
       const s = parseInfoScore(r.info);
       if (s.cp !== undefined && Math.abs(s.cp) <= 80) out.push({ line, cp: s.cp });
     }
     p.unmakeMove();
   }
   e.quit();
-  writeFileSync(FILE, JSON.stringify({ generator: `${e.name} depth 12, |cp|<=80, white-to-move perspective`, count: out.length, openings: out.map(o => o.line), evals: out }, null, 1));
+  writeFileSync(FILE, JSON.stringify({ generator: `${e.name} depth 10, |cp|<=80, white-to-move perspective`, count: out.length, openings: out.map(o => o.line), evals: out }, null, 1));
   return out.map(o => o.line);
 }

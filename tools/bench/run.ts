@@ -59,7 +59,7 @@ function pool(n: number) {
     }
   };
   for (let i = 0; i < n; i++) {
-    const w = new Worker(new URL('./worker.ts', import.meta.url), { execArgv: ['--import', 'tsx'] });
+    const w = new Worker(new URL('./worker-boot.mjs', import.meta.url));
     w.on('message', (msg: { id: number; game?: GameRecord; error?: string }) => {
       const p = pending.get(msg.id)!;
       pending.delete(msg.id);

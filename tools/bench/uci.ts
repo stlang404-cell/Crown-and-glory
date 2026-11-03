@@ -24,10 +24,10 @@ export class UciEngine {
   send(cmd: string): void { this.proc.stdin.write(cmd + '\n'); }
   wait(test: (l: string) => boolean): Promise<string> { return new Promise(resolve => this.waiters.push({ test, resolve })); }
   async init(variant = 'losalamos', hashMb = 16): Promise<void> {
+    this.lines = [];
     this.send('uci');
-    const idLine = await this.wait(l => l.startsWith('id name') );
-    this.name = idLine.slice(8);
     await this.wait(l => l === 'uciok');
+    this.name = (this.lines.find(l => l.startsWith('id name')) ?? 'id name unknown').slice(8);
     this.send(`setoption name UCI_Variant value ${variant}`);
     this.send(`setoption name Hash value ${hashMb}`);
     this.send('setoption name Threads value 1');
