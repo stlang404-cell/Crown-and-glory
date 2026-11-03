@@ -76,7 +76,7 @@ export function nextTitleProgress(c: TitleCandidate): { next: FedTitle | null; l
     next: r.title,
     lines: [
       `Norms at ${r.tpr}+ performance vs ${r.oppFloor}+ average opposition: ${q.length}/${r.norms} (${q.reduce((a, n) => a + n.games, 0)}/${r.normGames} games)`,
-      `${r.established ? 'Established peak' : 'Peak'} rating: ${Math.round(peak)}/${r.peak}`,
+      `${r.established ? 'Established peak' : 'Peak'} rating (recorded at each federation round): ${peak > 0 ? Math.round(peak) : 'none yet'}/${r.peak}`,
       ...(r.honour === 'any-title' ? [`An event title: ${c.honours.length ? 'yes' : 'not yet'}`] : r.honour === 'championship-final' ? [`A Crown Championship final: ${c.honours.some(h => /Crown Champion|Championship finalist/.test(h)) ? 'yes' : 'not yet'}`] : []),
     ],
   };
