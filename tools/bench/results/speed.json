@@ -5,15 +5,15 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "cores": 4,
   "searchId": "crown-search-1",
-  "evalId": "crown-eval-2",
-  "date": "2026-11-03T02:20:25.349Z"
+  "evalId": "crown-eval-3",
+  "date": "2026-11-03T04:00:31.448Z"
  },
  "budget": "1000 ms per search, 5 repetitions, fresh TT",
  "results": [
   {
    "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
-   "npsMedian": 327500,
-   "npsMin": 294824,
+   "npsMedian": 289341,
+   "npsMin": 238027,
    "depthMedian": 9,
    "depthRange": [
     9,
@@ -22,8 +22,8 @@
   },
   {
    "fen": "r1qk1r/pp1ppp/2n1n1/2p3/PPPPPP/RNQKNR w - - 0 4",
-   "npsMedian": 371123,
-   "npsMin": 303259,
+   "npsMedian": 345095,
+   "npsMin": 329821,
    "depthMedian": 10,
    "depthRange": [
     10,
@@ -32,29 +32,29 @@
   },
   {
    "fen": "r2k1r/1p3p/2n3/3Q2/PP3P/R2K1R b - - 0 1",
-   "npsMedian": 366751,
-   "npsMin": 331130,
+   "npsMedian": 340815,
+   "npsMin": 303853,
    "depthMedian": 10,
    "depthRange": [
-    10,
+    9,
     10
    ]
   },
   {
    "fen": "3k2/1p3p/6/1P2P1/6/3K2 w - - 0 1",
-   "npsMedian": 619707,
-   "npsMin": 538537,
-   "depthMedian": 21,
+   "npsMedian": 592985,
+   "npsMin": 573396,
+   "depthMedian": 20,
    "depthRange": [
     20,
-    21
+    20
    ]
   },
   {
    "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
-   "npsMedian": 405238,
-   "npsMin": 374562,
-   "depthMedian": 12,
+   "npsMedian": 362891,
+   "npsMin": 260029,
+   "depthMedian": 11,
    "depthRange": [
     11,
     12
