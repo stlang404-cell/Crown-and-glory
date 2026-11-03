@@ -73,7 +73,7 @@
 @media (max-width: 700px) {
   .mc-layout { gap: var(--sp-3); }
   .mc-layout > .mc-tabs { display: flex; flex-wrap: nowrap; position: sticky; top: 0; z-index: 3; width: 100%; }
-  .mc-layout > .mc-tabs button { flex: 1 1 0; min-width: 0; padding: 6px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc-layout > .mc-tabs button { flex: 1 1 auto; min-width: 0; padding: 6px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mc-panel.is-off { display: none; }
   .mc-nav-row { gap: 4px; }
   .mc-nav-row > .btn { min-width: 44px; padding: 6px 8px; }

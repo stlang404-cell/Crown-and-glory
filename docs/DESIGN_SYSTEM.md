@@ -62,6 +62,16 @@ octagon with crests, regions = banners, tournaments = cartouche crests, trophies
 clubs = chosen shapes, achievements = hexagons, financial tiers = coins. Prestige raises border, crest, wreath and
 pixel pips monotonically (tested).
 
+## Match Center (`src/ui/MatchCenter.tsx`, `src/ui/match-center.css`)
+
+One layout for playing (MatchScreen), spectating (Live Arena) and reviewing (Analysis): header with event name,
+status chips and a scoreboard strip (players, ratings, result or "vs"); player cards above and below the board
+(clock, or thinking time in the Arena); move navigation (first/previous/next/last, flip; play/pause and Replay
+Speed in replays); a two-column notation list. Board left, side panels right; under 980 px the panels drop below
+the board, and at ≤ 700 px they become tabs (Play: Moves / Assistant or Game Info; Analysis: Moves & Eval /
+Summary; Arena: Moves & Eval / Market / Portfolio). The components only render what a screen passes in: grade
+icons appear only for moves the screen supplies a grade for.
+
 ## Live Arena (`src/ui/SpectatorScreen.tsx`, `src/ui/arena.css`)
 
 Scoreboard header, prominent board with compact player cards, two-column notation (grade icons only after
