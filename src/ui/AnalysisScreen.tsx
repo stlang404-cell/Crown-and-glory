@@ -103,6 +103,15 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   })() : [];
 
   const goPly = (k: number) => { setVariation(null); setPly(Math.max(0, Math.min(n, k))); };
+  // replay autoplay (Match Center): play/pause and speed, stops at the last move or when a variation is explored
+  const [auto, setAuto] = useState(false);
+  const [autoMs, setAutoMs] = useState(1100);
+  useEffect(() => {
+    if (!auto) return;
+    if (variation || ply >= n) { setAuto(false); return; }
+    const t = setTimeout(() => setPly(x => Math.min(n, x + 1)), autoMs);
+    return () => clearTimeout(t);
+  }, [auto, ply, n, autoMs, variation]);
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1); }
@@ -164,6 +173,10 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
             <span className="chip mono" style={{ alignSelf: 'center' }} data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>
             <button className="btn" onClick={() => variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1)} aria-label="Next Move"><Icon name="next" /></button>
             <button className="btn" onClick={() => goPly(n)} aria-label="Last Position"><Icon name="last" /></button>
+            <button className="btn" data-testid="replay-play" aria-pressed={auto} onClick={() => { if (ply >= n) setPly(0); setAuto(a => !a); }}>{auto ? 'Pause' : 'Play'}</button>
+            <select aria-label="Replay Speed" value={autoMs} onChange={e => setAutoMs(+e.target.value)} className="small">
+              <option value={2000}>Slow</option><option value={1100}>Normal</option><option value={450}>Fast</option>
+            </select>
             <button className="btn" onClick={() => setFlipped(f => !f)} aria-label="Flip Board"><Icon name="flip" /></button>
           </div>
           <div className="row" style={{ justifyContent: 'center' }}>
