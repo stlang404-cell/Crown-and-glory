@@ -42,15 +42,21 @@ step('Launched Crown & Calculation');
 await page.getByRole('button', { name: /Mira Vell/ }).click();
 await page.getByRole('button', { name: 'Rapid 5+3' }).click();
 const rated = page.getByRole('button', { name: 'Rated', exact: true });
-const allowCasual = process.env.ALLOW_CASUAL === '1';
-const expectRated = !(await rated.isDisabled());
-if (!expectRated && !allowCasual) fail('Rated mode unavailable (calibration missing)');
-if (expectRated) await rated.click(); else { step('DRY RUN: calibration pending, playing casual'); await page.getByRole('button', { name: 'Casual', exact: true }).click(); }
+const expectRated = true;
+if (await rated.isDisabled()) fail('Rated mode unavailable (calibration missing)');
+await rated.click();
+const lockedVisible = async () => (await page.locator('[data-testid="assist-locked"]').count()) > 0;
 await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.screenshot({ path: OUT + '01-setup.png' });
 await page.getByRole('button', { name: /Start match/ }).click();
 await page.waitForSelector('[data-testid="match"]');
 step('Rated match started vs Mira Vell (L1), rapid 5+3, human = White');
+if (!(await lockedVisible())) fail('Assistant not locked in a rated game');
+if (await page.locator('[data-testid="assist-panel"]').count()) fail('Assistant panel present in a rated game');
+step('Rated-game integrity: assistant locked, no assistance controls rendered');
+const startRec = await page.evaluate(async () => { const g = (await window.__crown.db.unfinishedGames())[0]; return { rated: g.rated, pool: g.pool, mode: g.mode }; });
+step('Game state at start: ' + JSON.stringify(startRec));
+if (!startRec.rated || startRec.pool !== 'rapid') fail('Game did not start as an eligible rated rapid game');
 
 const robot = new Searcher(18);
 let plies = 0;
@@ -83,8 +89,19 @@ const dbState = await page.evaluate(async () => {
 });
 step('DB after game: ' + JSON.stringify(dbState));
 if (dbState.games.length !== 1 || dbState.games[0].status !== 'finalized') fail('Game not finalized');
-if (dbState.events.length !== (expectRated ? 1 : 0)) fail(`Expected exactly one rating event, found ${dbState.events.length}`);
+if (dbState.events.length !== 1) fail(`Expected exactly one rating event, found ${dbState.events.length}`);
 const gameId = dbState.games[0].id;
+// duplicate finalization attempts (retry) must not create another rating event
+const dup = await page.evaluate(async (id) => {
+  const s = window.__crown;
+  const g = await s.db.getGame(id);
+  const again = await s.finalize({ ...g, status: 'terminal' });
+  const evs = await s.db.ratingEvents();
+  return { again: again.event?.id ?? null, events: evs.length, rapidGames: (await s.db.ratingState('rapid')).games, blitz: await s.db.ratingState('blitz') };
+}, gameId);
+step('Duplicate finalization: ' + JSON.stringify({ events: dup.events, rapidGames: dup.rapidGames, blitzGames: dup.blitz.games, blitzRating: dup.blitz.rating }));
+if (dup.events !== 1 || dup.rapidGames !== 1) fail('Duplicate finalization changed the rating ledger');
+if (dup.blitz.games !== 0 || dup.blitz.rating !== 1500) fail('Blitz pool was affected by a rapid game');
 
 await page.getByRole('button', { name: 'View analysis' }).click();
 await page.waitForSelector('[data-testid="analysis-status"]');
@@ -107,7 +124,7 @@ const acc = await page.textContent('[data-testid="accuracy"]');
 step(`Variation explored and returned; accuracy shown: ${acc}`);
 
 await page.getByRole('button', { name: 'Passport' }).first().click();
-if (expectRated) await page.waitForSelector('[data-testid="rating-event"]');
+await page.waitForSelector('[data-testid="rating-event"]');
 const ratingShown = await page.textContent('[data-testid="current-rating"]');
 step(`Career shows rating ${ratingShown} and ${await page.locator('[data-testid="rating-event"]').count()} rating event(s)`);
 await page.screenshot({ path: OUT + '06-career.png' });
@@ -133,9 +150,32 @@ const after = await page.evaluate(async () => {
   return { games: (await s.db.allGames()).length, events: (await s.db.ratingEvents()).length, reports: (await s.db.allReports()).length, rapid: (await s.db.ratingState('rapid')).rating };
 });
 step('DB after restart: ' + JSON.stringify(after));
-if (after.games !== 1 || after.events !== (expectRated ? 1 : 0) || after.reports < 1) fail('State not fully recovered');
-if (expectRated && Math.abs(after.rapid - dbState.events[0].after) > 1e-9) fail('Rating changed across restart');
+if (after.games !== 1 || after.events !== 1 || after.reports < 1) fail('State not fully recovered');
+if (Math.abs(after.rapid - dbState.events[0].after) > 1e-9) fail('Rating changed across restart');
 await page.screenshot({ path: OUT + '08-analysis-after-restart.png' });
+
+// assisted casual game stays unrated
+await page.getByRole('button', { name: 'Play' }).first().click();
+await page.getByRole('button', { name: /Mira Vell/ }).click();
+await page.getByRole('button', { name: 'Blitz 3+2' }).click();
+await page.getByRole('button', { name: 'Casual', exact: true }).click();
+await page.getByRole('button', { name: 'White', exact: true }).click();
+await page.getByRole('button', { name: /Start match/ }).click();
+await page.waitForSelector('[data-testid="assist-panel"]');
+await page.getByRole('button', { name: 'Hint' }).click();
+await page.waitForTimeout(1500);
+await page.getByRole('button', { name: 'Threat check' }).click();
+await page.screenshot({ path: OUT + '12-assisted-casual.png' });
+await page.getByRole('button', { name: 'Resign' }).click();
+await page.getByRole('button', { name: 'Yes, resign' }).click();
+await page.waitForSelector('.result-overlay');
+const assisted = await page.evaluate(async () => {
+  const s = window.__crown;
+  const gs = (await s.db.allGames()).filter(g => g.timeControl.id === 'blitz');
+  return { n: gs.length, rated: gs[0]?.rated, assistance: gs[0]?.assistance.length, events: (await s.db.ratingEvents()).length, blitz: (await s.db.ratingState('blitz')).games };
+});
+step('Assisted casual blitz game: ' + JSON.stringify(assisted));
+if (assisted.rated !== false || assisted.assistance < 2 || assisted.events !== 1 || assisted.blitz !== 0) fail('Assisted game affected ratings');
 
 // mobile layout checks
 await ctx.close();
@@ -150,5 +190,5 @@ await page.goto(url + '#/library');
 await page.waitForSelector('[data-testid="library-row"]');
 await page.screenshot({ path: OUT + '10-mobile-library.png' });
 await ctx.close();
-step('PASS: M1 acceptance journey completed');
+step('PASS: rated-game acceptance journey completed (Gate G)');
 writeFileSync(OUT + 'e2e-log.txt', log.join('\n') + '\n');
