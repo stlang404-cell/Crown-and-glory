@@ -12,3 +12,29 @@
 [2026-11-03T22:32:58.653Z]    R5: league:0:8 vs c0112 — Victory; challenger vs c1226 — Victory
 [2026-11-03T22:32:58.960Z] PASS: 5. Following Ullia Hollowwell: "This SeasonLeague: 6th of 16 in the Open Division (Ashmere), 3 pointsFederation Title: None · Next: Squire: Norms at 1700+ performance vs 1100+ average opposition: 0/1 (0/5 games) · Peak rating (recorded at each federati"
 [2026-11-03T22:33:30.087Z]    R6: league:0:8 vs c0120 — Victory; challenger vs c0456 — Victory
+[2026-11-03T22:34:03.838Z]    R7: league:0:8 vs c0121 — Victory; challenger vs c1481 — Victory
+[2026-11-03T22:34:28.377Z]    R8: league:0:8 vs c0119 — Victory; challenger vs c0847 — Victory
+[2026-11-03T22:34:43.621Z]    ceremonies: fed-title: Federation title: Squire
+[2026-11-03T22:34:43.624Z]    after the Swiss events: norms [{"event":"Challenger Open S1","season":1,"games":5,"score":5,"avgOpp":1906,"tpr":2706,"tier":"Paladin"}], peak 2092, federation title Squire
+[2026-11-03T22:34:46.144Z]    R9: league:0:8 vs c0123 — Victory
+[2026-11-03T22:35:03.698Z]    R10: league:0:8 vs c0113 — Victory; club vs c0126 — Victory; club vs c0126 — Victory
+[2026-11-03T22:35:26.924Z]    R11: league:0:8 vs c0125 — Victory; club vs c0119 — Victory; club vs c0119 — Victory
+[2026-11-03T22:35:43.854Z]    R12: league:0:8 vs c0124 — Victory
+[2026-11-03T22:36:02.554Z]    R13: league:0:8 vs c0122 — Victory
+[2026-11-03T22:36:18.703Z]    R14: league:0:8 vs c0126 — Victory
+[2026-11-03T22:36:39.339Z]    R15: league:0:8 vs c0127 — Victory
+[2026-11-03T22:38:18.819Z]    ceremonies: championship: Crown Champion — season 1 | event-title: Open Division champion (1) | event-title: Challenger Open winner | promotion: Promoted to the Club Division
+[2026-11-03T22:38:18.827Z]    season 1 complete: 24 games — 24 wins
+[2026-11-03T22:38:18.831Z] PASS: 8. Earned the federation title Squire from 2 norm(s) ["Challenger Open S1 5/5 TPR 2706 Paladin","League season S1 15/15 TPR 1988 Squire"]; peak rating 2101
+[2026-11-03T22:38:18.832Z] PASS: 7. Entered and played the Challenger Open: Victory, Victory, Victory, Victory, Victory
+[2026-11-03T22:38:18.843Z] PASS: 9. Saw 5 ceremonies (fed-title, championship, event-title, promotion): Federation title: Squire | Crown Champion — season 1 | Open Division champion (1) | Challenger Open winner | Promoted to the Club Division; exactly one championship award, no duplicate ids
+[2026-11-03T22:38:19.165Z] PASS: 10. Hall of Fame: your trophy room shows the Squire insignia and 2 event trophy(ies); 1 Crown Champion row(s) with the grand trophy
+[2026-11-03T22:38:19.927Z] PASS: 11. Restarted: featured rivals, norms, federation title, ceremonies (seen), favourites, club identity, balances, every competitor's titles/norms and rating identical (56020 chars compared)
+[2026-11-03T22:38:21.065Z]    phone #/heraldry: ready in 61 ms, horizontal overflow no
+[2026-11-03T22:38:21.934Z]    phone #/rivals: ready in 194 ms, horizontal overflow no
+[2026-11-03T22:38:22.769Z]    phone #/competitor/c0117: ready in 122 ms, horizontal overflow no
+[2026-11-03T22:38:23.402Z]    phone #/hall: ready in 88 ms, horizontal overflow no
+[2026-11-03T22:38:24.032Z]    phone #/finance: ready in 108 ms, horizontal overflow no
+[2026-11-03T22:38:24.724Z]    phone #/world: ready in 56 ms, horizontal overflow no
+[2026-11-03T22:38:24.906Z] console/page errors: 0
+[2026-11-03T22:38:24.907Z] ACCEPTANCE JOURNEY: 11/11 steps passed
