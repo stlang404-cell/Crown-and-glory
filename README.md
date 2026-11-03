@@ -97,6 +97,26 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
   games, and any use makes a casual game permanently assisted.
 - **Chess Passport**: career timeline, records, memorable moves, opponent history, filters and CSV export.
 
+## What v0.5.0 "Sovereign Intelligence" adds
+
+- **One chess intelligence:** play, Sovereign Max, federation games, the assistant, post-game analysis, grading,
+  puzzle verification, the Academy and the Lab all run the same engine (crown-search-2 + crown-eval-4), differing
+  only in thinking budget. Older analysis reports are kept with their original labels and can be re-analysed.
+- **Sovereign Max (L9):** no handicap, a larger memory table and a 5/10/20/40 s thinking budget; measured
+  +112 Elo [60, 163] against the previous maximum (internal scale, not FIDE). Every engine move records its
+  configuration.
+- **Recalibrated analysis:** the expected-score map was refitted for the current engine and validated on held-out
+  opening families; Great/Brilliant are harder to earn in lost or trivially won positions; 405 of 484 puzzles
+  re-verified (the rest retired or shortened, never deleted).
+- **Career Passport:** rating, division, federation title, experience, financial prestige and achievements shown
+  as six separate records, with eligibility, rivalries, upsets, club and forecasting record.
+- **Cosmetics:** portrait frames, banners, two premium boards and portraits — bought with fictional crowns or
+  earned by results; never strength, rating or titles.
+- **Reliability:** the Windows/macOS launcher no longer silently moves to another port (which would hide your
+  saves); engine jobs are logged and cancellable; engine-build changes are recorded for federation events.
+- Details: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [docs/V5_ENGINE.md](docs/V5_ENGINE.md),
+  [docs/V5_ANALYSIS_CALIBRATION.md](docs/V5_ANALYSIS_CALIBRATION.md), [docs/V5_INTEGRITY_REPORT.md](docs/V5_INTEGRITY_REPORT.md).
+
 ## What the M5 heraldry addendum adds
 
 - **Original heraldry** for every league division, rating rank, federation title, region, tournament, trophy,

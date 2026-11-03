@@ -49,6 +49,28 @@ regenerated; both sides of every later game use the same build; market prices us
 evaluations only, so a build change creates no information advantage. A live game in progress at the moment of
 an update finishes on the new build, and the record notes how many were in progress.
 
+## Strength: Sovereign Max vs the previous maximum (release gate)
+
+`RESULT_TAG=v5max THREADS=3 npx tsx tools/bench/run.ts match '{"kind":"level","level":9,"timeCapMs":3333}' '{"kind":"level","level":8,"timeCapMs":2000}' 32`
+→ `tools/bench/results/match-crown-L9-vs-crown-L8-v5max.json` (per-game records included).
+
+| | Result |
+|---|---|
+| Games | 64 = 32 colour-swapped pairs over the deterministic 2-ply openings 1–32 |
+| Sovereign Max (L9) vs Crown (L8) | **+28 =28 −8**, score **65.6% [58.6, 71.9]**, **+112 Elo [60, 163]** (internal logistic scale, 95% bootstrap over opening pairs) |
+| Depth / nodes per move | L9 14.7 / 637k · L8 13.6 / 395k |
+| Terminations | 36 checkmates, 21 threefold, 4 fifty-move, 3 bare kings; 0 illegal moves, 0 capped games |
+| Host | Intel Xeon @ 2.80 GHz, 4 cores, Node 22, three games in parallel |
+
+Budgets were scaled to 1/3 of the shipped ones with the same ratio (L9 3.33 s + 2^20 table vs L8 2 s + 2^18 table,
+i.e. 10 s vs 6 s in the game), because full-length time-limited games would have taken many hours. The
+calibration of L8 was also measured with a 2 s cap, so the two are comparable. L9 is entered in
+`src/engine/calibration.json` as **3038 ± 171**, derived as L8's rating plus this difference (it inherits L8's
+uncertainty). The gain comes from more thinking time and a larger table, not from a new evaluation or search
+algorithm; nothing about the engine itself got stronger per node in v0.5. Time-based results depend on the host
+and its load; a phone will reach lower depth at the same budget. **Not claimed:** any FIDE, grandmaster or
+superhuman level — these are internal engine-vs-engine numbers without human games.
+
 ## Search correctness audit
 
 Reviewed in `src/engine/search.ts`: mate-distance pruning, TT mate-score normalisation (`scoreToTT`/`scoreFromTT`,

@@ -490,7 +490,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
               )}
             </div>
           )}
-          <div className="small muted">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}. {rec.rated ? 'No engine help is available in rated play; analysis opens after the game.' : 'Full engine analysis opens after the game.'}</div>
+          <div className="small muted" data-testid="engine-config">Engine: {opp.engine?.searchId} · {opp.engine?.evalId} · calibration {opp.engine?.calibrationId}{opp.engine?.config ? ` · ${opp.engine.config.selection === 'best' ? 'best move only' : 'bounded selection'} · up to ${opp.engine.config.maxTimeMs / 1000} s per move · ${Math.round((1 << opp.engine.config.ttBits) * 11 / 1048576)} MB table · ${opp.engine.config.backend}` : ''}. {rec.rated ? 'No engine help is available in rated play; analysis opens after the game.' : 'Full engine analysis opens after the game.'}</div>
         </div>
       </div>
       {final && <ResultOverlay final={final} onClose={() => setFinal(null)} />}

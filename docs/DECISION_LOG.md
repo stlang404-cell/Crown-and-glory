@@ -62,3 +62,20 @@ entries below record implementation decisions and conflicts resolved during M0/M
 | H06 | Only the first two meetings of a pair per season score; upsets once per season; ×0.7 decay. | Anti-farming and bounded intensity. |
 | H07 | AI club finances are real ledger journals (5% dues, 60% operations to the sink). | Club treasuries must be legitimate records, and the ledger must stay conserved. |
 | H08 | Ceremonies have deterministic ids and are created only in the round commit. | No duplicate awards; every ceremony traces to a recorded result. |
+
+## v0.5.0 "Sovereign Intelligence"
+
+| # | Decision | Reason |
+| --- | --- | --- |
+| S01 | The play engine (crown-search-2 + crown-eval-4) becomes the single foundation for every intelligence system. | Directive Phase 3; v0.4 analysed games with a weaker, differently scaled engine than the one that played them. |
+| S02 | Refit the expected-score map (v2) instead of reusing v1. | Held-out: v1 on the new scale is no better than the placeholder; v2 is better on Brier, log loss and ECE. |
+| S03 | Historical reports are never relabelled; `legacy-v1` mode exists only to reproduce them in tests. | Preserve history without mixing methodologies. |
+| S04 | Puzzles that fail canonical verification are retired, not deleted; lines shortened only to a verified prefix. | Attempts must keep pointing at real puzzles; nothing unverified is served. |
+| S05 | Sovereign Max = more time + larger table on the same engine; no new search features. | Only budget scaling was validated in this release; per-node improvements need their own paired evidence. |
+| S06 | L9 calibration is derived from one L9–L8 match at time-scaled budgets. | Full-length time-limited calibration would take many hours; the derivation and its inherited uncertainty are documented. |
+| S07 | Only the 10 s Max budget is rated; other budgets are casual. | A rating must correspond to a measured configuration. |
+| S08 | Fairy-Stockfish stays a development reference. | Unchanged constraints (GPL-3.0, threads/isolation, memory); owner decision required. |
+| S09 | Engine-build changes for federation events are recorded and announced, not hidden; no result is regenerated. | Directive: no silent engine changes during financially consequential events. |
+| S10 | The launcher reuses a running game rather than moving to another port; a forced port change prints a warning. | Different ports are different storage origins (empty career). |
+| S11 | Cosmetics are a sink with no resale and no gameplay effect; earned cosmetics cannot be bought. | Meaningful money use without pay-to-win or purchasable honours. |
+| S12 | No improvement badge was added. | The registered protocol named by the directive was not provided; the Lab keeps its "insufficient evidence" rule. |

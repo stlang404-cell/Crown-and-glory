@@ -134,29 +134,29 @@ rivalries does not change any result).
 
 Acceptance journey: see *Acceptance results* below.
 
-## Acceptance results (executed on the final production build, 2026-11-03)
+## Acceptance results (re-run on the final v0.5.0 build, 2026-11-03)
 
 `npm run build && node e2e/m5-heraldry.mjs` — headless Chromium on Linux, fresh profile, real UI clicks; the
 "human" is a scripted robot (Crown engine, 12k nodes) playing every fixture through the board. Log:
 [evidence/m5-heraldry/journey-log.txt](evidence/m5-heraldry/journey-log.txt). **11 / 11 passed**, 0 console or
-page errors.
+page errors. (The first run, on the M5 addendum build, also passed 11/11; its log was replaced by this run.)
 
 | # | Step | Result |
 |---|---|---|
-| 1 | View all league and rank insignia | Gallery: 8 division, 7 rank, 4 title, 16 regional, 5 financial, 8 achievement, 32 club emblems; 91 SVGs, 0 broken, 0 external images; rendered in 57 ms |
+| 1 | View all league and rank insignia | Gallery: 8 division, 7 rank, 4 title, 16 regional, 5 financial, 8 achievement, 32 club emblems; 91 SVGs, 0 broken, 0 external images; rendered in 51 ms |
 | 2 | Open a featured rival's profile | one of 28 featured ("your circle"); personal, division, club and region insignia |
 | 3 | Play a match that changes a rivalry record | league game vs that featured rival, won; rivalry went from no meetings to a recorded meeting |
 | 4 | View the updated head-to-head | "Acquaintance · 3/100 · 1–0–0 … You beat … (+3, S1)" on the profile |
 | 5 | Follow a rival's tournament | *Follow career* on; profile shows their live league position and title progress |
 | 6 | Customise the club emblem | name, motto, sable/sanguine, kite, griffin — saved and re-read from the save |
-| 7 | Enter a major championship | **Challenger Open** (major Swiss event, field average ≈ 1,900): D, W, W, W, D = 3.5/5. The Crown Championship itself needs Crown Division qualification, which a new player cannot reach in season 1, so it was watched, not entered |
-| 8 | Win an earned title | **Squire**: Challenger norm (performance 2055 over 5 games) + peak rating 1988 |
-| 9 | See the championship ceremony | 4 ceremonies, each shown and dismissed: federation title, Crown Champion (season 1), Open Division champion, promotion; exactly one championship award, no duplicate ids |
-| 10 | View the trophy in the Hall of Fame | trophy room: Squire insignia + league trophy; Crown Champions row with portrait, grand trophy and final replay |
-| 11 | Restart with everything preserved | browser closed and reopened: featured rivals, norms, title, ceremonies, favourites, club identity, every balance, every competitor's titles/norms, rating — identical (55,840-character snapshot) |
+| 7 | Enter a major championship | **Challenger Open** (major Swiss event, field average ≈ 1,970): 5/5. The Crown Championship itself needs Crown Division qualification, which a new player cannot reach in season 1, so it was watched, not entered |
+| 8 | Win an earned title | **Squire**: Challenger norm (performance 2725 over 5 games) + league norm + peak rating 2159 |
+| 9 | See the championship ceremony | 5 ceremonies, each shown and dismissed: federation title, Crown Champion (season 1), Open Division champion, Challenger Open winner, promotion; exactly one championship award, no duplicate ids |
+| 10 | View the trophy in the Hall of Fame | trophy room: Squire insignia + 2 event trophies; Crown Champions row with portrait, grand trophy and final replay |
+| 11 | Restart with everything preserved | browser closed and reopened: featured rivals, norms, title, ceremonies, favourites, club identity, every balance, every competitor's titles/norms, rating — identical (56,143-character snapshot) |
 
 Phone (390 × 844): heraldry, rivals, rival profile, Hall of Fame, finance, world: no horizontal overflow; each
-screen ready in 46–127 ms in this container. Emblems at 22 px stay distinguishable by silhouette and charge
+screen ready in 28–167 ms in this container. Emblems at 22 px stay distinguishable by silhouette and charge
 (screenshots `m-*.png`). Not tested: a physical iPhone or Windows machine.
 
 Screenshots (docs/evidence/m5-heraldry/): 01-gallery, 02-rivals, 03-rival-profile, 04-h2h-updated, 05-following,
@@ -169,10 +169,9 @@ ceremony-event-title, ceremony-promotion, 10-hall, m-heraldry, m-rivals, m-rival
 
 ### Known limits
 
-* The robot won 22 of 24 games in season 1 (the bottom division is weak against it), so this journey shows the
+* The robot wins almost every game in season 1 (the bottom division is weak against it), so this journey shows the
   happy path; the unit tests cover the no-norm and capped cases.
 * Norm performance uses opponents' ratings at the end of the event (decision H04).
 * The rules allow an exceptional AI competitor to reach Paladin or even Sovereign in the first season (three
-  high norms over 27 games plus the honour requirement). In the first journey run one competitor became a
-  Sovereign in season 1; in the final run one became a Paladin. Whether that is too fast is a balance question
+  high norms over 27 games plus the honour requirement). Across journey runs, a competitor reached Sovereign or Paladin in season 1. Whether that is too fast is a balance question
   left open.

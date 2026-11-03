@@ -1,40 +1,40 @@
-[2026-11-03T17:00:29.159Z] production build served; fresh profile
-[2026-11-03T17:00:30.861Z] PASS: 1. Heraldry gallery: 8 division, 7 rank, 4 federation-title, 16 regional, 5 financial, 8 achievement and 32 club emblems; 91 SVGs, 0 broken, 0 external images; rendered in 57 ms
-[2026-11-03T17:00:31.781Z] PASS: 2. Opened featured rival Karic Valeley (one of 28 featured; 4 insignia: personal, division, club, region); rivalry panel: "Rivalry with youNo recorded meetings yet."
-[2026-11-03T17:00:32.164Z]    registered for the Challenger Open (field average rating 1938)
-[2026-11-03T17:00:32.897Z] PASS: 6. Customised the club emblem: {"name":"Obsidian Gambit Circle","primary":"sable","secondary":"sanguine","shape":"kite","symbol":"griffin","motto":"Six squares, no fear"}
-[2026-11-03T17:00:35.402Z]    R1: league:0:8 vs c0127 — Victory
-[2026-11-03T17:00:35.487Z] PASS: 3. Played a federation league:0:8 game vs Karic Valeley (a featured rival) (Victory); the rivalry record went from no meetings to a recorded meeting
-[2026-11-03T17:00:35.729Z] PASS: 4. Updated head-to-head on Karic Valeley's profile: "Rivalry with youAcquaintance · 3/100 · 1–0–0 in 1S1 R1: You beat Karic Valeley (+3, S1)Points decay ×0.7 per season; only the first two meetings of a season cou"
-[2026-11-03T17:00:47.659Z]    R2: league:0:8 vs c0126 — Victory
-[2026-11-03T17:01:01.197Z]    R3: league:0:8 vs c0112 — Victory
-[2026-11-03T17:01:20.753Z]    R4: league:0:8 vs c0121 — Victory; challenger vs c0968 — Defeat
-[2026-11-03T17:01:45.666Z]    R5: league:0:8 vs c0119 — Victory; challenger vs c0834 — Victory
-[2026-11-03T17:01:45.906Z] PASS: 5. Following Karic Valeley: "This seasonLeague: 5th of 16 in the Open Division (Ashmere), 3 pointsFederation title: none · next Squire: Norms at 1700+ performance vs 1100+ average opposition: 0/1 (0/5 games) · Peak rating: 1402/1600Norms: none"
-[2026-11-03T17:02:15.654Z]    R6: league:0:8 vs c0116 — Victory; challenger vs c1986 — Victory
-[2026-11-03T17:02:48.457Z]    R7: league:0:8 vs c0114 — Victory; challenger vs c1991 — Victory
-[2026-11-03T17:03:18.232Z]    R8: league:0:8 vs c0118 — Victory; challenger vs c0205 — Draw
-[2026-11-03T17:03:33.639Z]    ceremonies: fed-title: Federation title: Squire
-[2026-11-03T17:03:33.643Z]    after the Swiss events: norms [{"event":"Challenger Open S1","season":1,"games":5,"score":3.5,"avgOpp":1908,"tpr":2055,"tier":"Knight"}], peak 1967, federation title Squire
-[2026-11-03T17:03:36.235Z]    R9: league:0:8 vs c0115 — Victory
-[2026-11-03T17:03:56.640Z]    R10: league:0:8 vs c0124 — Victory; club vs c0114 — Victory; club vs c0114 — Victory
-[2026-11-03T17:04:21.690Z]    R11: league:0:8 vs c0123 — Victory; club vs c0127 — Victory; club vs c0127 — Victory
-[2026-11-03T17:04:41.256Z]    R12: league:0:8 vs c0113 — Victory
-[2026-11-03T17:04:58.793Z]    R13: league:0:8 vs c0125 — Victory
-[2026-11-03T17:05:20.221Z]    R14: league:0:8 vs c0120 — Victory
-[2026-11-03T17:05:39.367Z]    R15: league:0:8 vs c0117 — Victory
-[2026-11-03T17:07:34.017Z]    ceremonies: championship: Crown Champion — season 1 | event-title: Open Division champion (1) | promotion: Promoted to the Club Division
-[2026-11-03T17:07:34.020Z]    season 1 complete: 24 games — 22 wins
-[2026-11-03T17:07:34.028Z] PASS: 8. Earned the federation title Squire from 2 norm(s) ["Challenger Open S1 3.5/5 TPR 2055 Knight","League season S1 15/15 TPR 2028 Squire"]; peak rating 1988
-[2026-11-03T17:07:34.029Z] PASS: 7. Entered and played the Challenger Open: Defeat, Victory, Victory, Victory, Draw
-[2026-11-03T17:07:34.037Z] PASS: 9. Saw 4 ceremonies (fed-title, championship, event-title, promotion): Federation title: Squire | Crown Champion — season 1 | Open Division champion (1) | Promoted to the Club Division; exactly one championship award, no duplicate ids
-[2026-11-03T17:07:34.320Z] PASS: 10. Hall of Fame: your trophy room shows the Squire insignia and 1 event trophy(ies); 1 Crown Champion row(s) with the grand trophy
-[2026-11-03T17:07:34.941Z] PASS: 11. Restarted: featured rivals, norms, federation title, ceremonies (seen), favourites, club identity, balances, every competitor's titles/norms and rating identical (55840 chars compared)
-[2026-11-03T17:07:35.930Z]    phone #/heraldry: ready in 61 ms, horizontal overflow no
-[2026-11-03T17:07:36.778Z]    phone #/rivals: ready in 127 ms, horizontal overflow no
-[2026-11-03T17:07:37.668Z]    phone #/competitor/c0127: ready in 89 ms, horizontal overflow no
-[2026-11-03T17:07:38.332Z]    phone #/hall: ready in 63 ms, horizontal overflow no
-[2026-11-03T17:07:38.907Z]    phone #/finance: ready in 60 ms, horizontal overflow no
-[2026-11-03T17:07:39.648Z]    phone #/world: ready in 46 ms, horizontal overflow no
-[2026-11-03T17:07:39.855Z] console/page errors: 0
-[2026-11-03T17:07:39.856Z] ACCEPTANCE JOURNEY: 11/11 steps passed
+[2026-11-03T19:45:10.058Z] production build served; fresh profile
+[2026-11-03T19:45:11.921Z] PASS: 1. Heraldry gallery: 8 division, 7 rank, 4 federation-title, 16 regional, 5 financial, 8 achievement and 32 club emblems; 91 SVGs, 0 broken, 0 external images; rendered in 51 ms
+[2026-11-03T19:45:12.844Z] PASS: 2. Opened featured rival Ismar Piketon (one of 28 featured; 4 insignia: personal, division, club, region); rivalry panel: "Rivalry with youNo recorded meetings yet."
+[2026-11-03T19:45:13.301Z]    registered for the Challenger Open (field average rating 1973)
+[2026-11-03T19:45:14.357Z] PASS: 6. Customised the club emblem: {"name":"Obsidian Gambit Circle","primary":"sable","secondary":"sanguine","shape":"kite","symbol":"griffin","motto":"Six squares, no fear"}
+[2026-11-03T19:45:18.791Z]    R1: league:0:8 vs c0112 — Victory
+[2026-11-03T19:45:18.936Z] PASS: 3. Played a federation league:0:8 game vs Ismar Piketon (a featured rival) (Victory); the rivalry record went from no meetings to a recorded meeting
+[2026-11-03T19:45:19.283Z] PASS: 4. Updated head-to-head on Ismar Piketon's profile: "Rivalry with youAcquaintance · 3/100 · 1–0–0 in 1S1 R1: You beat Ismar Piketon (+3, S1)Points decay ×0.7 per season; only the first two meetings of a season cou"
+[2026-11-03T19:45:34.399Z]    R2: league:0:8 vs c0113 — Victory
+[2026-11-03T19:45:46.129Z]    R3: league:0:8 vs c0125 — Victory
+[2026-11-03T19:46:04.841Z]    R4: league:0:8 vs c0115 — Victory; challenger vs c1610 — Victory
+[2026-11-03T19:46:29.371Z]    R5: league:0:8 vs c0124 — Victory; challenger vs c1863 — Victory
+[2026-11-03T19:46:29.823Z] PASS: 5. Following Ismar Piketon: "This seasonLeague: 4th of 16 in the Open Division (Ashmere), 3 pointsFederation title: none · next Squire: Norms at 1700+ performance vs 1100+ average opposition: 0/1 (0/5 games) · Peak rating: 1348/1600Norms: none"
+[2026-11-03T19:46:57.662Z]    R6: league:0:8 vs c0127 — Victory; challenger vs c0714 — Victory
+[2026-11-03T19:47:25.327Z]    R7: league:0:8 vs c0117 — Victory; challenger vs c0326 — Victory
+[2026-11-03T19:47:54.570Z]    R8: league:0:8 vs c0121 — Victory; challenger vs c0072 — Victory
+[2026-11-03T19:48:10.311Z]    ceremonies: fed-title: Federation title: Squire
+[2026-11-03T19:48:10.317Z]    after the Swiss events: norms [{"event":"Challenger Open S1","season":1,"games":5,"score":5,"avgOpp":1925,"tpr":2725,"tier":"Paladin"}], peak 2153, federation title Squire
+[2026-11-03T19:48:14.810Z]    R9: league:0:8 vs c0118 — Victory
+[2026-11-03T19:48:31.259Z]    R10: league:0:8 vs c0122 — Victory; club vs c0121 — Victory; club vs c0121 — Victory
+[2026-11-03T19:48:56.418Z]    R11: league:0:8 vs c0126 — Victory; club vs c0112 — Victory; club vs c0112 — Victory
+[2026-11-03T19:49:13.424Z]    R12: league:0:8 vs c0123 — Victory
+[2026-11-03T19:49:30.381Z]    R13: league:0:8 vs c0116 — Victory
+[2026-11-03T19:49:45.840Z]    R14: league:0:8 vs c0120 — Victory
+[2026-11-03T19:50:03.292Z]    R15: league:0:8 vs c0114 — Victory
+[2026-11-03T19:51:49.426Z]    ceremonies: championship: Crown Champion — season 1 | event-title: Open Division champion (1) | event-title: Challenger Open winner | promotion: Promoted to the Club Division
+[2026-11-03T19:51:49.434Z]    season 1 complete: 24 games — 24 wins
+[2026-11-03T19:51:49.443Z] PASS: 8. Earned the federation title Squire from 2 norm(s) ["Challenger Open S1 5/5 TPR 2725 Paladin","League season S1 15/15 TPR 1949 Squire"]; peak rating 2159
+[2026-11-03T19:51:49.450Z] PASS: 7. Entered and played the Challenger Open: Victory, Victory, Victory, Victory, Victory
+[2026-11-03T19:51:49.465Z] PASS: 9. Saw 5 ceremonies (fed-title, championship, event-title, promotion): Federation title: Squire | Crown Champion — season 1 | Open Division champion (1) | Challenger Open winner | Promoted to the Club Division; exactly one championship award, no duplicate ids
+[2026-11-03T19:51:49.822Z] PASS: 10. Hall of Fame: your trophy room shows the Squire insignia and 2 event trophy(ies); 1 Crown Champion row(s) with the grand trophy
+[2026-11-03T19:51:50.695Z] PASS: 11. Restarted: featured rivals, norms, federation title, ceremonies (seen), favourites, club identity, balances, every competitor's titles/norms and rating identical (56143 chars compared)
+[2026-11-03T19:51:51.865Z]    phone #/heraldry: ready in 81 ms, horizontal overflow no
+[2026-11-03T19:51:52.868Z]    phone #/rivals: ready in 167 ms, horizontal overflow no
+[2026-11-03T19:51:53.775Z]    phone #/competitor/c0112: ready in 131 ms, horizontal overflow no
+[2026-11-03T19:51:54.450Z]    phone #/hall: ready in 71 ms, horizontal overflow no
+[2026-11-03T19:51:55.074Z]    phone #/finance: ready in 87 ms, horizontal overflow no
+[2026-11-03T19:51:55.861Z]    phone #/world: ready in 28 ms, horizontal overflow no
+[2026-11-03T19:51:56.089Z] console/page errors: 0
+[2026-11-03T19:51:56.090Z] ACCEPTANCE JOURNEY: 11/11 steps passed

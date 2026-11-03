@@ -94,6 +94,13 @@ async function advance(page) {
   await page.waitForFunction(([r, s]) => { const w = window.__crown.fed.state.world; return w.round !== r || w.season !== s; }, [r0, s0], { timeout: 1800000 });
   const st = await fed(page);
   if (st.total !== 0 || st.negative !== 0) { step('ledger not conserved'); process.exit(1); }
+  // v0.5: titles, promotions and champions are presented in a modal ceremony; a player dismisses it to continue
+  for (let i = 0; i < 10 && await page.locator('[data-testid="ceremony-continue"]').count(); i++) {
+    const t = await page.getAttribute('[data-testid="ceremony"]', 'aria-label');
+    await page.locator('[data-testid="ceremony-continue"]').click();
+    step(`   ceremony dismissed: ${t}`);
+    await page.waitForTimeout(300);
+  }
 }
 
 // ===================== v0.3.0 save =====================

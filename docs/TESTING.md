@@ -1,4 +1,40 @@
-# Test results (v0.4.0 — The Grand Exchange)
+# Test results (v0.5.0 — Sovereign Intelligence)
+
+Run on 2026-11-03 in a cloud Linux container (Intel Xeon @ 2.80 GHz, 4 cores, Node 22, Playwright headless
+Chromium). No Windows machine or physical iPhone was available: those checks are **NOT RUN**. Every result below
+was executed in this session on the final build unless stated.
+
+| Command | Result |
+|---|---|
+| `npx tsc -b` | pass |
+| `npx vitest run` | **188 / 188** passed (24 files) |
+| `npm run build` | pass |
+| `node e2e/v5-journey.mjs <v0.4.0 dist>` — v0.5 acceptance (migration from the real v0.4.0 build, rollback, Sovereign Max provenance, cancellation, assistant and rated lock, exactly-once rating, canonical analysis, puzzles, Lab, cosmetics, Passport, export/import, restart, offline, accessibility) | **20 / 20 PASS**, 0 console errors — docs/evidence/v5/ |
+| `node e2e/m4-journey.mjs <v0.3.0 dist>` — v0.4 28-step journey from a real v0.3.0 save | **28 / 28 PASS** (harness now dismisses M5 ceremonies like a player) — docs/evidence/m4/ |
+| `node e2e/m5-heraldry.mjs` — heraldry & rivalry, 11 steps | **11 / 11 PASS** — docs/evidence/m5-heraldry/ |
+| `node e2e/run.mjs`, `e2e/academy.mjs`, `e2e/offline.mjs` (against `scripts/serve.mjs --port 4173`) | PASS, PASS, PASS |
+| `node tools/contrast/check-themes.mjs` | all pairs pass (two new premium boards were tuned after it first failed them) |
+| Strength gate: L9 vs L8, 64 games | +112 Elo [60, 163] — docs/V5_ENGINE.md |
+| Calibration: map v2 held-out | Brier −0.0029…−0.0050 vs placeholder, ECE 0.003 — docs/V5_ANALYSIS_CALIBRATION.md |
+| Puzzle re-verification | 405 active / 79 retired / 12 shortened, reproducible — same doc |
+| 20-season economy sweep | docs/V5_INTEGRITY_REPORT.md |
+
+New test files: `tests/engine.canonical.test.ts` (13), `tests/cosmetics.test.ts` (2); extended:
+`tests/grades.corpus.test.ts` (canonical v2 corpus + frozen v1 corpus in legacy mode), `tests/academy.test.ts`
+(canonical re-verification, retired puzzles never served).
+
+Defects found and fixed during verification: analysis jobs could not re-analyse a game that had a legacy report;
+the launcher silently changed port (and so the save origin); two premium boards failed contrast; decorative
+piece SVGs were exposed to assistive technology as unlabelled images; icon-only buttons lacked explicit names.
+Test-harness defects fixed: Playwright `waitForFunction` with an async predicate does not wait; a stale server
+from a crashed run could be mistaken for the build under test (the journey now refuses it).
+
+Not run: physical iPhone (install, offline cold start, suspend/resume, memory pressure); Windows launcher on
+Windows; screen-reader pass; the "Sovereign research package" J1–J6 journeys (package not provided).
+
+---
+
+## Previous: v0.4.0 — The Grand Exchange
 
 Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22, Playwright headless Chromium). No Windows machine
 or physical iPhone was available. Every result below was executed in this session.
