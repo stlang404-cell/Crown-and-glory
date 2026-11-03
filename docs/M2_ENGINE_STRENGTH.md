@@ -32,9 +32,15 @@ The held-out replication step mattered: the combined pruning change looked signi
 
 ## Gate A verdict
 
-**Measurable improvement demonstrated:** crown-eval-3 vs crown-eval-2 scored ≈ +66 Elo pooled over 128
-games (two independent opening halves, both intervals above zero), at identical node and time cost. This is
-an internal engine-vs-engine Elo difference at 40k nodes per move, not a human or FIDE strength claim.
+**Measurable improvement demonstrated in direct self-play:** crown-eval-3 vs crown-eval-2 scored ≈ +66 Elo
+pooled over 128 games (two independent opening halves, both intervals above zero), at identical node and
+time cost. This is an internal engine-vs-engine Elo difference at 40k nodes per move, not a human or FIDE
+strength claim.
+
+**Not detectable against the external reference:** re-running the Fairy-Stockfish matches with eval-3 gave
+89.8% vs Fairy@1k nodes (eval-2: 87.5%) and 39.8% vs Fairy@4k (eval-2: 39.1%) — both changes are well inside
+the 64-game intervals. Self-play gains often shrink against a different opponent; the honest summary is a
+small, replicated improvement, not a step change in strength.
 
 The maximum level (L8, clock-limited, up to 6 s per move) is the strongest validated configuration: in the
 calibration it scored 91% against L7 (30k nodes) and 97.5% against L6. On this host the engine searches
