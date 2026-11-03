@@ -42,6 +42,7 @@ for (const pz of puzzles) {
 {
   const { readdirSync } = await import('node:fs');
   const RES = new URL('../bench/results/', import.meta.url);
+  let scanned = 0;
   outer: for (const f of readdirSync(RES).filter(x => x.endsWith('-games.json'))) {
     const all = JSON.parse(readFileSync(new URL(f, RES), 'utf8')) as Record<string, { moves: string[] }[]>;
     for (const gs of Object.values(all)) for (const g of gs) {
@@ -49,6 +50,7 @@ for (const pz of puzzles) {
       const p = Position.fromFen('rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1');
       for (let i = 0; i < g.moves.length; i++) {
         if (i >= 8 && i % 9 === 0 && !p.inCheck()) {
+          if (++scanned > 150) break outer; // bounded scan (Excellent/Good are rare outside uncertainty bands)
           const fen = p.toFen();
           for (const mv of p.legalMoves().map(moveToCcn).slice(0, 8)) {
             const pl = analyse(fen, mv);
