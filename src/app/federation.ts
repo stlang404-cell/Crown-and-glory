@@ -324,8 +324,8 @@ export class FederationService {
     const { createGameRecord } = await import('../games/session');
     const { TIME_CONTROLS } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
-    const { SEARCH_ID } = await import('../engine/search');
-    const { EVAL_ID } = await import('../engine/evaluate');
+    const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
+    const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
     const rec = createGameRecord({
@@ -348,8 +348,8 @@ export class FederationService {
     const { createGameRecord } = await import('../games/session');
     const { TIME_CONTROLS } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
-    const { SEARCH_ID } = await import('../engine/search');
-    const { EVAL_ID } = await import('../engine/evaluate');
+    const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
+    const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
     return createGameRecord({

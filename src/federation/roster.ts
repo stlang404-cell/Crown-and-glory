@@ -8,8 +8,8 @@
  */
 import calibration from '../engine/calibration.json';
 import { LEVELS_ID, getLevel } from '../engine/levels';
-import { SEARCH_ID } from '../engine/search';
-import { EVAL_ID } from '../engine/evaluate';
+import { PLAY_SEARCH_ID } from '../engine/search';
+import { PLAY_EVAL_ID } from '../engine/evaluate';
 import type { ParticipantSnapshot } from '../games/types';
 
 export interface Opponent {
@@ -46,7 +46,7 @@ export function opponentSnapshot(o: Opponent): ParticipantSnapshot {
   const p = getLevel(o.level);
   return {
     kind: 'engine', id: o.id, name: o.name, rating: cal?.rating ?? null, rd: cal?.rd ?? null,
-    engine: { profileId: p.id, level: o.level, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: CALIBRATION_ID, style: 'standard (no distinct style yet)' },
+    engine: { profileId: p.id, level: o.level, levelsId: LEVELS_ID, searchId: PLAY_SEARCH_ID, evalId: PLAY_EVAL_ID, calibrationId: CALIBRATION_ID, style: 'standard (no distinct style yet)' },
   };
 }
 
