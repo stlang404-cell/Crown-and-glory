@@ -40,7 +40,7 @@ export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number 
 export interface AssetType { id: string; name: string; kind: 'club' | 'analyst' | 'scouting' | 'trophy'; price: number; bond: number; resale: number; upkeep: number; effect: string; unique: boolean }
 export const ASSETS: AssetType[] = [
   { id: 'club', name: 'Starter Chess Club', kind: 'club', price: C(500), bond: C(300), resale: 0, upkeep: C(40), unique: true,
-    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club.' },
+    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club. Upkeep usually exceeds Club Weekend income: a prestige purchase, not an investment.' },
   { id: 'analyst', name: 'Analyst Office', kind: 'analyst', price: C(300), bond: 0, resale: C(150), upkeep: C(20), unique: true,
     effect: 'Exchange research desk: full forecast breakdown (expected score, rating uncertainty, draw model), price history charts and your forecast track record. Uses public information only.' },
   { id: 'scouting', name: 'Scouting Department', kind: 'scouting', price: C(200), bond: 0, resale: C(100), upkeep: C(15), unique: true,

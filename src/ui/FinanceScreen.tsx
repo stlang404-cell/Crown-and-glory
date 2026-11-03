@@ -7,7 +7,7 @@ import type { FederationService } from '../app/federation';
 
 const KIND_LABEL: Record<string, string> = {
   prize: 'Prize money', sponsor: 'Sponsorships', 'trade-buy': 'Exchange purchases', 'trade-sell': 'Exchange sales', 'market-settle': 'Exchange settlements', 'market-cancel': 'Exchange cancellations',
-  'asset-purchase': 'Asset purchases', 'asset-sale': 'Asset sales', upkeep: 'Upkeep', 'entry-fee': 'Entry fees', 'recovery-voucher': 'Recovery vouchers', mint: 'Starting grant', club: 'Club Weekend',
+  'asset-purchase': 'Asset purchases', 'asset-sale': 'Asset sales', upkeep: 'Upkeep', 'entry-fee': 'Entry fees', 'recovery-voucher': 'Recovery vouchers', mint: 'Starting grant', grant: 'Starting grant', 'club-hosting': 'Club Weekend hosting', 'club-attendance': 'Club Weekend attendance',
 };
 
 function NetWorthChart({ points }: { points: { netWorth: number; cash: number; season: number; round: number }[] }) {

@@ -1,4 +1,43 @@
-# Test results (M2, v0.2.0)
+# Test results (v0.3.0)
+
+Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22.23.4, Playwright headless Chromium).
+No Windows machine or physical iPhone was available.
+
+## Automated suites — `npx vitest run`: **135 / 135 passed** (15 files, 170 s)
+
+New in v0.3.0 (the M2 suites below still pass unchanged):
+
+| File | Tests | What it covers |
+| --- | --- | --- |
+| tests/federation.test.ts | 11 | deterministic 2,048-competitor generator, round robin (colour balance), standings/tiebreaks, Swiss pairing without repeats, knockout termination incl. joint final, Davidson model, a full headless season, determinism, player joining, 4-season population stability |
+| tests/exchange.test.ts | 12 | LMSR prices/gradient, log-sum-exp stability, no complete-set arbitrage, directed rounding, 4,500 random trades with solvency and bounded maker loss for every outcome, idempotent settlement, no shorting/unfunded buys, cancellation, sandbox/official isolation, quotes, NPC traders use only public forecasts |
+| tests/federationService.test.ts | 8 | creation/persistence, rated player fixture recorded once (contradicting retry ignored), trade → market closed before the game exists → settlement, full season (prizes from escrow, sponsors once, issuance only via mint entries, competitor expense sink, conservation and non-negativity every round), stale/duplicate commands and simulated crash leave state unchanged, assets/upkeep/net worth, mid-season backup export/import + tampered-ledger rejection, no forecast leakage from hidden strength |
+| tests/storage.test.ts | +1 | DB v2 → v3 migration keeps games, ratings and Academy data |
+
+Typecheck (`tsc -b`): pass. Production build (`vite build`): pass.
+
+## Browser journeys (production build)
+
+| Script | Result | Evidence |
+| --- | --- | --- |
+| `e2e/federation.mjs` — **v0.3.0 player acceptance journey, all 18 steps**, starting from a save made by the real v0.2.0 build on the same origin | **PASS** | docs/evidence/v3/journey-log.txt, docs/evidence/v3/*.png (desktop + 390 px phone, no horizontal overflow) |
+| `e2e/run.mjs` — rated acceptance journey (Gate G) | **PASS** (re-run on v0.3.0) | docs/evidence/e2e-log.txt |
+| `e2e/academy.mjs` — Academy | **PASS** (re-run on v0.3.0) | docs/evidence/academy-log.txt |
+| `e2e/offline.mjs` — service worker, offline engine move | **PASS** (re-run on v0.3.0, Chromium) | docs/evidence/offline-log.txt |
+
+The federation journey plays 14 complete rated games through the UI (one in v0.2.0, thirteen federation
+games across eight rounds), watches a full engine game live, trades, settles, buys an asset, closes and
+reopens the browser and compares every federation, finance, rating and game value before and after.
+
+## Simulations
+
+`tools/sim/economy.ts` — 7 strategies × 6 seasons through the real service: conservation and non-negative
+balances in all 42 strategy-seasons; results and interpretation in docs/V3_ECONOMY.md.
+`tools/styles/validate.ts` — style behaviour/strength validation; results in docs/V3_STYLES.md.
+
+---
+
+# Earlier results (M2, v0.2.0)
 
 Run on 2026-11-03 in a cloud Linux container (4 cores, Node 22.23.4, Playwright 1.63 headless Chromium).
 No Windows machine or physical iPhone was available.
