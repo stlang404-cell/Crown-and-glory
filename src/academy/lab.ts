@@ -155,7 +155,7 @@ export function computeDimensions(input: LabInput): { dimensions: Dimension[]; m
   const threats = new Map(items.map(it => [it.gameId, threatenedPlies(it)]));
   const P = input.puzzles, A = input.attempts;
   const good = (p: PlyAnalysis) => (p.loss ?? 1) <= 0.05;
-  const dims: Dimension[] = [
+  const raw: Omit<Dimension, 'status'>[] = [
     { id: 'tactical', name: 'Tactical vision', rubric: 'Games: played the engine-best move where the engine line wins material or mates (coach-verified opportunity). Puzzles: first-try clean solves of fork / pin / skewer / discovered-attack / hanging-piece / mate puzzles.',
       evidence: [gameEvidence(items, p => tacticalNote(p) || (p.critical && p.best.ccn === p.ccn && p.notes.length === 0 && p.best.score.kind === 'mate'), p => p.best.ccn === p.ccn), puzzleEvidence(A, P, p => has(p, 'fork', 'pin', 'skewer', 'discovered-attack', 'hanging-piece', 'mate'), 'training')] },
     { id: 'calculation', name: 'Calculation', rubric: 'First-try clean solves of puzzles requiring two or more of your moves against best defence (verified line).',
@@ -181,9 +181,7 @@ export function computeDimensions(input: LabInput): { dimensions: Dimension[]; m
     { id: 'adaptability', name: 'Adaptability', rubric: 'Held-out assessments: first-exposure solve rate on unseen puzzles (never used in practice). Change over time requires two or more assessment windows.',
       evidence: [puzzleEvidence(A, P, () => true, 'heldout')] },
   ];
-  for (const d of dims) {
-    d.status = d.evidence.some(e => e.status === 'measured') ? 'measured' : 'insufficient';
-  }
+  const dims: Dimension[] = raw.map(d => ({ ...d, status: d.evidence.some(e => e.status === 'measured') ? 'measured' : 'insufficient' }));
   return { dimensions: dims, method, excluded, gamesUsed: items.length };
 }
 
@@ -227,7 +225,7 @@ export function computeTrend(input: LabInput, windowSize = 10): Trend {
     const sl: number[] = [];
     for (let i = 0; i < 1000; i++) sl.push(slope(idx.map(() => idx[Math.floor((rng() / 4294967296) * idx.length)])));
     sl.sort((a, b) => a - b);
-    velocity = { perTenGames: slope(idx), ci: [sl[25], sl[974]] };
+    velocity = { perTenGames: slope(idx), ci: [sl[25], sl[974]] as [number, number] };
     const opps = perGame.map(x => x.opponent).filter((x): x is number => x !== null);
     const oppShift = opps.length >= 2 * windowSize ? mean(opps.slice(-windowSize)) - mean(opps.slice(0, -windowSize)) : 0;
     note = `Descriptive comparison of non-overlapping windows (last ${windowSize} vs earlier ${e.length} analysed games). Opponent rating changed by ${oppShift >= 0 ? '+' : ''}${Math.round(oppShift)} between windows; accuracy is not adjusted for opponent strength or time control.` +
