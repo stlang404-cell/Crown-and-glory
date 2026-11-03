@@ -1,0 +1,278 @@
+{
+ "checks": {
+  "runs": 30,
+  "seasonsPerRun": 20,
+  "allConserved": true,
+  "negativeAccounts": 0,
+  "subsidyBoundViolations": 0
+ },
+ "macro": {
+  "circulatingGrowthPctPerSeasonAfterS5": {
+   "median": 0.56,
+   "min": 0.52,
+   "max": 0.61
+  },
+  "ratingMeanS1": 1835.4,
+  "ratingMeanFinal": 1837.0,
+  "ratingMeanFinalRange": [
+   1832.7,
+   1843.2
+  ],
+  "earningsGiniFinal": 0.724,
+  "latentRatingCorrFinal": 0.984
+ },
+ "strategies": [
+  {
+   "strategy": "chess-only",
+   "seeds": 3,
+   "netWorthMedian": 2038,
+   "netWorthRange": [
+    1655,
+    2399
+   ],
+   "cashMin": 1000,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    6,
+    6,
+    5
+   ],
+   "titles": 6,
+   "record": [
+    "132-123-145",
+    "139-106-155",
+    "139-121-140"
+   ]
+  },
+  {
+   "strategy": "successful",
+   "seeds": 3,
+   "netWorthMedian": 4882,
+   "netWorthRange": [
+    4850,
+    5304
+   ],
+   "cashMin": 1025,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    3,
+    4,
+    3
+   ],
+   "titles": 17,
+   "record": [
+    "168-79-78",
+    "173-77-70",
+    "142-93-85"
+   ]
+  },
+  {
+   "strategy": "losing",
+   "seeds": 3,
+   "netWorthMedian": 550,
+   "netWorthRange": [
+    550,
+    550
+   ],
+   "cashMin": 550,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    8,
+    8,
+    8
+   ],
+   "titles": 0,
+   "record": [
+    "26-73-301",
+    "40-64-296",
+    "26-83-291"
+   ]
+  },
+  {
+   "strategy": "conservative-trader",
+   "seeds": 3,
+   "netWorthMedian": 2182,
+   "netWorthRange": [
+    2132,
+    2720
+   ],
+   "cashMin": 997.6,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    7,
+    7,
+    7
+   ],
+   "titles": 3,
+   "record": [
+    "103-88-109",
+    "114-87-99",
+    "118-81-101"
+   ]
+  },
+  {
+   "strategy": "aggressive-trader",
+   "seeds": 3,
+   "netWorthMedian": 2866,
+   "netWorthRange": [
+    1776,
+    3467
+   ],
+   "cashMin": 842.4,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    7,
+    7,
+    8
+   ],
+   "titles": 2,
+   "record": [
+    "111-76-113",
+    "97-88-115",
+    "106-84-110"
+   ]
+  },
+  {
+   "strategy": "hybrid",
+   "seeds": 3,
+   "netWorthMedian": 2492,
+   "netWorthRange": [
+    2432,
+    2879
+   ],
+   "cashMin": 675,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    5,
+    5,
+    6
+   ],
+   "titles": 10,
+   "record": [
+    "149-107-144",
+    "141-125-134",
+    "128-118-149"
+   ]
+  },
+  {
+   "strategy": "business",
+   "seeds": 3,
+   "netWorthMedian": 584,
+   "netWorthRange": [
+    4,
+    658
+   ],
+   "cashMin": 0,
+   "everBelowRecovery": 3,
+   "recovered": 3,
+   "recoveryLatency": [
+    2,
+    2,
+    3
+   ],
+   "finalDivision": [
+    6,
+    6,
+    6
+   ],
+   "titles": 6,
+   "record": [
+    "151-128-191",
+    "144-112-208",
+    "142-133-185"
+   ]
+  },
+  {
+   "strategy": "market-specialist",
+   "seeds": 3,
+   "netWorthMedian": 2110,
+   "netWorthRange": [
+    1533,
+    2740
+   ],
+   "cashMin": 680.5,
+   "everBelowRecovery": 0,
+   "recovered": 0,
+   "recoveryLatency": [],
+   "finalDivision": [
+    7,
+    8,
+    7
+   ],
+   "titles": 5,
+   "record": [
+    "121-91-88",
+    "110-85-105",
+    "105-97-98"
+   ]
+  },
+  {
+   "strategy": "reckless",
+   "seeds": 3,
+   "netWorthMedian": 2,
+   "netWorthRange": [
+    1,
+    4
+   ],
+   "cashMin": 0.7,
+   "everBelowRecovery": 3,
+   "recovered": 3,
+   "recoveryLatency": [
+    0,
+    0,
+    0
+   ],
+   "finalDivision": [
+    8,
+    8,
+    8
+   ],
+   "titles": 0,
+   "record": [
+    "87-110-271",
+    "85-116-235",
+    "105-125-246"
+   ]
+  },
+  {
+   "strategy": "magnate",
+   "seeds": 3,
+   "netWorthMedian": 568,
+   "netWorthRange": [
+    405,
+    676
+   ],
+   "cashMin": 1.4,
+   "everBelowRecovery": 3,
+   "recovered": 3,
+   "recoveryLatency": [
+    5,
+    0,
+    2
+   ],
+   "finalDivision": [
+    6,
+    7,
+    6
+   ],
+   "titles": 3,
+   "record": [
+    "173-137-182",
+    "147-130-211",
+    "149-150-179"
+   ]
+  }
+ ]
+}

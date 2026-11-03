@@ -7,9 +7,10 @@ was executed in this session on the final build unless stated.
 | Command | Result |
 |---|---|
 | `npx tsc -b` | pass |
-| `npx vitest run` | **188 / 188** passed (24 files) |
+| `npx vitest run` | **189 / 189** passed (25 files, incl. `tests/arena.test.ts`) |
 | `npm run build` | pass |
 | `node e2e/v5-journey.mjs <v0.4.0 dist>` — v0.5 acceptance (migration from the real v0.4.0 build, rollback, Sovereign Max provenance, cancellation, assistant and rated lock, exactly-once rating, canonical analysis, puzzles, Lab, cosmetics, Passport, export/import, restart, offline, accessibility) | **20 / 20 PASS**, 0 console errors — docs/evidence/v5/ |
+| `node e2e/m6-arena.mjs` — M6 Live Arena acceptance (championship match, trade, revision, stale trade, settlement, post-game analysis, restart, phone, offline) | **11 / 11 PASS**, 0 console errors — docs/evidence/m6-arena/ |
 | `node e2e/m4-journey.mjs <v0.3.0 dist>` — v0.4 28-step journey from a real v0.3.0 save | **28 / 28 PASS** (harness now dismisses M5 ceremonies like a player) — docs/evidence/m4/ |
 | `node e2e/m5-heraldry.mjs` — heraldry & rivalry, 11 steps | **11 / 11 PASS** — docs/evidence/m5-heraldry/ |
 | `node e2e/run.mjs`, `e2e/academy.mjs`, `e2e/offline.mjs` (against `scripts/serve.mjs --port 4173`) | PASS, PASS, PASS |
@@ -17,7 +18,7 @@ was executed in this session on the final build unless stated.
 | Strength gate: L9 vs L8, 64 games | +112 Elo [60, 163] — docs/V5_ENGINE.md |
 | Calibration: map v2 held-out | Brier −0.0029…−0.0050 vs placeholder, ECE 0.003 — docs/V5_ANALYSIS_CALIBRATION.md |
 | Puzzle re-verification | 405 active / 79 retired / 12 shortened, reproducible — same doc |
-| 20-season economy sweep | docs/V5_INTEGRITY_REPORT.md |
+| 20-season economy sweep, 10 strategies × 3 seeds | 600 season-runs: ledger conserved, 0 negative accounts, 0 subsidy-bound violations; supply +0.56 %/season; no rating inflation — findings in docs/V5_INTEGRITY_REPORT.md |
 
 New test files: `tests/engine.canonical.test.ts` (13), `tests/cosmetics.test.ts` (2); extended:
 `tests/grades.corpus.test.ts` (canonical v2 corpus + frozen v1 corpus in legacy mode), `tests/academy.test.ts`

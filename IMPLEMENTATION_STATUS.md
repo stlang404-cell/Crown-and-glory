@@ -1,4 +1,4 @@
-# Implementation status — v0.5.0 "Sovereign Intelligence"
+# Implementation status — v0.6.0-preview.1 (v0.5.0 "Sovereign Intelligence" + M6 Live Arena addendum)
 
 Labels: **V** verified complete (automated test or executed browser journey on the final build) ·
 **U** implemented but unverified · **P** partial · **N** not implemented. Physical iPhone and Windows were
@@ -44,6 +44,17 @@ used; J1–J6 could not be executed as written (see docs/V5_BASELINE_AUDIT.md).
 | Spectator: move-by-move, pause, speed, review, live evaluation, replays | V | `e2e/m4-journey.mjs` steps 11–17 |
 | Spectator browsing/filtering of many simultaneous live matches | P | three featured engine games per round; other results are summary results by design |
 
+## M6 addendum: Sovereign Live Arena
+
+| Feature | State | Evidence |
+|---|---|---|
+| One dashboard: board, players, thinking clocks, notation, evaluation graph, odds + history, portfolio, replay controls; phone tabs | V | `e2e/m6-arena.mjs` 11/11; docs/M6_LIVE_ARENA.md |
+| Information policy: published evaluation only while trading; labels/deep analysis only after settlement | V | journey steps 1b, 6 |
+| Market revision per published move; stale quotes and duplicate steps rejected | V | `tests/arena.test.ts`; journey steps 3–4 |
+| Settlement, post-game analysis, replay after restart, offline replay | V (Chromium) | journey steps 5–9 |
+| Main M6 "Crown Legacy" features (e.g. 16 Circuit Grades) | N | the main M6 prompt was not provided |
+| Physical iPhone run of the Arena | NOT RUN | no device |
+
 ## Exchange and economy
 
 | Feature | State | Evidence |
@@ -53,7 +64,7 @@ used; J1–J6 could not be executed as written (see docs/V5_BASELINE_AUDIT.md).
 | Funded worst-case subsidy holds in long simulations | V | `subsidyBoundViolations` in the sweep (docs/V5_INTEGRITY_REPORT.md) |
 | Cosmetic unlockables (bought → sink, or earned; never strength/titles) | V | `tests/cosmetics.test.ts`; journey step 21 |
 | Institutions (club levels, venue, contracts), recovery voucher | V | `tests/markets.test.ts`, `tests/federationService.test.ts` |
-| Multi-seed 20-season economy sweep | see docs/V5_INTEGRITY_REPORT.md for the scale actually run | |
+| Multi-seed 20-season economy sweep | V | 10 strategies × 3 seeds × 20 seasons; findings: business paths lose money, chess strength dominates (docs/V5_INTEGRITY_REPORT.md) |
 
 ## Platform and data
 

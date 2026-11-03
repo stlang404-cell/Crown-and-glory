@@ -56,12 +56,12 @@ trading window.
 * `tests/arena.test.ts`: revision advances per move; stale quote rejected after a move without NPC trades;
   duplicate step rejected; price points carry revisions; settlement; replay data survives a reload; ledger
   conserved. Pass.
-* `e2e/m6-arena.mjs` (production build, Chromium) — **11/11 PASS, 0 console errors**
+* `e2e/m6-arena.mjs` (final production build, Chromium; also passed 11/11 on the first build) — **11/11 PASS, 0 console errors**
   ([log](evidence/m6-arena/journey-log.txt)): opened a live Crown Championship round-of-16 match; board, clocks,
   players, odds, portfolio and graph visible with the view's revision equal to the committed one; no labels while
   trading; bought 10 shares through the ticket; the next move advanced the revision (11.1 → 15.2) and the
   notation/graph; a trade quoted on the old revision and a duplicate step were rejected; the match finished
-  (83 plies, 1-0) and the market settled exactly (10 shares → 10.00 ₵); post-game analysis of all 83 plies was
+  (79 plies, 1-0) and the market settled exactly (10 shares → 10.00 ₵); post-game analysis of all 79 plies was
   produced only after settlement; after a browser restart the replay reopened with labels and price history;
   on a 390 px phone viewport the board stays on top and the tabs work with no overflow; offline, the replay loaded.
 * Not run: a physical iPhone; Windows.
