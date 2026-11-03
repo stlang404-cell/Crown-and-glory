@@ -199,6 +199,7 @@ async function main() {
       const plan: [string, string, number?][] =
         name === 'ablation' ? [['full40k', 'noNull40k'], ['full40k', 'noLmr40k'], ['full40k', 'noFut40k'], ['full40k', 'noAsp40k'], ['full40k', 'noSee40k'], ['full40k', 'noTT40k'], ['full40k', 'noQ40k'], ['full160k', 'full40k']]
         : name === 'confirm' ? [['both40k', 'full40k']]
+        : name === 'confirmmob' ? [['mobHi40k', 'full40k']]
         : name === 'evalexp' ? [['matAlt40k', 'full40k'], ['passedHi40k', 'full40k'], ['mobHi40k', 'full40k']]
         : name === 'experiments' ? [['lmrLog40k', 'full40k'], ['lmp40k', 'full40k'], ['both40k', 'full40k']]
         : name === 'vsfairy' ? [['full40k', 'fairy1k'], ['full40k', 'fairy4k'], ['full40k', 'fairy16k'], ['full160k', 'fairy16k'], ['full160k', 'fairy64k']]

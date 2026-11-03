@@ -6,7 +6,7 @@
   "cores": 4,
   "searchId": "crown-search-1",
   "evalId": "crown-eval-2",
-  "date": "2026-11-03T03:04:42.833Z"
+  "date": "2026-11-03T03:06:40.940Z"
  },
  "pairsPerMatch": 32,
  "openings": "tools/bench/openings.json",
@@ -87,6 +87,45 @@
     "threefold-claim": 18,
     "bare-kings": 2,
     "fifty-move-claim": 2
+   }
+  },
+  {
+   "a": "mobHi40k",
+   "b": "full40k",
+   "pairs": 32,
+   "games": 64,
+   "wins": 23,
+   "draws": 29,
+   "losses": 12,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.5859375,
+   "scoreCI": [
+    0.5,
+    0.671875
+   ],
+   "eloDiff": 60,
+   "eloCI": [
+    0,
+    124
+   ],
+   "avgDepth": {
+    "mobHi40k": 9.14,
+    "full40k": 9.24
+   },
+   "avgNodes": {
+    "mobHi40k": 38004,
+    "full40k": 37986
+   },
+   "avgMs": {
+    "mobHi40k": 91,
+    "full40k": 92
+   },
+   "reasons": {
+    "checkmate": 35,
+    "threefold-claim": 22,
+    "bare-kings": 6,
+    "fifty-move-claim": 1
    }
   }
  ]
