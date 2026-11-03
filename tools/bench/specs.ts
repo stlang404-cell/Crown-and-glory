@@ -3,7 +3,7 @@ import { SearchFeatures } from '../../src/engine/search';
 import { DEFAULT_WEIGHTS, EvalWeights } from '../../src/engine/evaluate';
 
 export type Spec =
-  | { kind: 'config'; id: string; nodes: number; features?: Partial<SearchFeatures>; weights?: Partial<EvalWeights> }
+  | { kind: 'config'; id: string; nodes: number; features?: Partial<SearchFeatures>; weights?: Partial<EvalWeights>; engine?: 'current' | 'base'; timeMs?: number; ttBits?: number }
   | { kind: 'level'; level: number; timeCapMs?: number }
   | { kind: 'fairy'; id: string; limit: string };
 
@@ -12,7 +12,7 @@ export function specId(s: Spec): string {
 }
 
 export async function makePlayer(s: Spec): Promise<Player> {
-  if (s.kind === 'config') return crownConfig(s.id, s.nodes, s.features, { ...DEFAULT_WEIGHTS, ...(s.weights ?? {}) });
+  if (s.kind === 'config') return crownConfig(s.id, s.nodes, s.features, s.engine === 'base' ? (s.weights ?? {}) as EvalWeights : { ...DEFAULT_WEIGHTS, ...(s.weights ?? {}) }, s.engine ?? 'current', s.timeMs, s.ttBits);
   if (s.kind === 'level') return crownLevel(s.level, s.timeCapMs);
   return fairy(s.id, s.limit);
 }

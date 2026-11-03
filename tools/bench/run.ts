@@ -20,9 +20,12 @@ import { GameRecord, pairBootstrap, scoreFor, eloFromScore } from './match';
 import { Position } from '../../src/rules/position';
 import { moveToCcn } from '../../src/rules/notation';
 import { Searcher, SEARCH_ID } from '../../src/engine/search';
+import { Searcher as BaseSearcher } from './baseline/search1';
 import { EVAL_ID } from '../../src/engine/evaluate';
 
 const RESULTS = new URL('./results/', import.meta.url);
+/** Optional suffix for result files (keeps earlier milestones' raw results intact). */
+const TAG = process.env.RESULT_TAG ? `-${process.env.RESULT_TAG}` : '';
 mkdirSync(RESULTS, { recursive: true });
 
 export const REGISTRY: Record<string, Spec> = {
@@ -53,6 +56,20 @@ export const REGISTRY: Record<string, Spec> = {
   fairy256k: { kind: 'fairy', id: 'fairy-n256k', limit: 'nodes 256000' },
   fairy1s: { kind: 'fairy', id: 'fairy-1s', limit: 'movetime 1000' },
 };
+// M4: frozen M3 engine (crown-search-1 + crown-eval-3) as the fixed baseline, at equal nodes and equal time.
+REGISTRY.base40k = { kind: 'config', id: 'base40k', nodes: 40_000, engine: 'base' };
+REGISTRY.base160k = { kind: 'config', id: 'base160k', nodes: 160_000, engine: 'base' };
+REGISTRY.baseT100 = { kind: 'config', id: 'baseT100', nodes: 0, timeMs: 100, engine: 'base' };
+REGISTRY.cur40k = { kind: 'config', id: 'cur40k', nodes: 40_000 };
+REGISTRY.cur160k = { kind: 'config', id: 'cur160k', nodes: 160_000 };
+REGISTRY.curT100 = { kind: 'config', id: 'curT100', nodes: 0, timeMs: 100 };
+REGISTRY.fairyT100 = { kind: 'fairy', id: 'fairy-100ms', limit: 'movetime 100' };
+/** A spec named on the command line: a registry key, or inline JSON (experiments). */
+export function resolveSpec(name: string): Spec {
+  if (REGISTRY[name]) return REGISTRY[name];
+  if (name.startsWith('{')) return JSON.parse(name) as Spec;
+  throw new Error(`unknown spec ${name}`);
+}
 for (let l = 1; l <= 8; l++) REGISTRY[`L${l}`] = { kind: 'level', level: l, timeCapMs: l === 8 ? 2000 : undefined };
 
 function pool(n: number) {
@@ -154,7 +171,7 @@ async function speed() {
   for (const fen of fens) {
     const samples: { nps: number; depth: number; ms: number }[] = [];
     for (let rep = 0; rep < 5; rep++) {
-      const s = new Searcher(18);
+      const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
       const r = s.search(Position.fromFen(fen), { limits: { timeMs: 1000 } });
       samples.push({ nps: r.nodes / (r.timeMs / 1000), depth: r.depth, ms: r.timeMs });
     }
@@ -163,7 +180,7 @@ async function speed() {
     out.push({ fen, npsMedian: Math.round(nps[2]), npsMin: Math.round(nps[0]), depthMedian: depths[2], depthRange: [depths[0], depths[4]] });
     console.log(fen, Math.round(nps[2]), 'nps median, depth', depths[2]);
   }
-  writeFileSync(new URL('speed.json', RESULTS), JSON.stringify({ env: env(), budget: '1000 ms per search, 5 repetitions, fresh TT', results: out }, null, 1));
+  writeFileSync(new URL(`speed${TAG}.json`, RESULTS), JSON.stringify({ env: env(), budget: '1000 ms per search, 5 repetitions, fresh TT', results: out }, null, 1));
 }
 
 async function tactics() {
@@ -174,7 +191,7 @@ async function tactics() {
   const res: Record<string, unknown> = {};
   for (const nodes of budgets) {
     let solved = 0;
-    const s = new Searcher(18);
+    const s = process.env.ENGINE === 'base' ? new BaseSearcher(18) : new Searcher(18);
     for (const it of suite.items) {
       s.newGame();
       const r = s.search(Position.fromFen(it.fen), { limits: { nodes } });
@@ -183,7 +200,7 @@ async function tactics() {
     res[nodes] = { solved, total: suite.items.length, rate: +(solved / suite.items.length).toFixed(3) };
     console.log(`tactics @${nodes} nodes: ${solved}/${suite.items.length}`);
   }
-  writeFileSync(new URL('tactics.json', RESULTS), JSON.stringify({ env: env(), suite: 'tools/bench/tactics.json', results: res }, null, 1));
+  writeFileSync(new URL(`tactics${TAG}.json`, RESULTS), JSON.stringify({ env: env(), suite: 'tools/bench/tactics.json', results: res }, null, 1));
 }
 
 async function main() {
@@ -191,13 +208,14 @@ async function main() {
   if (cmd === 'speed') return speed();
   if (cmd === 'tactics') return tactics();
   const openings = await buildOpenings();
-  const threads = Math.max(1, os.cpus().length);
+  const threads = +(process.env.THREADS ?? Math.max(1, os.cpus().length));
   const p = pool(threads);
   try {
     if (cmd === 'match') {
       const [A, B, pairs] = args;
-      const r = await match(p, REGISTRY[A], REGISTRY[B], openings, +(pairs ?? 20));
-      writeFileSync(new URL(`match-${A}-vs-${B}.json`, RESULTS), JSON.stringify({ env: env(), ...r }, null, 1));
+      const SA = resolveSpec(A), SB = resolveSpec(B);
+      const r = await match(p, SA, SB, openings, +(pairs ?? 20));
+      writeFileSync(new URL(`match-${specId(SA)}-vs-${specId(SB)}${TAG}.json`, RESULTS), JSON.stringify({ env: env(), offset: +(process.env.OPENING_OFFSET ?? 0), ...r }, null, 1));
     } else if (cmd === 'suite') {
       const [name, pairsArg] = args;
       const pairs = +(pairsArg ?? 20);
