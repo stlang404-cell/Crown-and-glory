@@ -1,1 +1,74 @@
-{ "id": "pending", "validated": [], "results": {} }
+{
+ "id": "styles-2026-11-03-crown-eval-3",
+ "method": "see tools/styles/validate.ts header",
+ "suitePositions": 400,
+ "validated": [],
+ "note": "Every style failed the behavioural criterion (disagreement >= 10% AND signature delta >= 3pp). The strength-parity run was stopped after ~70 minutes without results because it could not change the verdict.",
+ "results": {
+  "tactical": {
+   "behaviour": {
+    "disagreement": 0.05,
+    "signatureDelta": 0.03,
+    "forcingRate": 0.328,
+    "baseForcing": 0.297,
+    "checkRate": 0.14,
+    "pawnRate": 0.193,
+    "advanceRate": 0.482
+   },
+   "strength": "not completed",
+   "pass": false
+  },
+  "positional": {
+   "behaviour": {
+    "disagreement": 0.11,
+    "signatureDelta": 0.013,
+    "forcingRate": 0.285,
+    "baseForcing": 0.297,
+    "checkRate": 0.107,
+    "pawnRate": 0.18,
+    "advanceRate": 0.465
+   },
+   "strength": "not completed",
+   "pass": false
+  },
+  "defensive": {
+   "behaviour": {
+    "disagreement": 0.253,
+    "signatureDelta": 0.017,
+    "forcingRate": 0.28,
+    "baseForcing": 0.297,
+    "checkRate": 0.092,
+    "pawnRate": 0.17,
+    "advanceRate": 0.4
+   },
+   "strength": "not completed",
+   "pass": false
+  },
+  "endgame": {
+   "behaviour": {
+    "disagreement": 0.072,
+    "signatureDelta": 0.014,
+    "forcingRate": 0.29,
+    "baseForcing": 0.297,
+    "checkRate": 0.107,
+    "pawnRate": 0.2,
+    "advanceRate": 0.47
+   },
+   "strength": "not completed",
+   "pass": false
+  },
+  "aggressive": {
+   "behaviour": {
+    "disagreement": 0.247,
+    "signatureDelta": 0.018,
+    "forcingRate": 0.315,
+    "baseForcing": 0.297,
+    "checkRate": 0.13,
+    "pawnRate": 0.182,
+    "advanceRate": 0.512
+   },
+   "strength": "not completed",
+   "pass": false
+  }
+ }
+}

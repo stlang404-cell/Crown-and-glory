@@ -42,8 +42,9 @@ difference; it was replaced.
 | Aggressive | 24.7% | +1.8 pp | 0.315 | **fail** (signature too small) |
 
 Since every style fails the behavioural criterion, none can ship regardless of the strength result. The
-strength-parity run is recorded in `src/engine/styles-validation.json` when it completes; the shipped file
-lists `validated: []`.
+strength-parity run (320 games with the per-move style re-scoring) was stopped after ~70 minutes without a
+result because it could not change the verdict; `src/engine/styles-validation.json` records the behaviour
+results, `strength: "not completed"` and `validated: []`.
 
 ## Why it failed and what is next
 
