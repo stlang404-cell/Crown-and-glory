@@ -66,9 +66,9 @@ export function LabScreen() {
         <h3>Accuracy trend</h3>
         {pts.length >= 2 ? (
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Per-game accuracy for ${pts.length} analysed games`}>
-            <rect width={W} height={H} fill="#1d2532" />
-            {[25, 50, 75].map(v => <line key={v} x1="0" x2={W} y1={H - (v / 100) * H} y2={H - (v / 100) * H} stroke="#2e3a4d" />)}
-            <path d={pts.map((p, i) => `${i ? 'L' : 'M'}${(i / (pts.length - 1)) * W},${H - ((p.accuracy ?? 0) / 100) * H}`).join(' ')} fill="none" stroke="var(--accent)" strokeWidth="2" />
+            <rect width={W} height={H} rx={6} style={{ fill: 'var(--chart-bg)' }} />
+            {[25, 50, 75].map(v => <line key={v} x1="0" x2={W} y1={H - (v / 100) * H} y2={H - (v / 100) * H} style={{ stroke: 'var(--chart-grid)' }} />)}
+            <path d={pts.map((p, i) => `${i ? 'L' : 'M'}${(i / (pts.length - 1)) * W},${H - ((p.accuracy ?? 0) / 100) * H}`).join(' ')} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth="2" />
           </svg>
         ) : <p className="muted small">Appears after two analysed games of the same methodology.</p>}
         <p className="small">{trend.recent && trend.earlier ? <>Recent {trend.recent.games} games: {trend.recent.accuracy!.toFixed(1)} · earlier {trend.earlier.games}: {trend.earlier.accuracy!.toFixed(1)} · difference {trend.difference!.value >= 0 ? '+' : ''}{trend.difference!.value.toFixed(1)} (95% {trend.difference!.ci[0].toFixed(1)} to {trend.difference!.ci[1].toFixed(1)}) · velocity {trend.velocity!.perTenGames.toFixed(2)} per 10 games (95% {trend.velocity!.ci[0].toFixed(2)} to {trend.velocity!.ci[1].toFixed(2)}).</> : null}</p>

@@ -18,9 +18,9 @@ function NetWorthChart({ points }: { points: { netWorth: number; cash: number; s
   const line = (k: 'netWorth' | 'cash') => points.map((p, i) => `${(i / (points.length - 1)) * W},${y(p[k])}`).join(' ');
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Net worth history: ${fmtCrowns(points[0].netWorth, 0)} to ${fmtCrowns(points[points.length - 1].netWorth, 0)}`}>
-      <line x1={0} x2={W} y1={y(0)} y2={y(0)} stroke="var(--line)" />
-      <polyline points={line('cash')} fill="none" stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="4 3" />
-      <polyline points={line('netWorth')} fill="none" stroke="var(--accent)" strokeWidth={2.5} />
+      <line x1={0} x2={W} y1={y(0)} y2={y(0)} style={{ stroke: 'var(--chart-grid)' }} />
+      <polyline points={line('cash')} fill="none" style={{ stroke: 'var(--muted)' }} strokeWidth={1.5} strokeDasharray="4 3" />
+      <polyline points={line('netWorth')} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth={2.5} />
     </svg>
   );
 }
@@ -88,7 +88,7 @@ export function FinanceScreen() {
         </div>
         <div className="small muted" style={{ marginTop: 6 }}>Net worth = cash + asset book value (refundable bond + resale price) + open positions at their sell-now value after fees (closed, unsettled markets at the 1/3 cancellation floor) − liabilities (there is no borrowing, so liabilities are always 0).</div>
         <NetWorthChart points={st.finance.points} />
-        <div className="small muted">Gold: net worth · dashed: cash · {st.finance.points.length} snapshots.</div>
+        <div className="small muted">Solid accent line: net worth · dashed: cash · {st.finance.points.length} snapshots.</div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">

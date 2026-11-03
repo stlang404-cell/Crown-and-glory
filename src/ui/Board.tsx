@@ -174,7 +174,7 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
               const s = center(a.from), t = center(a.to);
               const len = Math.hypot(t.x - s.x, t.y - s.y);
               const ex = t.x - ((t.x - s.x) / len) * 0.28, ey = t.y - ((t.y - s.y) / len) * 0.28;
-              return <line key={i} x1={s.x} y1={s.y} x2={ex} y2={ey} stroke={a.color ?? 'rgba(131,214,176,.85)'} strokeWidth={0.14} strokeLinecap="round" markerEnd="url(#ah)" />;
+              return <line key={i} x1={s.x} y1={s.y} x2={ex} y2={ey} style={{ stroke: a.color ?? 'color-mix(in srgb, var(--positive) 85%, transparent)' }} strokeWidth={0.14} strokeLinecap="round" markerEnd="url(#ah)" />;
             })}
           </svg>
         )}

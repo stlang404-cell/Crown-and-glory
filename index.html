@@ -3,7 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#10151e" />
+    <meta name="theme-color" content="#111318" />
+    <script>
+      /* Pre-paint display preferences (mirrors src/ui/theme.ts applyPrefs; keep the key and ids in sync). */
+      (function () {
+        var p = {}, d = document.documentElement;
+        try { p = JSON.parse(localStorage.getItem('crown.display.v1') || '{}') || {}; } catch (e) { p = {}; }
+        var themes = { obsidian: '#111318', midnight: '#10151e', ivory: '#f2efe8' };
+        var t = themes[p.theme] ? p.theme : 'obsidian';
+        d.setAttribute('data-theme', t);
+        d.setAttribute('data-board', /^(theme|walnut|slate|green|mono)$/.test(p.board) ? p.board : 'theme');
+        d.setAttribute('data-motion', /^(system|reduce|full)$/.test(p.motion) ? p.motion : 'system');
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', themes[t]);
+      })();
+    </script>
     <meta name="description" content="Crown & Calculation: offline 6x6 chess with a local engine, Glicko-2 ratings and engine game analysis." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />

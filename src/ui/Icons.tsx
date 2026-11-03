@@ -7,6 +7,7 @@ const P: Record<string, string> = {
   academy: 'M3 9l9-5 9 5-9 5zM7 11.5V16c0 1.5 2.5 3 5 3s5-1.5 5-3v-4.5M21 9v6',
   exchange: 'M4 17l5-6 4 3 7-9M15 5h5v5',
   finance: 'M4 20h16M6 16v-5M10 16V8M14 16v-7M18 16V5',
+  settings: 'M4 6h9m4 0h3M15 3.5v5M4 12h3m4 0h9M9 9.5v5M4 18h11m4 0h1M17 15.5v5',
   flip: 'M7 7h11l-3-3M17 17H6l3 3',
   flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
   handshake: 'M3 12l4-4 5 3 5-3 4 4-9 8z',

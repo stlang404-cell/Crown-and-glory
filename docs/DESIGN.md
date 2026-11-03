@@ -1,5 +1,9 @@
 # Visual design notes
 
+> **M4:** the app now has three colour themes (Obsidian & Crimson is the default; Midnight & Gold is the look described
+> below) and separate board palettes. See [M4_THEMES.md](M4_THEMES.md) for palettes, rationale and the current
+> contrast audit. The table below records the original v0.3 measurement.
+
 Direction (research doc 11): "nocturnal federation observatory" — deep ink surfaces, warm ivory
 board, brass/gold accents, mint information highlights, original pixel-art portraits and brand mark,
 crisp vector text and charts. All artwork (SVG pieces, procedural 12×12 portraits, icons) is original.

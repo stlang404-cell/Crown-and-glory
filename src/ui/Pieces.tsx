@@ -1,6 +1,6 @@
 /**
  * Original Crown piece set (SVG, viewBox 100x100), designed for this project.
- * White: ivory with ink outline. Black: ink with brass outline.
+ * White: ivory with ink outline. Black: ink with a light outline (--piece-b-stroke: brass, champagne or parchment by theme).
  */
 import { memo } from 'react';
 
@@ -48,16 +48,16 @@ const ORBS: Record<Kind, [number, number, number][]> = {
 export const PieceSvg = memo(function PieceSvg({ kind, color, className, style, title }: { kind: Kind; color: 'w' | 'b'; className?: string; style?: React.CSSProperties; title?: string }) {
   const white = color === 'w';
   const fill = white ? 'url(#crown-ivory)' : 'url(#crown-ink)';
-  const stroke = white ? '#26211a' : '#d8b56c';
+  const stroke = white ? '#26211a' : 'var(--piece-b-stroke, #d8b56c)';
   return (
     <svg viewBox="0 0 100 100" className={className} style={style} role="img" aria-label={title}>
       {SHAPES[kind].map((d, i) => (
-        <path key={i} d={d} fill={fill} stroke={stroke} strokeWidth={3.2} strokeLinejoin="round" />
+        <path key={i} d={d} style={{ fill, stroke }} strokeWidth={3.2} strokeLinejoin="round" />
       ))}
-      {ORBS[kind].map(([cx, cy, r], i) => <circle key={`o${i}`} cx={cx} cy={cy} r={r} fill={white ? '#d8b56c' : '#d8b56c'} stroke={stroke} strokeWidth={2} />)}
-      {kind === 'n' && <circle cx={58} cy={30} r={3} fill={stroke} />}
-      {kind === 'n' && <path d="M60 22 C 66 30, 70 44, 68 60" fill="none" stroke={stroke} strokeWidth={2.4} strokeLinecap="round" opacity={0.7} />}
-      {(kind === 'k' || kind === 'q') && <path d="M34 62 h32" stroke={white ? '#b8924a' : '#d8b56c'} strokeWidth={3} strokeLinecap="round" />}
+      {ORBS[kind].map(([cx, cy, r], i) => <circle key={`o${i}`} cx={cx} cy={cy} r={r} style={{ fill: 'var(--piece-gild, #d8b56c)', stroke }} strokeWidth={2} />)}
+      {kind === 'n' && <circle cx={58} cy={30} r={3} style={{ fill: stroke }} />}
+      {kind === 'n' && <path d="M60 22 C 66 30, 70 44, 68 60" fill="none" style={{ stroke }} strokeWidth={2.4} strokeLinecap="round" opacity={0.7} />}
+      {(kind === 'k' || kind === 'q') && <path d="M34 62 h32" style={{ stroke: white ? '#9b7b45' : 'var(--piece-gild, #d8b56c)' }} strokeWidth={3} strokeLinecap="round" />}
     </svg>
   );
 });
