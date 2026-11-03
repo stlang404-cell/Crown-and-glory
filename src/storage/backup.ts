@@ -22,12 +22,12 @@ export interface BackupBundle {
   appVersion: string;
   counts: { games: number; ratingEvents: number; reports: number };
   payloadSha256: string;
-  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[] };
+  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[]; federation?: Record<string, unknown[]> };
 }
 
 export async function exportBundle(db: CrownDB, appVersion: string): Promise<BackupBundle> {
   const d = await db.dump();
-  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[] };
+  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation };
   return {
     format: BACKUP_FORMAT, appSchema: APP_SCHEMA, variantId: VARIANT_ID, exportedAt: new Date().toISOString(), appVersion,
     counts: { games: d.games.length, ratingEvents: d.ratingEvents.length, reports: d.reports.length },
@@ -83,10 +83,34 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
   const empty = existing.length === 0 && (await db.ratingEvents()).length === 0;
   if (empty) {
     const r = await db.importRecords(b.payload, true);
+    // federation & economy state is restored only into an empty career (it is one consistent world)
+    const fed = b.payload.federation;
+    if (fed && fed.world?.length) {
+      const { FEDERATION_STORES } = await import('./db');
+      validateFederation(fed);
+      await db.commit(FEDERATION_STORES.map(store => ({ store, put: fed[store] ?? [] })));
+    }
     return { mode: 'restore', ...r };
   }
   const r = await db.importRecords({ games: b.payload.games, reports: b.payload.reports, ratingEvents: [], ratingState: [], attempts: b.payload.attempts, trainingRuns: b.payload.trainingRuns, bookmarks: b.payload.bookmarks }, false);
   return { mode: 'merge', ...r };
+}
+
+/** Structural checks on an imported federation snapshot: ledger balances must equal the journal replay. */
+export function validateFederation(fed: Record<string, unknown[]>): void {
+  const journals = (fed.journal ?? []) as { id: string; lines: { account: string; amount: number }[] }[];
+  const bal = new Map<string, number>();
+  let total = 0;
+  for (const jr of journals) {
+    let s = 0;
+    for (const l of jr.lines) { if (!Number.isSafeInteger(l.amount)) throw new ImportError(`Journal ${jr.id} has a non-integer amount.`); s += l.amount; bal.set(l.account, (bal.get(l.account) ?? 0) + l.amount); }
+    if (s !== 0) throw new ImportError(`Journal ${jr.id} does not balance.`);
+    total += s;
+  }
+  for (const a of (fed.accounts ?? []) as { account: string; balance: number }[]) {
+    if ((bal.get(a.account) ?? 0) !== a.balance) throw new ImportError(`Account ${a.account} does not match its journal history.`);
+  }
+  if (total !== 0) throw new ImportError('Ledger does not conserve money.');
 }
 
 /** Single-game portable export (crown-game-1): lossless record plus report references. */

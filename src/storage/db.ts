@@ -12,7 +12,7 @@ import type { PoolId } from '../games/types';
 import type { AnalysisReport } from '../analysis/types';
 
 export const DB_NAME = 'crown-calculation';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 export const APP_SCHEMA = 'crown-save-1';
 
 export interface AnalysisJob {
@@ -67,7 +67,18 @@ export const MIGRATIONS: Migration[] = [
       bm.createIndex('gameId', 'gameId');
     },
   },
+  {
+    to: 3,
+    description: 'v0.3.0: federation (world, seasons, competitors, rounds, world games) and economy (journal, accounts, markets, positions, assets, finance) — additive; v1/v2 data untouched',
+    upgrade(db) {
+      for (const s of FEDERATION_STORES) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: s === 'world' || s === 'finance' ? 'key' : s === 'accounts' ? 'account' : 'id' });
+    },
+  },
 ];
+
+/** Stores written by the federation/economy commit protocol (one transaction per command). */
+export const FEDERATION_STORES = ['world', 'seasons', 'competitors', 'rounds', 'worldGames', 'journal', 'accounts', 'markets', 'positions', 'assets', 'finance'] as const;
+export type FederationStore = typeof FEDERATION_STORES[number];
 
 const req = <T>(r: IDBRequest<T>): Promise<T> => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const done = (tx: IDBTransaction): Promise<void> => new Promise((res, rej) => {
@@ -264,15 +275,49 @@ export class CrownDB {
     return (await req(this.store(store).getAll())) as T[];
   }
 
+  /** Load a whole federation store. */
+  async loadAll<T>(store: FederationStore): Promise<T[]> {
+    return (await req(this.store(store).getAll())) as T[];
+  }
+
+  /**
+   * Atomic multi-store commit: every put/delete happens in ONE IndexedDB transaction or not at all.
+   * `guard` runs inside the transaction first (re-reading committed state, e.g. the world cursor) and may
+   * throw to abort — this is the idempotency/fencing check against duplicate or stale commands.
+   */
+  async commit(writes: { store: FederationStore | 'games'; put?: unknown[]; del?: string[] }[], guard?: (get: (store: FederationStore, key: string) => Promise<unknown>) => Promise<void>): Promise<void> {
+    const stores = [...new Set([...writes.map(w => w.store), 'world' as const])];
+    const tx = this.db.transaction(stores, 'readwrite');
+    const finished = done(tx);
+    try {
+      if (guard) await guard((store, key) => req(tx.objectStore(store).get(key)));
+      for (const w of writes) {
+        const os = tx.objectStore(w.store);
+        for (const v of w.put ?? []) os.put(v);
+        for (const k of w.del ?? []) os.delete(k);
+      }
+    } catch (e) {
+      try { tx.abort(); } catch { /* already finished */ }
+      await finished.catch(() => {});
+      throw e;
+    }
+    await finished;
+  }
+
   /** Raw dump for export. */
-  async dump(): Promise<{ games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; jobs: AnalysisJob[]; attempts: unknown[]; trainingRuns: unknown[]; bookmarks: unknown[] }> {
+  async dump(): Promise<{ games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; jobs: AnalysisJob[]; attempts: unknown[]; trainingRuns: unknown[]; bookmarks: unknown[]; federation: Record<string, unknown[]> }> {
+    const fed: Record<string, unknown[]> = {};
+    if (this.db.objectStoreNames.contains('world')) {
+      const ftx = this.db.transaction([...FEDERATION_STORES], 'readonly');
+      for (const st of FEDERATION_STORES) fed[st] = (await req(ftx.objectStore(st).getAll())) as unknown[];
+    }
     const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'reports', 'analysisJobs', 'attempts', 'trainingRuns', 'bookmarks'], 'readonly');
     const [games, ratingEvents, ratingState, reports, jobs, attempts, trainingRuns, bookmarks] = await Promise.all([
       req(tx.objectStore('games').getAll()), req(tx.objectStore('ratingEvents').getAll()), req(tx.objectStore('ratingState').getAll()),
       req(tx.objectStore('reports').getAll()), req(tx.objectStore('analysisJobs').getAll()),
       req(tx.objectStore('attempts').getAll()), req(tx.objectStore('trainingRuns').getAll()), req(tx.objectStore('bookmarks').getAll()),
     ]);
-    return { games, ratingEvents, ratingState, reports, jobs, attempts, trainingRuns, bookmarks } as never;
+    return { games, ratingEvents, ratingState, reports, jobs, attempts, trainingRuns, bookmarks, federation: fed } as never;
   }
 
   /** Import records in one transaction, never overwriting existing records with the same id. */

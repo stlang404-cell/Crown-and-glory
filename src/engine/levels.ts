@@ -12,6 +12,9 @@
 import { Position } from '../rules/position';
 import { Move } from '../rules/types';
 import { Searcher, SearchResult, isMateScore } from './search';
+import type { EvalWeights } from './evaluate';
+import { STYLE_MARGIN_CP, stylePreference } from './styles';
+import type { StyleId } from '../federation/model';
 import { mulberry32 } from '../rules/tables';
 
 export const LEVELS_ID = 'crown-levels-2';
@@ -71,17 +74,32 @@ export interface ChooseResult {
  * Choose a move for a strength profile. `seed` makes the bounded sampling reproducible
  * (the game stores the seed and ply so the choice can be audited).
  */
-export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, clock?: ClockContext): ChooseResult {
+export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, clock?: ClockContext, evalWeights?: EvalWeights, style: StyleId = 'universal'): ChooseResult {
   const timeMs = allocateTime(profile, clock);
   const search = searcher.search(pos, {
     limits: { depth: profile.depth, nodes: profile.nodes === Infinity ? undefined : profile.nodes, timeMs },
     stopOnSingleMove: true,
+    weights: evalWeights,
   });
+  if (!profile.selection && style !== 'universal' && !isMateScore(search.score) && search.depth >= 3) {
+    // bounded style choice among near-equal moves (src/engine/styles.ts)
+    const legal = pos.legalMoves();
+    if (legal.length > 1) {
+      const scored = searcher.scoreRootMoves(pos, legal, Math.max(1, search.depth - 2), { weights: evalWeights }).filter(x => Number.isFinite(x.score));
+      const best = Math.max(...scored.map(x => x.score));
+      const near = scored.filter(x => x.score >= best - STYLE_MARGIN_CP && !isMateScore(x.score));
+      if (near.length > 1 && near.some(x => x.move === search.bestMove)) {
+        let pick = search.bestMove, pickPref = stylePreference(style, pos, search.bestMove);
+        for (const x of near) { const pr = stylePreference(style, pos, x.move); if (pr > pickPref) { pick = x.move; pickPref = pr; } }
+        return { move: pick, search, candidates: scored, selected: pick === search.bestMove ? 'best' : 'bounded-sample' };
+      }
+    }
+  }
   if (!profile.selection || isMateScore(search.score)) return { move: search.bestMove, search, selected: 'best' };
   const legal = pos.legalMoves();
   if (legal.length < 2) return { move: search.bestMove, search, selected: 'best' };
   const depth = Math.max(1, Math.min(profile.depth, search.depth || 1));
-  const scored = searcher.scoreRootMoves(pos, legal, depth, { nodeLimitPerMove: Math.max(200, Math.floor(profile.nodes / legal.length)) })
+  const scored = searcher.scoreRootMoves(pos, legal, depth, { nodeLimitPerMove: Math.max(200, Math.floor(profile.nodes / legal.length)), weights: evalWeights })
     .filter(s => Number.isFinite(s.score));
   if (!scored.length) return { move: search.bestMove, search, selected: 'best' };
   const bestScore = Math.max(...scored.map(s => s.score));

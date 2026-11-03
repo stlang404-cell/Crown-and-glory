@@ -3,7 +3,7 @@
  * the opponent's move. Cancellation terminates the worker and bumps the generation; late replies
  * from terminated or superseded requests are discarded.
  */
-import type { MoveRequest, AnalyzeRequest, AssistRequest, AssistCandidate, WorkerReply } from './protocol';
+import type { MoveRequest, AnalyzeRequest, AssistRequest, AssistCandidate, SelfplayRequest, WorkerReply } from './protocol';
 import type { AnalysisReport, PlyAnalysis } from '../analysis/types';
 
 type MoveResult = Extract<WorkerReply, { type: 'move-result' }>;
@@ -16,7 +16,7 @@ export class CancelledError extends Error { constructor() { super('cancelled'); 
 export class EngineChannel {
   private worker: Worker | null = null;
   private generation = 0;
-  private pending: { id: string; gen: number; resolve: (r: WorkerReply) => void; reject: (e: unknown) => void; onPly?: (p: PlyAnalysis, i: number, n: number) => void } | null = null;
+  private pending: { id: string; gen: number; resolve: (r: WorkerReply) => void; reject: (e: unknown) => void; onPly?: (p: PlyAnalysis, i: number, n: number) => void; onMove?: (m: Extract<WorkerReply, { type: 'selfplay-move' }>) => void } | null = null;
   private seq = 0;
   constructor(private factory: WorkerFactory = defaultFactory, readonly role = 'engine') {}
 
@@ -28,6 +28,7 @@ export class EngineChannel {
       const p = this.pending;
       if (!p || m.requestId !== p.id || m.generation !== p.gen) return; // stale reply: discard
       if (m.type === 'ply') { p.onPly?.(m.ply, m.index, m.total); return; }
+      if (m.type === 'selfplay-move') { p.onMove?.(m); return; }
       if (m.type === 'progress') return;
       this.pending = null;
       if (m.type === 'error') p.reject(new Error(m.message)); else p.resolve(m);
@@ -44,19 +45,23 @@ export class EngineChannel {
 
   get busy(): boolean { return this.pending !== null; }
 
-  private send<T extends WorkerReply>(req: Omit<MoveRequest, 'requestId' | 'generation'> | Omit<AnalyzeRequest, 'requestId' | 'generation'> | Omit<AssistRequest, 'requestId' | 'generation'>, onPly?: (p: PlyAnalysis, i: number, n: number) => void): Promise<T> {
+  private send<T extends WorkerReply>(req: Omit<MoveRequest, 'requestId' | 'generation'> | Omit<AnalyzeRequest, 'requestId' | 'generation'> | Omit<AssistRequest, 'requestId' | 'generation'> | Omit<SelfplayRequest, 'requestId' | 'generation'>, onPly?: (p: PlyAnalysis, i: number, n: number) => void, onMove?: (m: Extract<WorkerReply, { type: 'selfplay-move' }>) => void): Promise<T> {
     if (this.pending) this.cancel();
     const gen = ++this.generation;
     const id = `${this.role}-${++this.seq}`;
     const w = this.ensure();
     return new Promise<T>((resolve, reject) => {
-      this.pending = { id, gen, resolve: resolve as (r: WorkerReply) => void, reject, onPly };
+      this.pending = { id, gen, resolve: resolve as (r: WorkerReply) => void, reject, onPly, onMove };
       w.postMessage({ ...req, requestId: id, generation: gen });
     });
   }
 
   move(req: Omit<MoveRequest, 'type' | 'requestId' | 'generation'>): Promise<MoveResult> {
     return this.send<MoveResult>({ type: 'move', ...req });
+  }
+
+  selfplay(req: Omit<SelfplayRequest, 'type' | 'requestId' | 'generation'>, onMove?: (m: Extract<WorkerReply, { type: 'selfplay-move' }>) => void): Promise<Extract<WorkerReply, { type: 'selfplay-result' }>> {
+    return this.send<Extract<WorkerReply, { type: 'selfplay-result' }>>({ type: 'selfplay', ...req }, undefined, onMove);
   }
 
   async assist(req: Omit<AssistRequest, 'type' | 'requestId' | 'generation'>): Promise<{ candidates: AssistCandidate[]; depth: number }> {
