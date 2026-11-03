@@ -272,3 +272,26 @@ tr.me td { background: var(--accent-soft); }
 }
 :root[data-motion="reduce"] .piece.moving { animation: none; }
 :root[data-motion="reduce"] * { transition: none !important; scroll-behavior: auto !important; }
+
+/* ---- heraldry (crown-heraldry-1): emblem outlines follow the theme; tinctures are fixed like real arms ---- */
+:root, [data-theme] { --her-line: var(--text); --her-outline: var(--bg); --her-shine: #fff8e6; }
+.emblem, .trophy { display: inline-block; vertical-align: middle; flex: none; overflow: visible; }
+.emblem-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.emblem-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-width: 76px; }
+.emblem-cell .small { max-width: 110px; }
+.intensity { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.intensity > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-2, var(--info)), var(--accent)); }
+.ceremony { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--overlay); padding: 16px; }
+.ceremony-card { max-width: 440px; width: 100%; text-align: center; background: var(--panel); border: 1px solid var(--accent-line, var(--line)); border-radius: 18px; padding: 24px 20px; box-shadow: var(--shadow); animation: ceremony-in .5s ease-out; }
+.ceremony-card .glow { animation: ceremony-glow 2.4s ease-in-out infinite alternate; }
+@keyframes ceremony-in { from { transform: translateY(14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes ceremony-glow { from { filter: drop-shadow(0 0 0 transparent); } to { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 55%, transparent)); } }
+@media (prefers-reduced-motion: reduce) { .ceremony-card, .ceremony-card .glow { animation: none; } }
+[data-motion="reduce"] .ceremony-card, [data-motion="reduce"] .ceremony-card .glow { animation: none; }
+.rival-card { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.swatch-pick { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.swatch-pick button { width: 30px; height: 30px; min-height: 30px; padding: 0; border-radius: 6px; border: 2px solid var(--line); cursor: pointer; }
+.swatch-pick button[aria-pressed="true"] { border-color: var(--text); box-shadow: 0 0 0 2px var(--focus); }
+.icon-pick { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.icon-pick button { padding: 4px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.icon-pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, transparent); }

@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
+import { Emblem, Trophy } from './Emblem';
+import { divisionEmblem, tournamentCrest } from '../heraldry/catalog';
+import { collect } from '../app/rivalries';
+import { computeRivalry } from '../heraldry/rivalry';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
 import { leagueTable, swissTable, swissEventFor } from '../federation/world';
 import { gamesOf } from '../federation/driver';
@@ -9,16 +13,9 @@ import { prices } from '../exchange/lmsr';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import { CHALLENGER_FEE, RECOVERY_THRESHOLD } from '../economy/economy';
 
+/** League division insignia (crown-heraldry-1 emblem family: one shield shape per division). */
 export function Insignia({ division, size = 28 }: { division: number; size?: number }) {
-  // Division colours are theme tokens (--ins-1 … --ins-8 in themes.css).
-  const c = { fill: `var(--ins-${((division - 1) % 8) + 1})` };
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" shapeRendering="crispEdges" aria-label={divisionLabel(division)}>
-      <rect x="2" y="1" width="8" height="8" style={c} /><rect x="3" y="9" width="6" height="1" style={c} /><rect x="4" y="10" width="4" height="1" style={c} />
-      <rect x="3" y="2" width="6" height="6" style={{ fill: 'var(--ins-ink)' }} />
-      {Array.from({ length: Math.max(1, 9 - division) }).map((_, i) => <rect key={i} x={3 + (i % 3) * 2} y={3 + Math.floor(i / 3) * 2} width="1" height="1" style={c} />)}
-    </svg>
-  );
+  return <Emblem spec={divisionEmblem(division)} size={size >= 64 ? 'lg' : size >= 32 ? 'md' : 'sm'} title={divisionLabel(division)} />;
 }
 
 function phase(round: number): string {
@@ -81,6 +78,9 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'tournaments' })}>Tournaments</button>
         <button className="btn small" onClick={() => go({ name: 'competitors' })}>Competitors</button>
         <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; history</button>
+        <button className="btn small" onClick={() => go({ name: 'rivals' })}>Rivals</button>
+        <button className="btn small" onClick={() => go({ name: 'hall' })}>Hall of Fame</button>
+        <button className="btn small" onClick={() => go({ name: 'heraldry' })}>Heraldry</button>
       </div>
       {msg && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>{msg}</div>}
       <div className="grid-2">
@@ -228,6 +228,7 @@ export function TournamentsScreen() {
   if (!st) return <div className="panel"><p>Found the federation first.</p></div>;
   const games = gamesOf(fed.seasonRounds());
   const champ = st.plan.champ;
+  const previewRivalry = (a: string, b: string) => { const d = collect(st, new Set([a])); return computeRivalry(a, b, d.meetings, d.kos, d.finishes, st.world.season, x => fed.name(x)); };
   return (
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
@@ -239,7 +240,7 @@ export function TournamentsScreen() {
           const rows = swissTable(sw, games);
           return (
             <div key={sw.event} className="panel" data-testid={`swiss-${sw.event}`}>
-              <div className="panel-title"><h3 style={{ margin: 0 }}>{sw.name}</h3><span className="chip">{sw.rounds.length}/5 rounds</span></div>
+              <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 rounds</span></div>
               <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · top 8 qualify for the Crown Championship · prizes 1,500 ₵' : 'Divisions 5–8 (+ you if registered) · prizes 600 ₵'} · Swiss pairing without repeats, byes to the lowest player without one · order: points, Buchholz Cut-1, Buchholz, SB, seed.</div>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th></tr></thead>
@@ -251,7 +252,7 @@ export function TournamentsScreen() {
         })}
       </div>
       <div className="panel" style={{ marginTop: 14 }} data-testid="championship">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>🏆 Crown Championship</h3><span className="chip gold">8,000 ₵ prize fund</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">8,000 ₵ prize fund</span></div>
         {!champ ? <p className="small muted">The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: the 8 best regional Crown Division winners and the top 8 of the Federation Open. Two-game matches; level → rapid pair → blitz pair → higher seed advances (the final ends in joint champions instead).</p> : (
           <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }}>
             {champ.stages.map(sg => (
@@ -261,11 +262,12 @@ export function TournamentsScreen() {
                   <div key={i} className="panel" style={{ padding: 8, margin: '6px 0' }}>
                     {[m.a, m.b].map(id => <div key={id} className="row small" style={{ fontWeight: m.winner === id || (m.joint) ? 700 : 400 }}><span>({m.a === id ? m.seedA : m.seedB}) {fed.name(id)}</span><span className="spacer" /><span className="mono">{m.games.filter(g => g.result !== null).reduce((s, g) => s + (g.white === id ? g.result! : g.black === id ? 1 - g.result! : 0), 0)}</span></div>)}
                     {m.decidedBy && <div className="small muted">{m.joint ? 'Joint champions' : `decided by ${m.decidedBy}`}</div>}
+                    {(() => { const r = previewRivalry(m.a, m.b); return r && r.meetings > 0 ? <div className="small" data-testid="rivalry-preview"><span className="chip">{r.level}</span> {r.w}–{r.d}–{r.l} in {r.meetings}{r.events[0] ? ` · ${r.events[0].text}` : ''}</div> : null; })()}
                   </div>
                 ))}
               </div>
             ))}
-            {champ.champions.length > 0 && <div className="panel" style={{ minWidth: 180, borderColor: 'var(--accent)' }}><div style={{ fontSize: 40 }}>🏆</div><strong>{champ.champions.map(id => fed.name(id)).join(' & ')}</strong><div className="small muted">{champ.champions.length > 1 ? 'Joint Crown Champions' : 'Crown Champion'} · Season {st.world.season}</div></div>}
+            {champ.champions.length > 0 && <div className="panel" style={{ minWidth: 180, borderColor: 'var(--accent)' }}><Trophy kind="grand" size="lg" title="Crown Championship trophy" /><strong>{champ.champions.map(id => fed.name(id)).join(' & ')}</strong><div className="small muted">{champ.champions.length > 1 ? 'Joint Crown Champions' : 'Crown Champion'} · Season {st.world.season}</div></div>}
           </div>
         )}
       </div>

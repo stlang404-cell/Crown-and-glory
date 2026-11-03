@@ -8,6 +8,8 @@ const P: Record<string, string> = {
   exchange: 'M4 17l5-6 4 3 7-9M15 5h5v5',
   finance: 'M4 20h16M6 16v-5M10 16V8M14 16v-7M18 16V5',
   settings: 'M4 6h9m4 0h3M15 3.5v5M4 12h3m4 0h9M9 9.5v5M4 18h11m4 0h1M17 15.5v5',
+  rivals: 'M4 20L10 8L14 14M20 20L14 8L10 14M8 4H16',
+  hall: 'M7 4H17V9C17 12 15 14 12 14C9 14 7 12 7 9ZM12 14V18M8 20H16M7 6H4V8C4 10 5 11 7 11M17 6H20V8C20 10 19 11 17 11',
   flip: 'M7 7h11l-3-3M17 17H6l3 3',
   flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
   handshake: 'M3 12l4-4 5 3 5-3 4 4-9 8z',

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
+import { ClubEditor } from './ClubEditor';
+import { Emblem } from './Emblem';
+import { financialEmblem } from '../heraldry/catalog';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import type { Journal } from '../exchange/ledger';
 import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
@@ -46,7 +49,7 @@ export function PrestigeLadders({ bestRating }: { bestRating: number | null }) {
         <ul className="small">{p.chessBasis.length ? p.chessBasis.map((b, i) => <li key={i}>{b}</li>) : <li className="muted">Earned only through results: titles, promotions, podiums and established rating.</li>}</ul>
       </div>
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Financial prestige</h3><span className="chip info">{p.financialTier} · {p.financial}</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={financialEmblem(p.financialTier)} size="md" title={`Financial tier ${p.financialTier}`} /> Financial prestige</h3><span className="chip info">{p.financialTier} · {p.financial}</span></div>
         <ul className="small">{p.financialBasis.map((b, i) => <li key={i}>{b}</li>)}</ul>
         <div className="small muted">Separate ladder: money never buys chess prestige or titles.</div>
       </div>
@@ -165,7 +168,8 @@ function Institutions() {
         {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
         {!L ? <p className="small">You do not own a club. Buy the <strong>Starter Chess Club</strong> below to host a Club Weekend, sign sponsorship contracts and build up to a Federation Club.</p> : (
           <>
-            <div className="row"><span className="chip gold">Level {level}</span><strong>{L.name}</strong></div>
+            <div className="row"><span className="chip gold">Level {level}</span><strong>{fed.clubIdentity()?.name ?? L.name}</strong><span className="muted small">{L.name}</span></div>
+            <details data-testid="club-identity"><summary className="small"><strong>Club identity — name, colours and arms</strong></summary><ClubEditor /></details>
             <div className="small">{L.effect} Club Weekend: {L.weekendSize} players · contract slots: {L.contractSlots}{L.sponsorBonus ? ` · sponsor milestones +${L.sponsorBonus * 100}%` : ''}.</div>
             {next ? (
               <div className="panel stack" style={{ background: 'transparent' }}>

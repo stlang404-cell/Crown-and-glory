@@ -14,6 +14,10 @@ import { ExchangeScreen } from './ExchangeScreen';
 import { FinanceScreen } from './FinanceScreen';
 import { ForecastScreen } from './ForecastScreen';
 import { NewsScreen } from './NewsScreen';
+import { RivalsScreen } from './RivalsScreen';
+import { HallScreen } from './HallScreen';
+import { HeraldryScreen } from './HeraldryScreen';
+import { CeremonyOverlay } from './Ceremony';
 import { APP_VERSION } from '../app/services';
 import { AcademyScreen } from './AcademyScreen';
 import { Icon } from './Icons';
@@ -37,6 +41,9 @@ export type View =
   | { name: 'finance' }
   | { name: 'forecasts' }
   | { name: 'news' }
+  | { name: 'rivals' }
+  | { name: 'hall' }
+  | { name: 'heraldry' }
   | { name: 'settings' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
@@ -58,7 +65,7 @@ function parseHash(): View {
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
-  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings'].includes(name)) return { name } as View;
+  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry'].includes(name)) return { name } as View;
   return { name: 'play' };
 }
 function toHash(v: View): string {
@@ -77,12 +84,14 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'library', label: 'Library', icon: 'library' },
   { id: 'academy', label: 'Academy', icon: 'academy' },
   { id: 'profile', label: 'Passport', icon: 'profile' },
+  { id: 'rivals', label: 'Rivals', icon: 'rivals' },
+  { id: 'hall', label: 'Hall of Fame', icon: 'hall' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
 /** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the World/Passport screens and the side rail. */
 const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -133,6 +142,10 @@ export function App({ services }: { services: AppServices }) {
           {view.name === 'finance' && <FinanceScreen />}
           {view.name === 'forecasts' && <ForecastScreen />}
           {view.name === 'news' && <NewsScreen />}
+          {view.name === 'rivals' && <RivalsScreen />}
+          {view.name === 'hall' && <HallScreen />}
+          {view.name === 'heraldry' && <HeraldryScreen />}
+          <CeremonyOverlay />
           {view.name === 'settings' && <SettingsScreen />}
         </main>
         <nav className="tabbar" aria-label="Main">
