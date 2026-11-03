@@ -55,7 +55,7 @@ map with u = 1 / 0 as specified, but these are engine-vs-engine conversions, not
 
 ${decision}
 
-${best !== 'P0' && sig ? `The analyser therefore publishes **crown-accuracy-v1**: logistic expected-score map with s = ${f(fit.fullFit.L1.s, 0)} cp (L1 full-data fit), applied to new reports only. Old v0 reports are untouched; the Lab never merges v0 and v1 reports.` : 'The analyser keeps v0 and continues to label accuracy experimental.'}
+${best === 'ISO' && sig ? `The analyser therefore publishes **crown-accuracy-v1** with expected-score map **crown-outcome-map-v1**: the isotonic curve refitted on all ${fit.corpus.cpPositions} cp positions, reduced to monotone knots and linearly interpolated (\`src/analysis/outcome-map-v1.json\`, \`tools/calibration/publish_v1.ts\`). The fitted logistic (s ≈ ${f(fit.fullFit.L1.s, 0)} cp) was **not** adopted because its improvement interval includes zero: a single scale cannot express what the data show — on 6×6, small advantages convert more often than s = 200 predicts while large ones saturate, and the side to move scores ≈ 0.57 at an even evaluation. New reports use grading id \`crown-grade-v1-experimental\`; old v0 reports keep their own map for display and are never merged with v1 in the Lab.` : best !== 'P0' && sig ? `A fitted map (${names[best]}) is better; see the implementation for the published version.` : 'The analyser keeps v0 and continues to label accuracy experimental.'}
 
 What remains experimental even after this fit:
 - The data are engine-vs-engine games at ~40k nodes per move; human games may convert advantages differently.
