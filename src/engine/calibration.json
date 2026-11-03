@@ -1,5 +1,5 @@
 {
-  "id": "cal-2026-11-03-crown-search-1+crown-eval-3",
+  "id": "cal-2026-11-03-crown-search-2+crown-eval-4",
   "status": "measured 2026-11-03: 500 engine-vs-engine games on Intel(R) Xeon(R) Processor @ 2.80GHz",
   "method": "Colour-swapped opening pairs from tools/bench/openings.json; Bradley–Terry maximum likelihood, draws = ½, plus one virtual draw per match (keeps lopsided results finite); RD = sqrt(SE² + 40²).",
   "anchor": "Anchor: L1 Novice fixed at 800 (design choice; the absolute Crown scale is arbitrary and is not FIDE).",
@@ -14,51 +14,51 @@
     },
     {
       "level": 2,
-      "rating": 1037,
-      "rd": 75,
-      "se": 63,
+      "rating": 1122,
+      "rd": 86,
+      "se": 76,
       "games": 120
     },
     {
       "level": 3,
-      "rating": 1416,
-      "rd": 97,
-      "se": 88,
+      "rating": 1582,
+      "rd": 116,
+      "se": 109,
       "games": 160
     },
     {
       "level": 4,
-      "rating": 1647,
-      "rd": 107,
-      "se": 100,
+      "rating": 1710,
+      "rd": 121,
+      "se": 114,
       "games": 160
     },
     {
       "level": 5,
-      "rating": 1911,
-      "rd": 117,
-      "se": 110,
+      "rating": 1976,
+      "rd": 129,
+      "se": 123,
       "games": 160
     },
     {
       "level": 6,
-      "rating": 2302,
-      "rd": 137,
-      "se": 131,
+      "rating": 2375,
+      "rd": 148,
+      "se": 142,
       "games": 140
     },
     {
       "level": 7,
-      "rating": 2628,
-      "rd": 152,
-      "se": 146,
+      "rating": 2641,
+      "rd": 157,
+      "se": 152,
       "games": 120
     },
     {
       "level": 8,
-      "rating": 2987,
-      "rd": 170,
-      "se": 165,
+      "rating": 2926,
+      "rd": 169,
+      "se": 164,
       "games": 60
     }
   ],
@@ -66,9 +66,9 @@
     {
       "a": "crown-L2",
       "b": "crown-L1",
-      "w": 31,
-      "d": 3,
-      "l": 6,
+      "w": 33,
+      "d": 4,
+      "l": 3,
       "capped": 0
     },
     {
@@ -82,88 +82,88 @@
     {
       "a": "crown-L4",
       "b": "crown-L3",
-      "w": 29,
-      "d": 6,
-      "l": 5,
+      "w": 27,
+      "d": 1,
+      "l": 12,
       "capped": 0
     },
     {
       "a": "crown-L5",
       "b": "crown-L4",
-      "w": 31,
-      "d": 4,
+      "w": 33,
+      "d": 2,
       "l": 5,
       "capped": 0
     },
     {
       "a": "crown-L6",
       "b": "crown-L5",
-      "w": 34,
-      "d": 5,
-      "l": 1,
+      "w": 37,
+      "d": 0,
+      "l": 3,
       "capped": 0
     },
     {
       "a": "crown-L7",
       "b": "crown-L6",
-      "w": 33,
-      "d": 5,
+      "w": 29,
+      "d": 9,
       "l": 2,
       "capped": 0
     },
     {
       "a": "crown-L8",
       "b": "crown-L7",
-      "w": 34,
-      "d": 5,
+      "w": 28,
+      "d": 11,
       "l": 1,
       "capped": 0
     },
     {
       "a": "crown-L3",
       "b": "crown-L1",
-      "w": 39,
-      "d": 0,
-      "l": 1,
-      "capped": 0
-    },
-    {
-      "a": "crown-L4",
-      "b": "crown-L2",
-      "w": 39,
-      "d": 0,
-      "l": 1,
-      "capped": 0
-    },
-    {
-      "a": "crown-L5",
-      "b": "crown-L3",
-      "w": 37,
-      "d": 3,
-      "l": 0,
-      "capped": 0
-    },
-    {
-      "a": "crown-L6",
-      "b": "crown-L4",
-      "w": 39,
-      "d": 1,
-      "l": 0,
-      "capped": 0
-    },
-    {
-      "a": "crown-L7",
-      "b": "crown-L5",
       "w": 40,
       "d": 0,
       "l": 0,
       "capped": 0
     },
     {
+      "a": "crown-L4",
+      "b": "crown-L2",
+      "w": 40,
+      "d": 0,
+      "l": 0,
+      "capped": 0
+    },
+    {
+      "a": "crown-L5",
+      "b": "crown-L3",
+      "w": 35,
+      "d": 1,
+      "l": 4,
+      "capped": 0
+    },
+    {
+      "a": "crown-L6",
+      "b": "crown-L4",
+      "w": 40,
+      "d": 0,
+      "l": 0,
+      "capped": 0
+    },
+    {
+      "a": "crown-L7",
+      "b": "crown-L5",
+      "w": 38,
+      "d": 2,
+      "l": 0,
+      "capped": 0
+    },
+    {
       "a": "crown-L8",
       "b": "crown-L6",
-      "w": 19,
-      "d": 1,
+      "w": 20,
+      "d": 0,
       "l": 0,
       "capped": 0
     }

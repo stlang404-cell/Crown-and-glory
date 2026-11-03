@@ -21,6 +21,7 @@ import { Position } from '../../src/rules/position';
 import { moveToCcn } from '../../src/rules/notation';
 import { Searcher, PLAY_SEARCH_ID as SEARCH_ID, PLAY_FEATURES } from '../../src/engine/search';
 import { Searcher as BaseSearcher } from './baseline/search1';
+import { paramsFrom } from '../../src/engine/eval4';
 import { PLAY_EVAL_ID as EVAL_ID, EvalWeights, PLAY_WEIGHTS } from '../../src/engine/evaluate';
 
 const RESULTS = new URL('./results/', import.meta.url);
@@ -167,7 +168,7 @@ function envSearchOptions(): { features?: Record<string, boolean>; weights?: Eva
   if (process.env.ENGINE === 'base') return {};
   const o: { features?: Record<string, boolean>; weights?: EvalWeights } = { features: { ...PLAY_FEATURES }, weights: PLAY_WEIGHTS };
   if (process.env.FEATURES) o.features = { ...PLAY_FEATURES, ...JSON.parse(process.env.FEATURES) };
-  if (process.env.PARAMS) o.weights = { version: 4, p: Int32Array.from(JSON.parse(readFileSync(process.env.PARAMS, 'utf8')).params) };
+  if (process.env.PARAMS) o.weights = { version: 4, p: paramsFrom(JSON.parse(readFileSync(process.env.PARAMS, 'utf8')).params) };
   return o;
 }
 

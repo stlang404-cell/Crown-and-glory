@@ -5,6 +5,7 @@ const R = (f: string) => { const u = new URL(`./results/${f}`, import.meta.url);
 const speed = R('speed.json'), tactics = R('tactics.json'), abl = R('suite-ablation.json'), vsf = R('suite-vsfairy.json'), cal = R('suite-calibrate.json');
 const extra = (f: string) => R(`suite-${f}.json`)?.summaries as S[] | undefined;
 const browser = R('browser-speed.json');
+const m4 = ['base40k-vs-fairy-n4k-m4-base', 'e4l0-vs-cur40k-m4-e1', 'e4l0-vs-cur40k-m4-e1r', 'e4l0T100-vs-curT100-m4-e1t', 'e4l25-vs-cur40k-m4-e1', 'futd-vs-cur40k-m4-x2', 'futd-vs-cur40k-m4-x2r', 'futd-vs-cur40k-m4-s1', 'lmr2-vs-cur40k-m4-x1', 'lmr2-vs-cur40k-m4-x1r', 'lmr2-vs-cur40k-m4-s1', 'ord-vs-cur40k-m4-x1', 'lmr2hg-vs-lmr2-m4-x2', 'ttb-vs-cur40k-m4-x1', 'prune-vs-cur40k-m4-x1', 'iirext-vs-cur40k-m4-x1', 'sing-vs-cur40k-m4-x2', 'curT100-vs-baseT100-m4-final', 'cur40k-vs-fairy-n4k-m4-final'].map(n => [`match-${n}.json`]);
 const calib = JSON.parse(readFileSync(new URL('../../src/engine/calibration.json', import.meta.url), 'utf8'));
 const tsuite = JSON.parse(readFileSync(new URL('./tactics.json', import.meta.url), 'utf8'));
 const pct = (x: number) => (x * 100).toFixed(1) + '%';
@@ -95,6 +96,15 @@ ${extra('vsfairy3') ? table(extra('vsfairy3')!) : '_not run_'}
 ## Browser speed (production build, Chromium Web Worker)
 
 ${browser ? `${browser.browser}; ${browser.budget}.\n\n| Position | Plies played | Depth | Nodes | Engine ms | Nodes/s |\n| --- | --- | --- | --- | --- | --- |\n` + browser.results.map((r: { fen: string; plies: number; depth: number; nodes: number; engineMs: number; nps: number }) => `| \`${r.fen}\` | ${r.plies} | ${r.depth} | ${r.nodes.toLocaleString('en')} | ${r.engineMs} | ${r.nps.toLocaleString('en')} |`).join('\n') : '_not run_'}
+
+## M4 (crown-search-2 + crown-eval-4 play engine; details in M4_ENGINE_STRENGTH.md)
+
+Pre-M4 sections above were measured with the M3 engine and are kept as they were. M4 results (\`*-m4-*.json\`;
+"cur40k" was crown-eval-3 in m4-x*/m4-e* runs and crown-eval-4 in m4-s1 runs):
+
+${table(m4.map(([f]) => R(f)?.summary).filter(Boolean))}
+
+Tactics, M4 play engine: ${Object.entries(R('tactics-m4-final.json')?.results ?? {}).map(([n, r]) => `${Number(n).toLocaleString('en')} nodes ${(r as { solved: number }).solved}/87`).join(', ')} (M3: ${Object.entries(R('tactics-m4-base.json')?.results ?? {}).map(([, r]) => (r as { solved: number }).solved).join(' / ')}).
 
 ## Strength levels and calibration
 

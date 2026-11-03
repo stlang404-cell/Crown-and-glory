@@ -9,7 +9,7 @@
 import { Position } from '../rules/position';
 import { BLACK, WHITE } from '../rules/types';
 import { KING_TARGETS, KNIGHT_TARGETS, RAYS } from '../rules/tables';
-import { Eval4Weights, evaluate4 } from './eval4';
+import { Eval4Weights, evaluate4, paramsFrom } from './eval4';
 import { EVAL4_PARAMS } from './eval4-params';
 
 /**
@@ -142,7 +142,7 @@ const pawnFilesBuf = new Int8Array(12);
 const kingZoneBuf = new Int32Array(2);
 
 /** crown-eval-4 weights (fitted parameters in eval4-params.ts). */
-export const EVAL4_WEIGHTS: Eval4Weights = { version: 4, p: Int32Array.from(EVAL4_PARAMS) };
+export const EVAL4_WEIGHTS: Eval4Weights = { version: 4, p: paramsFrom(EVAL4_PARAMS) };
 
 /** Default (analysis) evaluator: crown-eval-3. */
 export const DEFAULT_WEIGHTS: EvalWeights = EVAL3_WEIGHTS;

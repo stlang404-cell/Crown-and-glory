@@ -137,36 +137,65 @@ Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessC
 | `2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20` | 0 | 13 | 525,242 | 1279 | 410,666 |
 | `2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20` | 0 | 13 | 525,242 | 1192 | 440,639 |
 
+## M4 (crown-search-2 + crown-eval-4 play engine; details in M4_ENGINE_STRENGTH.md)
+
+Pre-M4 sections above were measured with the M3 engine and are kept as they were. M4 results (`*-m4-*.json`;
+"cur40k" was crown-eval-3 in m4-x*/m4-e* runs and crown-eval-4 in m4-s1 runs):
+
+| A | B | Games | A W/D/L | Capped | Illegal | A score (95% pair-bootstrap) | Elo diff (CI) | A avg depth | B avg depth |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| base40k | fairy-n4k | 128 | 48/20/60 | 0 | 0 | 45.3% (37.9%–52.7%) | -33 (-86 to 19) | 9.02 | 16.96 |
+| e4l0 | cur40k | 64 | 47/10/7 | 0 | 0 | 81.3% (72.7%–89.1%) | 255 (170 to 364) | 8.77 | 8.76 |
+| e4l0 | cur40k | 64 | 44/5/15 | 0 | 0 | 72.7% (61.7%–82.8%) | 170 (83 to 273) | 8.55 | 8.74 |
+| e4l0T100 | curT100 | 64 | 45/11/8 | 0 | 0 | 78.9% (70.3%–86.7%) | 229 (150 to 326) | 7.6 | 7.94 |
+| e4l25 | cur40k | 64 | 42/15/7 | 0 | 0 | 77.3% (69.5%–85.2%) | 213 (143 to 303) | 9.29 | 9.17 |
+| futd | cur40k | 64 | 28/21/15 | 0 | 0 | 60.2% (51.6%–68.8%) | 72 (11 to 137) | 9.66 | 9.06 |
+| futd | cur40k | 64 | 24/25/15 | 0 | 0 | 57.0% (46.9%–67.2%) | 49 (-22 to 124) | 9.86 | 9.43 |
+| futd | cur40k | 128 | 52/41/35 | 0 | 0 | 56.6% (50.4%–62.5%) | 46 (3 to 89) | 9.84 | 9.42 |
+| lmr2 | cur40k | 64 | 27/23/14 | 0 | 0 | 60.2% (50.0%–69.5%) | 72 (0 to 143) | 11.82 | 10.56 |
+| lmr2 | cur40k | 64 | 20/26/18 | 0 | 0 | 51.6% (43.0%–60.2%) | 11 (-49 to 72) | 10.93 | 9.73 |
+| lmr2 | cur40k | 128 | 45/43/40 | 0 | 0 | 52.0% (45.7%–58.2%) | 14 (-30 to 58) | 10.38 | 9.36 |
+| ord | cur40k | 64 | 20/23/21 | 0 | 0 | 49.2% (40.6%–57.8%) | -5 (-66 to 55) | 9.39 | 9.38 |
+| lmr2hg | lmr2 | 64 | 21/24/18 | 1 | 0 | 53.2% (44.4%–62.1%) | 22 (-39 to 86) | 10.24 | 10.23 |
+| ttb | cur40k | 64 | 16/34/14 | 0 | 0 | 51.6% (43.8%–59.4%) | 11 (-44 to 66) | 10.4 | 9.83 |
+| prune | cur40k | 64 | 19/22/23 | 0 | 0 | 46.9% (40.6%–53.1%) | -22 (-66 to 22) | 10.38 | 8.94 |
+| iirext | cur40k | 64 | 18/21/25 | 0 | 0 | 44.5% (35.9%–52.3%) | -38 (-100 to 16) | 8.89 | 9.06 |
+| sing | cur40k | 64 | 18/27/19 | 0 | 0 | 49.2% (40.6%–57.0%) | -5 (-66 to 49) | 8.35 | 9.13 |
+| curT100 | baseT100 | 48 | 40/6/2 | 0 | 0 | 89.6% (81.3%–95.8%) | 374 (255 to 545) | 8.59 | 8.4 |
+| cur40k | fairy-n4k | 64 | 42/12/10 | 0 | 0 | 75.0% (64.8%–84.4%) | 191 (106 to 293) | 9.53 | 17.39 |
+
+Tactics, M4 play engine: 10,000 nodes 74/87, 40,000 nodes 78/87, 160,000 nodes 78/87, 640,000 nodes 79/87 (M3: 70 / 70 / 76 / 79).
+
 ## Strength levels and calibration
 
 | A | B | Games | A W/D/L | Capped | Illegal | A score (95% pair-bootstrap) | Elo diff (CI) | A avg depth | B avg depth |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| crown-L2 | crown-L1 | 40 | 31/3/6 | 0 | 0 | 81.3% (68.8%–92.5%) | 255 (137 to 436) | 1 | 1 |
+| crown-L2 | crown-L1 | 40 | 33/4/3 | 0 | 0 | 87.5% (78.8%–95.0%) | 338 (228 to 512) | 1 | 1 |
 | crown-L3 | crown-L2 | 40 | 37/0/3 | 0 | 0 | 92.5% (85.0%–100.0%) | 436 (301 to +∞) | 1.99 | 1 |
-| crown-L4 | crown-L3 | 40 | 29/6/5 | 0 | 0 | 80.0% (67.5%–91.3%) | 241 (127 to 407) | 1.99 | 1.94 |
-| crown-L5 | crown-L4 | 40 | 31/4/5 | 0 | 0 | 82.5% (71.3%–92.5%) | 269 (158 to 436) | 2.85 | 1.95 |
-| crown-L6 | crown-L5 | 40 | 34/5/1 | 0 | 0 | 91.3% (83.8%–97.5%) | 407 (285 to 636) | 5.14 | 2.89 |
-| crown-L7 | crown-L6 | 40 | 33/5/2 | 0 | 0 | 88.8% (77.5%–97.5%) | 359 (215 to 636) | 8.9 | 5.65 |
-| crown-L8 | crown-L7 | 40 | 34/5/1 | 0 | 0 | 91.3% (83.8%–97.5%) | 407 (285 to 636) | 12.43 | 8.01 |
-| crown-L3 | crown-L1 | 40 | 39/0/1 | 0 | 0 | 97.5% (92.5%–100.0%) | 636 (436 to +∞) | 2 | 1 |
-| crown-L4 | crown-L2 | 40 | 39/0/1 | 0 | 0 | 97.5% (92.5%–100.0%) | 636 (436 to +∞) | 2 | 1 |
-| crown-L5 | crown-L3 | 40 | 37/3/0 | 0 | 0 | 96.3% (92.5%–100.0%) | 564 (436 to +∞) | 2.8 | 1.94 |
-| crown-L6 | crown-L4 | 40 | 39/1/0 | 0 | 0 | 98.8% (96.3%–100.0%) | 759 (564 to +∞) | 4.89 | 1.94 |
-| crown-L7 | crown-L5 | 40 | 40/0/0 | 0 | 0 | 100.0% (100.0%–100.0%) | ∞ (−∞ to +∞) | 7.79 | 2.66 |
-| crown-L8 | crown-L6 | 20 | 19/1/0 | 0 | 0 | 97.5% (92.5%–100.0%) | 636 (436 to +∞) | 12.46 | 5.07 |
+| crown-L4 | crown-L3 | 40 | 27/1/12 | 0 | 0 | 68.8% (52.5%–83.8%) | 137 (17 to 285) | 1.98 | 1.95 |
+| crown-L5 | crown-L4 | 40 | 33/2/5 | 0 | 0 | 85.0% (73.8%–95.0%) | 301 (179 to 512) | 3.32 | 1.92 |
+| crown-L6 | crown-L5 | 40 | 37/0/3 | 0 | 0 | 92.5% (85.0%–100.0%) | 436 (301 to +∞) | 5.43 | 2.93 |
+| crown-L7 | crown-L6 | 40 | 29/9/2 | 0 | 0 | 83.8% (75.0%–92.5%) | 285 (191 to 436) | 8.5 | 5.26 |
+| crown-L8 | crown-L7 | 40 | 28/11/1 | 0 | 0 | 83.8% (76.3%–90.0%) | 285 (203 to 382) | 13.3 | 8.79 |
+| crown-L3 | crown-L1 | 40 | 40/0/0 | 0 | 0 | 100.0% (100.0%–100.0%) | ∞ (−∞ to +∞) | 2 | 1 |
+| crown-L4 | crown-L2 | 40 | 40/0/0 | 0 | 0 | 100.0% (100.0%–100.0%) | ∞ (−∞ to +∞) | 2 | 1 |
+| crown-L5 | crown-L3 | 40 | 35/1/4 | 0 | 0 | 88.8% (78.8%–97.5%) | 359 (228 to 636) | 3.08 | 1.95 |
+| crown-L6 | crown-L4 | 40 | 40/0/0 | 0 | 0 | 100.0% (100.0%–100.0%) | ∞ (−∞ to +∞) | 5.39 | 1.92 |
+| crown-L7 | crown-L5 | 40 | 38/2/0 | 0 | 0 | 97.5% (93.8%–100.0%) | 636 (470 to +∞) | 8.11 | 2.89 |
+| crown-L8 | crown-L6 | 20 | 20/0/0 | 0 | 0 | 100.0% (100.0%–100.0%) | ∞ (−∞ to +∞) | 11.35 | 5.18 |
 
-Fitted ratings (`src/engine/calibration.json`, id `cal-2026-11-03-crown-search-1+crown-eval-3`): Colour-swapped opening pairs from tools/bench/openings.json; Bradley–Terry maximum likelihood, draws = ½, plus one virtual draw per match (keeps lopsided results finite); RD = sqrt(SE² + 40²). Anchor: L1 Novice fixed at 800 (design choice; the absolute Crown scale is arbitrary and is not FIDE).
+Fitted ratings (`src/engine/calibration.json`, id `cal-2026-11-03-crown-search-2+crown-eval-4`): Colour-swapped opening pairs from tools/bench/openings.json; Bradley–Terry maximum likelihood, draws = ½, plus one virtual draw per match (keeps lopsided results finite); RD = sqrt(SE² + 40²). Anchor: L1 Novice fixed at 800 (design choice; the absolute Crown scale is arbitrary and is not FIDE).
 
 | Level | Rating | RD (published) | Statistical SE | Calibration games |
 | --- | --- | --- | --- | --- |
 | L1 | 800 | 40 | 0 | 80 |
-| L2 | 1037 | 75 | 63 | 120 |
-| L3 | 1416 | 97 | 88 | 160 |
-| L4 | 1647 | 107 | 100 | 160 |
-| L5 | 1911 | 117 | 110 | 160 |
-| L6 | 2302 | 137 | 131 | 140 |
-| L7 | 2628 | 152 | 146 | 120 |
-| L8 | 2987 | 170 | 165 | 60 |
+| L2 | 1122 | 86 | 76 | 120 |
+| L3 | 1582 | 116 | 109 | 160 |
+| L4 | 1710 | 121 | 114 | 160 |
+| L5 | 1976 | 129 | 123 | 160 |
+| L6 | 2375 | 148 | 142 | 140 |
+| L7 | 2641 | 157 | 152 | 120 |
+| L8 | 2926 | 169 | 164 | 60 |
 
 Caveats: Engine-vs-engine strength only; no human games. L8 is time-limited (2 s cap in calibration) and therefore hardware dependent. Capped games are excluded.
 

@@ -11,7 +11,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Position } from '../../../src/rules/position';
-import { OFF, NUM_PAIRS, evaluate4, setTrace, lastTraceScale, phaseOf, Eval4Weights } from '../../../src/engine/eval4';
+import { OFF, NUM_PAIRS, evaluate4, setTrace, lastTraceScale, phaseOf, Eval4Weights, paramsFrom } from '../../../src/engine/eval4';
 
 const PARAMS_TS = new URL('../../../src/engine/eval4-params.ts', import.meta.url);
 
@@ -60,7 +60,8 @@ const outName = process.argv[5] ?? 'params-fit.json';
 const K = Math.LN10 / 400;
 const sig = (x: number) => 1 / (1 + Math.exp(-x));
 
-const init = eval3Init();
+// start: INIT=<params json> (padded to the current layout) or the eval-3-equivalent values
+const init = process.env.INIT ? Array.from(paramsFrom(JSON.parse(readFileSync(process.env.INIT, 'utf8')).params)) : eval3Init();
 const pos = JSON.parse(readFileSync(new URL('./positions.json', import.meta.url), 'utf8')) as { positions: { fen: string; result: number; game: string }[] };
 const resultOf = new Map(pos.positions.map(p => [p.fen, p]));
 const labels = readFileSync(new URL('./labels.jsonl', import.meta.url), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { fen: string; cpW: number | null; mateW: number | null });
@@ -101,7 +102,7 @@ console.log('rows', rows.length, 'validation', rows.filter(r => r.val).length);
 // --- Adam on full batch ---
 const theta = Float64Array.from(init);
 const m = new Float64Array(theta.length), v = new Float64Array(theta.length);
-const isPst = (i: number) => { const pair = i >> 1; return pair >= OFF.PST && pair < OFF.PST + 6 * 36; };
+const isPst = (i: number) => { const pair = i >> 1; return (pair >= OFF.PST && pair < OFF.PST + 6 * 36) || (pair >= OFF.MOBT && pair < OFF.MOBT + 6 * 16); };
 const REG = 1e-8; // L2 pull of square tables toward the start (per cp²)
 const lr = 1.0, b1 = 0.9, b2 = 0.999;
 function evalRow(r: Row, q: Float64Array): number {
@@ -150,7 +151,7 @@ const res = { lambda, iters, K, rows: rows.length, trainLoss: loss(rounded, fals
 writeFileSync(new URL(`./${outName}`, import.meta.url), JSON.stringify(res));
 console.log('final (rounded): train', res.trainLoss.toFixed(6), 'val', res.valLoss.toFixed(6));
 const named = (k: number) => [rounded[2 * k], rounded[2 * k + 1]];
-console.log('MAT', [1, 2, 3, 4].map(t => named(OFF.MAT + t)), 'MOB', [2, 3, 4].map(t => named(OFF.MOB + t)));
+console.log('MAT', [1, 2, 3, 4].map(t => named(OFF.MAT + t)), 'MOB', [2, 3, 4].map(t => named(OFF.MOB + t)), 'TROPISM', [2, 3, 4].map(t => named(OFF.TROPISM + t)));
 console.log('PASSED', [1, 2, 3, 4].map(r => named(OFF.PASSED + r)), 'FREE', [1, 2, 3, 4].map(r => named(OFF.PASSED_FREE + r)), 'OWNK', named(OFF.PASSED_OWNK), 'ENK', named(OFF.PASSED_ENK));
-for (const n of ['DOUBLED', 'ISOLATED', 'SUPPORTED', 'PHALANX', 'KING_SHIELD', 'KING_ATTACK', 'KING_ATTACKERS', 'ROOK_OPEN', 'ROOK_SEMI', 'THREAT_PAWN', 'THREAT_MINOR', 'THREAT_ROOK', 'HANGING', 'TEMPO'] as const) console.log(n, named(OFF[n]));
+for (const n of ['OUTPOST', 'UNSTOPPABLE', 'KING_OPEN', 'DOUBLED', 'ISOLATED', 'SUPPORTED', 'PHALANX', 'KING_SHIELD', 'KING_ATTACK', 'KING_ATTACKERS', 'ROOK_OPEN', 'ROOK_SEMI', 'THREAT_PAWN', 'THREAT_MINOR', 'THREAT_ROOK', 'HANGING', 'TEMPO'] as const) console.log(n, named(OFF[n]));
 if (process.argv.includes('--write')) writeParams(Array.from(rounded), `eval4-fit-l${lambda}`, `Fitted on ${rows.length} positions; validation loss ${res.valLoss.toFixed(6)} (start ${res.startVal.toFixed(6)}).`);

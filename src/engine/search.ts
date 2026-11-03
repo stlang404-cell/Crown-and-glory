@@ -111,7 +111,7 @@ export const DEFAULT_FEATURES: SearchFeatures = {
 /** The crown-search-1 feature set (all M4 additions off): reproduces the M3 engine node for node. */
 export const SEARCH1_FEATURES: SearchFeatures = { ...DEFAULT_FEATURES };
 /** crown-search-2: the play profile (M4 additions accepted by paired matches; docs/M4_ENGINE_STRENGTH.md). */
-export const PLAY_FEATURES: SearchFeatures = { ...DEFAULT_FEATURES };
+export const PLAY_FEATURES: SearchFeatures = { ...DEFAULT_FEATURES, fwdFutility: true, deltaPruning: true };
 
 export interface SearchLimits {
   depth?: number;
@@ -262,7 +262,7 @@ export class Searcher {
     if (this.features.qsTT && !this.features.ttBucket) this.features.qsTT = false;
     this.weights = weights ?? DEFAULT_WEIGHTS;
     // asymmetric (styled) evaluation: the root side is the styled side
-    if (this.weights.version === 4 && this.weights.own) this.weights = { ...this.weights, styleColor: position.side };
+    if (this.weights.version === 4 && (this.weights.own || this.weights.opp || this.weights.simplify)) this.weights = { ...this.weights, styleColor: position.side };
     this.contempt = contempt ?? 0;
   }
 

@@ -11,8 +11,10 @@
 import { writeFileSync } from 'node:fs';
 import os from 'node:os';
 import { Position } from '../../src/rules/position';
-import { Searcher, SEARCH_ID } from '../../src/engine/search';
-import { EVAL_ID } from '../../src/engine/evaluate';
+import { Searcher, PLAY_SEARCH_ID as SEARCH_ID, PLAY_FEATURES, DEFAULT_FEATURES } from '../../src/engine/search';
+import { PLAY_EVAL_ID as EVAL_ID, PLAY_WEIGHTS, DEFAULT_WEIGHTS } from '../../src/engine/evaluate';
+// PROFILE=default measures the current code with the analysis defaults (crown-search-1 + crown-eval-3)
+const play = process.env.PROFILE !== 'default';
 import { Searcher as BaseSearcher } from './baseline/search1';
 
 const FENS = [
@@ -34,7 +36,7 @@ for (const fen of FENS) {
     for (const which of ['base', 'cur'] as const) {
       const s = which === 'base' ? new BaseSearcher(18) : new Searcher(18);
       const t0 = performance.now();
-      const res = s.search(Position.fromFen(fen), { limits: { nodes } });
+      const res = which === 'base' ? s.search(Position.fromFen(fen), { limits: { nodes } }) : (s as Searcher).search(Position.fromFen(fen), { limits: { nodes }, features: play ? PLAY_FEATURES : DEFAULT_FEATURES, weights: play ? PLAY_WEIGHTS : DEFAULT_WEIGHTS });
       const nps = res.nodes / ((performance.now() - t0) / 1000);
       if (which === 'base') { base.push(nps); bd = res.depth; } else { cur.push(nps); cd = res.depth; }
     }
@@ -43,5 +45,5 @@ for (const fen of FENS) {
   rows.push(row);
   console.log(JSON.stringify(row));
 }
-const out = { env: { node: process.version, cpu: os.cpus()[0]?.model, cores: os.cpus().length, load: os.loadavg(), searchId: SEARCH_ID, evalId: EVAL_ID, date: new Date().toISOString() }, mode: tag, nodesPerSearch: nodes, reps, rows };
+const out = { env: { node: process.version, cpu: os.cpus()[0]?.model, cores: os.cpus().length, load: os.loadavg(), searchId: SEARCH_ID, evalId: EVAL_ID, date: new Date().toISOString() }, mode: tag, profile: play ? 'play' : 'default', nodesPerSearch: nodes, reps, rows };
 writeFileSync(`tools/bench/results/nps-${tag}.json`, JSON.stringify(out, null, 1));

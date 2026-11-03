@@ -17,6 +17,8 @@ import repertoire from './repertoire.json';
 import { moveToCcn } from '../rules/notation';
 import { mulberry32 } from '../rules/tables';
 import type { StyleId } from '../federation/model';
+import { OFF } from './eval4';
+import type { EvalWeights } from './evaluate';
 
 export const STYLE_BETA = 1.2;
 export const REPERTOIRE_ID = (repertoire as { id: string }).id;
@@ -87,8 +89,49 @@ export function repertoireChoice(style: StyleId, pos: Position, seed: number): M
   return moves[moves.length - 1].move;
 }
 
-const V = validation as { id: string; validated: StyleId[]; results: Record<string, unknown> };
+// ---------------------------------------------------------------------------------------------------------
+// Full-game styles (crown-styles-4): an asymmetric evaluation for the styled side plus a draw contempt.
+// Multipliers scale crown-eval-4 terms for the styled side's OWN terms (`own`) or for the opponent's terms as
+// the styled side sees them (`opp`, e.g. a defensive player over-weights the opponent's attacking chances).
+// They change judgement, never legality, depth or node budgets. Used only for styles listed in
+// styles-validation.json → fullGame (tools/styles/validate_full.ts).
+type Term = keyof typeof OFF;
+/** A term adjustment: a multiplier, or [mg, eg] centipawns added to every entry of the term. */
+type Adj = number | [number, number];
+export interface StyleEval { own?: Partial<Record<Term, Adj>>; opp?: Partial<Record<Term, Adj>>; contempt: number; simplify?: number }
+export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
+  tactical: { own: { HANGING: [40, 20], THREAT_PAWN: [30, 10], THREAT_MINOR: [30, 10], THREAT_ROOK: [30, 10], KING_ATTACKERS: [10, 0] }, contempt: 20 },
+  positional: { own: { THREAT_PAWN: 0.4, THREAT_MINOR: 0.4, THREAT_ROOK: 0.4, HANGING: 0.4, SUPPORTED: [20, 10], PHALANX: [15, 10], OUTPOST: [30, 20] }, contempt: 0 },
+  aggressive: { own: { KING_ATTACKERS: [25, 0], KING_ATTACK: [3, 0], TROPISM: [8, 0] }, contempt: 40 },
+  defensive: { own: { KING_SHIELD: [20, 0] }, opp: { KING_ATTACKERS: [25, 0], KING_ATTACK: [3, 0], TROPISM: [8, 0] }, contempt: -30 },
+  endgame: { own: { PASSED: 1.5, PASSED_FREE: 1.5, UNSTOPPABLE: 1.5 }, contempt: 10, simplify: 200 },
+};
+const TERM_SIZE: Partial<Record<Term, number>> = { MAT: 6, PST: 216, MOB: 6, PASSED: 6, PASSED_FREE: 6, MOBT: 96, TROPISM: 6 };
+function scaled(base: Int32Array, adj: Partial<Record<Term, Adj>>): Int32Array {
+  const p = Int32Array.from(base);
+  for (const [term, a] of Object.entries(adj) as [Term, Adj][]) {
+    const start = OFF[term], n = TERM_SIZE[term] ?? 1;
+    for (let i = start; i < start + n; i++) {
+      if (typeof a === 'number') { p[2 * i] = Math.round(base[2 * i] * a); p[2 * i + 1] = Math.round(base[2 * i + 1] * a); }
+      else { p[2 * i] = base[2 * i] + a[0]; p[2 * i + 1] = base[2 * i + 1] + a[1]; }
+    }
+  }
+  return p;
+}
+/** Styled evaluation weights and contempt for a style (null for universal or a style without an eval profile). */
+export function styledWeights(style: StyleId, base: EvalWeights, defs: Partial<Record<StyleId, StyleEval>> = STYLE_EVAL): { weights: EvalWeights; contempt: number } | null {
+  const d = defs[style];
+  if (!d || base.version !== 4) return null;
+  return { weights: { ...base, own: d.own ? scaled(base.p, d.own) : undefined, opp: d.opp ? scaled(base.p, d.opp) : undefined, simplify: d.simplify }, contempt: d.contempt };
+}
+
+const V = validation as unknown as { id: string; validated: StyleId[]; repertoireStyles?: StyleId[]; fullGame?: StyleId[]; results: Record<string, unknown> };
 export const STYLE_VALIDATION_ID = V.id;
+/** A style is shown and played if any of its components passed validation. */
 export const isValidatedStyle = (s: StyleId) => s === 'universal' || V.validated.includes(s);
+/** The opening repertoire is used only by styles whose repertoire passed (crown-styles-3). */
+export const usesRepertoire = (s: StyleId) => s !== 'universal' && (V.repertoireStyles ?? V.validated).includes(s);
+/** The full-game styled evaluation is used only by styles that passed the full-game validation. */
+export const usesStyleEval = (s: StyleId) => s !== 'universal' && (V.fullGame ?? []).includes(s);
 /** The style actually used in play: unvalidated styles fall back to Universal. */
 export const playStyle = (s: StyleId): StyleId => (isValidatedStyle(s) ? s : 'universal');

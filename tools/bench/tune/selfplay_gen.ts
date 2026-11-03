@@ -31,7 +31,8 @@ if (isMainThread) {
   const { Searcher } = await import('../../../src/engine/search');
   const { mulberry32 } = await import('../../../src/rules/tables');
   const { ids, nodes, params } = workerData as { ids: number[]; nodes: number; params: number[] };
-  const weights = { version: 4 as const, p: Int32Array.from(params) };
+  const { paramsFrom } = await import('../../../src/engine/eval4');
+  const weights = { version: 4 as const, p: paramsFrom(params) };
   const recs: unknown[] = [];
   for (const id of ids) {
     const rng = mulberry32(0xc0ffee + id * 7919);
