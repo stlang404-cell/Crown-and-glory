@@ -7,6 +7,7 @@ import { playSelfplay } from '../src/engine/selfplay';
 import { PLAYER_ID, ROUNDS_PER_SEASON } from '../src/federation/model';
 import { MICRO } from '../src/exchange/ledger';
 import { exportBundle, importBundle } from '../src/storage/backup';
+import { wdl } from '../src/federation/resultModel';
 import type { GameRecord } from '../src/games/types';
 
 let clock = 0;
@@ -189,4 +190,19 @@ describe('federation service', () => {
     const { db: db3 } = await make(new IDBFactory());
     await expect(importBundle(db3, bad)).rejects.toThrow(/does not match/);
   }, 60_000);
+
+  it('no leakage: market forecasts are the public-rating model only, never the hidden strength', async () => {
+    const { svc } = await make();
+    await svc.create(5, 2024);
+    for (const fx of svc.featuredFixtures()) {
+      const m = svc.marketFor(fx.id)!;
+      const w = svc.state!.competitors.get(fx.white)!, b = svc.state!.competitors.get(fx.black)!;
+      const pub = wdl(w.rating, b.rating), hidden = wdl(w.latent, b.latent);
+      expect(m.forecast.w).toBeCloseTo(pub.w, 12);
+      expect(m.forecast.l).toBeCloseTo(pub.l, 12);
+      expect(Math.abs(hidden.w - pub.w)).toBeGreaterThan(0); // they differ, and the market used the public one
+      expect(fx.result).toBeNull(); // no result exists while the market is open
+      expect(await svc.worldGame(`wg:${fx.id}`)).toBeUndefined();
+    }
+  });
 });

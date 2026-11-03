@@ -1,7 +1,7 @@
 # Save, export and import formats
 
 All data lives in the browser's IndexedDB database `crown-calculation` (schema `crown-save-1`,
-IndexedDB version 1) on the device. Nothing is sent anywhere.
+IndexedDB version **3** since v0.3.0) on the device. Nothing is sent anywhere.
 
 ## Object stores
 
@@ -13,6 +13,20 @@ IndexedDB version 1) on the device. Nothing is sent anywhere.
 | `reports` | `id` = `report:<gameId>:<checksum12>:<engineBuild>:<settings>:<gradingId>` | Immutable analysis reports. A new engine, setting or methodology produces a new id; old reports are never overwritten. |
 | `analysisJobs` | `job:<gameId>:<settingsId>` | Job intent and status (queued/running/complete/partial/cancelled/failed). |
 | `meta` | `key` | Schema marker, last backup time. |
+| `attempts`, `trainingRuns`, `bookmarks` | `id` | v0.2.0 Academy attempts, training runs, position bookmarks. |
+| `world` | `key` = `world` | Federation cursor: seed, season, round, player membership, titles, history (v0.3.0). |
+| `seasons` | `id` = `season:<n>` | Season plans: 128 league circuits, Swiss events, championship and Club Weekend brackets. |
+| `competitors` | `id` | 2,048+ competitor records (identity, hidden strength, public Glicko-2, career, titles). |
+| `rounds` | `id` = `<season>:<round>` | Fixtures (player, featured, knockout) with results + compact summary results. |
+| `worldGames` | `id` = `wg:<fixture>` | Full move records of featured AI-vs-AI games. |
+| `journal` | `id` | Immutable double-entry journals (integer microcrowns). |
+| `accounts` | `account` | Account balances (must equal the journal replay). |
+| `markets`, `positions` | `id` | Exchange markets (LMSR state, history, status) and holdings. |
+| `assets` | `id` | Owned assets (acquired season, upkeep, suspension). |
+| `finance` | `key` | Net-worth history and player extras (watchlist, sponsors paid, vouchers, paper forecasts). |
+
+Every federation/economy command writes all changed records in **one** transaction guarded by the
+committed (season, round) cursor (docs/V3_FEDERATION.md §4).
 
 Finalization writes the finished game, its rating event, the pool state and the analysis intent in
 **one** IndexedDB transaction; the event key makes retries idempotent (tested in tests/storage.test.ts).
@@ -29,10 +43,11 @@ as the source of truth. This is **not** standard-chess PGN.
 
 ```json
 { "format": "crown-backup-1", "appSchema": "crown-save-1", "variantId": "crown-la6-v1",
-  "exportedAt": "...", "appVersion": "0.1.0",
+  "exportedAt": "...", "appVersion": "0.3.0",
   "counts": { "games": 0, "ratingEvents": 0, "reports": 0 },
   "payloadSha256": "<sha-256 of JSON.stringify(payload)>",
-  "payload": { "games": [], "ratingEvents": [], "ratingState": [], "reports": [] } }
+  "payload": { "games": [], "ratingEvents": [], "ratingState": [], "reports": [],
+               "attempts": [], "trainingRuns": [], "bookmarks": [], "federation": { "world": [], "journal": [], "...": [] } } }
 ```
 
 Import validates everything before writing: format/variant/schema, payload checksum, every game
@@ -48,10 +63,28 @@ is the checksummed rules content (`id, variantId, rulesVersion, initialFen, setu
 
 ## Migrations
 
-`src/storage/db.ts` holds an ordered `MIGRATIONS` list applied in `onupgradeneeded`. Version 1 is
-the initial schema. Future data-transforming migrations must follow research doc 12: export a
-recovery backup first, check quota, validate the new store before switching, keep the old data
-until confirmed.
+`src/storage/db.ts` holds an ordered `MIGRATIONS` list applied in `onupgradeneeded`:
+
+| Version | Release | Change |
+| --- | --- | --- |
+| 1 | v0.1.0 | Initial schema |
+| 2 | v0.2.0 | Adds `attempts`, `trainingRuns`, `bookmarks` (additive) |
+| 3 | v0.3.0 | Adds the 11 federation/economy stores (additive) |
+
+Both upgrades are **additive**: no existing record is read, rewritten or deleted, so a v0.2.0 career opens
+unchanged in v0.3.0 (verified: `tests/storage.test.ts` v1→v2 and v2→v3, and in Chromium by
+`e2e/federation.mjs`, which plays a rated game in the real v0.2.0 build, then serves the v0.3.0 build on
+the same origin and checks the games, rating events and rating are identical). The federation is empty
+until the player founds it. Future data-transforming migrations must follow research doc 12: export a
+recovery backup first, check quota, validate the new store before switching, keep the old data until
+confirmed.
+
+### Backups in v0.3.0
+
+The `crown-backup-1` payload gains an optional `federation` object holding every federation store.
+It is restored **only into an empty career** (the federation is one consistent world, never merged), and
+only after validation: every journal must balance, and every account balance must equal the replay of
+the journals (a tampered balance is rejected — tested). Older backups without `federation` still import.
 
 ## Durability limits
 

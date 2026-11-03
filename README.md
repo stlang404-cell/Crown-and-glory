@@ -5,14 +5,16 @@ no pawn double-step, no en passant, mandatory Q/R/N promotion) with a genuine lo
 ratings, a permanent game library and engine-based move-by-move analysis. TypeScript + React + Vite,
 Web Workers, IndexedDB, installable PWA. No accounts, servers, paid APIs or real money.
 
-Status: **v0.2.0 — M0, M1 and M2 (“Sovereign Intelligence”) implemented with gate evidence** — see
-[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md). The loop: **Play → Analyse → Train → Improve → play again.**
-M3 (federation) is planned in [docs/M3_IMPLEMENTATION_PLAN.md](docs/M3_IMPLEMENTATION_PLAN.md); M4–M5 in
-[docs/ROADMAP_M2_M5.md](docs/ROADMAP_M2_M5.md); the binding research specification is in [docs/research](docs/research).
+Status: **v0.3.0 — “The Living Federation”** — see [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+The loop: **Play → Analyse → Train → Compete → Forecast → Build → play again.**
+v0.4.0 is planned in [docs/V4_PLAN.md](docs/V4_PLAN.md); the binding research specification is in [docs/research](docs/research).
 
-M2 reports: [baseline audit](docs/M2_BASELINE_AUDIT.md) · [engine strength](docs/M2_ENGINE_STRENGTH.md) ·
-[analysis calibration](docs/M2_ANALYSIS_CALIBRATION.md) · [Academy validation](docs/M2_ACADEMY_VALIDATION.md) ·
-[intelligence methodology](docs/M2_INTELLIGENCE_METHODOLOGY.md) · [testing](docs/TESTING.md).
+v0.3 reports: [baseline audit](docs/V3_BASELINE_AUDIT.md) · [federation architecture](docs/V3_FEDERATION.md) ·
+[competition rules](docs/V3_COMPETITION_RULES.md) · [exchange math & accounting](docs/V3_EXCHANGE.md) ·
+[economy & simulations](docs/V3_ECONOMY.md) · [AI personality validation](docs/V3_STYLES.md) ·
+[save format & migration](docs/SAVE_FORMAT.md) · [testing](docs/TESTING.md).
+M2 reports: [engine strength](docs/M2_ENGINE_STRENGTH.md) · [analysis calibration](docs/M2_ANALYSIS_CALIBRATION.md) ·
+[Academy validation](docs/M2_ACADEMY_VALIDATION.md) · [intelligence methodology](docs/M2_INTELLIGENCE_METHODOLOGY.md).
 
 ## Play on Windows
 
@@ -95,6 +97,25 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
   games, and any use makes a casual game permanently assisted.
 - **Chess Passport**: career timeline, records, memorable moves, opponent history, filters and CSV export.
 
+## What v0.3.0 adds
+
+- **A persistent federation of 2,048 AI competitors** (16 regions × 8 divisions) with identities, hidden
+  strengths, public Glicko-2 ratings, careers, aging, retirements and new entrants.
+- **Seasons**: 15-round division leagues with promotion/relegation, the Federation Open and Challenger Open
+  (Swiss), the 16-player Crown Championship (two-game knockout matches with rapid/blitz tiebreaks) and a
+  Club Weekend for club owners. Your federation games are real rated games.
+- **Spectator**: watch featured AI-vs-AI games played live by the engine (pause, speed, navigation, the
+  engine's own evaluation line), or replay them. Background results are summary results and are labelled so.
+- **Crown Exchange**: forecast markets on featured AI matches (LMSR market maker, integer double-entry
+  ledger, 1% fee, markets close before the game exists, idempotent settlement), match research with model
+  probability vs market price, paper forecasts with Brier scores.
+- **Economy**: escrowed prize pools, sponsorship milestones, a Finance page (net worth = cash + assets +
+  positions − liabilities, ledger, history), functional assets (Starter Chess Club, Analyst Office, Scouting
+  Department) and collectibles with upkeep, recovery without debt, and two separate prestige ladders
+  (chess vs financial — money never buys chess titles).
+
+All money is fictional crowns (₵) with no real-world value.
+
 ## Tests and benchmarks
 
 ```bash
@@ -107,6 +128,18 @@ npm run build && node scripts/serve.mjs --port 4173
 
 ```bash
 node e2e/run.mjs http://127.0.0.1:4173/ && node e2e/academy.mjs http://127.0.0.1:4173/ && node e2e/offline.mjs http://127.0.0.1:4173/
+```
+
+The v0.3.0 acceptance journey (optionally upgrading a save made by a v0.2.0 build first):
+
+```bash
+node e2e/federation.mjs [path/to/v0.2.0/dist] 4191
+```
+
+Multi-season economy/federation simulation across player strategies:
+
+```bash
+npx tsx tools/sim/economy.ts 6 docs/sim/economy-results.json
 ```
 
 Engine benchmarks need a local Fairy-Stockfish binary (development only, never shipped):
@@ -128,15 +161,16 @@ src/games       game records, session state machine, clocks, openings
 src/ratings     Glicko-2, rating ledger, ranks
 src/analysis    analyser, methodology (grades/accuracy/phases), report types
 src/academy     Academy (puzzles, verification, motifs), coach, Intelligence Lab
-src/federation  opponent roster (M3 grows here)
-src/exchange    reserved for M4 (no code yet)
+src/federation  federation world: generator, formats (round robin, Swiss, knockout), seasons, result model
+src/exchange    ledger, LMSR, markets, NPC traders
+src/economy     prize pools, sponsors, assets, net worth, prestige
 src/storage     IndexedDB, finalization, backups, checksums
 src/app, src/ui application services and React UI
 tests           Vitest suites (rules oracle, engine, analysis, ratings, storage, sessions)
 e2e             Playwright acceptance journey and offline check
-tools           oracle fixture generator, benchmark harness
+tools           oracle fixture generator, benchmark harness, style validation, economy simulation
 docs            status, decisions, benchmarks, roadmap, research package
 ```
 
-All money in future milestones is fictional and nonredeemable. Ratings are internal Crown ratings and
+All money is fictional and nonredeemable. Ratings are internal Crown ratings and
 are not FIDE ratings. See THIRD_PARTY_NOTICES.md for licensing of dependencies.

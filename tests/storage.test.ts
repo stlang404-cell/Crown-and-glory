@@ -104,3 +104,21 @@ describe('schema migration v1 → v2', () => {
     expect(await v2.getAll('attempts')).toHaveLength(1);
   });
 });
+
+describe('schema migration v2 → v3 (federation)', () => {
+  it('adds the federation and economy stores without touching games, ratings or Academy data', async () => {
+    const f = new IDBFactory();
+    const v2 = await CrownDB.open(f, 'crown-calculation', 2);
+    const g = finishedGame('m2');
+    await v2.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
+    await v2.put('attempts', { id: 'a1', puzzleId: 'p', at: 'T' });
+    const before = await v2.ratingState('rapid');
+    v2.close();
+    const v3 = await CrownDB.open(f, 'crown-calculation', 3);
+    expect([...v3.db.objectStoreNames]).toEqual(expect.arrayContaining(['world', 'competitors', 'rounds', 'journal', 'accounts', 'markets', 'positions', 'assets', 'finance', 'games', 'attempts']));
+    expect((await v3.getGame('m2'))?.moves).toHaveLength(4);
+    expect((await v3.ratingState('rapid')).rating).toBe(before.rating);
+    expect(await v3.getAll('attempts')).toHaveLength(1);
+    expect(await v3.loadAll('world')).toHaveLength(0); // no federation until the player founds one
+  });
+});
