@@ -242,7 +242,7 @@ await page.waitForSelector('[data-testid="swiss-challenger"]');
 await page.screenshot({ path: OUT + '10-tournaments.png', fullPage: true });
 
 // 16. chess and financial career progress
-await nav(page, 'Passport');
+await nav(page, 'Career');
 await page.waitForSelector('[data-testid="federation-career"]');
 await page.waitForSelector('[data-testid="prestige"]');
 await page.screenshot({ path: OUT + '11-passport.png', fullPage: true });

@@ -114,7 +114,7 @@ if (OLD_DIST) {
   const r0 = await playOut(page);
   await waitUntil(page, async () => (await window.__crown.db.allReports()).some(r => r.status === 'complete'), undefined, 600000);
   await page.goto(URL_ + '#/academy');
-  await page.getByRole('button', { name: /Start adaptive training/ }).click();
+  await page.getByRole('button', { name: /Start adaptive training/i }).click();
   await page.waitForSelector('[data-testid="puzzle-panel"]');
   const sol = (await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-solution')).split(' ');
   for (let i = 0; i < sol.length; i += 2) { await page.click(`[data-square="${sol[i].slice(0, 2)}"]`); await page.click(`[data-square="${sol[i].slice(2, 4)}"]`); if (sol[i].length === 5) await page.getByRole('button', { name: { q: /Promote to queen/, r: /Promote to rook/, n: /Promote to knight/ }[sol[i][4]] }).click(); await page.waitForTimeout(700); }
@@ -218,7 +218,7 @@ await page.screenshot({ path: OUT + '05-analysis.png', fullPage: true });
 
 // ---- 9: Academy puzzle from the re-verified library
 await page.goto(URL_ + '#/academy');
-await page.getByRole('button', { name: /Start adaptive training/ }).click();
+await page.getByRole('button', { name: /Start adaptive training/i }).click();
 await page.waitForSelector('[data-testid="puzzle-panel"]');
 const pid = await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-puzzle');
 const sol = (await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-solution')).split(' ');

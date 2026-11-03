@@ -182,7 +182,7 @@ await page.screenshot({ path: OUT + '04-analysis.png', fullPage: true });
 
 // 8 Academy
 await page.goto(URL_ + '#/academy');
-await page.getByRole('button', { name: /Start adaptive training/ }).click();
+await page.getByRole('button', { name: /Start adaptive training/i }).click();
 await page.waitForSelector('[data-testid="puzzle-panel"]');
 {
   const panel = page.locator('[data-testid="puzzle-panel"]');

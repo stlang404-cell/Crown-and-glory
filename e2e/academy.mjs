@@ -33,7 +33,7 @@ const st1 = await solveCurrent();
 step(`Tactical puzzle solved by clicking the verified line: status=${st1}`);
 if (st1 !== 'solved') fail('puzzle not solved');
 await page.screenshot({ path: OUT + '21-academy-solved.png' });
-await page.getByRole('button', { name: 'Next puzzle' }).click();
+await page.getByRole('button', { name: 'Next Puzzle' }).click();
 // make a deliberate wrong move: first legal move that is not the solution
 const sol2 = (await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-solution')).split(' ')[0];
 const fen = await page.evaluate(() => null);
@@ -43,7 +43,7 @@ const wrong = await page.evaluate(async (s) => {
   return btns.map(b => b.getAttribute('data-square'));
 }, sol2);
 step(`second puzzle loaded (solution starts ${sol2}); squares rendered: ${wrong.length}`);
-await page.getByRole('button', { name: 'Show solution' }).click();
+await page.getByRole('button', { name: 'Show Solution' }).click();
 await page.waitForTimeout(1500);
 step('Solution reveal: status=' + await page.locator('[data-testid="puzzle-panel"]').getAttribute('data-status'));
 await page.getByRole('button', { name: '← Academy' }).click();

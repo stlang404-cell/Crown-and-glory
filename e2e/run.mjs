@@ -123,7 +123,7 @@ await page.getByRole('button', { name: 'Return to main line' }).click();
 const acc = await page.textContent('[data-testid="accuracy"]');
 step(`Variation explored and returned; accuracy shown: ${acc}`);
 
-await page.getByRole('button', { name: 'Passport' }).first().click();
+await page.getByRole('button', { name: 'Career' }).first().click();
 await page.waitForSelector('[data-testid="rating-event"]');
 const ratingShown = await page.textContent('[data-testid="current-rating"]');
 step(`Career shows rating ${ratingShown} and ${await page.locator('[data-testid="rating-event"]').count()} rating event(s)`);
@@ -134,7 +134,7 @@ step('Browser closed');
 // ---------- session 2: reopen ----------
 ({ ctx, page } = await open());
 step('Reopened Crown & Calculation with the same profile');
-await page.getByRole('button', { name: 'Library' }).first().click();
+await page.getByRole('button', { name: 'Games' }).first().click();
 await page.waitForSelector('[data-testid="library-row"]');
 const rows = await page.locator('[data-testid="library-row"]').count();
 const rowText = await page.locator('[data-testid="library-row"]').first().innerText();
