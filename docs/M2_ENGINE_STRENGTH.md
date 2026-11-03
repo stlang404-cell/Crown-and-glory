@@ -46,6 +46,13 @@ The maximum level (L8, clock-limited, up to 6 s per move) is the strongest valid
 calibration it scored 91% against L7 (30k nodes) and 97.5% against L6. On this host the engine searches
 ~330k–620k nodes/s in Node; browser speed is listed in ENGINE_BENCHMARKS.md.
 
+**Tactical suite** (87 Fairy-verified unique-best positions), eval-2 → eval-3: 72 → 70 at 10k nodes, 73 → 70 at
+40k, 75 → 76 at 160k, 76 → 79 at 640k. Slightly fewer shallow solves, slightly more deep solves; all
+differences are a few positions and not significant. The game-result gain did not come from tactics.
+
+**Speed**: unchanged by eval-3 within noise (289k–593k nodes/s median in Node; 284k–441k in headless
+Chromium's Web Worker).
+
 ## Strength ladder (crown-levels-2)
 
 M1's ladder had cliffs (L3 beat L2 40–0; L4 beat L3 97.5%), so the intermediate levels were redesigned with

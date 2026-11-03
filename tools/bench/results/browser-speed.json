@@ -1,0 +1,96 @@
+{
+ "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+ "budget": "L8 with a 60 s clock (allocation ≈ 2.7 s/move)",
+ "results": [
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 0,
+   "nodes": 366630,
+   "depth": 10,
+   "engineMs": 1137,
+   "wallMs": 1158.6000000005588,
+   "move": "c2c3",
+   "nps": 322454
+  },
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 0,
+   "nodes": 583488,
+   "depth": 11,
+   "engineMs": 1800,
+   "wallMs": 1801.1000000005588,
+   "move": "c2c3",
+   "nps": 324160
+  },
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 0,
+   "nodes": 366630,
+   "depth": 10,
+   "engineMs": 1117,
+   "wallMs": 1117.5999999996275,
+   "move": "c2c3",
+   "nps": 328227
+  },
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 6,
+   "nodes": 622763,
+   "depth": 12,
+   "engineMs": 1873,
+   "wallMs": 1874.8999999994412,
+   "move": "b2b3",
+   "nps": 332495
+  },
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 6,
+   "nodes": 310619,
+   "depth": 11,
+   "engineMs": 1092,
+   "wallMs": 1092.8999999994412,
+   "move": "b2b3",
+   "nps": 284450
+  },
+  {
+   "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+   "plies": 6,
+   "nodes": 622763,
+   "depth": 12,
+   "engineMs": 1956,
+   "wallMs": 1957.1000000005588,
+   "move": "b2b3",
+   "nps": 318386
+  },
+  {
+   "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+   "plies": 0,
+   "nodes": 525242,
+   "depth": 13,
+   "engineMs": 1292,
+   "wallMs": 1293.699999999255,
+   "move": "d2f4",
+   "nps": 406534
+  },
+  {
+   "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+   "plies": 0,
+   "nodes": 525242,
+   "depth": 13,
+   "engineMs": 1279,
+   "wallMs": 1280,
+   "move": "d2f4",
+   "nps": 410666
+  },
+  {
+   "fen": "2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20",
+   "plies": 0,
+   "nodes": 525242,
+   "depth": 13,
+   "engineMs": 1192,
+   "wallMs": 1193.4000000003725,
+   "move": "d2f4",
+   "nps": 440639
+  }
+ ]
+}
