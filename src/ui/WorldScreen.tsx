@@ -184,7 +184,7 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
           })}
         </tbody>
       </table>
-      <div className="small muted" style={{ marginTop: 4 }}>Green edge: promotion zone · red edge: relegation zone. Order: points, head-to-head, Sonneborn–Berger, pre-season seed.</div>
+      <div className="small muted" style={{ marginTop: 4 }}>Left edge marks the promotion zone (positive colour) and the relegation zone (negative colour). Order: points, head-to-head, Sonneborn–Berger, pre-season seed.</div>
     </div>
   );
 }
