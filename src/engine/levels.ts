@@ -21,8 +21,9 @@ import { mulberry32 } from '../rules/tables';
 /**
  * crown-levels-4 = crown-levels-3 (L1–L8, unchanged and still calibrated) + L9 Sovereign Max: the canonical
  * engine with no selection, no handicap, a 4× larger transposition table and a player-chosen thinking budget.
+ * crown-levels-5 (v0.7): L8 and L9 (clock-limited) use the partialRoot search option; L1–L7 node for node unchanged.
  */
-export const LEVELS_ID = 'crown-levels-4';
+export const LEVELS_ID = 'crown-levels-5';
 /** Thinking budgets offered for Sovereign Max (seconds per move, upper bound; the clock can lower it). */
 export const MAX_BUDGETS_S = [5, 10, 20, 40] as const;
 /** Rated games against Sovereign Max always use this budget, so its measured strength stays meaningful. */
@@ -106,7 +107,9 @@ export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthP
     limits: { depth: profile.depth, nodes: profile.nodes === Infinity ? undefined : profile.nodes, timeMs },
     stopOnSingleMove: true,
     weights: evalWeights,
-    features: PLAY_FEATURES,
+    // crown-levels-5: clock-limited profiles (L8, L9) keep a fully searched better root move from an unfinished
+    // iteration (partialRoot, +34 Elo [4, 66] at 100 ms/move, 192 games); node-limited levels are unchanged
+    features: profile.nodes === Infinity ? { ...PLAY_FEATURES, partialRoot: true } : PLAY_FEATURES,
     contempt,
   });
   // styled opening repertoire (src/engine/styles.ts): only book moves within 30 cp of the best at depth 7

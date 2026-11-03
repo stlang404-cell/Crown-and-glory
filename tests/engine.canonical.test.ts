@@ -72,7 +72,7 @@ describe('canonical engine: tactics and terminal positions', () => {
 
 describe('Sovereign Max', () => {
   it('is the last level, plays the best move only, uses a 2^20 table and the rated budget by default', () => {
-    expect(LEVELS_ID).toBe('crown-levels-4');
+    expect(LEVELS_ID).toBe('crown-levels-5');
     expect(LEVELS[LEVELS.length - 1].level).toBe(MAX_LEVEL);
     const m = getLevel(MAX_LEVEL);
     expect(m.selection).toBeNull();
@@ -81,6 +81,14 @@ describe('Sovereign Max', () => {
     expect(m.maxTimeMs).toBe(MAX_RATED_BUDGET_S * 1000);
     expect(maxProfile(40).maxTimeMs).toBe(40_000);
     expect(maxProfile(7).maxTimeMs).toBe(MAX_RATED_BUDGET_S * 1000); // unknown budget → rated budget
+  });
+  it('partialRoot is used only by clock-limited levels; node-limited levels search exactly as before', () => {
+    const p = Position.fromFen(START_FEN);
+    const prof = getLevel(6);
+    const a = chooseMove(new Searcher(18), p, prof, 5);
+    const b = new Searcher(18).search(p, { limits: { depth: prof.depth, nodes: prof.nodes, timeMs: prof.maxTimeMs }, stopOnSingleMove: true, ...CANON_OPTS });
+    expect(a.search.nodes).toBe(b.nodes);
+    expect(a.move).toBe(b.bestMove);
   });
   it('is deterministic: no random choice regardless of seed (node-limited for the test)', () => {
     const prof = { ...maxProfile(5), nodes: 20_000 };
