@@ -9,3 +9,6 @@
 [2026-11-03T22:32:01.635Z]    R2: league:0:8 vs c0115 — Victory
 [2026-11-03T22:32:16.255Z]    R3: league:0:8 vs c0114 — Victory
 [2026-11-03T22:32:34.467Z]    R4: league:0:8 vs c0116 — Victory; challenger vs c1367 — Victory
+[2026-11-03T22:32:58.653Z]    R5: league:0:8 vs c0112 — Victory; challenger vs c1226 — Victory
+[2026-11-03T22:32:58.960Z] PASS: 5. Following Ullia Hollowwell: "This SeasonLeague: 6th of 16 in the Open Division (Ashmere), 3 pointsFederation Title: None · Next: Squire: Norms at 1700+ performance vs 1100+ average opposition: 0/1 (0/5 games) · Peak rating (recorded at each federati"
+[2026-11-03T22:33:30.087Z]    R6: league:0:8 vs c0120 — Victory; challenger vs c0456 — Victory
