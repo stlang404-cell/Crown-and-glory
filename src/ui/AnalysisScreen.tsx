@@ -178,12 +178,12 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
           )}
           <div className="panel">
             <div className="panel-title"><h3>Evaluation</h3><span className="small muted">White advantage up · bounded expected score (mate shown at the edge)</span></div>
-            {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} /> : <p className="muted">No evaluation yet — the graph is drawn only from completed engine analysis.</p>}
+            {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet — the graph is drawn only from completed engine analysis.</p>}
           </div>
         </div>
         <div className="side-col">
           <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
-          {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} /> : (
+          {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId} /> : (
             <div className="panel"><h3>{ply === 0 ? 'Initial position' : `Ply ${ply}`}</h3><p className="muted small">{ply === 0 ? 'Select a move in the list or graph, or use ← → keys.' : 'This move has not been analysed yet.'}</p></div>
           )}
           <div className="panel">
@@ -219,7 +219,9 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
               <div className="small muted" style={{ marginTop: 8 }}>
                 Phase accuracy (you): opening {fmtAcc(mine.phaseAccuracy.opening.accuracy)} ({mine.phaseAccuracy.opening.eligible}) · middlegame {fmtAcc(mine.phaseAccuracy.middlegame.accuracy)} ({mine.phaseAccuracy.middlegame.eligible}) · endgame {fmtAcc(mine.phaseAccuracy.endgame.accuracy)} ({mine.phaseAccuracy.endgame.eligible}). “—” means the phase did not occur.<br />
                 Critical positions handled: {mine.critical.handled}/{mine.critical.total}. Best-move frequency: {mine.bestFrequency === null ? '—' : `${Math.round(mine.bestFrequency * 100)}%`}. Avg. loss on cp-scored moves: {mine.avgCpLoss === null ? '—' : `${Math.round(mine.avgCpLoss)} cp (${mine.cpLossMoves} moves; mate positions excluded)`}.<br />
-                Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp. These parameters are uncalibrated research placeholders for 6×6 chess.
+                {report.methodology.accuracyId === 'crown-accuracy-v1'
+                  ? 'Accuracy = 100·exp(−4·mean expected-score loss). The expected-score map (crown-outcome-map-v1) is fitted and validated on held-out 6×6 engine games; the grade boundaries and k = 4 remain experimental.'
+                  : 'Accuracy = 100·exp(−4·mean expected-score loss), logistic scale s = 200 cp (methodology v0). These parameters are uncalibrated research placeholders; re-analyse to get a v1 report.'}
               </div>
               <ClockPressure game={game} plies={plies} />
               <div className="row" style={{ marginTop: 10 }}>
@@ -301,7 +303,7 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
   );
 }
 
-function MovePanel({ p, onExplore, onRetry, humanPov }: { p: PlyAnalysis; onExplore: (c: Candidate, label: string) => void; onRetry: () => void; humanPov: 'white' | 'black' }) {
+function MovePanel({ p, onExplore, onRetry, humanPov, accuracyId }: { p: PlyAnalysis; onExplore: (c: Candidate, label: string) => void; onRetry: () => void; humanPov: 'white' | 'black'; accuracyId?: string }) {
   const mover = p.color;
   return (
     <div className="panel stack" data-testid="move-panel">
@@ -314,7 +316,7 @@ function MovePanel({ p, onExplore, onRetry, humanPov }: { p: PlyAnalysis; onExpl
         <div className="stat"><span className="k">Before (best play)</span><span className="v" style={{ fontSize: '1.2rem' }}>{formatScore(p.evalBefore, 'white')}</span></div>
         <div className="stat"><span className="k">After {p.san}</span><span className="v" style={{ fontSize: '1.2rem' }}>{formatScore(p.evalAfter, 'white')}</span></div>
       </div>
-      <div className="evalbar" aria-label={`White expected score ${Math.round(whiteU(p.evalAfter) * 100)}%`}><div style={{ width: `${whiteU(p.evalAfter) * 100}%` }} /></div>
+      <div className="evalbar" aria-label={`White expected score ${Math.round(whiteU(p.evalAfter, accuracyId) * 100)}%`}><div style={{ width: `${whiteU(p.evalAfter, accuracyId) * 100}%` }} /></div>
       <div className="small muted">
         Scores from White's view. Expected-score loss for {mover}: {p.loss === null ? 'n/a' : p.loss.toFixed(3)}{p.lossInterval ? ` (range across depths ${p.lossInterval[0].toFixed(3)}–${p.lossInterval[1].toFixed(3)})` : ''}{p.cpLoss !== null ? ` · ${Math.round(p.cpLoss)} cp` : ''}.
         {' '}{p.legalCount} legal move{p.legalCount === 1 ? '' : 's'} · depth {p.achievedDepth} · {p.nodes.toLocaleString()} nodes · {p.phase}{p.critical ? ' · critical position' : ''}.

@@ -6,12 +6,19 @@
  * labels accuracy and grades as experimental.
  */
 import type { EngineScore, Grade, Phase, Pov } from './types';
+import { logisticU, mapV1 } from './outcomeMap';
 
-export const GRADING_ID = 'crown-grade-v0-experimental';
-export const ACCURACY_ID = 'crown-accuracy-v0-experimental';
+/**
+ * Versions: v0 used the research placeholder logistic s = 200 cp. v1 (M2) uses crown-outcome-map-v1, an
+ * isotonic expected-score map validated on held-out opening families (docs/M2_ANALYSIS_CALIBRATION.md).
+ * Grade bins and accuracy k are unchanged and remain experimental.
+ */
+export const GRADING_ID = 'crown-grade-v1-experimental';
+export const ACCURACY_ID = 'crown-accuracy-v1';
+export const LEGACY_IDS = { grading: 'crown-grade-v0-experimental', accuracy: 'crown-accuracy-v0-experimental' };
 export const PHASE_ID = 'crown-phase-1';
 export const CRITICAL_ID = 'crown-critical-1';
-export const CALIBRATION = 'uncalibrated: logistic s=200cp, k=4 (research placeholder)';
+export const CALIBRATION = 'expected-score map crown-outcome-map-v1 (isotonic, held-out validated on engine games); grade bins and k=4 are uncalibrated placeholders';
 
 export const S_CP = 200;
 export const K_ACC = 4;
@@ -29,9 +36,9 @@ export const LOSS_BINS: { grade: Grade; max: number }[] = [
 export const GREAT_GAP = 0.1;
 export const CRITICAL_GAP = 0.1;
 
-/** Bounded expected score of a typed score for the score's own POV. */
-export function expectedU(s: EngineScore): number {
-  if (s.kind === 'cp') return 1 / (1 + Math.exp(-s.value / S_CP));
+/** Bounded expected score of a typed score for the score's own POV, under a methodology's map. */
+export function expectedU(s: EngineScore, accuracyId: string = ACCURACY_ID): number {
+  if (s.kind === 'cp') return accuracyId === LEGACY_IDS.accuracy ? logisticU(s.value, S_CP) : mapV1(s.value);
   if (s.kind === 'mate') return s.plies > 0 ? 1 : 0;
   return s.outcome === 'win' ? 1 : s.outcome === 'draw' ? 0.5 : 0;
 }
@@ -43,6 +50,7 @@ export function flipScore(s: EngineScore): EngineScore {
   return { kind: 'terminal', outcome: s.outcome === 'win' ? 'loss' : s.outcome === 'loss' ? 'win' : 'draw', pov };
 }
 export const toPov = (s: EngineScore, pov: Pov): EngineScore => (s.pov === pov ? s : flipScore(s));
+void flipScore;
 
 export function gradeForLoss(L: number): Grade {
   const x = Math.min(1, Math.max(0, L));

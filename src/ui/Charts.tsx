@@ -3,7 +3,7 @@ import type { EngineScore, PlyAnalysis } from '../analysis/types';
 import { expectedU, toPov } from '../analysis/methodology';
 
 /** White-perspective expected score in [0,1]; mate is drawn at the bounded edge, never as a giant cp spike. */
-export const whiteU = (s: EngineScore) => expectedU(toPov(s, 'white'));
+export const whiteU = (s: EngineScore, accuracyId?: string) => expectedU(toPov(s, 'white'), accuracyId);
 
 export function formatScore(s: EngineScore | null, pov: 'white' | 'black' = 'white'): string {
   if (!s) return '—';
@@ -23,13 +23,13 @@ const GRADE_COLOR: Record<string, string> = {
   brilliant: 'var(--g-brilliant)', great: 'var(--g-great)', mistake: 'var(--g-mistake)', blunder: 'var(--g-blunder)', inaccuracy: 'var(--g-inaccuracy)',
 };
 
-export function EvalGraph({ plies, total, selected, onSelect }: { plies: PlyAnalysis[]; total: number; selected: number; onSelect: (ply: number) => void }) {
+export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { plies: PlyAnalysis[]; total: number; selected: number; onSelect: (ply: number) => void; accuracyId?: string }) {
   const ref = useRef<SVGSVGElement>(null);
   const W = 600, H = 150, n = Math.max(total, 1);
   const x = (ply: number) => (ply / n) * W;
   const y = (u: number) => H - u * H;
   const pts: [number, number][] = [[0, 0.5]];
-  for (const p of plies) pts.push([p.ply, whiteU(p.evalAfter)]);
+  for (const p of plies) pts.push([p.ply, whiteU(p.evalAfter, accuracyId)]);
   const path = pts.map(([px, u], i) => `${i ? 'L' : 'M'}${x(px).toFixed(1)},${y(u).toFixed(1)}`).join(' ');
   const area = `${path} L${x(pts[pts.length - 1][0]).toFixed(1)},${H} L0,${H} Z`;
   const pick = (clientX: number) => {
@@ -45,7 +45,7 @@ export function EvalGraph({ plies, total, selected, onSelect }: { plies: PlyAnal
       <path d={area} fill="rgba(233,220,192,.88)" />
       <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="rgba(216,181,108,.5)" strokeDasharray="4 4" />
       {plies.filter(p => p.grade && GRADE_COLOR[p.grade]).map(p => (
-        <circle key={p.ply} cx={x(p.ply)} cy={y(whiteU(p.evalAfter))} r={4} fill={GRADE_COLOR[p.grade!]} stroke="#10151e" strokeWidth={1.5} />
+        <circle key={p.ply} cx={x(p.ply)} cy={y(whiteU(p.evalAfter, accuracyId))} r={4} fill={GRADE_COLOR[p.grade!]} stroke="#10151e" strokeWidth={1.5} />
       ))}
       {plies.length < total && <rect x={x(plies.length)} y="0" width={W - x(plies.length)} height={H} fill="url(#pending-hatch)" opacity={0.5} />}
       <defs>

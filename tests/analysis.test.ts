@@ -67,7 +67,10 @@ describe('grading methodology v0', () => {
     expect(expectedU({ kind: 'mate', plies: 3, pov: 'white', proven: false })).toBe(1);
     expect(expectedU(flipScore({ kind: 'mate', plies: 3, pov: 'white', proven: false }))).toBe(0);
     expect(expectedU({ kind: 'terminal', outcome: 'draw', pov: 'black' })).toBe(0.5);
-    expect(expectedU({ kind: 'cp', value: 0, pov: 'white' })).toBe(0.5);
+    expect(expectedU({ kind: 'cp', value: 0, pov: 'white' }, 'crown-accuracy-v0-experimental')).toBe(0.5);
+    // v1 map is monotone and bounded
+    let prev = -1;
+    for (let cp = -2500; cp <= 2500; cp += 25) { const u = expectedU({ kind: 'cp', value: cp, pov: 'white' }); expect(u).toBeGreaterThanOrEqual(prev); expect(u).toBeGreaterThan(0); expect(u).toBeLessThan(1); prev = u; }
   });
   it('phases are monotone and do not reverse after promotion', () => {
     let p = nextPhase('opening', { fullmove: 5, whiteQueens: 1, blackQueens: 1, minorMajor: 10 });
