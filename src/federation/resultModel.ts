@@ -1,0 +1,22 @@
+/**
+ * Tier-3 background result model (crown-result-model-1): Davidson extension of Bradley–Terry,
+ *   P(W) = πw / Z, P(D) = ν√(πw πb) / Z, P(L) = πb / Z, π = 10^(strength/400), ν = 0.9.
+ * ν is the maximum-likelihood fit over 1,779 recorded Crown engine games (33 matches with measured
+ * strength differences; ≈ 31% draws between equals). White's first-move advantage measured 50.5%
+ * over 1,280 games and is treated as 0. Abstract outcomes use the hidden latent strengths;
+ * forecasts shown to the player and NPC traders use the same formula on PUBLIC ratings only.
+ */
+export const RESULT_MODEL_ID = 'crown-result-model-1';
+export const NU = 0.9;
+
+export function wdl(white: number, black: number, nu = NU): { w: number; d: number; l: number } {
+  const pw = 10 ** ((white - black) / 800), pb = 1 / pw;
+  const z = pw + pb + nu;
+  return { w: pw / z, d: nu / z, l: pb / z };
+}
+
+/** Sample a result (1 / 0.5 / 0 for White) from a uniform draw u ∈ [0,1). */
+export function sampleResult(white: number, black: number, u: number): number {
+  const p = wdl(white, black);
+  return u < p.w ? 1 : u < p.w + p.d ? 0.5 : 0;
+}
