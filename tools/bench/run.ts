@@ -16,6 +16,7 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Spec, specId } from './specs';
 import { buildOpenings } from './openings';
+import { loadOpenings4 } from './openings4';
 import { GameRecord, pairBootstrap, scoreFor, eloFromScore } from './match';
 import { Position } from '../../src/rules/position';
 import { moveToCcn } from '../../src/rules/notation';
@@ -220,7 +221,7 @@ async function main() {
   const [cmd, ...args] = process.argv.slice(2);
   if (cmd === 'speed') return speed();
   if (cmd === 'tactics') return tactics();
-  const openings = await buildOpenings();
+  const openings = process.env.OPENINGS === '4ply' ? loadOpenings4() : await buildOpenings();
   const threads = +(process.env.THREADS ?? Math.max(1, os.cpus().length));
   const p = pool(threads);
   try {
@@ -228,7 +229,7 @@ async function main() {
       const [A, B, pairs] = args;
       const SA = resolveSpec(A), SB = resolveSpec(B);
       const r = await match(p, SA, SB, openings, +(pairs ?? 20));
-      writeFileSync(new URL(`match-${specId(SA)}-vs-${specId(SB)}${TAG}.json`, RESULTS), JSON.stringify({ env: env(), offset: +(process.env.OPENING_OFFSET ?? 0), ...r }, null, 1));
+      writeFileSync(new URL(`match-${specId(SA)}-vs-${specId(SB)}${TAG}.json`, RESULTS), JSON.stringify({ env: env(), openings: process.env.OPENINGS === '4ply' ? 'tools/bench/openings-4ply.json' : 'tools/bench/openings.json', offset: +(process.env.OPENING_OFFSET ?? 0), ...r }, null, 1));
     } else if (cmd === 'suite') {
       const [name, pairsArg] = args;
       const pairs = +(pairsArg ?? 20);
