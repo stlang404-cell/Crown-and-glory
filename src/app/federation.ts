@@ -17,9 +17,10 @@ import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { Market, Position, openMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue } from '../exchange/market';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
+import { subsidyMicro } from '../exchange/lmsr';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, voucherJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import type { GameRecord } from '../games/types';
@@ -39,6 +40,7 @@ const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 const FEATURED_NODE_CAP = 30_000;
 const MARKET_B = 120;
 const NPC_FUND = 2_000 * MICRO;
+export const COMPETITOR_EXPENSE_SHARE = 0.75;
 
 export interface FedState {
   world: WorldState;
@@ -194,6 +196,8 @@ export class FederationService {
     const markets: Market[] = [];
     const positions: Position[] = [];
     for (const f of featured) {
+      // a market opens only with its worst-case subsidy funded; otherwise the match is still featured, unlisted
+      if ((st.balances.get('treasury') ?? 0) < subsidyMicro(MARKET_B, 3)) continue;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
       const p = wdl(w.rating, b.rating);
       const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${RESULT_MODEL_ID} on public ratings` }, at: this.now() });
@@ -428,6 +432,7 @@ export class FederationService {
     if (!this.state) throw new Error('No federation');
     if (this.playerFixtures().length) throw new Error('Play or forfeit your fixtures first');
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
+    if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready — play it first');
     return this.run(async () => {
       const st = this.clone();
       const expect = { season: st.world.season, round: st.world.round };
@@ -439,6 +444,7 @@ export class FederationService {
       const plansChanged: SeasonPlan[] = [];
       const oldPlan = ctx.plan;
       const res = processRound(ctx, rec, seasonRounds, this.now());
+      const expensesPaid = new Map<string, number>();
       st.rounds.set(rec.id, rec);
       const games = gamesOf([...seasonRounds, rec]);
       const season = expect.season, round = expect.round;
@@ -496,6 +502,8 @@ export class FederationService {
           else na.suspended = true;
           st.assets.set(a.id, na);
         }
+        // treasury replenishment toward its target (explicit, capped issuance)
+        { const rj = treasuryReplenishJournal(season + 1, st.balances.get('treasury') ?? 0, this.now()); if (rj) this.post(st, [rj], posted); }
         // NPC wallet top-up (bounded by cap and treasury)
         for (const t of NPC_TRADERS) {
           const need = NPC_WALLET_CAP - (st.balances.get(t.id) ?? 0);
@@ -505,12 +513,31 @@ export class FederationService {
         }
         // leftover prize escrow (e.g. rounding) returns to the treasury
         for (const [acc, bal] of st.balances) if (acc.startsWith(`prize:${season}:`) && bal > 0) this.post(st, [{ id: `prize-return:${acc}`, at: this.now(), kind: 'transfer', memo: `Unpaid remainder of ${acc}`, lines: [{ account: acc, amount: -bal }, { account: 'treasury', amount: bal }], season }], posted);
+        // competitor career expenses (coaching, travel, living costs): 75% of each competitor's balance, all of a
+        // retired competitor's, leaves circulation into the sink. With fixed issuance per season this bounds the
+        // circulating supply (steady state ≈ issuance / 3 held by competitors) instead of growing forever.
+        {
+          const lines: { account: string; amount: number }[] = [];
+          for (const c of st.competitors.values()) {
+            const bal = st.balances.get(`comp:${c.id}`) ?? 0;
+            if (bal <= 0) continue;
+            const amt = c.status === 'retired' ? bal : Math.floor(bal * COMPETITOR_EXPENSE_SHARE);
+            if (amt > 0) { lines.push({ account: `comp:${c.id}`, amount: -amt }); expensesPaid.set(c.id, amt); }
+          }
+          const total = -lines.reduce((a, l) => a + l.amount, 0);
+          if (total) this.post(st, [{ id: `comp-expenses:${season}`, at: this.now(), kind: 'expenses', memo: 'Competitor season expenses', lines: [...lines, { account: 'sink', amount: total }], season }], posted);
+        }
         // new season issuance
         this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits), this.now()), posted);
         plansChanged.push(structuredClone(oldPlan));
       }
-      // competitor earnings mirror their ledger accounts
-      for (const c of st.competitors.values()) c.earnings = st.balances.get(`comp:${c.id}`) ?? 0;
+      // career earnings accumulate every credit to the competitor's account (expenses are not subtracted)
+      for (const c of st.competitors.values()) {
+        const bal = st.balances.get(`comp:${c.id}`) ?? 0;
+        const gain = bal + (expensesPaid.get(c.id) ?? 0) - (c.balanceSeen ?? 0);
+        if (gain > 0) c.earnings += gain;
+        c.balanceSeen = bal;
+      }
       st.world = ctx.world;
       st.plan = ctx.plan;
       st.plans.set(st.plan.id, st.plan);

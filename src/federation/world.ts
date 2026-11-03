@@ -201,7 +201,8 @@ export function settleRound(ctx: Ctx, rec: RoundRecord): { waiting: Fixture[] } 
   for (let guard = 0; guard < 50; guard++) {
     resolveAbstract(ctx, rec);
     koSync(ctx, rec);
-    if (rec.fixtures.some(f => f.result === null && f.tier !== 3)) break;
+    // koNext only schedules a match's next game once its current games are decided, so pending league or
+    // featured games elsewhere in the round never delay a knockout follow-up (e.g. the player's game 2).
     if (!koFill(ctx, rec)) break;
   }
   return { waiting: rec.fixtures.filter(f => f.result === null) };

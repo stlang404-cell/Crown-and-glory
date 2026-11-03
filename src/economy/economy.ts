@@ -13,6 +13,10 @@ const C = (crowns: number) => Math.round(crowns * MICRO);
 export const GENESIS_TREASURY = C(25_000); // standing float for market subsidies and NPC wallets
 export const STARTING_GRANT = C(1_000);
 export const SPONSOR_BUDGET = C(1_200);
+/** The treasury funds market subsidies and NPC wallets. At each season start it is replenished toward the
+ *  target by an explicit, capped mint entry — the only issuance besides prize pools, sponsors and grants. */
+export const TREASURY_TARGET = C(25_000);
+export const TREASURY_REPLENISH_CAP = C(8_000);
 export const CHALLENGER_FEE = C(25);
 export const LEAGUE_SPLIT = [0.5, 0.3, 0.2];
 /** League prize pool per circuit: 2,000 ₵ in the Crown Division down to 120 ₵ in the Open Division (geometric). */
@@ -72,6 +76,12 @@ export function seasonStartJournals(season: number, pools: PrizePools, at: strin
   for (const [k, v] of Object.entries(pools.league)) lines.push({ account: `prize:${season}:league:${k}`, amount: v });
   lines.push({ account: `prize:${season}:open`, amount: pools.open }, { account: `prize:${season}:challenger`, amount: pools.challenger }, { account: `prize:${season}:champ`, amount: pools.champ }, { account: `sponsor:${season}`, amount: pools.sponsor });
   return [j(`mint:season:${season}`, 'mint', `Season ${season} issuance: prize pools and sponsor budget (escrowed)`, lines, season, 0, at)];
+}
+
+export function treasuryReplenishJournal(season: number, treasury: number, at: string): Journal | null {
+  const amt = Math.min(TREASURY_REPLENISH_CAP, TREASURY_TARGET - treasury);
+  if (amt <= 0) return null;
+  return j(`mint:treasury:${season}`, 'mint', `Season ${season} treasury replenishment (capped at ${TREASURY_REPLENISH_CAP / MICRO} ₵)`, [{ account: 'mint', amount: -amt }, { account: 'treasury', amount: amt }], season, 0, at);
 }
 
 export const holderAccount = (id: string) => (id === 'player' ? 'player:cash' : `comp:${id}`);

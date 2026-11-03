@@ -11,12 +11,14 @@ import type { Journal } from './ledger';
 
 export interface NpcTrader { id: string; name: string; noise: number; margin: number; budgetShare: number; bias: 'none' | 'favourite' | 'underdog' }
 
+/** Trading order matters: biased and noisy traders act first, the informed analyst last, so prices end near the
+ *  public-information consensus with residual noise (measured in docs/V3_ECONOMY.md). */
 export const NPC_TRADERS: NpcTrader[] = [
-  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0.03, margin: 0.03, budgetShare: 0.04, bias: 'none' },
   { id: 'npc:conservative', name: 'Old Harbour Fund', noise: 0.05, margin: 0.06, budgetShare: 0.02, bias: 'none' },
   { id: 'npc:fan', name: 'Crown Supporters Club', noise: 0.08, margin: 0.02, budgetShare: 0.05, bias: 'favourite' },
   { id: 'npc:contrarian', name: 'Lantern Contrarians', noise: 0.08, margin: 0.04, budgetShare: 0.03, bias: 'underdog' },
   { id: 'npc:novice', name: 'First-Time Forecasters', noise: 0.14, margin: 0.02, budgetShare: 0.03, bias: 'none' },
+  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0.03, margin: 0.02, budgetShare: 0.12, bias: 'none' },
 ];
 export const NPC_WALLET_CAP = 4_000 * 1_000_000; // µ; topped up each season from the treasury up to this cap
 

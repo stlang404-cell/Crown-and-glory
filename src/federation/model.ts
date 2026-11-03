@@ -32,7 +32,8 @@ export interface Competitor {
   form: string; // last 5 results, newest last: W/D/L
   reputation: number; // 0..100, from public achievements only
   titles: { season: number; title: string }[];
-  earnings: number; // microcrowns, mirrors the competitor's ledger account
+  earnings: number; // microcrowns, lifetime credits (prizes, attendance) to the competitor's ledger account
+  balanceSeen?: number; // last observed ledger balance (bookkeeping for `earnings`)
   stats: { w: number; d: number; l: number };
   history: CompetitorSeason[];
   milestones: { season: number; round: number; text: string }[];

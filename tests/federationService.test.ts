@@ -118,6 +118,11 @@ describe('federation service', () => {
     expect(svc.state!.extra.sponsorsPaid).toEqual(expect.arrayContaining(['1:league-title', '1:promotion']));
     const journals = await svc.db.loadAll<{ id: string }>('journal');
     expect(journals.some(j => j.id === 'mint:season:2')).toBe(true);
+    // competitor expenses leave circulation into the sink; lifetime earnings are kept separately
+    expect(journals.some(j => j.id === 'comp-expenses:1')).toBe(true);
+    expect(svc.balance('sink')).toBeGreaterThan(0);
+    const earner = [...svc.state!.competitors.values()].find(c => c.titles.some(t => t.season === 1))!;
+    expect(earner.earnings).toBeGreaterThan(svc.balance(`comp:${earner.id}`));
     expect(journals.filter(j => j.id.startsWith('prize-pay:1:league:')).length).toBe(128);
     // currency is only created by explicit mint entries
     const mintLines = journals.flatMap(j => (j as unknown as { lines: { account: string; amount: number }[] }).lines.filter(l => l.account === 'mint').map(() => j.id));

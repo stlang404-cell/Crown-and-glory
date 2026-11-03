@@ -124,7 +124,7 @@ export function CompetitorScreen({ id }: { id: string }) {
             <div className="stat"><span className="v mono">{c.form || '—'}</span><span className="k">Form (last 5)</span></div>
             <div className="stat"><span className="v">{c.stats.w}-{c.stats.d}-{c.stats.l}</span><span className="k">Career W-D-L</span></div>
             <div className="stat"><span className="v">{c.reputation}</span><span className="k">Reputation</span></div>
-            <div className="stat"><span className="v">{fmtCrowns(fed.balance(`comp:${c.id}`), 0)}</span><span className="k">Prize account</span></div>
+            <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career earnings</span></div>
           </div>
           <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but that style did not pass behavioural validation, so they play the common engine policy)</span>}</div>
           <div className="small muted">Public rating only. Their hidden playing strength is never shown and is not used by forecasts or traders.</div>

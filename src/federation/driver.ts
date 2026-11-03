@@ -30,7 +30,7 @@ export interface ProcessedRound {
  */
 export function processRound(ctx: Ctx, rec: RoundRecord, seasonRounds: RoundRecord[], nowIso: string): ProcessedRound {
   const { waiting } = settleRound(ctx, rec);
-  if (waiting.length) throw new Error(`Round ${rec.season}:${rec.round} still has ${waiting.length} unplayed fixture(s)`);
+  if (waiting.length) throw new Error(`Round ${rec.season}:${rec.round} still has ${waiting.length} unplayed fixture(s): ${waiting.map(f => `${f.id} (tier ${f.tier})`).join(", ")}`);
   rec.status = 'done';
   rec.processedAt = nowIso;
   const all = [...seasonRounds.filter(r => r.id !== rec.id), rec];
