@@ -8,6 +8,7 @@ import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
 import { FederationScreen } from './FederationScreen';
+import { AcademyScreen } from './AcademyScreen';
 import { Icon } from './Icons';
 
 export type View =
@@ -17,6 +18,7 @@ export type View =
   | { name: 'library' }
   | { name: 'profile' }
   | { name: 'lab' }
+  | { name: 'academy' }
   | { name: 'federation' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
@@ -34,7 +36,7 @@ function parseHash(): View {
   const [name, id, ply] = h.split('/');
   if (name === 'match' && id) return { name: 'match', gameId: decodeURIComponent(id) };
   if (name === 'analysis' && id) return { name: 'analysis', gameId: decodeURIComponent(id), ply: ply ? +ply : undefined };
-  if (name === 'library' || name === 'profile' || name === 'lab' || name === 'federation') return { name };
+  if (name === 'library' || name === 'profile' || name === 'lab' || name === 'federation' || name === 'academy') return { name };
   return { name: 'play' };
 }
 function toHash(v: View): string {
@@ -46,6 +48,7 @@ function toHash(v: View): string {
 const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['name'] }[] = [
   { id: 'play', label: 'Play', icon: 'play' },
   { id: 'library', label: 'Library', icon: 'library' },
+  { id: 'academy', label: 'Academy', icon: 'academy' },
   { id: 'profile', label: 'Career', icon: 'profile' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
   { id: 'federation', label: 'Federation', icon: 'world' },
@@ -89,6 +92,7 @@ export function App({ services }: { services: AppServices }) {
           {view.name === 'library' && <LibraryScreen />}
           {view.name === 'profile' && <ProfileScreen />}
           {view.name === 'lab' && <LabScreen />}
+          {view.name === 'academy' && <AcademyScreen />}
           {view.name === 'federation' && <FederationScreen />}
         </main>
         <nav className="tabbar" aria-label="Main">

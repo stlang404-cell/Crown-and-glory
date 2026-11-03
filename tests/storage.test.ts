@@ -86,3 +86,21 @@ describe('storage', () => {
     await expect(validateBundle({ format: 'nope' })).rejects.toThrow(ImportError);
   });
 });
+
+describe('schema migration v1 → v2', () => {
+  it('upgrades a v1 database without touching existing games or ratings', async () => {
+    const f = new IDBFactory();
+    const v1 = await CrownDB.open(f, 'crown-calculation', 1);
+    const g = finishedGame('m1');
+    await v1.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
+    expect([...v1.db.objectStoreNames]).not.toContain('attempts');
+    const before = await v1.ratingState('rapid');
+    v1.close();
+    const v2 = await CrownDB.open(f, 'crown-calculation', 2);
+    expect([...v2.db.objectStoreNames]).toEqual(expect.arrayContaining(['attempts', 'trainingRuns', 'bookmarks', 'games']));
+    expect((await v2.getGame('m1'))?.moves).toHaveLength(4);
+    expect((await v2.ratingState('rapid')).rating).toBe(before.rating);
+    await v2.put('attempts', { id: 'a1', puzzleId: 'p', at: 'T' });
+    expect(await v2.getAll('attempts')).toHaveLength(1);
+  });
+});

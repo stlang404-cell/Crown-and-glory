@@ -15,6 +15,8 @@ export interface BoardProps {
   arrows?: BoardArrow[];
   showCoords?: boolean;
   label?: string;
+  /** Extra highlighted squares (e.g. puzzle hints). */
+  highlights?: string[];
 }
 
 function parseBoard(fen: string): (string | null)[] {
@@ -34,7 +36,7 @@ const sqName = (i: number) => FILES[i % 6] + (Math.floor(i / 6) + 1);
 const sqIndex = (n: string) => FILES.indexOf(n[0]) + (+n[1] - 1) * 6;
 const describe = (p: string | null) => (p ? `${p === p.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[p.toLowerCase() as PieceKind]}` : 'empty');
 
-export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSquare, arrows = [], showCoords = true, label = 'Chess board' }: BoardProps) {
+export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSquare, arrows = [], showCoords = true, label = 'Chess board', highlights = [] }: BoardProps) {
   const board = useMemo(() => parseBoard(fen), [fen]);
   const [selected, setSelected] = useState<string | null>(null);
   const [promo, setPromo] = useState<{ from: string; to: string } | null>(null);
@@ -131,7 +133,7 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
           const name = sqName(idx);
           const p = board[idx];
           const light = (idx % 6 + Math.floor(idx / 6)) % 2 === 1;
-          const cls = ['sq', light ? 'light' : 'dark', last.includes(name) ? 'last' : '', selected === name ? 'sel' : '', checkSquare === name ? 'check' : ''].join(' ');
+          const cls = ['sq', light ? 'light' : 'dark', last.includes(name) ? 'last' : '', selected === name || highlights.includes(name) ? 'sel' : '', checkSquare === name ? 'check' : ''].join(' ');
           const isDest = dests.has(name);
           const row = Math.floor(pos / 6), col = pos % 6;
           return (

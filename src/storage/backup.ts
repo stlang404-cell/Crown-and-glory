@@ -22,12 +22,12 @@ export interface BackupBundle {
   appVersion: string;
   counts: { games: number; ratingEvents: number; reports: number };
   payloadSha256: string;
-  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[] };
+  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[] };
 }
 
 export async function exportBundle(db: CrownDB, appVersion: string): Promise<BackupBundle> {
   const d = await db.dump();
-  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports };
+  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[] };
   return {
     format: BACKUP_FORMAT, appSchema: APP_SCHEMA, variantId: VARIANT_ID, exportedAt: new Date().toISOString(), appVersion,
     counts: { games: d.games.length, ratingEvents: d.ratingEvents.length, reports: d.reports.length },
@@ -85,7 +85,7 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
     const r = await db.importRecords(b.payload, true);
     return { mode: 'restore', ...r };
   }
-  const r = await db.importRecords({ games: b.payload.games.map(g => ({ ...g, context: { ...g.context, kind: g.context.kind } })), reports: b.payload.reports, ratingEvents: [], ratingState: [] }, false);
+  const r = await db.importRecords({ games: b.payload.games, reports: b.payload.reports, ratingEvents: [], ratingState: [], attempts: b.payload.attempts, trainingRuns: b.payload.trainingRuns, bookmarks: b.payload.bookmarks }, false);
   return { mode: 'merge', ...r };
 }
 

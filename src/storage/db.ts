@@ -12,7 +12,7 @@ import type { PoolId } from '../games/types';
 import type { AnalysisReport } from '../analysis/types';
 
 export const DB_NAME = 'crown-calculation';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 export const APP_SCHEMA = 'crown-save-1';
 
 export interface AnalysisJob {
@@ -53,6 +53,18 @@ export const MIGRATIONS: Migration[] = [
       const jobs = db.createObjectStore('analysisJobs', { keyPath: 'id' });
       jobs.createIndex('status', 'status');
       db.createObjectStore('meta', { keyPath: 'key' });
+    },
+  },
+  {
+    to: 2,
+    description: 'M2: Academy attempts, training runs and position bookmarks (additive; v1 data untouched)',
+    upgrade(db) {
+      const att = db.createObjectStore('attempts', { keyPath: 'id' });
+      att.createIndex('puzzleId', 'puzzleId');
+      att.createIndex('at', 'at');
+      db.createObjectStore('trainingRuns', { keyPath: 'id' });
+      const bm = db.createObjectStore('bookmarks', { keyPath: 'id' });
+      bm.createIndex('gameId', 'gameId');
     },
   },
 ];
@@ -238,19 +250,37 @@ export class CrownDB {
     return (await req(this.store('analysisJobs').getAll())) as AnalysisJob[];
   }
 
+  async put(store: 'attempts' | 'trainingRuns' | 'bookmarks', value: unknown): Promise<void> {
+    const tx = this.db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(value);
+    await done(tx);
+  }
+  async remove(store: 'bookmarks', key: string): Promise<void> {
+    const tx = this.db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    await done(tx);
+  }
+  async getAll<T>(store: 'attempts' | 'trainingRuns' | 'bookmarks'): Promise<T[]> {
+    return (await req(this.store(store).getAll())) as T[];
+  }
+
   /** Raw dump for export. */
-  async dump(): Promise<{ games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; jobs: AnalysisJob[] }> {
-    const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'reports', 'analysisJobs'], 'readonly');
-    const [games, ratingEvents, ratingState, reports, jobs] = await Promise.all([
+  async dump(): Promise<{ games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; jobs: AnalysisJob[]; attempts: unknown[]; trainingRuns: unknown[]; bookmarks: unknown[] }> {
+    const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'reports', 'analysisJobs', 'attempts', 'trainingRuns', 'bookmarks'], 'readonly');
+    const [games, ratingEvents, ratingState, reports, jobs, attempts, trainingRuns, bookmarks] = await Promise.all([
       req(tx.objectStore('games').getAll()), req(tx.objectStore('ratingEvents').getAll()), req(tx.objectStore('ratingState').getAll()),
       req(tx.objectStore('reports').getAll()), req(tx.objectStore('analysisJobs').getAll()),
+      req(tx.objectStore('attempts').getAll()), req(tx.objectStore('trainingRuns').getAll()), req(tx.objectStore('bookmarks').getAll()),
     ]);
-    return { games, ratingEvents, ratingState, reports, jobs } as never;
+    return { games, ratingEvents, ratingState, reports, jobs, attempts, trainingRuns, bookmarks } as never;
   }
 
   /** Import records in one transaction, never overwriting existing records with the same id. */
-  async importRecords(d: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[] }, replaceRatingState: boolean): Promise<{ games: number; events: number; reports: number; skipped: number }> {
-    const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'reports'], 'readwrite');
+  async importRecords(d: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[] }, replaceRatingState: boolean): Promise<{ games: number; events: number; reports: number; skipped: number }> {
+    const tx = this.db.transaction(['games', 'ratingEvents', 'ratingState', 'reports', 'attempts', 'trainingRuns', 'bookmarks'], 'readwrite');
+    for (const [store, list] of [['attempts', d.attempts], ['trainingRuns', d.trainingRuns], ['bookmarks', d.bookmarks]] as const) {
+      for (const r of list ?? []) if (!(await req(tx.objectStore(store).get(r.id)))) tx.objectStore(store).add(r);
+    }
     let games = 0, events = 0, reports = 0, skipped = 0;
     for (const g of d.games) {
       if (await req(tx.objectStore('games').get(g.id))) { skipped++; continue; }
