@@ -459,3 +459,25 @@ worker updates, accessibility audit, licensed font/art, licence/source package, 
 commentary, news feed and history pages, further styles and engine strength, confirmatory improvement
 plan. Open gates that no milestone can close without new data: human calibration of levels, grades and
 puzzles; human enjoyment; variant balance.
+
+## Addendum — v0.4.0 outcome for the major gaps (verification evidence)
+
+The matrix above describes v0.3.0 as audited. Outcome in v0.4.0:
+
+| Gap | Outcome | Evidence |
+| --- | --- | --- |
+| Tournament, promotion, qualification, season and conditional market families; payoff registry | Implemented: one n-state LMSR with subset claims; four season families on four distinct regions; overlapping clusters never open at once | tests/markets.test.ts, docs/M4_EXCHANGE.md §2 |
+| Joint champions vs the 8-state conditional reference | Kept 8 states; joint finals settle ½/½ by payout vector (in the simplex; bound unchanged) — documented deviation | tests/exchange2.test.ts |
+| Uniform opening prices where priors matter | Sandbox markets open at a funded prior (b·ln(1/min p0)); family markets open uniform and receive NPC opening liquidity | tests/exchange2.test.ts |
+| Ply cap settled as a draw | Censored games cancel the market (published vector) | docs/M4_EXCHANGE.md §7 |
+| Unreachable cancellation, random trade keys, no stale-quote check | Fixed (resolveMarket path, deterministic keys, expectVersion guard) | tests |
+| NPC traders 3-outcome only, one pass | Eight strategies, pre/live/round roles, exposure caps | src/exchange/npc.ts |
+| Live trading absent | Move-by-move in-play trading with resume | tests/markets.test.ts, journey 15–17 |
+| Forecast scoring | Brier + log, calibration, skill progression; forecast league with prizes deferred (M5) | src/app/forecasting.ts |
+| Sandbox Exchange | Implemented with isolation and anti-exploit controls | docs/M4_EXCHANGE.md §6 |
+| Player route into the Federation Open | Implemented with the conflict rule | tests/markets.test.ts |
+| Institutions (hosting, research dept., management slot) | Club levels and sponsorship contracts implemented; research department / format choice deferred (M5) | tests, docs/M4_ECONOMY.md |
+| Exchange hiding / spending limits; advance preview; broadcast requests; rank titles | Deferred to M5 | docs/M5_ROADMAP.md |
+| Engine efficiency vs Fairy-Stockfish | Play engine 45.3% → 75.0% vs the fixed reference setting; WASM backend evaluated and not integrated | docs/M4_ENGINE_STRENGTH.md |
+| Multi-seed economy study | 9 strategies × 3 seeds + 8-season convergence; 3 seeds × 40 seasons federation | docs/M4_ECONOMY.md |
+| Engine worker queue, SW update timing, lease fallback, quota check | Deferred to M5 | docs/M5_ROADMAP.md §6 |
