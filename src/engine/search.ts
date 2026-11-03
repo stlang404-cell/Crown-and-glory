@@ -77,6 +77,8 @@ export interface SearchFeatures {
   rfpDeep: boolean;
   /** Singular extension of the TT move (with multi-cut). */
   singular: boolean;
+  /** v0.7: when time runs out mid-iteration, play a root move that already fully beat the previous best. */
+  partialRoot: boolean;
 }
 
 export const DEFAULT_FEATURES: SearchFeatures = {
@@ -106,6 +108,7 @@ export const DEFAULT_FEATURES: SearchFeatures = {
   pawnExt: false,
   rfpDeep: false,
   singular: false,
+  partialRoot: false,
 };
 
 /** The crown-search-1 feature set (all M4 additions off): reproduces the M3 engine node for node. */
@@ -238,6 +241,9 @@ export class Searcher {
   private contempt = 0;
   private now: () => number = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   private rootMovesFilter: Move[] | null = null;
+  /** Best root move found so far in the current (possibly unfinished) iteration (partialRoot). */
+  private rootBest: Move = 0;
+  private rootBestScore = 0;
 
   constructor(ttBits = 18) {
     this.tt = new TranspositionTable(ttBits);
@@ -297,6 +303,7 @@ export class Searcher {
     let prevScore = 0;
     for (let depth = 1; depth <= maxDepth; depth++) {
       let score: number;
+      this.rootBest = 0; this.rootBestScore = -INF;
       try {
         if (this.features.aspiration && depth >= 4 && !isMateScore(prevScore)) {
           let delta = 30;
@@ -314,6 +321,11 @@ export class Searcher {
       } catch (e) {
         if (e instanceof StopSearch) {
           stopReason = this.nodes + this.qnodes >= this.nodeLimit ? 'nodes' : 'time';
+          // partialRoot: a different root move already searched to completion in this iteration and scored above
+          // the previous iteration's best is the better choice than discarding the unfinished iteration
+          if (this.features.partialRoot && best && this.rootBest && this.rootBest !== best.bestMove && this.rootBestScore > best.score && !isMateScore(this.rootBestScore)) {
+            best = { ...best, bestMove: this.rootBest, pv: [this.rootBest] };
+          }
           break;
         }
         throw e;
@@ -652,6 +664,7 @@ export class Searcher {
         bestScore = s;
         bestMove = m;
         if (s > alpha) {
+          if (ply === 0) { this.rootBest = m; this.rootBestScore = s; }
           alpha = s;
           // update PV
           const base = ply * MAX_PLY;

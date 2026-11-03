@@ -111,12 +111,30 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
   const rnd = mulberry32(seed);
   const title = new Map(members.map(m => [m, 0])), top2 = new Map(members.map(m => [m, 0]));
   const seeds = new Map(members.map((m, i) => [m, i + 1]));
+  // exact fast path: points by array; the full tiebreak order only when 1st or 2nd place is tied on points
+  const ix = new Map(members.map((m, i) => [m, i]));
+  const rt = members.map(m => rating(m));
+  const base = new Float64Array(members.length);
+  for (const g of played) if (g.result !== null) { const wi = ix.get(g.white), bi = ix.get(g.black); if (wi !== undefined) base[wi] += g.result; if (bi !== undefined) base[bi] += 1 - g.result; }
   for (let k = 0; k < N; k++) {
-    const games: G[] = played.slice();
-    for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) games.push({ white: w, black: b, result: draw(rating(w), rating(b), rnd() / 4294967296) });
-    const order = leagueOrder(standings(members, games, seeds), games);
-    title.set(order[0].id, title.get(order[0].id)! + 1 / N);
-    top2.set(order[0].id, top2.get(order[0].id)! + 1 / N); top2.set(order[1].id, top2.get(order[1].id)! + 1 / N);
+    const pts = base.slice();
+    const extra: G[] = [];
+    for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) {
+      const wi = ix.get(w)!, bi = ix.get(b)!;
+      const res = draw(rt[wi], rt[bi], rnd() / 4294967296);
+      pts[wi] += res; pts[bi] += 1 - res;
+      extra.push({ white: w, black: b, result: res });
+    }
+    let a = -1, b2 = -1;
+    for (let i = 0; i < pts.length; i++) { if (a < 0 || pts[i] > pts[a]) { b2 = a; a = i; } else if (b2 < 0 || pts[i] > pts[b2]) b2 = i; }
+    let unique = true;
+    for (let i = 0; i < pts.length; i++) if (i !== a && i !== b2 && Math.abs(pts[i] - pts[b2]) <= 1e-9) unique = false;
+    if (Math.abs(pts[a] - pts[b2]) <= 1e-9) unique = false;
+    let first: string, second: string;
+    if (unique) { first = members[a]; second = members[b2]; }
+    else { const games = played.concat(extra); const order = leagueOrder(standings(members, games, seeds), games); first = order[0].id; second = order[1].id; }
+    title.set(first, title.get(first)! + 1 / N);
+    top2.set(first, top2.get(first)! + 1 / N); top2.set(second, top2.get(second)! + 1 / N);
   }
   return { title, top2 };
 }
@@ -127,11 +145,26 @@ export function qualificationModel(target: string, circuits: { members: string[]
   const rnd = mulberry32(seed);
   let hit = 0;
   const rrs = circuits.map(c => roundRobin(c.members));
+  // Exact fast path (same result as the full order): tally points with arrays; the complete league order with its
+  // tiebreaks (head-to-head, Sonneborn–Berger, seed) is computed only when the top of a league is tied.
+  const idx = circuits.map(c => new Map(c.members.map((m, i) => [m, i])));
+  const base = circuits.map((c, ci) => { const a = new Float64Array(c.members.length); for (const g of c.played) if (g.result !== null) { const wi = idx[ci].get(g.white), bi = idx[ci].get(g.black); if (wi !== undefined) a[wi] += g.result; if (bi !== undefined) a[bi] += 1 - g.result; } return a; });
+  const ratings = circuits.map(c => c.members.map(m => rating(m)));
   for (let k = 0; k < N; k++) {
     const winners: StandingRow[] = [];
     circuits.forEach((c, ci) => {
-      const games: G[] = c.played.slice();
-      for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rrs[ci][(r - 1) % rrs[ci].length] ?? []) games.push({ white: w, black: b, result: draw(rating(w), rating(b), rnd() / 4294967296) });
+      const pts = base[ci].slice();
+      const extra: G[] = [];
+      for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rrs[ci][(r - 1) % rrs[ci].length] ?? []) {
+        const wi = idx[ci].get(w)!, bi = idx[ci].get(b)!;
+        const res = draw(ratings[ci][wi], ratings[ci][bi], rnd() / 4294967296);
+        pts[wi] += res; pts[bi] += 1 - res;
+        extra.push({ white: w, black: b, result: res });
+      }
+      let max = -1, n = 0, at = -1;
+      for (let i = 0; i < pts.length; i++) { if (pts[i] > max + 1e-9) { max = pts[i]; n = 1; at = i; } else if (Math.abs(pts[i] - max) <= 1e-9) n++; }
+      if (n === 1) { winners.push({ id: c.members[at], points: max } as StandingRow); return; }
+      const games = c.played.concat(extra);
       winners.push(leagueOrder(standings(c.members, games, new Map(c.members.map((m, i) => [m, i + 1]))), games)[0]);
     });
     const top8 = winners.sort((a, b) => b.points - a.points || rating(b.id) - rating(a.id) || a.id.localeCompare(b.id)).slice(0, 8).map(r => r.id);

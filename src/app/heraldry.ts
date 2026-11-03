@@ -10,6 +10,7 @@ import { selectFeatured } from '../heraldry/rivals';
 import { AI_CLUBS, clubOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/clubs';
 import type { Journal } from '../exchange/ledger';
 import type { KoState } from '../federation/world';
+import { hashSeed } from '../federation/generator';
 
 type G = { event: string; white: string; black: string; result: number | null };
 const MAX_NORMS = 24;
@@ -74,20 +75,64 @@ export function eventGames(games: G[], kind: 'league' | 'open' | 'challenger' | 
 export const NORM_EVENTS = { swissRound: SWISS_ROUNDS[SWISS_ROUNDS.length - 1], leagueRound: LEAGUE_ROUNDS };
 
 /** Season-end AI club finances: dues from members, operating costs to the sink. Real, balanced journals. */
+/**
+ * Player club membership (crown-club-appeal-1, v0.7). A player-owned club competes with the two AI clubs of the
+ * player's region for members. Its share of the region's active competitors depends on how it is run:
+ *   share = 0.06·level + 0.08 if this season's Club Weekend was completed + 0.03 per active sponsorship contract
+ *           + 0.02 per title the player won this or last season (max 3) − 0.10 per suspended club, clamped to [0, 0.45].
+ * Members pay the same dues as AI-club members (5% of their balance at season end) to the player's cash instead of
+ * their AI club — money moving between existing accounts, never new money. Income therefore depends on the club's
+ * management AND on what the region's competitors actually earned; upkeep and upgrade costs are fixed, so an idle
+ * or poorly run club still loses money.
+ */
+export const CLUB_APPEAL_ID = 'crown-club-appeal-1';
+export function playerClubAppeal(st: FedState, season: number): { share: number; parts: { label: string; value: number }[] } {
+  // simulation-only switch reproducing the pre-v0.7 policy (no player-club dues) for before/after comparisons
+  if (typeof process !== 'undefined' && process.env?.CROWN_SIM_NO_PLAYER_CLUB_DUES === '1') return { share: 0, parts: [] };
+  const club = [...st.assets.values()].find(a => a.typeId === 'club');
+  if (!club) return { share: 0, parts: [] };
+  const level = club.level ?? 1;
+  const weekend = !!st.plan.club && st.plan.club.champions.length > 0;
+  const contracts = [...st.contracts.values()].filter(c => c.status === 'active').length;
+  const titles = Math.min(3, st.world.player.titles.filter(t => t.season >= season - 1).length);
+  const parts = [
+    { label: `Club level ${level}`, value: 0.06 * level },
+    { label: 'Club Weekend completed this season', value: weekend ? 0.08 : 0 },
+    { label: `${contracts} sponsored player(s)`, value: 0.03 * contracts },
+    { label: `${titles} recent title(s)`, value: 0.02 * titles },
+    { label: 'Club suspended (unpaid upkeep)', value: club.suspended ? -0.1 : 0 },
+  ];
+  const share = Math.max(0, Math.min(0.45, parts.reduce((a, x) => a + x.value, 0)));
+  return { share, parts };
+}
+/** Which competitors join the player's club this season: a stable, seeded share of the region's active players. */
+export function playerClubMembers(st: FedState, season: number): Set<string> {
+  const { share } = playerClubAppeal(st, season);
+  if (share <= 0) return new Set();
+  const region = st.world.player.region;
+  const pool = [...st.competitors.values()].filter(c => c.status === 'active' && c.region === region)
+    .map(c => ({ id: c.id, k: hashSeed(st.world.seed, 'club-member', season, c.id) })).sort((a, b) => a.k - b.k);
+  return new Set(pool.slice(0, Math.round(pool.length * share)).map(x => x.id));
+}
+
 export function clubFinances(st: FedState, season: number, post: (j: Journal[]) => void, now: string): void {
   const dues = new Map<string, number>();
   const lines: { account: string; amount: number }[] = [];
+  const mine = playerClubMembers(st, season);
+  let playerDues = 0;
   for (const c of st.competitors.values()) {
     if (c.status !== 'active') continue;
     const bal = st.balances.get(`comp:${c.id}`) ?? 0;
     const amt = Math.floor(bal * CLUB_DUES_SHARE);
     if (amt <= 0) continue;
+    if (mine.has(c.id)) { lines.push({ account: `comp:${c.id}`, amount: -amt }); playerDues += amt; continue; }
     const club = clubOf(c.id, c.region).id;
     lines.push({ account: `comp:${c.id}`, amount: -amt });
     dues.set(club, (dues.get(club) ?? 0) + amt);
   }
   for (const [club, amt] of dues) lines.push({ account: `club:${club}`, amount: amt });
-  if (lines.length) post([{ id: `club-dues:${season}`, at: now, kind: 'club-dues', memo: 'AI club membership dues (5% of member balances)', lines, season }]);
+  if (playerDues > 0) lines.push({ account: 'player:cash', amount: playerDues });
+  if (lines.length) post([{ id: `club-dues:${season}`, at: now, kind: 'club-dues', memo: playerDues > 0 ? `Club membership dues (5% of member balances; your club: ${mine.size} members)` : 'AI club membership dues (5% of member balances)', lines, season }]);
   const ops: { account: string; amount: number }[] = [];
   let total = 0;
   for (const k of AI_CLUBS) {

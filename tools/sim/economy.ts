@@ -26,7 +26,7 @@ import type { GameRecord } from '../../src/games/types';
 const SEASONS = +(process.argv[2] ?? 4);
 const OUT = process.argv[3] ?? 'docs/sim/economy-results.json';
 
-interface Strategy { id: string; label: string; strength: number; trade: 'none' | 'conservative' | 'aggressive'; assets: string[]; challenger: boolean; families?: boolean; magnate?: boolean }
+interface Strategy { id: string; label: string; strength: number; trade: 'none' | 'conservative' | 'aggressive'; assets: string[]; challenger: boolean; families?: boolean; magnate?: boolean; organizer?: boolean }
 const STRATEGIES: Strategy[] = [
   { id: 'chess-only', label: 'Chess only (1600-strength player, no trading, no assets)', strength: 1600, trade: 'none', assets: [], challenger: true },
   { id: 'successful', label: 'Successful competitor (2100 strength)', strength: 2100, trade: 'none', assets: [], challenger: true },
@@ -36,6 +36,7 @@ const STRATEGIES: Strategy[] = [
   { id: 'hybrid', label: 'Hybrid (1700 strength, conservative trading, Analyst Office)', strength: 1700, trade: 'conservative', assets: ['analyst'], challenger: true },
   { id: 'business', label: 'Business owner (1500 strength; club + scouting + analyst)', strength: 1500, trade: 'none', assets: ['club', 'scouting', 'analyst'], challenger: true },
   { id: 'market-specialist', label: 'Market specialist (1300 strength; conservative match trading + 10 shares on the largest model edge in every season/tournament family market)', strength: 1300, trade: 'conservative', assets: ['analyst'], challenger: false, families: true },
+  { id: 'organizer', label: 'Tournament organiser (1500 strength; club upgraded to a Tournament Venue when affordable, hosts the Club Weekend every season; no tools, no contracts)', strength: 1500, trade: 'none', assets: ['club'], challenger: true, organizer: true },
   { id: 'reckless', label: 'Reckless spender (1000 strength; aggressive trading on every market, buys club + scouting + analyst) — bankruptcy and recovery test', strength: 1000, trade: 'aggressive', assets: ['club', 'scouting', 'analyst'], challenger: true },
   { id: 'magnate', label: 'Business magnate (1500 strength; club upgraded when affordable, sponsorship contracts on the strongest affordable Crown Division players)', strength: 1500, trade: 'none', assets: ['club'], challenger: true, magnate: true },
 ];
@@ -95,6 +96,7 @@ async function run(s: Strategy, seed: number) {
           try { await svc.trade(m.id, best, 10, 'buy'); trades++; tradeSpent += cashBefore - svc.balance('player:cash'); } catch { /* conflict, cash */ }
         }
       }
+      if (s.organizer && r === 2 && svc.clubLevelOf() === 1 && svc.balance('player:cash') > CLUB_LEVELS[1].cost + 200 * MICRO) await svc.upgradeClub().catch(() => {});
       if (s.magnate && r === 2) {
         const lv = svc.clubLevelOf();
         if (lv > 0 && lv < 3) { const cost = CLUB_LEVELS[lv].cost; if (svc.balance('player:cash') > cost + 300 * MICRO) await svc.upgradeClub().catch(() => {}); }
