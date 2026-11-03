@@ -5,16 +5,16 @@ no pawn double-step, no en passant, mandatory Q/R/N promotion) with a genuine lo
 ratings, a permanent game library and engine-based move-by-move analysis. TypeScript + React + Vite,
 Web Workers, IndexedDB, installable PWA. No accounts, servers, paid APIs or real money.
 
-Status: **v0.3.0 — “The Living Federation”** — see [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
-The loop: **Play → Analyse → Train → Compete → Forecast → Build → play again.**
-M4 (v0.4.0) is planned in [docs/M4_PLAN.md](docs/M4_PLAN.md); the binding research specification is in [docs/research](docs/research).
+Status: **v0.4.0 — “The Grand Exchange”** — see [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (every feature is
+labelled verified complete / implemented but unverified / partial / not implemented). The next milestone is in
+[docs/M5_ROADMAP.md](docs/M5_ROADMAP.md); the binding research specification is in [docs/research](docs/research).
 
-v0.3 reports: [baseline audit](docs/V3_BASELINE_AUDIT.md) · [federation architecture](docs/V3_FEDERATION.md) ·
-[competition rules](docs/V3_COMPETITION_RULES.md) · [exchange math & accounting](docs/V3_EXCHANGE.md) ·
-[economy & simulations](docs/V3_ECONOMY.md) · [AI personality validation](docs/V3_STYLES.md) · [M3 directive audit](docs/M3_GAP_AUDIT.md) ·
+v0.4 reports: [research reconciliation](docs/M4_RESEARCH_RECONCILIATION.md) · [baseline audit](docs/M4_BASELINE_AUDIT.md) ·
+[engine strength](docs/M4_ENGINE_STRENGTH.md) · [Grand Exchange: market maths, live-market integrity, forecasting, sandbox](docs/M4_EXCHANGE.md) ·
+[economy simulations](docs/M4_ECONOMY.md) · [themes & design](docs/M4_THEMES.md) · [AI styles](docs/V3_STYLES.md) ·
 [save format & migration](docs/SAVE_FORMAT.md) · [testing](docs/TESTING.md).
-M2 reports: [engine strength](docs/M2_ENGINE_STRENGTH.md) · [analysis calibration](docs/M2_ANALYSIS_CALIBRATION.md) ·
-[Academy validation](docs/M2_ACADEMY_VALIDATION.md) · [intelligence methodology](docs/M2_INTELLIGENCE_METHODOLOGY.md).
+Earlier reports: [v0.3 federation](docs/V3_FEDERATION.md) · [competition rules](docs/V3_COMPETITION_RULES.md) ·
+[v0.3 exchange](docs/V3_EXCHANGE.md) · [M2 engine](docs/M2_ENGINE_STRENGTH.md) · [M2 analysis](docs/M2_ANALYSIS_CALIBRATION.md).
 
 ## Play on Windows
 
@@ -97,6 +97,23 @@ Safari may evict website data that is not used for a while. Use **Library → Ex
   games, and any use makes a casual game permanently assisted.
 - **Chess Passport**: career timeline, records, memorable moves, opponent history, filters and CSV export.
 
+## What v0.4.0 adds
+
+- **The Grand Exchange**: one funded LMSR mechanism for match markets, tournament-champion markets (Federation
+  Open, Crown Championship), promotion, qualification and season-title markets, and a bounded conditional
+  final-four market (8 bracket paths with champion, finalist and “X beats Y in the final” claims).
+- **Live in-play trading**: watch a featured match move by move; after each published move trading reopens for a
+  window, NPC traders react to the public engine evaluation, and the market settles at the final move.
+- **Forecasting companion**: free probability forecasts scored with Brier and log scores, calibration chart and
+  skill progression, compared with the market price and the public model.
+- **Sandbox Exchange** on your own casual games, with a separate practice balance that never touches official money.
+- **Institutions**: upgrade your club to a tournament venue (8-player Club Weekend) and a Federation Club; sign
+  sponsorship contracts for a share of a competitor's prizes. Eight NPC trading strategies with budgets.
+- **News & history**, championship history with final replays, rivalries and a season archive.
+- **New look**: Obsidian & Crimson (default), Midnight & Gold and Ivory & Slate themes, five board palettes,
+  reduced-motion control, all in Settings.
+- Engine and AI-style work: see [docs/M4_ENGINE_STRENGTH.md](docs/M4_ENGINE_STRENGTH.md).
+
 ## What v0.3.0 adds
 
 - **A persistent federation of 2,048 AI competitors** (16 regions × 8 divisions) with identities, hidden
@@ -138,10 +155,16 @@ The v0.3.0 acceptance journey (optionally upgrading a save made by a v0.2.0 buil
 node e2e/federation.mjs [path/to/v0.2.0/dist] 4191
 ```
 
+The v0.4.0 acceptance journey (28 steps; optionally upgrading a save made by a v0.3.0 build first):
+
+```bash
+node e2e/m4-journey.mjs [path/to/v0.3.0/dist] 4291
+```
+
 Multi-season economy/federation simulation across player strategies:
 
 ```bash
-npx tsx tools/sim/economy.ts 6 docs/sim/economy-results.json
+npx tsx tools/sim/economy.ts 4 docs/sim/economy-v4.json "" 1000,2000,3000
 ```
 
 Engine benchmarks need a local Fairy-Stockfish binary (development only, never shipped):

@@ -1,0 +1,23 @@
+{
+ "measuredAt": "2026-11-03T14:16:05.151Z",
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+ "cores": 4,
+ "note": "Node, single thread, other workloads running concurrently; browsers on phones are typically slower",
+ "presets": {
+  "quick-d5": {
+   "msPerPly": 29,
+   "plies": 192,
+   "games": 3
+  },
+  "std-d7": {
+   "msPerPly": 159,
+   "plies": 192,
+   "games": 3
+  },
+  "deep-d9": {
+   "msPerPly": 919,
+   "plies": 192,
+   "games": 3
+  }
+ }
+}

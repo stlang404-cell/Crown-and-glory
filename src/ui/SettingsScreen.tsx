@@ -3,6 +3,8 @@ import { APP_VERSION } from '../app/services';
 import { DB_VERSION } from '../storage/db';
 import { RULES_VERSION } from '../rules/types';
 import { PieceSvg } from './Pieces';
+import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS, ENGINE_BUILD } from '../analysis/analyzer';
+import SPEED from '../analysis/analysis-speed.json';
 import { BOARDS, MOTIONS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
 
 function usePrefs() {
@@ -85,6 +87,16 @@ export function SettingsScreen() {
         <p className="small muted" style={{ marginBottom: 0 }}>
           “Follow system” uses your device’s reduced-motion setting (currently {systemReduced ? 'on' : 'off'}). Reduce turns off piece slides and interface transitions; Full keeps them even when the device asks for less motion.
         </p>
+      </section>
+
+      <section className="panel" aria-labelledby="set-engine">
+        <div className="panel-title"><h2 id="set-engine" style={{ margin: 0 }}>Analysis engine</h2><span className="chip">local · {ENGINE_BUILD}</span></div>
+        <p className="small" style={{ marginTop: 0 }}>Postgame analysis runs the Crown engine in a background worker on this device. Choose a configuration per game on the Analysis screen or for batch re-analysis in the Library; every run is stored as a separate, versioned report and never overwrites an older one.</p>
+        <table className="small">
+          <thead><tr><th>Configuration</th><th>Search</th><th>Measured speed*</th><th>Use</th></tr></thead>
+          <tbody>{ANALYSIS_PRESETS.map(p => { const m = (SPEED.presets as Record<string, { msPerPly: number }>)[p.id]; return <tr key={p.id}><td>{p.label}{p.id === DEFAULT_ANALYSIS.id ? ' · default' : ''}</td><td className="mono">depth {p.depth}, {p.candidates} candidates</td><td className="mono">{m ? `≈ ${m.msPerPly < 1000 ? `${m.msPerPly} ms` : `${(m.msPerPly / 1000).toFixed(1)} s`} per move` : '—'}</td><td>{p.depth <= 5 ? 'fast overview; misses deeper tactics' : p.depth <= 7 ? 'balanced (grades calibrated at this setting)' : 'slowest; best for critical games'}</td></tr>; })}</tbody>
+        </table>
+        <p className="small muted" style={{ marginBottom: 0 }}>*Measured with tools/bench/analysis_speed.ts on three engine games in Node on a 4-core cloud machine ({SPEED.measuredAt.slice(0, 10)}); phones are usually slower. Deeper search finds more, but no setting is a grandmaster: the grade thresholds are internal and experimental, not FIDE-calibrated.</p>
       </section>
 
       <section className="panel about" aria-labelledby="set-about">
