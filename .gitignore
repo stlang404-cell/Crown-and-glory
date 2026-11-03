@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.log
+.vite/
+test-results/
+e2e/artifacts/tmp/
+scratch_*.ts
+tools/bench/out/*.tmp
+.DS_Store
