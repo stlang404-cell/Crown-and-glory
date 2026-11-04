@@ -13,7 +13,7 @@ import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
 import { Emblem } from './Emblem';
 import { personalEmblem, divisionEmblem, titleEmblem, regionEmblem, FED_TITLES, FED_TITLE_ABBR } from '../heraldry/catalog';
-import { AI_CLUBS, clubOf, clubEmblem } from '../heraldry/clubs';
+import { clubOf, clubEmblem, clubsOf } from '../heraldry/clubs';
 import { ambitionOf } from '../heraldry/rivals';
 import { nextTitleProgress } from '../heraldry/titles';
 import { rivalriesOf, collect } from '../app/rivalries';
@@ -21,6 +21,7 @@ import { computeRivalry } from '../heraldry/rivalry';
 import { IntensityBar, usePlayerGames } from './RivalsScreen';
 import { leagueTable, swissTable } from '../federation/world';
 import { gamesOf } from '../federation/driver';
+import { filterCompetitors, pageOf, PAGE_SIZE, type DiscoverySpecial } from '../app/discovery';
 
 /** All results of a competitor across stored rounds (summary results included), newest first. */
 function resultsOf(rounds: Iterable<{ season: number; round: number; abstract: [string, string, string, number | null][]; fixtures: { event: string; white: string; black: string; result: number | null; tier: number; gameId: string | null }[] }>, id: string) {
@@ -46,22 +47,19 @@ export function CompetitorsScreen() {
   const [title, setTitle] = useState('');
   const [style, setStyle] = useState('');
   const [club, setClub] = useState('');
-  const [special, setSpecial] = useState<'' | 'watch' | 'featured' | 'rival' | 'titled' | 'upcoming' | 'favorites'>('');
+  const [special, setSpecial] = useState<DiscoverySpecial>('');
+  const [page, setPage] = useState(0);
   const rivals = useMemo(() => (st && special === 'rival' ? new Set(rivalriesOf(st, PLAYER_ID, games).filter(r => r.intensity >= 10).map(r => r.b)) : null), [st, special, games]);
   const list = useMemo(() => {
     if (!st) return [];
-    const ql = q.trim().toLowerCase();
-    const featured = new Set((st.world.featured ?? []).map(f => f.id));
-    const upcoming = new Set(st.rounds.get(`${st.world.season}:${st.world.round}`)?.fixtures.flatMap(f => (f.result === null ? [f.white, f.black] : [])) ?? []);
-    const favs = new Set(st.extra.favorites ?? []);
-    return [...st.competitors.values()]
-      .filter(c => c.status === 'active' && (region < 0 || c.region === region) && (!division || c.division === division) && (!ql || c.name.toLowerCase().includes(ql))
-        && c.rating >= minR && c.rating <= maxR && (!title || (title === 'any' ? !!c.fedTitle : c.fedTitle === title)) && (!style || (isValidatedStyle(c.style) ? c.style : 'universal') === style)
-        && (!club || clubOf(c.id, c.region).id === club)
-        && (special !== 'watch' || st.extra.watchlist.includes(c.id)) && (special !== 'featured' || featured.has(c.id)) && (special !== 'rival' || !!rivals?.has(c.id))
-        && (special !== 'titled' || c.titles.length > 0) && (special !== 'upcoming' || upcoming.has(c.id)) && (special !== 'favorites' || favs.has(c.id)))
-      .sort((a, b) => b.rating - a.rating);
+    const sets = {
+      watchlist: new Set(st.extra.watchlist), featured: new Set((st.world.featured ?? []).map(f => f.id)), rivals,
+      upcoming: new Set(st.rounds.get(`${st.world.season}:${st.world.round}`)?.fixtures.flatMap(f => (f.result === null ? [f.white, f.black] : [])) ?? []),
+      favorites: new Set(st.extra.favorites ?? []),
+    };
+    return filterCompetitors(st.competitors.values(), { q, region, division, minR, maxR, title, style, club, special }, sets);
   }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, services.revision]);
+  useEffect(() => setPage(0), [q, region, division, minR, maxR, title, style, club, special]); // a new search starts at page 1
   if (!st) return <NeedsFederation />;
   const active = [...st.competitors.values()].filter(c => c.status === 'active').length;
   const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const).filter(x => isValidatedStyle(x))];
@@ -79,16 +77,16 @@ export function CompetitorsScreen() {
         <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 4000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
         <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation Title"><option value="">Any Title or None</option><option value="any">Any Federation Title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>
         <select value={style} onChange={e => setStyle(e.target.value)} aria-label="Playing Style"><option value="">Any Style</option>{styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x as keyof typeof STYLE_LABEL]}</option>)}</select>
-        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{AI_CLUBS.map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
+        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{clubsOf(fed.topology().regions).map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
         <select value={special} onChange={e => setSpecial(e.target.value as typeof special)} aria-label="Show"><option value="">Everyone</option><option value="featured">Featured Rivals</option><option value="rival">Your Rivals</option><option value="favorites">Followed</option><option value="watch">Watchlist ({st.extra.watchlist.length})</option><option value="titled">Event Champions</option><option value="upcoming">Playing This Round</option></select>
       </div>
       <div className="panel" style={{ overflowX: 'auto' }}>
         <table>
           <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th>Div</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
-            {list.slice(0, 200).map((c, i) => (
+            {pageOf(list, page).rows.map((c, i) => (
               <tr key={c.id} className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
-                <td>{i + 1}</td>
+                <td>{pageOf(list, page).from + i + 1}</td>
                 <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{c.fedTitle && <span className="chip gold">{FED_TITLE_ABBR[c.fedTitle]}</span>}{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
                 <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /></td>
                 <td className="mono">{Math.round(c.rating)} <span className="muted">±{Math.round(c.rd)}</span></td>
@@ -97,7 +95,16 @@ export function CompetitorsScreen() {
             ))}
           </tbody>
         </table>
-        {list.length > 200 && <div className="small muted">Showing the top 200 of {list.length.toLocaleString('en')} by rating. Narrow the filters to see the rest.</div>}
+        {list.length > PAGE_SIZE && (() => {
+          const pg = pageOf(list, page);
+          return (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }} data-testid="discovery-pages">
+              <button className="btn ghost small" disabled={pg.page === 0} onClick={() => setPage(pg.page - 1)}>← Previous</button>
+              <span className="small muted">{(pg.from + 1).toLocaleString('en')}–{(pg.from + pg.rows.length).toLocaleString('en')} of {list.length.toLocaleString('en')} by rating · page {pg.page + 1} of {pg.pages}</span>
+              <button className="btn ghost small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.page + 1)}>Next →</button>
+            </div>
+          );
+        })()}
         {list.length === 0 && <div className="small muted">No competitors match these filters. Try widening them.</div>}
       </div>
     </div>

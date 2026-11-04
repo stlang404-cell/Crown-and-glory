@@ -6,7 +6,8 @@ import { Emblem, Trophy } from './Emblem';
 import { divisionEmblem, tournamentCrest } from '../heraldry/catalog';
 import { collect } from '../app/rivalries';
 import { computeRivalry } from '../heraldry/rivalry';
-import { NEW_FEDERATION_TOPOLOGY, populationOf, regionNamesOf } from '../federation/model';
+import { FEDERATION_SIZES, newFederationTopology, populationOf, regionNamesOf } from '../federation/model';
+import { detectDevice } from '../app/scheduler';
 import { LiveNow } from './LiveNow';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
 import { leagueTable, swissTable, swissEventFor } from '../federation/world';
@@ -31,6 +32,10 @@ export function WorldScreen() {
   const { go } = useApp();
   const fed = services.fed;
   const [region, setRegion] = useState(0);
+  // v0.10: the size of a new federation; the default depends on the device (docs/FEDERATION_SCALE.md §1.8)
+  const [device] = useState(() => detectDevice());
+  const [sizeId, setSizeId] = useState(() => newFederationTopology(device).id);
+  const size = (FEDERATION_SIZES.find(s => s.topology.id === sizeId) ?? FEDERATION_SIZES[0]).topology;
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmForfeit, setConfirmForfeit] = useState<string | null>(null);
@@ -45,15 +50,23 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found a federation of <strong>{populationOf(NEW_FEDERATION_TOPOLOGY).toLocaleString('en')} AI competitors</strong> across {NEW_FEDERATION_TOPOLOGY.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
+          <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
           <details className="small"><summary>Details</summary>
             <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
           </details>
-          <label className="small">Home Region{' '}
-            <select value={region} onChange={e => setRegion(+e.target.value)}>{regionNamesOf(NEW_FEDERATION_TOPOLOGY).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+          <label className="small">Federation Size{' '}
+            <select value={sizeId} onChange={e => { setSizeId(e.target.value); setRegion(0); }} aria-label="Federation Size">
+              {FEDERATION_SIZES.map(s => <option key={s.topology.id} value={s.topology.id}>{s.label} · {populationOf(s.topology).toLocaleString('en')} competitors, {s.topology.regions} regions{s.topology.id === newFederationTopology(device).id ? ' (recommended here)' : ''}</option>)}
+            </select>
           </label>
-          <button className="btn primary" disabled={!!busy || services.readOnly} onClick={() => act('create', () => fed.create(region))}>{busy ? 'Founding the federation…' : 'Found the federation'}</button>
+          <div className="small muted" data-testid="size-note">{device.mobile
+            ? 'On phones and tablets the Standard federation is recommended: a larger world takes longer to advance each round and uses more storage.'
+            : 'Every competitor is persistent; results of the games you do not watch come from the result model, so a larger world costs time only when a round is advanced. The size is fixed once founded.'}</div>
+          <label className="small">Home Region{' '}
+            <select value={region} onChange={e => setRegion(+e.target.value)}>{regionNamesOf(size).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+          </label>
+          <button className="btn primary" disabled={!!busy || services.readOnly} onClick={() => act('create', () => fed.create(region, undefined, size))}>{busy ? 'Founding the federation…' : 'Found the federation'}</button>
           {msg && <div className="notice warn">{msg}</div>}
         </div>
       </div>

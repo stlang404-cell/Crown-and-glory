@@ -10,7 +10,7 @@
 import type { FedState } from './federation';
 import type { Ctx, RoundRecord } from '../federation/world';
 import { leagueTable, swissTable } from '../federation/world';
-import { LEAGUE_EVENT, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, divisionLabel, REGION_NAMES } from '../federation/model';
+import { LEAGUE_EVENT, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, divisionLabel, REGION_NAMES, topologyOf } from '../federation/model';
 import { hashSeed } from '../federation/generator';
 import { Journal, validateJournal } from '../exchange/ledger';
 import { Market, Position, openGenericMarket, closeMarket, resolveMarket, acct, unitPayout, MarketKind } from '../exchange/market';
@@ -86,7 +86,8 @@ function settle(ops: MarketOps, m: Market, payout: number[], memo: string): void
 function subjects(st: FedState) {
   const pr = st.world.player.region;
   const circuit = (region: number, division: number) => st.plan.circuits.find(c => c.region === region && c.division === division)!;
-  const rp = (pr + 5) % 16, rq = (pr + 9) % 16, rs = (pr + 13) % 16;
+  const R = topologyOf(st.world).regions; // 16 in the original world (subjects unchanged); every region in larger ones
+  const rp = (pr + 5) % R, rq = (pr + 9) % R, rs = (pr + 13) % R;
   const promoDiv = 3 + (st.world.season % 5); // divisions 3..7 rotate by season
   const promoCircuit = circuit(rp, promoDiv);
   const byRating = (ids: string[]) => [...ids].sort((a, b) => rating(st)(b) - rating(st)(a) || a.localeCompare(b));

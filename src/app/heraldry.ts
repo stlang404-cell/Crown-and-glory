@@ -3,11 +3,11 @@
  * Everything is derived from recorded results; nothing here influences pairings, results or ratings.
  */
 import type { FedState, Ceremony } from './federation';
-import { PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, divisionLabel, REGION_NAMES } from '../federation/model';
+import { PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, divisionLabel, REGION_NAMES, topologyOf } from '../federation/model';
 import { makeNorm, earnedTitle, type Norm } from '../heraldry/titles';
 import { FED_TITLES, type FedTitle } from '../heraldry/catalog';
 import { selectFeatured } from '../heraldry/rivals';
-import { AI_CLUBS, clubOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/clubs';
+import { clubOf, clubsOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/clubs';
 import type { Journal } from '../exchange/ledger';
 import type { KoState } from '../federation/world';
 import { hashSeed } from '../federation/generator';
@@ -135,7 +135,7 @@ export function clubFinances(st: FedState, season: number, post: (j: Journal[]) 
   if (lines.length) post([{ id: `club-dues:${season}`, at: now, kind: 'club-dues', memo: playerDues > 0 ? `Club membership dues (5% of member balances; your club: ${mine.size} members)` : 'AI club membership dues (5% of member balances)', lines, season }]);
   const ops: { account: string; amount: number }[] = [];
   let total = 0;
-  for (const k of AI_CLUBS) {
+  for (const k of clubsOf(topologyOf(st.world).regions)) {
     const bal = st.balances.get(`club:${k.id}`) ?? 0;
     const amt = Math.floor(bal * CLUB_OPS_SHARE);
     if (amt > 0) { ops.push({ account: `club:${k.id}`, amount: -amt }); total += amt; }
