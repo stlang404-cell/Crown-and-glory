@@ -75,6 +75,38 @@ describe('storage', () => {
     expect(again.mode).toBe('merge');
     expect(again.games).toBe(0);
   });
+  it('backups carry Vault unlocks and Grimoire progress; restore keeps both, merge keeps only learning progress', async () => {
+    const db = await CrownDB.open(new IDBFactory());
+    const g = finishedGame('x');
+    await db.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'Nx', analysisSettingsId: 'std-d7', humanScore: 1 });
+    await db.putMetaIfAbsent([{ key: 'ach:first-win', value: { id: 'first-win', at: 'T' } }, { key: 'grim:done:b1-1', value: { at: 'T' } }, { key: 'unrelated', value: 1 }]);
+    const bundle = JSON.parse(JSON.stringify(await exportBundle(db, 'test')));
+    expect(bundle.payload.progress.map((e: { key: string }) => e.key).sort()).toEqual(['ach:first-win', 'grim:done:b1-1']);
+    const fresh = await CrownDB.open(new IDBFactory());
+    await importBundle(fresh, bundle);
+    expect(await fresh.getMeta('ach:first-win')).toEqual({ id: 'first-win', at: 'T' });
+    expect(await fresh.getMeta('grim:done:b1-1')).toEqual({ at: 'T' });
+    // merging into a different career: learning progress only, never someone else's achievements; never overwrites
+    const other = await CrownDB.open(new IDBFactory());
+    const g2 = finishedGame('y');
+    await other.finalizeGame(g2, { checksum: await gameChecksum(g2), nowIso: 'Ny', analysisSettingsId: 'std-d7', humanScore: 1 });
+    await other.putMetaIfAbsent([{ key: 'grim:done:b1-1', value: { at: 'EARLIER' } }]);
+    const r = await importBundle(other, bundle);
+    expect(r.mode).toBe('merge');
+    expect(await other.getMeta('ach:first-win')).toBeUndefined();
+    expect(await other.getMeta('grim:done:b1-1')).toEqual({ at: 'EARLIER' });
+  });
+  it('older backups without progress records still import', async () => {
+    const db = await CrownDB.open(new IDBFactory());
+    const g = finishedGame('z');
+    await db.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'Nz', analysisSettingsId: 'std-d7', humanScore: 1 });
+    const bundle = JSON.parse(JSON.stringify(await exportBundle(db, 'test')));
+    delete bundle.payload.progress;
+    const { sha256Hex } = await import('../src/storage/checksum');
+    bundle.payloadSha256 = await sha256Hex(JSON.stringify(bundle.payload));
+    const r = await importBundle(await CrownDB.open(new IDBFactory()), bundle);
+    expect(r.mode).toBe('restore');
+  });
   it('rejects tampered or illegal backups', async () => {
     const db = await CrownDB.open(new IDBFactory());
     const g = finishedGame('t1');
