@@ -13,6 +13,7 @@ import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
 import { WorldScreen, StandingsScreen, TournamentsScreen } from './WorldScreen';
 import { CompetitorsScreen, CompetitorScreen } from './CompetitorScreen';
+import { PopulationScreen } from './PopulationScreen';
 import { SpectatorScreen } from './SpectatorScreen';
 import { ExchangeScreen } from './ExchangeScreen';
 import { FinanceScreen } from './FinanceScreen';
@@ -45,6 +46,7 @@ export type View =
   | { name: 'standings' }
   | { name: 'tournaments' }
   | { name: 'competitors' }
+  | { name: 'population' }
   | { name: 'competitor'; id: string }
   | { name: 'watch'; id: string }
   | { name: 'exchange'; id?: string }
@@ -79,7 +81,7 @@ function parseHash(): View {
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
+  if (['play', 'library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
   return { name: 'dashboard' };
 }
 function toHash(v: View): string {
@@ -162,6 +164,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'standings' && <StandingsScreen />}
             {view.name === 'tournaments' && <TournamentsScreen />}
             {view.name === 'competitors' && <CompetitorsScreen />}
+            {view.name === 'population' && <PopulationScreen />}
             {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
             {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
             {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}

@@ -4,7 +4,7 @@
  * records create/advance times, JS heap and IndexedDB usage; then runs the live scheduler at fixed N for a while and
  * records committed moves, measured engine time per move and main-thread long tasks.
  *   npx vite build --outDir <dir> && node tools/sim/browser_scale.mjs <dir> [rounds=19] [liveN=12,24] [liveSeconds=60] [port=4231] [regions=16]
- * liveN = 0 skips the live-scheduler part. regions ≠ 16 founds a world of that many regions (v0.9+ builds).
+ * [cpuThrottle=1]. liveN = 0 skips the live-scheduler part. regions ≠ 16 founds a world of that many regions (v0.9+ builds).
  */
 import { createRequire } from 'node:module';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -20,6 +20,9 @@ const LIVE_N = (process.argv[4] ?? '12,24').split(',').map(Number).filter(Boolea
 const LIVE_S = +(process.argv[5] ?? 60);
 const PORT = +(process.argv[6] ?? 4231);
 const REGIONS = +(process.argv[7] ?? 16);
+/** CPU throttling of the page (Chrome DevTools Protocol), e.g. 4 = DevTools' mid-tier mobile preset. It slows the
+ *  renderer (JavaScript, structured cloning) only; IndexedDB's backend runs in the browser process unthrottled. */
+const THROTTLE = +(process.argv[8] ?? 1);
 if (!DIR) { console.error('usage: node tools/sim/browser_scale.mjs <built dist dir> [rounds] [liveN] [liveSeconds] [port]'); process.exit(2); }
 
 const server = spawn(process.execPath, ['scripts/serve.mjs', '--dir', DIR, '--port', String(PORT)], { stdio: ['ignore', 'pipe', 'inherit'] });
@@ -31,6 +34,7 @@ const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
 await page.goto(`http://127.0.0.1:${PORT}/#/world`);
 await page.waitForFunction(() => !!window.__crown?.fed);
+if (THROTTLE > 1) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
 
 const world = await page.evaluate(async ({ rounds, regions }) => {
   const s = window.__crown;
@@ -55,9 +59,11 @@ const world = await page.evaluate(async ({ rounds, regions }) => {
   db.commit = origCommit;
   const est = await navigator.storage.estimate();
   const sorted = [...roundMs].sort((a, b) => a - b);
-  return { regions, competitors: s.fed.state.competitors.size, createMs: Math.round(createMs), roundMs, roundMedianMs: sorted[sorted.length >> 1], roundP95Ms: sorted[Math.min(sorted.length - 1, Math.floor(0.95 * sorted.length))], roundMaxMs: sorted.at(-1), commitMs, commitMedianMs: [...commitMs].sort((a, b) => a - b)[commitMs.length >> 1], heapMB: heap(), storageMB: +((est.usage ?? 0) / 1048576).toFixed(2), cores: navigator.hardwareConcurrency, pool: s.livePool.length };
+  // a cold load of the saved federation from IndexedDB (what reopening the app costs)
+  t = performance.now(); await s.fed.load(); const loadMs = Math.round(performance.now() - t);
+  return { regions, loadMs, competitors: s.fed.state.competitors.size, createMs: Math.round(createMs), roundMs, roundMedianMs: sorted[sorted.length >> 1], roundP95Ms: sorted[Math.min(sorted.length - 1, Math.floor(0.95 * sorted.length))], roundMaxMs: sorted.at(-1), commitMs, commitMedianMs: [...commitMs].sort((a, b) => a - b)[commitMs.length >> 1], heapMB: heap(), storageMB: +((est.usage ?? 0) / 1048576).toFixed(2), cores: navigator.hardwareConcurrency, pool: s.livePool.length };
 }, { rounds: ROUNDS, regions: REGIONS });
-console.log(JSON.stringify({ world }));
+console.log(JSON.stringify({ world: { ...world, throttle: THROTTLE } }));
 
 for (const n of LIVE_N) {
   const live = await page.evaluate(async ({ n, seconds }) => {

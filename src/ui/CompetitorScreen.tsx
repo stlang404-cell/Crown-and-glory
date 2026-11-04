@@ -69,6 +69,7 @@ export function CompetitorsScreen() {
         <button className="btn ghost small" onClick={() => go({ name: 'world' })}>← Federation</button>
         <h1 style={{ margin: 0 }}>Discover Competitors</h1>
         <span className="chip">{active.toLocaleString('en')} Active · {st.competitors.size.toLocaleString('en')} on Record</span>
+        <button className="btn ghost small" onClick={() => go({ name: 'population' })}>Population analytics</button>
       </div>
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }} data-testid="discovery-filters">
         <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search Competitors" />

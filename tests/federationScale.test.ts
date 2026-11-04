@@ -60,6 +60,7 @@ describe('federation topology', () => {
     expect(regionNamesOf(TOPOLOGY_V3).every(n => !/^Region \d/.test(n))).toBe(true);
     expect(populationOf(TOPOLOGY_V3)).toBe(10240);
     expect(newFederationTopology({ mobile: false })).toBe(TOPOLOGY_V3);
+    expect(newFederationTopology({ mobile: true })).toBe(TOPOLOGY_V3);
   });
 
   it('save compatibility: a stored 2,048 world (no topology field) loads, advances and rolls over a season with 16 regions', async () => {

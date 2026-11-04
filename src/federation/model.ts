@@ -32,10 +32,12 @@ export const NEW_FEDERATION_TOPOLOGY: Topology = TOPOLOGY_V1;
 export const FEDERATION_SIZES: { topology: Topology; label: string }[] = [
   { topology: TOPOLOGY_V1, label: 'Standard' }, { topology: TOPOLOGY_V2, label: 'Large' }, { topology: TOPOLOGY_V3, label: 'Grand' },
 ];
-/** Default size of a new federation on this device (v0.10 mobile performance mode): the Grand federation (10,240)
- *  on desktop, the Standard one (2,048) on phones and tablets (coarse pointer or mobile user agent), whose round
- *  advance was measured about 4× slower under CPU throttling and whose storage is tighter. */
-export const newFederationTopology = (device: { mobile: boolean }): Topology => (device.mobile ? TOPOLOGY_V1 : TOPOLOGY_V3);
+/** Default size of a new federation (v0.10): the Grand federation, 10,240 competitors, on desktop and on phones.
+ *  Measured in Chromium (docs/FEDERATION_SCALE.md §1.7): round advance median 0.19 s on desktop and about 1.0 s with
+ *  4× CPU throttling (a phone proxy), season end about 0.45 s / 1.8 s. Phones keep their reduced live-game load
+ *  (src/app/scheduler.ts: one engine worker, at most 6 games at once, 24 per round). The founding screen offers the
+ *  smaller sizes; an existing federation never changes size. */
+export const newFederationTopology = (device: { mobile: boolean }): Topology => { void device; return TOPOLOGY_V3; };
 /** The topology of a stored world (absent field = crown-topology-1, the v0.1–v0.8 federation). */
 export const topologyOf = (world?: { topology?: Topology } | null): Topology => world?.topology ?? TOPOLOGY_V1;
 export const populationOf = (t: Topology) => t.regions * t.divisions * t.divisionSize;

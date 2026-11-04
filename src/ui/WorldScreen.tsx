@@ -61,7 +61,7 @@ export function WorldScreen() {
             </select>
           </label>
           <div className="small muted" data-testid="size-note">{device.mobile
-            ? 'On phones and tablets the Standard federation is recommended: a larger world takes longer to advance each round and uses more storage.'
+            ? 'Every competitor is persistent. On this device fewer AI games play live at once, and a Grand round takes about a second to advance; choose Standard for the quickest rounds. The size is fixed once founded.'
             : 'Every competitor is persistent; results of the games you do not watch come from the result model, so a larger world costs time only when a round is advanced. The size is fixed once founded.'}</div>
           <label className="small">Home Region{' '}
             <select value={region} onChange={e => setRegion(+e.target.value)}>{regionNamesOf(size).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
@@ -96,6 +96,7 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'standings' })}>Divisions</button>
         <button className="btn small" onClick={() => go({ name: 'tournaments' })}>Tournaments</button>
         <button className="btn small" onClick={() => go({ name: 'competitors' })}>Competitors</button>
+        <button className="btn small" onClick={() => go({ name: 'population' })}>Population</button>
         <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; History</button>
         <button className="btn small" onClick={() => go({ name: 'rivals' })}>Rivals</button>
         <button className="btn small" onClick={() => go({ name: 'hall' })}>Hall of Fame</button>
