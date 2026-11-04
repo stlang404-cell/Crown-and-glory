@@ -184,6 +184,13 @@ export class CrownDB {
     await done(tx);
   }
 
+  /** Delete one meta record (v0.11: exhibition archive entries; absent keys are a no-op). */
+  async deleteMeta(key: string): Promise<void> {
+    const tx = this.db.transaction('meta', 'readwrite');
+    tx.objectStore('meta').delete(key);
+    await done(tx);
+  }
+
   /** Every meta record whose key starts with `prefix` (e.g. "ach:" for Vault unlocks). */
   async metaWithPrefix<T = unknown>(prefix: string): Promise<{ key: string; value: T }[]> {
     return (await req(this.store('meta').getAll(IDBKeyRange.bound(prefix, prefix + '￿')))) as { key: string; value: T }[];
@@ -351,6 +358,11 @@ export class CrownDB {
   async putJob(job: AnalysisJob): Promise<void> {
     const tx = this.db.transaction('analysisJobs', 'readwrite');
     tx.objectStore('analysisJobs').put(job);
+    await done(tx);
+  }
+  async deleteJob(id: string): Promise<void> {
+    const tx = this.db.transaction('analysisJobs', 'readwrite');
+    tx.objectStore('analysisJobs').delete(id);
     await done(tx);
   }
   async getJob(id: string): Promise<AnalysisJob | undefined> {

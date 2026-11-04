@@ -275,7 +275,8 @@ export function buildFacts(input: VaultInput): Facts {
     if (!lastAt || r.completedAt > lastAt) lastAt = r.completedAt;
   }
   const marks = new Set<string>();
-  for (const b of input.bookmarks ?? []) marks.add(`${b.gameId}:${b.ply}`);
+  // v0.11: favourites and positions saved from unofficial exhibitions (gameId "exh:…") never count
+  for (const b of input.bookmarks ?? []) if (!b.gameId.startsWith('exh:')) marks.add(`${b.gameId}:${b.ply}`);
   for (const g of input.games) for (const ply of g.bookmarks ?? []) marks.add(`${g.id}:${ply}`);
   const retries = new Set<string>();
   for (const g of input.games) {

@@ -13,6 +13,7 @@ import { CrownDB, APP_SCHEMA } from './db';
 import { canonicalGame, gameChecksum, sha256Hex } from './checksum';
 import { decodeAccounts } from '../federation/persist';
 import { CAREER_MODEL, KNOWN_STARTS, LEGACY_START, legacyCareerRecord, type CareerRecord } from '../ratings/career';
+import { EXHIBITION_PREFIXES, EXH_PREFIX, validateExhibition, type ExhibitionGame } from '../app/exhibition';
 
 export const BACKUP_FORMAT = 'crown-backup-1';
 
@@ -29,7 +30,9 @@ export interface BackupBundle {
     progress?: { key: string; value: unknown }[];
     /** v0.11: the career's rating origin (crown-career-1). Optional: a backup without it is from a career created
      *  before v0.11, whose pools started at 1500. */
-    career?: CareerRecord };
+    career?: CareerRecord
+    /** v0.11: Exhibition Arena archive (meta `exh:` games and `exhrep:` reports; unofficial, src/app/exhibition.ts). Optional. */
+    exhibitions?: { key: string; value: unknown }[] };
 }
 
 /** The rating origin a backup's ledger replays from. */
@@ -43,7 +46,10 @@ export async function exportBundle(db: CrownDB, appVersion: string): Promise<Bac
   const d = await db.dump();
   const progress: { key: string; value: unknown }[] = [];
   for (const p of PROGRESS_PREFIXES) progress.push(...(await db.metaWithPrefix(p)));
-  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation, progress, career: db.career };
+  const exhibitions: { key: string; value: unknown }[] = [];
+  for (const p of EXHIBITION_PREFIXES) exhibitions.push(...(await db.metaWithPrefix(p)));
+  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation, progress,
+    ...(exhibitions.length ? { exhibitions } : {}), career: db.career };
   return {
     format: BACKUP_FORMAT, appSchema: APP_SCHEMA, variantId: VARIANT_ID, exportedAt: new Date().toISOString(), appVersion,
     counts: { games: d.games.length, ratingEvents: d.ratingEvents.length, reports: d.reports.length },
@@ -65,6 +71,12 @@ export async function validateBundle(raw: unknown): Promise<BackupBundle> {
   if ((await sha256Hex(JSON.stringify(p))) !== b.payloadSha256) throw new ImportError('Backup checksum mismatch: the file is corrupted or was modified.');
   if (p.progress !== undefined && (!Array.isArray(p.progress) || p.progress.some(e => !e || typeof e.key !== 'string' || !PROGRESS_PREFIXES.some(pre => e.key.startsWith(pre)))))
     throw new ImportError('Backup progress records are malformed.');
+  if (p.exhibitions !== undefined) {
+    if (!Array.isArray(p.exhibitions) || p.exhibitions.some(e => !e || typeof e.key !== 'string' || !EXHIBITION_PREFIXES.some(pre => e.key.startsWith(pre)))) throw new ImportError('Backup exhibition records are malformed.');
+    for (const e of p.exhibitions) if (e.key.startsWith(EXH_PREFIX)) {
+      try { validateExhibition(e.value as ExhibitionGame); if ((e.value as ExhibitionGame).id !== e.key) throw new Error('key mismatch'); } catch (err) { throw new ImportError(`Exhibition ${e.key}: ${(err as Error).message}`); }
+    }
+  }
   for (const g of p.games) {
     if (typeof g.id !== 'string' || g.variantId !== VARIANT_ID || !Array.isArray(g.moves)) throw new ImportError(`Game ${g?.id ?? '?'} is malformed.`);
     let pos: Position;
@@ -115,12 +127,15 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
       await db.commit(FEDERATION_STORES.map(store => ({ store, put: fed[store] ?? [] })));
     }
     if (b.payload.progress?.length) await db.putMetaIfAbsent(b.payload.progress);
+    if (b.payload.exhibitions?.length) await db.putMetaIfAbsent(b.payload.exhibitions);
     return { mode: 'restore', ...r };
   }
   const r = await db.importRecords({ games: b.payload.games, reports: b.payload.reports, ratingEvents: [], ratingState: [], attempts: b.payload.attempts, trainingRuns: b.payload.trainingRuns, bookmarks: b.payload.bookmarks }, false);
   // merging into another career: learning progress only (achievements belong to the career that earned them)
   const learning = (b.payload.progress ?? []).filter(e => !CAREER_ONLY.some(pre => e.key.startsWith(pre)));
   if (learning.length) await db.putMetaIfAbsent(learning);
+  // exhibitions are unofficial study material, not career records: they merge like learning progress
+  if (b.payload.exhibitions?.length) await db.putMetaIfAbsent(b.payload.exhibitions);
   return { mode: 'merge', ...r };
 }
 
