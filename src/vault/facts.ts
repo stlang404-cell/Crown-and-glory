@@ -58,6 +58,9 @@ export interface OwnGame {
   termination: string | null; myRating: number | null; oppRating: number | null;
   level: number | null; budgetMs: number | null; quickMatch: boolean; federation: boolean; oppRegion: number | null;
   plies: number; lostMaterial: boolean; worstDiff: number;
+  /** v0.11: was the player's rating established (RD ≤ 100) when the game started? Rating-gap ("upset") collectibles
+   *  compare ratings only then — a provisional 0-start career is not "beating higher-rated" beginners (docs/CAREER_RATING.md). */
+  myEstablished?: boolean;
 }
 export interface RatedResult { at: string; score: number; oppId: string; oppName: string; gameId: string; myRating: number; oppRating: number }
 export interface SettledPosition { marketId: string; title: string; season: number; family: string; pnl: number; at: string }
@@ -152,7 +155,7 @@ function ownGame(g: GameRecord, regionOf: Map<string, number>): OwnGame {
   return {
     id: g.id, at, startedAt: g.startedAt, day: at.slice(0, 10), oppId: opp.id, oppName: opp.name, score: scoreOf(g)!,
     rated: g.mode === 'rated' && !!g.ratingEventId, color: g.humanColor, termination: g.termination,
-    myRating: me.rating, oppRating: opp.rating, level: opp.engine?.level ?? null,
+    myRating: me.rating, oppRating: opp.rating, myEstablished: me.rd !== null && me.rd <= 100, level: opp.engine?.level ?? null,
     budgetMs: opp.engine?.profile?.maxTimeMs ?? opp.engine?.config?.maxTimeMs ?? null,
     quickMatch, federation: g.context.kind === 'federation', oppRegion: regionOf.get(opp.id) ?? null,
     plies: g.moves.length, lostMaterial: lost, worstDiff: worst,

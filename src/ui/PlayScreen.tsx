@@ -17,6 +17,7 @@ import { Position } from '../rules/position';
 import { squareName } from '../rules/types';
 import type { RatingEvent, PoolState } from '../ratings/ledger';
 import { explainEvent } from '../ratings/ledger';
+import { careerEloLabel, displayElo, gamesToEstablish, isEstablished, suggestBeginnerBands } from '../ratings/career';
 import type { EngineScore } from '../analysis/types';
 import { formatScore } from './Charts';
 import type { AssistCandidate } from '../engine/protocol';
@@ -51,7 +52,22 @@ export function PlayScreen() {
   // control, and Casual — a practice setup never starts a rated game by itself (src/app/practice.ts).
   const [practice] = useState(() => peekPractice());
   useEffect(() => { if (practice) clearPractice(); }, [practice]);
-  const [opp, setOpp] = useState<PlayOpponent>(() => (practice && findOpponent(practice.opponentId)) || ROSTER[2]);
+  const [opp, setOppRaw] = useState<PlayOpponent>(() => (practice && findOpponent(practice.opponentId)) || ROSTER[2]);
+  const [oppTouched, setOppTouched] = useState(!!practice);
+  const setOpp = (o: PlayOpponent) => { setOppTouched(true); setOppRaw(o); };
+  // A provisional new career (or any career under 800) is offered the calibrated beginners first (docs/CAREER_RATING.md)
+  const [beginnerFirst, setBeginnerFirst] = useState(false);
+  useEffect(() => {
+    void services.db.ratingState('rapid').then(p => {
+      const on = suggestBeginnerBands(p, services.db.ratingStart);
+      setBeginnerFirst(on);
+      if (on && !oppTouched) {
+        const r = displayElo(p.rating);
+        const best = [...BEGINNER_OPPONENTS].sort((a, b) => Math.abs((opponentRating(a)?.rating ?? 0) - r) - Math.abs((opponentRating(b)?.rating ?? 0) - r))[0];
+        if (best) setOppRaw(best);
+      }
+    }).catch(() => {});
+  }, [services, services.revision]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tc, setTc] = useState<TimeControlId>(practice?.timeControl ?? 'rapid');
   const [mode, setMode] = useState<'rated' | 'casual'>(practice ? 'casual' : 'rated');
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
@@ -126,7 +142,7 @@ export function PlayScreen() {
               const cal = opponentRating(o);
               const beginner = !!o.beginner;
               return (<div key={o.id} style={{ display: 'contents' }}>
-                {i === 0 && <div className="small muted" data-testid="beginner-group" style={{ fontWeight: 700 }}>Beginners · under 800 · they miss threats and sometimes play random moves</div>}
+                {i === 0 && <div className="small muted" data-testid="beginner-group" style={{ fontWeight: 700 }}>Beginners · 0–399 and 400–799 · they miss threats and sometimes play random moves{beginnerFirst && <> · <span className="chip info" data-testid="beginner-suggested">Suggested for your career Elo</span></>}</div>}
                 {i === BEGINNER_OPPONENTS.length && <div className="small muted" style={{ fontWeight: 700, marginTop: 6 }}>Calibrated ladder · 800 and up</div>}
                 <button className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)} data-testid={beginner ? `opp-beginner-${o.beginner}` : undefined}>
                   <Portrait seed={o.portraitSeed} size={48} crown={o.level >= 8} />
@@ -189,7 +205,7 @@ export function PlayScreen() {
           </div>
           {pool && mode === 'rated' && ratedAllowed && (
             <div className="notice">
-              Your {poolFor(tc)} rating: <strong>{Math.round(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). It becomes more certain as you play more rated games.
+              Your {poolFor(tc)} career Elo: <strong data-testid="play-my-rating">{careerEloLabel(pool.rating, pool.games, pool.rd)}</strong> ±{Math.round(pool.rd)} ({pool.games} rated games). {isEstablished(pool.games, pool.rd) ? 'It becomes more certain as you play more rated games.' : `Provisional: it moves quickly and is established after at least ${gamesToEstablish(pool.games)} more rated game${gamesToEstablish(pool.games) === 1 ? '' : 's'} and ±100. It changes only through results.`}
             </div>
           )}
           <button className="btn primary" style={{ width: '100%', fontSize: '1.05rem' }} onClick={start} disabled={services.readOnly}>
@@ -436,7 +452,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
         name={<>{shownName} {!isHuman && <span className="chip gold">{p.engine?.profile ? (p.engine.profileId.startsWith('L0') ? p.engine.profileId : 'Federation') : `L${p.engine?.level}`}</span>}{sp && <> <span className="chip" data-testid="opponent-persona" title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Fictional persona. ${CONTEMPORARY_DISCLOSURE}`}>Fictional Persona</span></>}</>}
         meta={<>
-          {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+          {p.rating !== null ? `${isHuman ? displayElo(p.rating) : Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
           {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
         </>}
@@ -447,7 +463,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   };
 
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
-  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(p.kind === 'human' ? displayElo(p.rating) : Math.round(p.rating)) : null);
   const budgetMs = opp.engine?.config?.maxTimeMs;
   const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
     : thinking && opp.engine?.level === MAX_LEVEL && budgetMs ? `Thinking · up to ${budgetMs / 1000} s` : thinking ? 'Thinking…' : 'Opponent to Move';
@@ -587,7 +603,8 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         {e ? (
           <div>
             <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{e.delta >= 0 ? '+' : ''}{e.delta.toFixed(1)}</div>
-            <div>{e.pool[0].toUpperCase() + e.pool.slice(1)} rating {Math.round(e.before.rating)} → <strong>{Math.round(e.after.rating)}</strong> (±{Math.round(e.after.rd)}){e.provisionalAfter ? ' · provisional' : ''}</div>
+            <div data-testid="rating-change">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo {displayElo(e.before.rating)} → <strong>{displayElo(e.after.rating)}</strong> (±{Math.round(e.after.rd)}){e.provisionalAfter ? ' · provisional' : ''}</div>
+            {e.after.rating < 0 && <p className="small muted">Career Elo is shown from 0 upward; the underlying rating is {e.after.rating.toFixed(0)} and wins bring it back up.</p>}
             <p className="small muted">{explainEvent(e)}</p>
           </div>
         ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game: saved to your Library, no rating change.'}</p>}

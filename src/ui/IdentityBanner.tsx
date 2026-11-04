@@ -3,6 +3,7 @@ import { useApp, useServices } from './App';
 import { Emblem } from './Emblem';
 import { insigniaSpec, titleFor, titleProgress } from '../ratings/titles';
 import { isProvisional } from '../ratings/glicko2';
+import { displayElo } from '../ratings/career';
 import type { PoolState, RatingEvent } from '../ratings/ledger';
 import { PLAYER_ID } from '../federation/model';
 import { REGION_NAMES, divisionLabel } from '../federation/model';
@@ -36,7 +37,7 @@ export function IdentityBanner() {
         let brilliants = 0;
         for (const g of games) { const r = latest.get(g.id); if (r && g.status === 'finalized') brilliants += r.plies.filter(p => p.color === g.humanColor && p.grade === 'brilliant').length; }
         const last = [...events].sort((a, b) => a.at.localeCompare(b.at)).at(-1) ?? null;
-        if (alive) setD({ pool: pool && (pool as PoolState).games > 0 ? (pool as PoolState) : null, last, brilliants, games: games.filter(g => g.status === 'finalized').length });
+        if (alive) setD({ pool: pool && ((pool as PoolState).games > 0 || services.db.ratingStart === 0) ? (pool as PoolState) : null, last, brilliants, games: games.filter(g => g.status === 'finalized').length });
       } catch { if (alive) setD({ pool: null, last: null, brilliants: 0, games: 0 }); }
     })(), d ? 1500 : 0);
     return () => { alive = false; clearTimeout(t); };
@@ -58,7 +59,7 @@ export function IdentityBanner() {
         {t ? <Emblem spec={insigniaSpec(t)} size="md" title={`${t.name} insignia`} /> : <span className="id-blank" aria-hidden />}
         <span className="id-who">
           <span className="id-title" data-testid="banner-title">{t ? t.name : 'Unrated'}{t && prov ? <span className="id-prov"> · provisional</span> : null}</span>
-          <span className="id-rating mono" data-testid="banner-rating">{rating !== null ? `${Math.round(rating)} ±${Math.round(d.pool!.rd)}` : 'No rated games yet'}</span>
+          <span className="id-rating mono" data-testid="banner-rating">{rating !== null ? `${displayElo(rating)} ±${Math.round(d.pool!.rd)}` : 'No rated games yet'}</span>
         </span>
       </button>
       {prog && (

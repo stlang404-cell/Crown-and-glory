@@ -5,9 +5,16 @@
  * convergence epsilon 1e-6 (Glickman's paper value; the research doc's 1e-7 is also accepted —
  * we use 1e-7). One completed rated match = one rating period for the player. Published RD is
  * capped at 350. Ratings are internal Crown ratings, not FIDE Elo.
+ *
+ * The update is location-invariant: CENTER only fixes where the internal scale μ = (r − CENTER)/SCALE is zero and
+ * only rating DIFFERENCES enter E, g, v and Δ, so any start (v0.11 careers start at 0, docs/CAREER_RATING.md) gives
+ * the same changes as the same situation translated to 1500. DEFAULTS.rating is Glickman's default start, used by
+ * careers created before v0.11 (src/ratings/career.ts).
  */
 export const GLICKO_MODEL = 'crown-glicko2-1';
 export const SCALE = 173.7178;
+/** Origin of the internal Glicko-2 scale (not a start rating). */
+export const CENTER = 1500;
 export const DEFAULTS = { rating: 1500, rd: 350, sigma: 0.06, tau: 0.5, epsilon: 1e-7, maxRd: 350 } as const;
 
 export interface Rating {
@@ -40,7 +47,7 @@ const E = (mu: number, muj: number, phij: number) => 1 / (1 + Math.exp(-g(phij) 
 
 /** Expected score of a player vs an opponent (Glicko-2 E with opponent RD). */
 export function expectedScore(player: Rating, opp: { rating: number; rd: number }): number {
-  return E((player.rating - 1500) / SCALE, (opp.rating - 1500) / SCALE, opp.rd / SCALE);
+  return E((player.rating - CENTER) / SCALE, (opp.rating - CENTER) / SCALE, opp.rd / SCALE);
 }
 
 /** Update a rating with all results of one rating period. Empty results = inactivity (RD grows). */
@@ -50,7 +57,7 @@ export function updateRating(
   tau: number = DEFAULTS.tau,
   epsilon: number = DEFAULTS.epsilon,
 ): { after: Rating; explanation: UpdateExplanation | null } {
-  const mu = (player.rating - 1500) / SCALE;
+  const mu = (player.rating - CENTER) / SCALE;
   const phi = player.rd / SCALE;
   const sigma = player.sigma;
   if (!results.length) {
@@ -60,7 +67,7 @@ export function updateRating(
   const gs: number[] = [], es: number[] = [];
   let vInv = 0, sum = 0;
   for (const o of results) {
-    const muj = (o.rating - 1500) / SCALE, phij = o.rd / SCALE;
+    const muj = (o.rating - CENTER) / SCALE, phij = o.rd / SCALE;
     const gj = g(phij), ej = E(mu, muj, phij);
     gs.push(gj); es.push(ej);
     vInv += gj * gj * ej * (1 - ej);
@@ -99,12 +106,13 @@ export function updateRating(
   const phiPrime = 1 / Math.sqrt(1 / (phiStar * phiStar) + 1 / v);
   const muPrime = mu + phiPrime * phiPrime * sum;
   return {
-    after: { rating: muPrime * SCALE + 1500, rd: Math.min(phiPrime * SCALE, DEFAULTS.maxRd), sigma: sigmaPrime },
+    after: { rating: muPrime * SCALE + CENTER, rd: Math.min(phiPrime * SCALE, DEFAULTS.maxRd), sigma: sigmaPrime },
     explanation: { mu, phi, v, delta, expected: es, g: gs, sigmaPrime, phiStar, iterations },
   };
 }
 
-export const initialRating = (): Rating => ({ rating: DEFAULTS.rating, rd: DEFAULTS.rd, sigma: DEFAULTS.sigma });
+/** Initial rating of a pool: `start` on the Crown scale (0 for v0.11 careers, 1500 for older ones), RD 350, σ 0.06. */
+export const initialRating = (start: number = DEFAULTS.rating): Rating => ({ rating: start, rd: DEFAULTS.rd, sigma: DEFAULTS.sigma });
 
 /** Provisional until at least 20 eligible games AND RD <= 100 (research doc 06 design thresholds). */
 export const isProvisional = (games: number, rd: number): boolean => games < 20 || rd > 100;

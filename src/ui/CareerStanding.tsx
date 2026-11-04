@@ -12,6 +12,7 @@ import { usePlayerGames } from './RivalsScreen';
 import { titleKind } from './HallScreen';
 import { fmtCrowns } from '../exchange/ledger';
 import { playerPrestige } from './FinanceScreen';
+import { displayElo, isEstablished } from '../ratings/career';
 
 /**
  * The Passport's career standing (crown-passport-2): six separate identities that are never mixed —
@@ -42,7 +43,7 @@ export function CareerStanding({ rating, rd, games, peak }: { rating: number; rd
     <section className="panel stack" style={{ marginTop: 14 }} data-testid="career-standing" aria-labelledby="career-standing-h">
       <div className="panel-title"><h2 id="career-standing-h" style={{ margin: 0 }}>Career Standing</h2><span className="small muted">Six separate records. Money can't buy your rating, division or title.</span></div>
       <div className="grid-3">
-        <div className="panel stat"><span className="k">Rating</span><span className="v">{Math.round(rating)}</span><span className="small muted">±{Math.round(rd)} · {games} rated games. Changes only with rated games.</span></div>
+        <div className="panel stat"><span className="k">Rating</span><span className="v">{displayElo(rating)}</span><span className="small muted">±{Math.round(rd)} · {games} rated games{isEstablished(games, rd) ? '' : ' · provisional'}. Changes only with rated games.</span></div>
         <div className="panel stat"><span className="k">Division</span><span className="v row" style={{ gap: 6 }}><Emblem spec={divisionEmblem(p.division)} size="sm" title={divisionLabel(p.division)} />{divisionLabel(p.division)}</span><span className="small muted">Division {p.division} of 8 · {REGION_NAMES[p.region]}. Each season the top two are promoted and the bottom two relegated.</span></div>
         <div className="panel stat"><span className="k">Federation Title</span><span className="v row" style={{ gap: 6 }}>{p.fedTitle ? <><Emblem spec={titleEmblem(p.fedTitle)} size="sm" title={p.fedTitle} />{p.fedTitle}</> : 'None yet'}</span><span className="small muted">{progress.next ? `Next: ${progress.next} · ${progress.lines.join(' · ')}` : progress.lines[0]}. Earned by norms; not a FIDE title.</span></div>
         <div className="panel stat"><span className="k">Experience</span><span className="v">{seasons} season{seasons === 1 ? '' : 's'}</span><span className="small muted">{fedGames} federation games played · Season {st.world.season}, Round {st.world.round}.</span></div>

@@ -42,8 +42,10 @@ export interface RatingEvent {
   explanation: { v: number; delta: number; g: number; tau: number; iterations: number };
 }
 
-export const newPoolState = (pool: PoolId): PoolState => ({
-  pool, ...initialRating(), games: 0, wins: 0, draws: 0, losses: 0, peak: null, lowest: null, lastEventId: null, updatedAt: null,
+/** A pool before its first rated game. `start` is the career's rating origin (src/ratings/career.ts): 0 for careers
+ *  created from v0.11, 1500 (the default here) for older careers. The storage layer always passes the career's own. */
+export const newPoolState = (pool: PoolId, start: number = DEFAULTS.rating): PoolState => ({
+  pool, ...initialRating(start), games: 0, wins: 0, draws: 0, losses: 0, peak: null, lowest: null, lastEventId: null, updatedAt: null,
 });
 
 /** Rank ladder (policy crown-rank-0): rating-only bands until federation qualification exists (M3). */
@@ -111,10 +113,12 @@ export function computeRatingEvent(
   return { event, next };
 }
 
-/** Replay a pool's ledger from scratch; used for audit tests and corruption checks. */
-export function replayLedger(pool: PoolId, events: RatingEvent[]): PoolState {
-  let s = newPoolState(pool);
-  for (const e of [...events].sort((a, b) => a.sequence - b.sequence)) {
+/** Replay a pool's ledger from scratch; used for audit tests and corruption checks. `start` is the career's rating
+ *  origin; when omitted it is read from the first event (each event records the state before it). */
+export function replayLedger(pool: PoolId, events: RatingEvent[], start?: number): PoolState {
+  const sorted = [...events].sort((a, b) => a.sequence - b.sequence);
+  let s = newPoolState(pool, start ?? (sorted[0]?.sequence === 1 ? sorted[0].before.rating : DEFAULTS.rating));
+  for (const e of sorted) {
     s = computeRatingEvent(s, e.gameId, e.at, e.opponent, e.score).next;
   }
   return s;

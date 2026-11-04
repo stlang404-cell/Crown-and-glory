@@ -182,7 +182,7 @@ export function ratingSeries(events: readonly RatingEvent[], pool: PoolId = 'rap
   const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
   return [
     ...(ev.length && ev[0].sequence === 1 ? [{ at: ev[0].at, rating: ev[0].before.rating, rd: ev[0].before.rd, label: 'Initial rating' }] : []),
-    ...ev.map(e => ({ at: e.at, rating: e.after.rating, rd: e.after.rd, label: `${e.score === 1 ? 'Win' : e.score === 0 ? 'Loss' : 'Draw'} vs ${e.opponent.name}: ${Math.round(e.after.rating)}` })),
+    ...ev.map(e => ({ at: e.at, rating: e.after.rating, rd: e.after.rd, label: `${e.score === 1 ? 'Win' : e.score === 0 ? 'Loss' : 'Draw'} vs ${e.opponent.name}: ${Math.max(0, Math.round(e.after.rating))}` })),
   ];
 }
 export interface DashResult { gameId: string; pool: PoolId; at: string; opponent: string; score: number; delta: number; after: number }
