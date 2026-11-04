@@ -170,6 +170,13 @@ export function prestige(p: { titles: { title: string }[]; promotions: number; b
   };
 }
 
+/** v0.11: add the financial prestige of estates, facilities and sponsorship (src/economy/wealth.ts) to the financial ladder. */
+export function withWealthPrestige(p: Prestige, w: { points: number; basis: string[] }): Prestige {
+  if (!w.points) return p;
+  const financial = p.financial + w.points;
+  return { ...p, financial, financialTier: tier(financial, [[0, 'Apprentice'], [60, 'Saver'], [150, 'Investor'], [300, 'Patron'], [600, 'Magnate']]), financialBasis: [...p.financialBasis, ...w.basis] };
+}
+
 // ---------------------------------------------------------------- institutions (v0.4.0)
 /** Club levels. Upgrade cost: half is escrowed (refundable when the club closes, counted in book value),
  *  half is spent (sink). Extra upkeep is charged with the club's upkeep each season. */

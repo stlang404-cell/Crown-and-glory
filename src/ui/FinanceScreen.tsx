@@ -7,16 +7,15 @@ import { Emblem } from './Emblem';
 import { financialEmblem } from '../heraldry/catalog';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import type { Journal } from '../exchange/ledger';
-import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
+import { wealthPrestige } from '../economy/wealth';
+import { ASSETS, assetValue, prestige, withWealthPrestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
 import type { FederationService } from '../app/federation';
 import { statusLabel } from './ExchangeScreen';
 import { exchangeApi } from '../exchange/api';
 import { fmtMoneyDelta } from '../exchange/ledger';
+import { categoryOf } from '../economy/stats';
+import { AdministrationPanel, EstatesPanel, FacilitiesPanel, LifetimeStatsPanel, SponsorshipPanel } from './WealthPanels';
 
-const KIND_LABEL: Record<string, string> = {
-  prize: 'Prize money', sponsor: 'Sponsorships', 'trade-buy': 'Exchange purchases', 'trade-sell': 'Exchange sales', 'market-settle': 'Exchange settlements', 'market-cancel': 'Exchange cancellations',
-  'asset-purchase': 'Asset purchases', 'asset-sale': 'Asset sales', upkeep: 'Upkeep', 'entry-fee': 'Entry fees', 'recovery-voucher': 'Recovery vouchers', mint: 'Starting grant', grant: 'Starting grant', 'club-hosting': 'Club Weekend hosting', 'club-attendance': 'Club Weekend attendance',
-};
 
 function NetWorthChart({ points }: { points: { netWorth: number; cash: number; season: number; round: number }[] }) {
   const W = 600, H = 150;
@@ -40,7 +39,9 @@ export function playerPrestige(fed: FederationService, bestRating: number | null
   const divs = [...h.map(x => x.division), st.world.player.division];
   for (let i = 1; i < divs.length; i++) if (divs[i] < divs[i - 1]) promotions++;
   const fin = fed.finance();
-  return prestige({ titles: st.world.player.titles, promotions, bestRating, podiums: h.filter(x => x.rank <= 3).length }, { netWorth: fin.netWorth, peakNetWorth: fin.peak, realizedTrading: fin.realized, assets: fin.owned.length });
+  const wp = wealthPrestige(fed.wealthState());
+  const base = prestige({ titles: st.world.player.titles, promotions, bestRating, podiums: h.filter(x => x.rank <= 3).length }, { netWorth: fin.netWorth, peakNetWorth: fin.peak, realizedTrading: fin.realized, assets: fin.owned.length });
+  return withWealthPrestige(base, wp);
 }
 
 export function PrestigeLadders({ bestRating }: { bestRating: number | null }) {
@@ -68,12 +69,12 @@ export function FinanceScreen() {
   const [journal, setJournal] = useState<Journal[]>([]);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  useEffect(() => { if (fed.ready) fed.playerJournal(400).then(setJournal); }, [services.revision]);
+  useEffect(() => { if (fed.ready) fed.playerJournal(Infinity).then(setJournal); }, [services.revision]);
   if (!fed.ready) return <NeedsFederation title="Finance" />;
   const st = fed.state!;
   const fin = fed.finance();
   const byKind = new Map<string, number>();
-  for (const j of journal) { const amt = j.lines.filter(l => l.account === 'player:cash').reduce((s, l) => s + l.amount, 0); const k = j.kind === 'trade-buy' || j.kind === 'trade-sell' || j.kind === 'market-settle' || j.kind === 'market-cancel' ? 'exchange' : j.kind; byKind.set(k, (byKind.get(k) ?? 0) + amt); }
+  for (const j of journal) { const amt = j.lines.filter(l => l.account === 'player:cash').reduce((s, l) => s + l.amount, 0); const c = categoryOf(j.kind); const k = c.cls === 'exchange' ? 'Exchange (net)' : c.label; byKind.set(k, (byKind.get(k) ?? 0) + amt); }
   const act = async (label: string, fn: () => Promise<void>) => {
     setMsg(null); setConfirm(null);
     try { await fn(); setMsg({ kind: 'ok', text: label }); } catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); }
@@ -90,26 +91,30 @@ export function FinanceScreen() {
           <div className="stat"><span className="v">{fmtCrowns(fin.cash, 0)}</span><span className="k">Cash</span></div>
           <div className="stat"><span className="v">{fmtCrowns(fin.assets, 0)}</span><span className="k">Assets</span></div>
           <div className="stat"><span className="v">{fmtCrowns(fin.positions, 0)}</span><span className="k">Open Positions</span></div>
-          <div className="stat"><span className="v">{fmtCrowns(0, 0)}</span><span className="k">Liabilities</span></div>
+          <div className="stat"><span className="v" data-testid="liabilities">{fmtCrowns(fin.liabilities, 0)}</span><span className="k">Liabilities</span></div>
           <div className="stat"><span className="v">{fmtCrowns(fin.peak, 0)}</span><span className="k">Peak Net Worth</span></div>
         </div>
-        <div className="small muted" style={{ marginTop: 6 }}>Net worth is your cash, plus your assets, plus what your open positions would sell for now. You can't borrow, so you never owe anything.</div>
+        <div className="small muted" style={{ marginTop: 6 }}>Net worth is your cash, plus your assets, plus what your open positions would sell for now, minus what you owe (only the recovery loan, if you took it).</div>
         <NetWorthChart points={st.finance.points} />
         <div className="small muted">Solid line: net worth · dashed line: cash.</div>
-        <details className="small muted"><summary>Details</summary>Net worth = cash + asset book value (refundable bond + resale price) + open positions at their sell-now value after fees (closed, unsettled markets at the 1/3 cancellation refund) − liabilities (always 0). Every figure is read from the double-entry ledger ({ECONOMY_ID}) · {st.finance.points.length} snapshots.</details>
+        <details className="small muted"><summary>Details</summary>Net worth = cash + asset book value (refundable bond + resale price) + open positions at their sell-now value after fees (closed, unsettled markets at the 1/3 cancellation refund) − liabilities (the outstanding recovery loan, if any). Every figure is read from the double-entry ledger ({ECONOMY_ID}) · {st.finance.points.length} snapshots.</details>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
           <h3>Income and Spending</h3>
           <table className="small"><tbody>
-            {[...byKind].sort((a, b) => b[1] - a[1]).map(([k, v]) => <tr key={k}><td>{k === 'exchange' ? 'Exchange (net)' : KIND_LABEL[k] ?? k}</td><td className={`mono ${v >= 0 ? 'pos' : 'neg'}`}>{v >= 0 ? '+' : ''}{fmtCrowns(v)}</td></tr>)}
+            {[...byKind].sort((a, b) => b[1] - a[1]).map(([k, v]) => <tr key={k}><td>{k}</td><td className={`mono ${v >= 0 ? 'pos' : 'neg'}`}>{v >= 0 ? '+' : ''}{fmtCrowns(v)}</td></tr>)}
           </tbody></table>
           <div className="small" style={{ marginTop: 8 }}>Exchange: realised {fmtCrowns(fin.realized)} · unrealised {fmtCrowns(fin.unrealized)} · fees paid {fmtCrowns(fin.fees)}</div>
-          {fin.cash < RECOVERY_THRESHOLD && <div className="notice" style={{ marginTop: 8 }}>Low on cash? You can't go into debt. Below {fmtCrowns(RECOVERY_THRESHOLD, 0)} you get one free recovery voucher per season for the Challenger Open entry. You can also sell assets, and prizes and sponsorships keep coming from your results.</div>}
+          {fin.cash < RECOVERY_THRESHOLD && <div className="notice" style={{ marginTop: 8 }}>Low on cash? Below {fmtCrowns(RECOVERY_THRESHOLD, 0)} you get one free recovery voucher per season for the Challenger Open entry. You can also sell assets, and prizes and sponsorships keep coming from your results.</div>}
         </div>
         <PortfolioPanel />
       </div>
+      <AdministrationPanel />
+      <LifetimeStatsPanel journals={journal} />
       <Institutions />
+      <div className="grid-2" style={{ marginTop: 14 }}><FacilitiesPanel /><SponsorshipPanel /></div>
+      <EstatesPanel />
       <CosmeticsShop />
       <div className="panel" style={{ marginTop: 14 }} data-testid="assets">
         <h3>Assets</h3>
