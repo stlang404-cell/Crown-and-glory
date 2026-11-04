@@ -8522,7 +8522,7 @@
           ],
           "show": "after",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase win-in-9"
          }
         }
        ]
@@ -8695,7 +8695,7 @@
    "intro": [
     {
      "kind": "md",
-     "md": "*Being the fourth book of THE SOVEREIGN'S GRIMOIRE: FROM APPRENTICE TO CHESS SOVEREIGN, for players of Crown & Calculation (rules `crown-la6-v1`).*\n\nWelcome to the Masters' Hall, Strategist. You know where pieces belong and why. Now you must become exact. A master's spells are short and they never misfire: the right candidate moves, a forcing line calculated to its end, a defence found when all seems lost, and the cold certainties of the endgame. On a board of 36 squares those certainties are closer than you think: many endings that are mysteries on the older board can here be solved completely, and this book does so.\n\n**How to read this book.** As in Book III, every board is checked by `tools/grimoire/check.ts`. A caption that says **mate in N** (N ≤ 3) was proven by the checker, which tried every defence; **only** means no other first move mates as fast. Claims carry labels:\n\n- **Proven** — by the checker's exhaustive mate search.\n- **Evidence (exhaustive enumeration)** — by retrograde analysis written for this book: every legal position of an ending (for example king and rook against king and knight: 852,400 positions with White to move) was generated with the real move generator of `src/rules`, and won/drawn/lost values with distance to mate were computed backwards from the checkmates. The program is not part of the repository, so these results are not re-checked by `check.ts`; they are reported with the exact positions so that anyone can test them.\n- **Evidence (archive)** — measured on the engine-game archive described in Book III's Ledger (method A: 5,568 games from balanced pairings).\n- **Engine judgement** — the canonical engine (`crown-search-2` + `crown-eval-4`, `CANON_OPTS`) at the stated depth.\n- **Guidance** — advice."
+     "md": "*Being the fourth book of THE SOVEREIGN'S GRIMOIRE: FROM APPRENTICE TO CHESS SOVEREIGN, for players of Crown & Calculation (rules `crown-la6-v1`).*\n\nWelcome to the Masters' Hall, Strategist. You know where pieces belong and why. Now you must become exact. A master's spells are short and they never misfire: the right candidate moves, a forcing line calculated to its end, a defence found when all seems lost, and the cold certainties of the endgame. On a board of 36 squares those certainties are closer than you think: many endings that are mysteries on the older board can here be solved completely, and this book does so.\n\n**How to read this book.** As in Book III, every board is checked by `tools/grimoire/check.ts`. A caption that says **mate in N** (N ≤ 3) was proven by the checker, which tried every defence; **only** means no other first move mates as fast. Claims carry labels:\n\n- **Proven** — by the checker's exhaustive mate search.\n- **Evidence (exhaustive enumeration)** — by retrograde analysis written for this book: every legal position of an ending (for example king and rook against king and knight: 852,400 positions with White to move) was generated with the real move generator of `src/rules`, and won/drawn/lost values with distance to mate were computed backwards from the checkmates. The solver is `tools/grimoire/endgame.ts` (`npx tsx tools/grimoire/endgame.ts` re-computes every figure in this book in about 20 seconds; `--probe \"<fen>\"` gives the value of any 3- or 4-man position and of each of its moves), and `tests/endgame.test.ts` re-checks a sample of the results; the positions are reported exactly so that anyone can test them. A position is *quiet* when the side to move is not in check and has no capture.\n- **Evidence (archive)** — measured on the engine-game archive described in Book III's Ledger (method A: 5,568 games from balanced pairings).\n- **Engine judgement** — the canonical engine (`crown-search-2` + `crown-eval-4`, `CANON_OPTS`) at the stated depth.\n- **Guidance** — advice."
     }
    ],
    "chapters": [
@@ -9803,7 +9803,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase draw"
          }
         },
         {
@@ -9815,7 +9815,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase loss-in-12"
          }
         }
        ]
@@ -9867,7 +9867,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase win-in-11"
          }
         },
         {
@@ -10222,7 +10222,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase win-in-12"
          }
         }
        ]
@@ -10520,7 +10520,7 @@
        "parts": [
         {
          "kind": "md",
-         "md": "**Knights (Evidence, exhaustive enumeration).**\n- King and knight against king: **no position is a win**; mate is impossible.\n- King and **two** knights against king: no forced win. In 447,832 positions with White to move, 0.1% are wins, and every one of those is a mate in one that already stands on the board. With the defender to move, none is lost.\n- **Evidence (archive):** knight endings were drawn 61.0% of the time, and even with an extra pawn the stronger side won only 49.0%.\n\n**Rook against knight (Evidence, exhaustive enumeration).** 852,400 positions with White (the rook) to move; we report the 592,704 *quiet* positions with the knight's side to move (not in check, no capture available). White wins only **11.7%**; the rest are draws. The win rate depends on two things:\n\n| Defender's king–knight distance | 1 | 2 | 3 | 4 or more |\n|---|---|---|---|---|\n| White wins | 2.5% | 3.4% | 7.3% | 27.1% |\n\n| Defender's king on | the edge | second ring | the four centre squares | a corner |\n|---|---|---|---|---|\n| White wins | 17.5% | 4.0% | 0.8% | 33.0% |\n\n**Rule (proven by these counts): keep the knight next to the king and the king out of the corner.** The longest win in this ending takes 29 moves.\n\n**Queens (Evidence, exhaustive enumeration).**\n- King and queen against king: every position is won, in at most **7 moves** (longest from `6/6/4k1/6/1Q4/K5 w`).\n- Queen against rook: in the 326,672 quiet positions with the rook's side to move, White wins **87.8%**, draws 10.6% (and loses 1.6%, to tactical rook tricks). The draws do not depend on geometry the way rook-against-knight does: the defender's chances are tactical — checks, skewers and stalemates. The longest win takes 23 moves.\n- **Evidence (archive):** queen endings with an extra pawn were won 63.8% of the time."
+         "md": "**Knights (Evidence, exhaustive enumeration).**\n- King and knight against king: **no position is a win**; mate is impossible.\n- King and **two** knights against king: no forced win. In 447,832 positions with White to move, 0.1% are wins, and every one of those is a mate in one that already stands on the board. With the defender to move, the only lost positions (88 of 583,440) are those where the defender is already checkmated on the board.\n- **Evidence (archive):** knight endings were drawn 61.0% of the time, and even with an extra pawn the stronger side won only 49.0%.\n\n**Rook against knight (Evidence, exhaustive enumeration).** 852,400 positions with White (the rook) to move; we report the 592,704 *quiet* positions with the knight's side to move (not in check, no capture available). White wins only **11.7%**; the rest are draws. The win rate depends on two things:\n\n| Defender's king–knight distance | 1 | 2 | 3 | 4 or more |\n|---|---|---|---|---|\n| White wins | 2.5% | 3.4% | 7.3% | 27.1% |\n\n| Defender's king on | the edge (corners included) | second ring | the four centre squares | a corner |\n|---|---|---|---|---|\n| White wins | 17.5% | 4.0% | 0.8% | 33.0% |\n\n**Rule (proven by these counts): keep the knight next to the king and the king out of the corner.** The longest win in this ending takes 29 moves.\n\n**Queens (Evidence, exhaustive enumeration).**\n- King and queen against king: every position is won, in at most **7 moves** (longest from `6/6/4k1/6/1Q4/K5 w`).\n- Queen against rook: in the 326,672 quiet positions with the rook's side to move, White wins **87.8%**, draws 10.6% (and loses 1.6%, to tactical rook tricks). The draws do not depend on geometry the way rook-against-knight does: the defender's chances are tactical — checks, skewers and stalemates. The longest win takes 23 moves.\n- **Evidence (archive):** queen endings with an extra pawn were won 63.8% of the time."
         }
        ]
       },
@@ -10537,7 +10537,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase draw"
          }
         },
         {
@@ -10549,7 +10549,7 @@
           "ccn": [],
           "show": "before",
           "flip": false,
-          "claim": "legal"
+          "claim": "tablebase win-in-10"
          }
         }
        ]

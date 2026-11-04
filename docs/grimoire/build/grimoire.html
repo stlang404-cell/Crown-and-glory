@@ -4971,10 +4971,15 @@ analysis written for this book: every legal position of an ending (for
 example king and rook against king and knight: 852,400 positions with
 White to move) was generated with the real move generator of
 <code>src/rules</code>, and won/drawn/lost values with distance to mate
-were computed backwards from the checkmates. The program is not part of
-the repository, so these results are not re-checked by
-<code>check.ts</code>; they are reported with the exact positions so
-that anyone can test them.</li>
+were computed backwards from the checkmates. The solver is
+<code>tools/grimoire/endgame.ts</code>
+(<code>npx tsx tools/grimoire/endgame.ts</code> re-computes every figure
+in this book in about 20 seconds; <code>--probe &quot;&lt;fen&gt;&quot;</code>
+gives the value of any 3- or 4-man position and of each of its moves),
+and <code>tests/endgame.test.ts</code> re-checks a sample of the
+results; the positions are reported exactly so that anyone can test
+them. A position is <em>quiet</em> when the side to move is not in check
+and has no capture.</li>
 <li><strong>Evidence (archive)</strong> — measured on the engine-game
 archive described in Book III&#39;s Ledger (method A: 5,568 games from
 balanced pairings).</li>
@@ -5751,7 +5756,8 @@ mate is impossible.</li>
 <li>King and <strong>two</strong> knights against king: no forced win.
 In 447,832 positions with White to move, 0.1% are wins, and every one of
 those is a mate in one that already stands on the board. With the
-defender to move, none is lost.</li>
+defender to move, the only lost positions (88 of 583,440) are those
+where the defender is already checkmated on the board.</li>
 <li><strong>Evidence (archive):</strong> knight endings were drawn 61.0%
 of the time, and even with an extra pawn the stronger side won only
 49.0%.</li>
@@ -5786,7 +5792,7 @@ things:</p>
 <thead>
 <tr class="header">
 <th>Defender&#39;s king on</th>
-<th>the edge</th>
+<th>the edge (corners included)</th>
 <th>second ring</th>
 <th>the four centre squares</th>
 <th>a corner</th>

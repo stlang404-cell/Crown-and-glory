@@ -126,7 +126,8 @@ export function registerChallenger(ctx: Ctx): { replaced: string } {
   if (!ev) throw new Error('Crown Division players qualify for the Championship through their league');
   const sw = ctx.plan.swiss.find(x => x.event === ev)!;
   if (!ctx.world.player.joined) throw new Error('Join the federation first');
-  if (ctx.world.round > SWISS_ROUNDS[0] - 1 && ctx.world.round !== SWISS_ROUNDS[0]) throw new Error('Registration is closed');
+  // Registration closes before the first Swiss round (rounds 1–3), as the rulebook and the service say (D9).
+  if (ctx.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration is closed');
   if (sw.rounds.length) throw new Error('Registration is closed');
   if (sw.entrants.includes(PLAYER_ID)) throw new Error('Already registered');
   const replaced = sw.entrants[sw.entrants.length - 1];
