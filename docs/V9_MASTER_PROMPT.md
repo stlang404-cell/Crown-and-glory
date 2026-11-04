@@ -49,3 +49,31 @@ Center consistency; sound/motion polish; mobile performance budget; offline upda
 Full vitest; all journeys on the final build (analysis, nav audit, motion/sound, motion-extra, rated run, offline,
 Live Arena, v5 migration + a new v0.8→v0.9 migration journey); engine benchmark table; calibration tables; economy and
 federation simulations; screenshots; source ZIP; Windows and iPhone instructions; known issues.
+
+## Addendum (owner directives received during v0.8): "The Living Federation" — ordered continuation plan
+The owner's v0.9 directives (Sovereign Ascendancy, Living Federation, maintenance/fun addendum) add the work below.
+Already delivered in v0.8.0 and verified: Random Federation Quick Match, Sovereign Vault v1 (134 collectibles incl. the
+Exchange title ladder), dollar display, 31 rating titles + insignias, identity banner, fullBudget (+23). Priority order
+(P0 integrity first; engine research runs in parallel, bounded):
+
+1. **M0 baseline** — rerun all journeys + vitest; fix Vault known issues (Hall of Fame reads Vault ownership; backups
+   export/import unlock records); finish the doubling-time ladder and Fairy 1000 ms; run the economy sweep.
+2. **M1 Living Federation simulation** — measure first: population at 2,048 / 5,000 / 10,000 (create time, round
+   time, IndexedDB size, memory) with `tools/sim/scale_probe.mts`; lightweight career records for inactive
+   competitors; a persistent scheduler (bounded per tick, resumable queue, deterministic seeds, documented catch-up on
+   reopen — nothing runs while the app is closed); choose the population from the measurements, not the target.
+3. **M2 Live Arena + Tournament Center** — N concurrent watchable engine games in a worker pool (measure CPU/battery;
+   adaptive N, smaller on phones); every watchable game is genuinely move-by-move; background results stay abstract and
+   are labelled as such; tournament formats (opens, cups, knockouts, round-robins, invitationals) with real pairing
+   and advancement rules; filters by region/division/rating/tournament/status.
+4. **M3 Exchange expansion** — new markets only with exact settlement rules and integrity tests (draw, decisive
+   result, advancement, length bands); live probability charts with trade markers; portfolio equity curve; watchlists;
+   NPC trader archetypes with defined information (no future knowledge); accounting invariants.
+5. **M4 Federation Dashboard** as the landing page (identity, Random Rated Match, live matches, Exchange snapshot,
+   tournaments, real-data graphs, activity feed, Vault preview) with memoised selectors and virtualised lists.
+6. **M6 engine** — approach B measurement (Fairy WASM in the browser) + owner licensing decision; approach A speed work
+   with differential tests; beginner profiles below 800 with calibration.
+7. **M7 Vault expansion** — equippable identity, collection sets with cosmetic rewards, tournament trophies, more
+   Exchange/Arena achievements; ceremonies.
+8. **M8 release** — Played Like re-validation, economy/progression simulations, mobile polish, all gates, ZIP.
+Each milestone ends with tests, journeys, commits and an honest status; nothing is called verified without evidence.
