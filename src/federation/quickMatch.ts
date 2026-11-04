@@ -6,8 +6,9 @@
 import type { Competitor } from './model';
 import { PLAYER_ID } from './model';
 
-export type QuickPool = 'anyone' | 'near' | 'higher' | 'elite';
+export type QuickPool = 'beginner' | 'anyone' | 'near' | 'higher' | 'elite';
 export const QUICK_POOLS: { id: QuickPool; label: string; detail: string }[] = [
+  { id: 'beginner', label: 'Beginner Bands', detail: 'Competitors rated 0–399 and 400–799 (suggested while your career Elo is provisional or under 800)' },
   { id: 'anyone', label: 'Anyone', detail: 'Any active competitor in the Federation, any rating' },
   { id: 'near', label: 'Near My Rating', detail: 'Within 200 points of your rating' },
   { id: 'higher', label: 'Higher Rated', detail: 'Rated above you' },
@@ -15,6 +16,8 @@ export const QUICK_POOLS: { id: QuickPool; label: string; detail: string }[] = [
 ];
 export const NEAR_RANGE = 200;
 export const ELITE_MIN = 2400;
+/** Beginner bands 0–399 and 400–799 (docs/CAREER_RATING.md). */
+export const BEGINNER_MAX = 800;
 
 /** Active competitors only: reserves and retired players do not take challenges. */
 export function eligiblePool(all: Iterable<Competitor>, pool: QuickPool, myRating: number): Competitor[] {
@@ -24,6 +27,7 @@ export function eligiblePool(all: Iterable<Competitor>, pool: QuickPool, myRatin
     if (pool === 'near' && Math.abs(c.rating - myRating) > NEAR_RANGE) continue;
     if (pool === 'higher' && !(c.rating > myRating)) continue;
     if (pool === 'elite' && c.rating < ELITE_MIN) continue;
+    if (pool === 'beginner' && !(c.rating < BEGINNER_MAX)) continue;
     out.push(c);
   }
   return out;

@@ -49,9 +49,11 @@ export const MID_ROUND = 8;
  *  III of the new division: the senior grade of the lower division, its sublevels to be re-earned). */
 export const PROMOTION_LANDING = 0;
 export const RELEGATION_LANDING = 3;
-/** Events that count toward the results part: sanctioned rated Federation events. The Club Weekend is excluded (it
- *  is a hosted event the player pays for), as is anything outside the Federation's fixtures. */
-export const SANCTIONED = (event: string) => event.startsWith('league:') || event === 'open' || event === 'challenger' || event === 'champ';
+/** Events that count toward the results part: sanctioned rated Federation events — leagues, the two Opens, the
+ *  Crown Championship and (crown-competition-2) the Zonal Championships (`zonal-…`) and Regional Cups (`cup-…`), whose
+ *  fields qualify by results and charge no entry. The Club Weekend is excluded (a hosted event the player pays for), as
+ *  is anything outside the Federation's fixtures (exhibitions, quick matches, practice, sandbox). */
+export const SANCTIONED = (event: string) => event.startsWith('league:') || event === 'open' || event === 'challenger' || event === 'champ' || event.startsWith('zonal-') || event.startsWith('cup-');
 
 // ------------------------------------------------------------------ steps, labels, insignia
 export const clampStep = (s: number) => Math.max(0, Math.min(STEPS - 1, Math.floor(s)));
@@ -213,7 +215,10 @@ export function rankCheckpoint(w: WorldLike, games: Game[], playerRating: number
       const r = w.world.player.rank;
       if (!r) continue;
       const base = r.step - localOf(r.step);
-      const n = checkpointStep(localOf(r.step), score, r.protect, !parts.bottom);
+      // league games the player postponed (crown-competition-2, due by round 15) are missing from the table at the
+      // mid-season checkpoint: the checkpoint can raise the player but not lower them while any is pending
+      const pending = (w.world.player.postponed?.length ?? 0) > 0;
+      const n = checkpointStep(localOf(r.step), score, pending ? 1 : r.protect, !parts.bottom);
       const to = base + n.local;
       if (to !== r.step) log(r, { season, round, kind, from: r.step, to, score });
       if (n.change > 0) r.highest = raise(r.highest, to, season, round, 'checkpoint');

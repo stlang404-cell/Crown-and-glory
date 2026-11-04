@@ -135,7 +135,8 @@ Safari/iOS may evict site data. Export backups regularly; only an external file 
 
 ## v0.9: progress records in backups
 The `crown-backup-1` payload gains an optional `progress` array of `{ key, value }` meta-store records with the prefixes
-`ach:` / `achtoast:` / `vault:` (Sovereign Vault unlocks, shown notices, backfill flag) and `grim:` (Grimoire lesson
+`ach:` / `achtoast:` / `vault:` (Sovereign Vault unlocks, shown notices, backfill flags — `vault:backfilled` and, from
+v0.11, `vault:backfilled:crown-vault-2` for the expansion's one-time back-fill) and `grim:` (Grimoire lesson
 attempts, chapter completion, plan settings). It is covered by `payloadSha256` like the rest of the payload; older backups
 without it import unchanged. Restore into an empty career writes all of them; merging into an existing career writes only
 `grim:` learning progress (achievements stay with the career that earned them). Every write is put-if-absent: existing
@@ -177,3 +178,39 @@ Two additive, optional fields (docs/PLAYED_LIKE.md):
   that touches the record. Backups carry the fields unchanged.
 * Tests: `tests/ranks.test.ts` (reload through a checkpoint and a season end, backup round trip, a save with every
   rank field removed).
+
+## v0.11: trophies and legacy header (no schema change)
+Package I adds meta-store records only (additive, IndexedDB version unchanged): `trophy:<key>` (one per trophy, written
+put-if-absent; `{ key, defId, kind, tier, name, season, event, evidence, earnedAt, replay?, at, backfill, registry:
+"crown-trophies-1" }`), `trophyseen:<key>` (ceremony shown), `legacy:backfilled` (one-time back-fill marker) and
+`legacy:prefs` (`crown-legacy-prefs-1`: `{ v: 1, name, banner, featured[], insignia, accent, showcase[], honour }`).
+All four prefixes are carried in the backup `progress` array; restore into an empty career writes them put-if-absent,
+merging into another career does not import them (they belong to the career that earned them). Older builds ignore
+them. Tests: `tests/legacy.test.ts`. See docs/LEGACY.md.
+
+## v0.11: Exhibition Arena archive (no schema change, IndexedDB v4)
+Unofficial exhibitions (any two Federation competitors, `src/app/exhibition.ts`, crown-exhibition-1) are kept in the
+`meta` store under their own prefixes, apart from every official record:
+
+| Key | Value |
+|---|---|
+| `exh:<timestamp>-<seed36>` | `ExhibitionGame` — `kind: "exhibition"`, `official: false`, `schema`, `createdAt`, `finishedAt`, `status` (`playing` / `finished`), `seed`, `nodeCap` (30,000, as featured games), `initialFen`, `white` / `black` sides (competitor id, name, career Elo and RD at the start, division, region, title, own and played style, persona id, the engine profile used), `moves` (CCN, SAN, FEN after, the moving engine's published score, depth, nodes, ms), `result`, `termination`, `checksum` (SHA-256 of id, moves and result once finished). Saved after every move, so an unfinished exhibition resumes on the same timeline. |
+| `exhrep:<exhibition id>` | The exhibition's Match Analysis report (standard settings and queue; job ids `job:exh:…` in `analysisJobs`), with its `playedLike` field. **Never** in the `reports` store, so no career statistic, Vault fact, Lab/Academy item or permanent Played Like record can read it. |
+
+* Exhibitions never write `games`, `reports`, `ratingEvents`, `ratingState` or any Federation store; bookmarks
+  (favourites, saved sandbox positions) on an exhibition use its `exh:` id and are ignored by the Vault.
+* Backups: `crown-backup-1` gains the optional `payload.exhibitions` (`{ key, value }[]` with both prefixes), validated
+  on import (prefixes, legal replay of every move, stored FENs, finished games terminal) and imported put-if-absent in
+  both restore and merge mode. Older backups have none; older builds reject a backup that carries the field.
+* Deleting an exhibition removes its two records, its analysis jobs and its bookmarks.
+* Tests: `tests/exhibition.test.ts` (archive reload, backup round trip and tamper rejection, deletion, isolation).
+
+## v0.11: career rating origin (crown-career-1, no schema change)
+The `meta` store gains a record `career` = `{ model: "crown-career-1", id, ratingStart, origin: "new" | "legacy",
+createdAt, previousArchiveId? }` (docs/CAREER_RATING.md). A database created by v0.11+ starts its pools at 0; a
+database from an older build is marked `legacy` (start 1500) on first open if it holds any game, rating event, rating
+state or Federation, and is otherwise treated as a new career. No existing record is rewritten. The backup payload
+gains an optional `career` (covered by `payloadSha256`); a backup without it replays from 1500, and a restore into an
+empty career adopts the backup's origin. Start New Career clears every store of `crown-calculation` in one transaction
+after a full backup was exported; a copy of that backup is kept in a separate database `crown-calculation-archive`
+(store `backups`, key `archive:<exportedAt>`, the exact file text) when storage allows. Older builds ignore the record.

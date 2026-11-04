@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
@@ -117,7 +118,7 @@ export function CompetitorsScreen() {
                 <td>{pg.from + i + 1}</td>
                 <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}{c.fedTitle && <span className="chip gold">{FED_TITLE_ABBR[c.fedTitle]}</span>}{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
                 <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
-                <td className="mono">{Math.round(c.rating)} <span className="muted">±{Math.round(c.rd)}</span></td>
+                <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
                 <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
               </tr>
             ); })}
@@ -216,7 +217,7 @@ export function CompetitorScreen({ id }: { id: string }) {
             <Insignia division={c.division} size={20} />{divisionLabel(c.division)} · {REGION_NAMES[c.region]} · Age {ageOf(c, season)} · {c.status === 'retired' ? 'Retired' : c.status === 'reserve' ? 'Reserve' : 'Active'}{c.status === 'retired' && c.retiredSeason ? ` (season ${c.retiredSeason})` : ''}
           </div>
           <div className="row" style={{ marginTop: 10, gap: 24, flexWrap: 'wrap' }}>
-            <div className="stat"><span className="v">{Math.round(c.rating)}</span><span className="k">Rating ±{Math.round(c.rd)}</span></div>
+            <div className="stat"><span className="v mono" data-testid="competitor-elo">{fmtCareerElo(c.rating)}</span><span className="k">Career Elo ±{Math.round(c.rd)}</span></div>
             <div className="stat"><span className="v mono">{c.form || '—'}</span><span className="k">Form (last 5)</span></div>
             <div className="stat"><span className="v">{c.stats.w}–{c.stats.d}–{c.stats.l}</span><span className="k">Career W–D–L</span></div>
             <div className="stat" data-testid="competitor-rank"><span className="v" style={{ fontSize: '1.15rem' }}><RankBadge rank={competitorRank(c)} size="sm" /></span><span className="k">Circuit Grade{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` · highest ${competitorHighestRank(c)!.label} (S${competitorHighestRank(c)!.season})` : ' · their highest so far'} · <a href="#/ranks">guide</a></span></div>
@@ -259,7 +260,7 @@ export function CompetitorScreen({ id }: { id: string }) {
         <div className="panel" style={{ marginTop: 14, borderColor: 'var(--accent)' }} data-testid="dossier">
           <h3>Scouting Dossier · Your Next Opponent</h3>
           {competitorRank(c) && <div className="small" data-testid="dossier-rank">Circuit Grade: <strong>{competitorRank(c)!.label}</strong>{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` (highest ${competitorHighestRank(c)!.label})` : ''}. Standing score at the last checkpoint: {c.rank && c.rank[4] >= 0 ? (c.rank[4] / 10).toFixed(1) : '—'}.</div>}
-          <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${Math.round(h.rating)}`).join(' → ') || 'First season'} → now {Math.round(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
+          <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${fmtCareerElo(h.rating)}`).join(' → ') || 'First season'} → now {fmtCareerElo(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
           <div className="small muted">You can replay the recorded games below. Summary results have no moves to replay.</div>
         </div>
       )}
@@ -278,7 +279,7 @@ export function CompetitorScreen({ id }: { id: string }) {
           <h3>Career by Season</h3>
           {c.history.length === 0 ? <p className="small muted">First season in progress.</p> : (
             <table><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Pts</th><th>Rating</th></tr></thead>
-              <tbody>{c.history.slice().reverse().map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division} · {REGION_NAMES[h.region]}</td><td>{h.rank}</td><td>{h.points}</td><td>{Math.round(h.rating)}</td></tr>)}</tbody></table>
+              <tbody>{c.history.slice().reverse().map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division} · {REGION_NAMES[h.region]}</td><td>{h.rank}</td><td>{h.points}</td><td>{fmtCareerElo(h.rating)}</td></tr>)}</tbody></table>
           )}
           {c.milestones.length > 0 && <><h3>Milestones</h3><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
         </div>

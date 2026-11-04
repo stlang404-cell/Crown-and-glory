@@ -8480,7 +8480,7 @@ and Man-at-Arms, and so on up to King and High Sovereign in the Crown Division. 
 promotion starts you at the new division's lower grade III, relegation puts you at the lower division's upper grade
 III. Inside the division a **standing score** (0–100) moves you at two **checkpoints** per season, after round 8 and
 at season end: 45 % league position (1st = 100, 16th = 0), 25 % your score in sanctioned rated games (league, the
-Opens, the Crown Championship) and 30 % your rating's percentile within the division. The six steps of a division
+Opens, the Zonal Championships, the Regional Cups, the Crown Championship) and 30 % your rating's percentile within the division. The six steps of a division
 are reached at 0 / 30 / 42 / 54 / 64 / 76; you drop a step only below the step's mark minus **12**; at most one step
 per checkpoint; never down at the checkpoint right after a step up; never up from the bottom two of your league.
 Exhibitions, unrated, practice and sandbox games do not count, and nothing can be bought. Your **highest rank ever**

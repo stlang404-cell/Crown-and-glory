@@ -447,7 +447,20 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .vault-mini:hover, .vault-card:hover { border-color: var(--line-strong); background: var(--hover); }
 .vault-mini > span { min-width: 0; overflow-wrap: anywhere; }
 .vault-mini:not(.earned):is(.locked, .awaiting) .emblem { filter: grayscale(1) opacity(.35); }
-.vault-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr); gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.vault-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.vault-families { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--sp-2); }
+.vault-family { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; font: inherit; }
+.vault-family:hover { border-color: var(--line-strong); background: var(--hover); }
+.vault-family.complete { border-color: var(--accent-line); }
+.vault-family-head { display: flex; justify-content: space-between; gap: var(--sp-2); min-width: 0; overflow-wrap: anywhere; }
+.vault-family .vault-bar { max-width: none; }
+.vault-family-next { overflow-wrap: anywhere; }
+.vault-tiers { display: flex; flex-wrap: wrap; gap: 4px; }
+.vault-tier-pip, .chip.vault-tier { --tier: var(--muted); font-size: .72rem; padding: 1px 6px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--tier) 50%, transparent); color: var(--tier); white-space: nowrap; }
+.vault-tier-pip.full { background: color-mix(in srgb, var(--tier) 16%, transparent); }
+.tier-bronze { --tier: #b07a46; } .tier-silver { --tier: #8f9aa6; } .tier-gold { --tier: var(--accent); } .tier-sovereign { --tier: var(--ins-1); }
+.vault-rarity { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
+.vault-rarity-cell { display: inline-flex; align-items: center; gap: 6px; }
 .vault-filters > * { width: 100%; min-width: 0; }
 .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: var(--sp-2); }
 .vault-card { display: flex; gap: var(--sp-3); align-items: flex-start; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; font: inherit; }

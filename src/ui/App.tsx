@@ -8,6 +8,7 @@ import { AnalysisScreen } from './AnalysisScreen';
 import { AnalysisPicker } from './AnalysisPicker';
 import { ScreenBoundary } from './ScreenBoundary';
 import { IdentityBanner } from './IdentityBanner';
+import { TrophyCeremony } from './TrophyHall';
 import { ReplayLibrary } from './ReplayLibrary';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
@@ -16,6 +17,7 @@ import { WorldScreen, StandingsScreen, TournamentsScreen } from './WorldScreen';
 import { CompetitorsScreen, CompetitorScreen } from './CompetitorScreen';
 import { PopulationScreen } from './PopulationScreen';
 import { SpectatorScreen } from './SpectatorScreen';
+import { ExhibitionScreen } from './ExhibitionScreen';
 import { ExchangeScreen } from './ExchangeScreen';
 import { FinanceScreen } from './FinanceScreen';
 import { ForecastScreen } from './ForecastScreen';
@@ -52,6 +54,7 @@ export type View =
   | { name: 'population' }
   | { name: 'competitor'; id: string }
   | { name: 'watch'; id: string }
+  | { name: 'exhibition'; id?: string }
   | { name: 'exchange'; id?: string }
   | { name: 'finance' }
   | { name: 'forecasts' }
@@ -81,6 +84,7 @@ function parseHash(): View {
   if (name === 'analysis') return { name: 'analyses' };
   if (name === 'competitor' && id) return { name: 'competitor', id: decodeURIComponent(id) };
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
+  if (name === 'exhibition') return id ? { name: 'exhibition', id: decodeURIComponent(id) } : { name: 'exhibition' };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
@@ -94,6 +98,7 @@ function toHash(v: View): string {
   if (v.name === 'analyses') return '#/analysis';
   if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
   if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
+  if (v.name === 'exhibition' && v.id) return `#/exhibition/${encodeURIComponent(v.id)}`;
   if (v.name === 'grimoire' && v.path) return `#/grimoire/${encodeURIComponent(v.path)}`;
   return `#/${v.name}`;
 }
@@ -117,7 +122,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 /** The phone tab bar keeps Dashboard, the four most-used sections and Settings; Finance and the rest live in the side rail,
  *  the Dashboard's Exchange snapshot and the Federation/Career screens. */
 const TABS: View['name'][] = ['dashboard', 'play', 'world', 'exchange', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', exhibition: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -153,6 +158,7 @@ export function App({ services }: { services: AppServices }) {
           <UpdateNotice />
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
           {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="banner" screen="banner" onHome={() => go({ name: 'play' })}><IdentityBanner /></ScreenBoundary>}
+          {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="trophy-ceremony" screen="trophy-ceremony" onHome={() => go({ name: 'play' })}><TrophyCeremony /></ScreenBoundary>}
           <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
             {view.name === 'dashboard' && <DashboardScreen />}
             {view.name === 'play' && <PlayScreen />}
@@ -172,6 +178,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'population' && <PopulationScreen />}
             {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
             {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
+            {view.name === 'exhibition' && <ExhibitionScreen key={view.id ?? ''} id={view.id} />}
             {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
             {view.name === 'finance' && <FinanceScreen />}
             {view.name === 'forecasts' && <ForecastScreen />}

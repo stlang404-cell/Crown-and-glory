@@ -87,7 +87,7 @@ export function RankScreen() {
             <tbody>
               {(() => { const parts = live ?? r?.last?.parts ?? null; return (<>
                 <tr><td>League position (1st = 100, last = 0)</td><td>{RANK_WEIGHTS.position * 100}%</td><td className="mono">{pct(parts?.position ?? null)}</td></tr>
-                <tr><td>Score in sanctioned rated games (league, Opens, Championship)</td><td>{RANK_WEIGHTS.results * 100}%</td><td className="mono">{pct(parts?.results ?? null)}</td></tr>
+                <tr><td>Score in sanctioned rated games (league, Opens, Zonal Championships, Regional Cups, Crown Championship)</td><td>{RANK_WEIGHTS.results * 100}%</td><td className="mono">{pct(parts?.results ?? null)}</td></tr>
                 <tr><td>Rating percentile within your division</td><td>{RANK_WEIGHTS.rating * 100}%</td><td className="mono">{pct(parts?.rating ?? null)}</td></tr>
                 <tr><td><strong>Standing score</strong></td><td /><td className="mono"><strong>{parts ? standingScore(parts).toFixed(1) : '—'}</strong></td></tr>
               </>); })()}
@@ -132,7 +132,7 @@ export function RankScreen() {
             <li>Promotion to a new division starts you at its lower grade III ({rankLabel(divisionBase(7) + PROMOTION_LANDING)} after the Open Division) and protects you at the next checkpoint. Relegation places you at the lower division's upper grade III ({rankLabel(divisionBase(8) + RELEGATION_LANDING)} below the Club Division).</li>
             <li>Inside your division, each checkpoint moves you at most one step. Stepping up needs the score in the table; stepping down needs a score {HYSTERESIS} points below the step's own mark, so a single bad half-season near a line does not bounce you back and forth.</li>
             <li>After any step up, the next checkpoint cannot lower your rank.</li>
-            <li>Only recorded Federation results count: league games, the Federation and Challenger Opens and the Crown Championship. Exhibitions, unrated, assisted, practice, sandbox and quick-match games never count, and nothing can be bought: money, clubs, sponsorships and cosmetics have no effect.</li>
+            <li>Only recorded Federation results count: league games, the Federation and Challenger Opens, the Zonal Championships, the Regional Cups and the Crown Championship. A forfeit counts as the loss it is; a postponed league game counts once it is played, and while one is pending the mid-season checkpoint cannot lower you. Exhibitions, unrated, assisted, practice, sandbox and quick-match games never count, and nothing can be bought: money, clubs, sponsorships and cosmetics have no effect.</li>
             <li>Your highest rank ever achieved is kept for good. Demotion, relegation, rating losses and new seasons never lower it.</li>
           </ul>
         </section>

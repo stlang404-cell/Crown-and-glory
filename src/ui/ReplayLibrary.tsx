@@ -4,6 +4,7 @@
  * market moves and favourites (bookmark records, backed up with the career). Opening a row goes to the Replay &
  * Analysis Center for that game: Game Review for the player's games, the Arena replay for federation games.
  */
+import { fmtCareerElo } from '../ratings/display';
 import { useEffect, useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { eventName } from '../app/federation';
@@ -11,9 +12,10 @@ import { PLAYER_ID } from '../federation/model';
 import { featuredRivalries, rivalriesOf } from '../app/rivalries';
 import type { AnalysisReport } from '../analysis/types';
 import {
-  DRAMATIC_SWING, MARKET_MOVE, REPLAY_FILTERS, UPSET_GAP, favouriteId, federationEntry, filterReplays, personalEntry,
+  DRAMATIC_SWING, MARKET_MOVE, REPLAY_FILTERS, UPSET_GAP, exhibitionEntry, favouriteId, federationEntry, filterReplays, personalEntry,
   type ReplayBookmark, type ReplayEntry, type ReplayFilter,
 } from '../app/replay';
+import { listExhibitions } from '../app/exhibition';
 
 const PAGE = 30;
 
@@ -48,6 +50,8 @@ export function ReplayLibrary() {
           const wgs = await fed.worldGames();
           for (const wg of wgs) out.push(federationEntry(wg, st.liveGames.get(wg.fixtureId)?.points ?? null, pairs, rivals, eventName));
         }
+        // v0.11: unofficial Exhibition Arena games (their own archive, src/app/exhibition.ts)
+        for (const g of await listExhibitions(services.db)) out.push(exhibitionEntry(g));
         if (!alive) return;
         setRows(out);
         setFavs(new Set(bms.filter(b => b.kind === 'favourite').map(b => b.gameId)));
@@ -66,7 +70,7 @@ export function ReplayLibrary() {
     const n = new Set(favs); if (n.has(id)) n.delete(id); else n.add(id);
     setFavs(n);
   };
-  const open = (r: ReplayEntry) => go(r.kind === 'personal' ? { name: 'analysis', gameId: r.id } : { name: 'watch', id: r.id.replace(/^wg:/, '') });
+  const open = (r: ReplayEntry) => go(r.kind === 'personal' ? { name: 'analysis', gameId: r.id } : r.kind === 'exhibition' ? { name: 'exhibition', id: r.id } : { name: 'watch', id: r.id.replace(/^wg:/, '') });
   const count = (f: ReplayFilter) => (rows ? filterReplays(rows, f, favs).length : 0);
 
   return (
@@ -75,6 +79,7 @@ export function ReplayLibrary() {
         <div className="kicker">Replay &amp; Analysis Center</div>
         <h1>Replay Library</h1>
         <p className="muted">Every recorded game on this device: yours and the Federation's. Open one to replay it move by move with the evaluation bar, the graph and, for games traded in play, the prices that were recorded.</p>
+        <button className="btn small" data-testid="open-exhibition-arena" onClick={() => go({ name: 'exhibition' })}>Exhibition Arena: pick any two competitors</button>
       </header>
       {error && <div className="notice warn" role="alert">The library could not be loaded: {error}</div>}
       <div className="panel stack">
@@ -92,11 +97,11 @@ export function ReplayLibrary() {
             {shown.map(r => (
               <li key={r.id} className="replay-row" data-testid="replay-row" data-kind={r.kind} data-id={r.id}>
                 <button className="replay-open" onClick={() => open(r)}>
-                  <span className="replay-players"><strong>{r.white}</strong>{r.whiteRating !== null ? <span className="mono muted"> {Math.round(r.whiteRating)}</span> : null} – <strong>{r.black}</strong>{r.blackRating !== null ? <span className="mono muted"> {Math.round(r.blackRating)}</span> : null}</span>
+                  <span className="replay-players"><strong>{r.white}</strong>{r.whiteRating !== null ? <span className="mono muted"> {fmtCareerElo(r.whiteRating)}</span> : null} – <strong>{r.black}</strong>{r.blackRating !== null ? <span className="mono muted"> {fmtCareerElo(r.blackRating)}</span> : null}</span>
                   <span className="replay-meta small muted">{r.event}{r.stage ? ` · ${r.stage}` : ''}{r.season ? ` · S${r.season} R${r.round}` : ''} · {Math.ceil(r.plies / 2)} moves · {r.at.slice(0, 10)}</span>
                   <span className="replay-tags">
                     <span className="chip mono">{r.result}</span>
-                    {r.kind === 'personal' ? <span className="chip">My game</span> : <span className="chip info">Federation</span>}
+                    {r.kind === 'personal' ? <span className="chip">My game</span> : r.kind === 'exhibition' ? <span className="chip gold">Exhibition · unofficial</span> : <span className="chip info">Federation</span>}
                     {r.championshipFinal && <span className="chip gold">Final</span>}
                     {r.rivalry && <span className="chip">Rivalry</span>}
                     {r.upsetGap >= UPSET_GAP && <span className="chip neg">Upset +{Math.round(r.upsetGap)}</span>}

@@ -1,4 +1,5 @@
 import { useApp, useServices } from './App';
+import { fmtCareerElo } from '../ratings/display';
 import { Emblem, Trophy } from './Emblem';
 import { divisionEmblem, titleEmblem, financialEmblem, achievementEmblem, TROPHY_FOR } from '../heraldry/catalog';
 import { divisionLabel, REGION_NAMES, PLAYER_ID } from '../federation/model';
@@ -14,6 +15,7 @@ import { fmtCrowns } from '../exchange/ledger';
 import { playerPrestige } from './FinanceScreen';
 import { RankBadge } from './RankBadge';
 import { currentRank, highestRank } from '../federation/ranks';
+import { isEstablished } from '../ratings/career';
 
 /**
  * The Passport's career standing (crown-passport-2): separate identities that are never mixed —
@@ -44,7 +46,7 @@ export function CareerStanding({ rating, rd, games, peak }: { rating: number; rd
     <section className="panel stack" style={{ marginTop: 14 }} data-testid="career-standing" aria-labelledby="career-standing-h">
       <div className="panel-title"><h2 id="career-standing-h" style={{ margin: 0 }}>Career Standing</h2><span className="small muted">Seven separate records. Money can't buy your rating, division, Circuit Grade or title.</span></div>
       <div className="grid-3">
-        <div className="panel stat"><span className="k">Rating</span><span className="v">{Math.round(rating)}</span><span className="small muted">±{Math.round(rd)} · {games} rated games. Changes only with rated games.</span></div>
+        <div className="panel stat"><span className="k">Career Elo</span><span className="v mono">{fmtCareerElo(rating)}</span><span className="small muted">±{Math.round(rd)} · {games} rated games{isEstablished(games, rd) ? '' : ' · provisional'}. Changes only with rated games.</span></div>
         <div className="panel stat"><span className="k">Division</span><span className="v row" style={{ gap: 6 }}><Emblem spec={divisionEmblem(p.division)} size="sm" title={divisionLabel(p.division)} />{divisionLabel(p.division)}</span><span className="small muted">Division {p.division} of 8 · {REGION_NAMES[p.region]}. Each season the top two are promoted and the bottom two relegated.</span></div>
         <div className="panel stat" data-testid="career-rank"><span className="k">Circuit Grade</span><span className="v row" style={{ gap: 6 }}><RankBadge rank={currentRank(st)} /></span><span className="small muted">Highest ever: {highestRank(st)?.label ?? '—'}{highestRank(st) && highestRank(st)!.via !== 'start' ? ` (season ${highestRank(st)!.season})` : ''}. Set by division and checkpoint standing; not your Career Elo. <a href="#/ranks" onClick={e => { e.preventDefault(); go({ name: 'ranks' }); }}>Rank guide</a></span></div>
         <div className="panel stat"><span className="k">Federation Title</span><span className="v row" style={{ gap: 6 }}>{p.fedTitle ? <><Emblem spec={titleEmblem(p.fedTitle)} size="sm" title={p.fedTitle} />{p.fedTitle}</> : 'None yet'}</span><span className="small muted">{progress.next ? `Next: ${progress.next} · ${progress.lines.join(' · ')}` : progress.lines[0]}. Earned by norms; not a FIDE title.</span></div>

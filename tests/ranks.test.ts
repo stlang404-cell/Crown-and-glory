@@ -27,6 +27,9 @@ import { signature } from '../src/heraldry/spec';
 import { divisionEmblem, rankEmblem, RANK_ORDER, titleEmblem, FED_TITLES, regionEmblem, tournamentCrest, TOURNAMENTS, financialEmblem, FIN_TIERS } from '../src/heraldry/catalog';
 import { rankCeremonies } from '../src/app/ranks';
 import type { Ceremony } from '../src/app/federation';
+import { newCareerRecord, CAREER_RANK_START } from '../src/ratings/career';
+import { currentRankOf, highestRankOf } from '../src/legacy/ranks';
+import { prepareNewCareer, startNewCareer } from '../src/app/career';
 
 function newCtx(seed = 42, topology = TOPOLOGY_V1): Ctx {
   const comps = generateFederation(seed, topology, POPULATION_V2);
@@ -224,6 +227,9 @@ describe('seasons and the federation', () => {
     const base = computeStandings(ctx, league, 900).get(PLAYER_ID)!;
     const noise = ['exhibition', 'unrated', 'sandbox', 'practice', 'quick', 'club', 'assisted', 'friendly'].flatMap(event => circuit.members.filter(m => m !== PLAYER_ID).map(m => ({ event, white: PLAYER_ID, black: m, result: 1 })));
     expect(computeStandings(ctx, [...league, ...noise], 900).get(PLAYER_ID)).toEqual(base);
+    // crown-competition-2 knockouts count: Zonal Championship and Regional Cup
+    const ko = computeStandings(ctx, [...league, { event: 'zonal-0', white: PLAYER_ID, black: 'c0001', result: 1 }, { event: 'cup-0', white: PLAYER_ID, black: 'c0002', result: 1 }], 900).get(PLAYER_ID)!;
+    expect(ko.results).toBeGreaterThan(base.results!);
     // sanctioned Swiss games do count
     const swiss = computeStandings(ctx, [...league, { event: 'challenger', white: PLAYER_ID, black: 'c0001', result: 1 }], 900).get(PLAYER_ID)!;
     expect(swiss.results).toBeGreaterThan(base.results!);
@@ -365,4 +371,44 @@ describe('scale: 10,240 competitors', () => {
     for (const c of ctx.competitors.values()) competitorRank(c);
     expect(performance.now() - t1).toBeLessThan(200);
   }, 120_000);
+});
+
+describe('new careers and the identity header (packages N and I)', () => {
+  it('newCareerRecord starts at Commoner III; the header adapter discovers this module', () => {
+    expect(newCareerRecord('2026-01-01T00:00:00Z').rankStart).toEqual(CAREER_RANK_START);
+    expect(rankView(0)).toMatchObject({ gradeId: CAREER_RANK_START.gradeId, sublevel: CAREER_RANK_START.sublevel });
+    expect(initialPlayerRank(1, 1).step).toBe(0);
+    const ctx = newCtx(8);
+    ctx.world.player.rank!.step = divisionBase(8) + 4;
+    ctx.world.player.rank!.highest = { step: divisionBase(8) + 5, season: 2, round: 8, via: 'checkpoint' };
+    expect(currentRankOf(ctx)).toMatchObject({ gradeId: 'cg-02', rankName: 'Page', sublevel: 'II', label: 'Page II' });
+    expect(highestRankOf(ctx)).toMatchObject({ label: 'Page I', season: 2 });
+    expect(currentRankOf(ctx)!.insignia!.marks).toBe(2);
+  });
+
+  it('Start New Career: the new career starts at Commoner III; the old rank stays only in the archived backup', async () => {
+    let clock = 0;
+    const now = () => new Date(Date.UTC(2026, 0, 1) + (clock++) * 1000).toISOString();
+    const f = new IDBFactory(), archiveF = new IDBFactory();
+    const db = await CrownDB.open(f);
+    const fed = new FederationService(db, async () => ({ rating: 1500, rd: 200 }), now);
+    await fed.create(2, 4242);
+    fed.runSelfplay = async req => ({ moves: [], result: (['1-0', '0-1', '1/2-1/2'] as const)[req.seed % 3], termination: 'checkmate' });
+    // give the old career a higher rank and persist it through a normal command
+    fed.state!.world.player.rank!.step = 4; fed.state!.world.player.rank!.highest = { step: 4, season: 1, round: 8, via: 'checkpoint' };
+    await fed.setFavorites(['c0001']);
+    const prepared = await prepareNewCareer(db, 'test', archiveF);
+    expect(JSON.stringify(JSON.parse(prepared.json).payload.federation.world)).toContain('"highest":{"step":4');
+    await fed.closeForNewCareer(() => startNewCareer(db, prepared));
+    db.close();
+    const fresh = await CrownDB.open(f);
+    expect(fresh.career.rankStart).toEqual(CAREER_RANK_START);
+    const fed2 = new FederationService(fresh, async () => ({ rating: 0, rd: 350 }), now);
+    await fed2.load();
+    expect(fed2.state).toBeNull();
+    await fed2.create(1, 7);
+    expect(currentRank(fed2.state)).toMatchObject({ label: 'Commoner III', step: 0 });
+    expect(highestRank(fed2.state)).toMatchObject({ label: 'Commoner III', via: 'start' });
+    expect(fed2.state!.world.player.rank!.origin).toBe('new');
+  }, 60_000);
 });

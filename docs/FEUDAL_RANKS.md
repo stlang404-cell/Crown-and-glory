@@ -80,7 +80,11 @@ times, and must leave promotion/relegation exactly as they are (packages K/I own
 4. **Standing score** (0–100, `standingScore`):
    * 45 % **league position**: 1 − (place − 1)/15 (1st = 1, 16th = 0) from the live league table;
    * 25 % **results**: score fraction in **sanctioned rated games** of the season so far — league, Federation Open,
-     Challenger Open, Crown Championship (`SANCTIONED`). Wins and losses count; forfeits count as recorded;
+     Challenger Open, Crown Championship and, under crown-competition-2 (package K), the **Zonal Championships**
+     (`zonal-…`) and **Regional Cups** (`cup-…`), whose fields qualify by results with no entry fee (`SANCTIONED`). Wins
+     and losses count; a forfeit counts as the recorded loss (no game, no rating change, but a zero in the table and in
+     this part); a **postponed** league game (K's rule: ≤ 2, due by round 15) counts when played — while the player has
+     one pending, the mid-season checkpoint can raise but not lower the player (the table is missing that game);
    * 30 % **rating within the division**: percentile of the Federation (Glicko-2) rating among all members of the
      same division federation-wide (the "division band", taken from actual ratings, so it works for every population
      model).
@@ -96,9 +100,11 @@ times, and must leave promotion/relegation exactly as they are (packages K/I own
    Honest caveat: entry to the Challenger/Federation Open costs 25 ₵ (an existing rule) and the Club Weekend's rated
    games move the Glicko-2 rating; money buys the chance to play, never points — a poor result lowers the score
    (tested: identical results with different purchases give identical ranks).
-7. **New careers** start at **Commoner III** (`initialPlayerRank`, `INITIAL_STEP`; set in `FederationService.create`
-   after `joinPlayer`). Package N's new-career setup can call `initialPlayerRank(season, round)`; it does not depend
-   on the starting rating. **AI entrants** start at the lowest step of the division they enter. A **new world's
+7. **New careers** start at **Commoner III**: package N's single new-career record `newCareerRecord` carries
+   `rankStart = CAREER_RANK_START` (cg-01, III), and the Federation founded for the career applies it
+   (`initialPlayerRank`, `INITIAL_STEP`, set in `FederationService.create` after `joinPlayer`; tested equal). Start New
+   Career clears the Federation stores, so the next founding starts again at Commoner III; the previous career's rank
+   and highest rank survive only in its archived backup. The rank does not depend on the starting rating (0 or 1500). **AI entrants** start at the lowest step of the division they enter. A **new world's
    founding competitors** are seeded from their rating percentile within their division (`seedLocal`, no hysteresis):
    a starting rank, not an achievement.
 
@@ -225,6 +231,12 @@ instead of two — a slightly more conservative rank than live play would have g
 
 ## 9. Read API (for package I's identity header and package J's achievements)
 
+**Wired (v0.11 merge):** package I's adapter `src/legacy/ranks.ts` discovers this module (`import.meta.glob` of
+`src/federation/ranks*.ts`) and `src/ui/RankHeading.tsx` shows the current full rank with insignia and sublevel,
+linked to `#/ranks`, with the Career Elo and division beside it, on the Dashboard and Profile headings; Profile →
+Career Statistics shows the Highest Rank Ever (sublevel, season and round first reached, or "starting rank")
+separately from current/highest Career Elo (Played Like highs and lows stay in the Played Like panel).
+
 ```ts
 import { currentRank, highestRank, competitorRank, competitorHighestRank, rankOfId } from '../federation/ranks';
 currentRank(fed.state)   // { step, gradeId, grade, rankName, sublevel: 'III'|'II'|'I', label, division, insignia, ariaLabel, joined }
@@ -239,6 +251,8 @@ table lookup); they accept `null` state (Commoner III before a career).
 ## 10. Not done / open
 
 * The names are a proposal awaiting the owner's approval or renaming (one file).
+* The relegation-places gate uses the bottom two of every league, including the Open Division (which has no
+  relegation), so it is not K's `leagueZone` (which returns null there).
 * Mid-season checkpoints of past seasons cannot be back-filled (§7).
 * Rank-milestone achievements are left to package J (data: `highestRank`, `rank.log`).
 * No dedicated rank filter on the competitor list yet (the rank is shown in every row).
