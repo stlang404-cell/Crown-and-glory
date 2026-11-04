@@ -29,10 +29,11 @@ PLANNED / NOT DONE.
 | 22 | High | With a Federation founded, a downloaded update **never** installed by itself: every scheduled background game counted as an in-play market. | `e2e/pages-check.mjs` on the integrated build |
 | 23 | Medium | React error #185 (render loop) in the update notice when the waiting update was the build already running. | same run |
 | 24 | Low | A move sound could be lost after an instant engine reply (made more common by the speed-up). | `e2e/motion-sound.mjs` |
+| 25 | Low | On the play board a quick move right after the engine's reply was drawn without a slide or sound (the replay-scrubbing rule applied to live play). | `e2e/motion-sound.mjs` |
 | — | Release | Two engine test files read a git-ignored corpus and failed on a clean checkout (would have stopped the Pages deploy). The corpus is now a committed fixture. | clean-worktree test run |
 | — | Release | `scripts/verify-dist.mjs` only worked for a build inside the repository. | clean-worktree build check |
 
-Bugs #22–#24 and the two release defects were found only by running every journey and the whole test suite on a clean
+Bugs #22–#25 and the two release defects were found only by running every journey and the whole test suite on a clean
 checkout of the integrated tree; each agent's own checks had passed.
 
 ## 3. Engine
@@ -59,7 +60,30 @@ slightly lower Brier score (0.138 vs 0.147); the prior carries little informatio
 
 ## 5. Release gates (clean checkout of the release commit)
 
-GATE-RESULTS
+Run on a clean worktree of commit `249f451` (no untracked files; logs in `docs/evidence/v0.9-final/`):
+
+| Gate | Result |
+|---|---|
+| TypeScript (`tsc --noEmit`) | pass |
+| Unit and integration tests (vitest) | **452 passed, 1 skipped** (48 files; the skipped test needs a validated Played Like model) |
+| Production build + `scripts/verify-dist.mjs` | pass: version 0.9.0 · commit 249f451, 11 precached files verified |
+| `e2e/run.mjs` (rated game, Gate G) | pass |
+| `e2e/offline.mjs` | pass |
+| `e2e/analysis-journey.mjs` | 12/12 |
+| `e2e/nav-audit.mjs` (every destination, fresh + populated, desktop + phone) | 5/5 |
+| `e2e/motion-sound.mjs` | 10/10 |
+| `e2e/motion-extra.mjs` | 8/8 |
+| `e2e/quick-match.mjs` | 9/9 |
+| `e2e/vault.mjs` | 10/10 |
+| `e2e/grimoire.mjs`, `e2e/practice.mjs`, `e2e/academy.mjs` | pass |
+| `e2e/dashboard.mjs` | 10/10 |
+| `e2e/m6-arena.mjs` (live markets, settlement) | 11/11 |
+| `e2e/v5-journey.mjs` (v0.4.0 save → v0.9 migration, backup, restart, offline, rollback) | 20/20 |
+| `e2e/pages-check.mjs` (GitHub Pages subpath, two real builds, automatic updates) | 12/12 (+ build-identity step) |
+
+Two journeys were updated for intended v0.9 behaviour, never loosened: offline opens `#/play` (the landing page is
+now the Dashboard), and the v5 restart check allows scheduled background games to gain moves while requiring every
+earlier move to be kept and everything else to be byte-identical.
 
 ## 6. Not done / known limits
 * **Physical iPhone, Safari/WebKit and Windows were not tested.** iOS foreground/resume timing and Safari's service
