@@ -13,7 +13,7 @@ import type { GameRecord } from '../games/types';
 import { TIME_CONTROLS } from '../games/types';
 import { createGameRecord } from '../games/session';
 import { ROSTER, opponentSnapshot } from '../federation/roster';
-import { practiceForLevel, requestPractice } from '../app/practice';
+import { practiceForLevel, requestPractice, takeMistakeDrill } from '../app/practice';
 import {
   DEFAULT_PLAN, GRIMOIRE_INDEX, LEVELS, LEVEL_LABEL, LEVEL_PLAN, MINUTES, dailyPlan, dueReviews, loadProgress, savePlan, suggestLevel,
   type GrimProgress, type Level, type PlanSettings,
@@ -36,6 +36,9 @@ export function AcademyScreen() {
       const set = await loadPuzzleSet();
       const [attempts, runs, reports, games, grimoire] = await Promise.all([services.db.getAll<Attempt>('attempts'), services.db.getAll<TrainingRun>('trainingRuns'), services.db.allReports(), services.db.allGames(), loadProgress(services.db)]);
       setData({ puzzles: set.puzzles, meta: { id: set.id, engine: set.engine, policy: set.policy }, attempts, runs, reports, games, grimoire });
+      // v0.10: Game Review → "Practise This Mistake": open the Mistakes drill on that position if the report supports it
+      const drill = takeMistakeDrill();
+      if (drill && mistakePuzzles(reports, games).some(p => p.id === drill)) { setMode('mistakes'); setPlanIds([drill]); }
     })();
   }, [services, services.revision]);
   if (!data) return <p className="muted">Loading the Academy…</p>;
@@ -109,7 +112,7 @@ function PuzzleSession({ mode, theme, ids, data, onExit }: { mode: AcademyMode; 
   const sessionSeen = useRef(new Set<string>());
   const adaptive = useMemo(() => adaptiveThemes(data.attempts, data.puzzles, data.reports, data.games), [data]);
   const mistakes = useMemo(() => mistakePuzzles(data.reports, data.games), [data]);
-  const pool = ids ? data.puzzles.filter(p => ids.includes(p.id)) : mode === 'mistakes' ? mistakes : data.puzzles;
+  const pool = ids ? (mode === 'mistakes' ? mistakes : data.puzzles).filter(p => ids.includes(p.id)) : mode === 'mistakes' ? mistakes : data.puzzles;
 
   const pick = (t = targetRef.current) => {
     const themes = mode === 'adaptive' ? adaptive.themes : theme ? [theme] : undefined;
