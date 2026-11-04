@@ -68,3 +68,10 @@ Every result (summary or full game) updates the competitors' public Glicko-2 rat
 Titles come only from results (league titles, Swiss winners, Crown Champion / joint champions). They can
 never be bought. Reputation rises with titles (Crown Champion +25, Federation Open +10, others +4) and
 decays ×0.9 per season.
+
+## Circuit Grades (v0.11)
+
+A rank tied to the division (two grades per division, sublevels III → II → I, 48 steps), moved at checkpoints after
+round 8 and at season end by a standing score from league position, sanctioned results and rating within the
+division, with hysteresis and protection. It never changes divisions, prizes or titles. Rules, thresholds and their
+simulation: docs/FEUDAL_RANKS.md.

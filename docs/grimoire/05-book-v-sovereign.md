@@ -710,6 +710,19 @@ thresholds:
 Federation titles are **permanent**. Rating titles (31 bands of 100 points, from *Wandless Wanderer* to *Eternal
 Sovereign*) describe your current rating and are a separate system (src/ratings/titles.ts).
 
+**Circuit Grades (v0.11). [Demonstrated]** src/federation/ranks.ts: a rank ladder of 16 feudal grades, each with
+three sublevels III → II → I: 48 steps from **Commoner III** to **High Sovereign I** (the names are a proposed list,
+docs/FEUDAL_RANKS.md). Each division owns two grades: the Open Division Commoner and Page, the Club Division Squire
+and Man-at-Arms, and so on up to King and High Sovereign in the Crown Division. Your **division** decides the pair;
+promotion starts you at the new division's lower grade III, relegation puts you at the lower division's upper grade
+III. Inside the division a **standing score** (0–100) moves you at two **checkpoints** per season, after round 8 and
+at season end: 45 % league position (1st = 100, 16th = 0), 25 % your score in sanctioned rated games (league, the
+Opens, the Crown Championship) and 30 % your rating's percentile within the division. The six steps of a division
+are reached at 0 / 30 / 42 / 54 / 64 / 76; you drop a step only below the step's mark minus **12**; at most one step
+per checkpoint; never down at the checkpoint right after a step up; never up from the bottom two of your league.
+Exhibitions, unrated, practice and sandbox games do not count, and nothing can be bought. Your **highest rank ever**
+is kept for good. A Circuit Grade is not your Career Elo (the Glicko-2 rating) and not Played Like.
+
 ### Illustrated example
 *A Swiss, last round.* You are on 3.5/4, half a point clear of three players on 3. You are White against one of
 them.
@@ -736,6 +749,9 @@ Look it up in the standings table before the round ([Counsel] on the decision; t
 * **Forgetting that knockout tiebreaks are faster games.** If your blitz is much weaker than your classical play,
   a drawn classical pair is bad news.
 * **Assuming a high score is a norm.** It needs ≥ 5 games *and* a high enough average opposition.
+* **Reading your Circuit Grade as a rating.** "Knight II" says where you stand in your division's ladder, not how
+  strong you are: it is tied to your division and your checkpoint standing, while your Career Elo moves with every
+  rated game.
 * **Entering an event you have traded on.** If you enter an event, its open winner market is **cancelled at the
   published 1/n vector before your entry takes effect** ([Demonstrated], src/exchange/families.ts rules). See Book VI.
 
@@ -762,6 +778,9 @@ A five-round Swiss: you score 3.5 against an average of 1,950. (a) Compute p and
    higher?
 3. Why does winning every game of a 4-game Swiss give no norm at all?
 4. You have 2 Knight-tier norms over 18 games and an established peak of 1880. What is missing for Knight?
+5. You are **Squire II** (Club Division, lower grade II). At the mid-season checkpoint you are 4th of 16, you have
+   scored 6/8 in league and Challenger games together, and your rating sits at the 70th percentile of the division.
+   (a) Compute your standing score. (b) What is your rank after the checkpoint? (c) What would a score of 29 have done?
 
 ### Answers
 * **Guided:** p = 0.7, dp = −400·log10(1/0.7 − 1) = −400·log10(0.4286) ≈ **+147**. Performance ≈ **2097**. With an
@@ -772,6 +791,10 @@ A five-round Swiss: you score 3.5 against an average of 1,950. (a) Compute p and
 * **2:** head-to-head among the tied pair is ½–½ (level), so Sonneborn–Berger decides: **A** ranks higher.
 * **3:** a norm needs at least **5 games**.
 * **4:** the established **peak rating of 1900**. You have the norms (2) and the games (18 ≥ 15).
+* **5:** (a) position = 1 − 3/15 = 0.8, results = 6/8 = 0.75, rating = 0.70; score = 100 × (0.45·0.8 + 0.25·0.75 +
+  0.30·0.70) = 36 + 18.75 + 21 = **75.75**. (b) Squire II is the Club Division's step 1; the next step (Squire I)
+  needs 42, so you rise **one step only**, to **Squire I**, and are protected at the next checkpoint. (c) Squire II
+  is reached at 30, so you drop only below 30 − 12 = 18: a score of 29 **keeps Squire II**.
 
 ### Summary
 Know the pairing rules, tiebreak order and advancement rules of each event, and choose your risk round by round.

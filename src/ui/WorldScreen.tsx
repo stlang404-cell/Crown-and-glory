@@ -52,7 +52,7 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
+          <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money), at the Circuit Grade of <strong>Commoner III</strong>: climb the 48 steps to High Sovereign I through your results (<a href="#/ranks">rank guide</a>).</p>
           <details className="small"><summary>Details</summary>
             <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
@@ -169,7 +169,7 @@ export function WorldScreen() {
         </div>
         <div className="panel stack">
           <h3>Season Calendar</h3>
-          <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · At season end, the top two are promoted and the bottom two relegated.</div>
+          <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · At season end, the top two are promoted and the bottom two relegated. Circuit Grade checkpoints: after round 8 and at season end (<a href="#/ranks">rank guide</a>).</div>
           <div className="panel" style={{ background: 'transparent' }}>
             <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'Divisions 2–4, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship' : 'Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes'}.
             <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>

@@ -7088,6 +7088,28 @@ opposition reach the tier&#39;s thresholds:</p>
 bands of 100 points, from <em>Wandless Wanderer</em> to <em>Eternal
 Sovereign</em>) describe your current rating and are a separate system
 (src/ratings/titles.ts).</p>
+<p><strong>Circuit Grades (v0.11). [Demonstrated]</strong>
+src/federation/ranks.ts: a rank ladder of 16 feudal grades, each with
+three sublevels III → II → I: 48 steps from <strong>Commoner
+III</strong> to <strong>High Sovereign I</strong> (the names are a
+proposed list, docs/FEUDAL_RANKS.md). Each division owns two grades: the
+Open Division Commoner and Page, the Club Division Squire and
+Man-at-Arms, and so on up to King and High Sovereign in the Crown
+Division. Your <strong>division</strong> decides the pair; promotion
+starts you at the new division&#39;s lower grade III, relegation puts you at
+the lower division&#39;s upper grade III. Inside the division a
+<strong>standing score</strong> (0–100) moves you at two
+<strong>checkpoints</strong> per season, after round 8 and at season
+end: 45 % league position (1st = 100, 16th = 0), 25 % your score in
+sanctioned rated games (league, the Opens, the Crown Championship) and
+30 % your rating&#39;s percentile within the division. The six steps of a
+division are reached at 0 / 30 / 42 / 54 / 64 / 76; you drop a step only
+below the step&#39;s mark minus <strong>12</strong>; at most one step per
+checkpoint; never down at the checkpoint right after a step up; never up
+from the bottom two of your league. Exhibitions, unrated, practice and
+sandbox games do not count, and nothing can be bought. Your
+<strong>highest rank ever</strong> is kept for good. A Circuit Grade is
+not your Career Elo (the Glicko-2 rating) and not Played Like.</p>
 <h3 id="illustrated-example-39">Illustrated example</h3>
 <p><em>A Swiss, last round.</em> You are on 3.5/4, half a point clear of
 three players on 3. You are White against one of them.</p>
@@ -7127,6 +7149,10 @@ games.</strong> If your blitz is much weaker than your classical play, a
 drawn classical pair is bad news.</li>
 <li><strong>Assuming a high score is a norm.</strong> It needs ≥ 5 games
 <em>and</em> a high enough average opposition.</li>
+<li><strong>Reading your Circuit Grade as a rating.</strong> &quot;Knight II&quot;
+says where you stand in your division&#39;s ladder, not how strong you are:
+it is tied to your division and your checkpoint standing, while your
+Career Elo moves with every rated game.</li>
 <li><strong>Entering an event you have traded on.</strong> If you enter
 an event, its open winner market is <strong>cancelled at the published
 1/n vector before your entry takes effect</strong> ([Demonstrated],
@@ -7163,6 +7189,12 @@ has a higher Sonneborn–Berger. Who ranks higher?</li>
 all?</li>
 <li>You have 2 Knight-tier norms over 18 games and an established peak
 of 1880. What is missing for Knight?</li>
+<li>You are <strong>Squire II</strong> (Club Division, lower grade II).
+At the mid-season checkpoint you are 4th of 16, you have scored 6/8 in
+league and Challenger games together, and your rating sits at the 70th
+percentile of the division. (a) Compute your standing score. (b) What is
+your rank after the checkpoint? (c) What would a score of 29 have
+done?</li>
 </ol>
 <h3 id="answers-3">Answers</h3>
 <ul>
@@ -7181,6 +7213,14 @@ so Sonneborn–Berger decides: <strong>A</strong> ranks higher.</li>
 games</strong>.</li>
 <li><strong>4:</strong> the established <strong>peak rating of
 1900</strong>. You have the norms (2) and the games (18 ≥ 15).</li>
+<li><strong>5:</strong> (a) position = 1 − 3/15 = 0.8, results = 6/8 =
+0.75, rating = 0.70; score = 100 × (0.45·0.8 + 0.25·0.75 + 0.30·0.70) =
+36 + 18.75 + 21 = <strong>75.75</strong>. (b) Squire II is the Club
+Division&#39;s step 1; the next step (Squire I) needs 42, so you rise
+<strong>one step only</strong>, to <strong>Squire I</strong>, and are
+protected at the next checkpoint. (c) Squire II is reached at 30, so you
+drop only below 30 − 12 = 18: a score of 29 <strong>keeps Squire
+II</strong>.</li>
 </ul>
 <h3 id="summary-40">Summary</h3>
 <p>Know the pairing rules, tiebreak order and advancement rules of each
@@ -10071,6 +10111,13 @@ Order: checks, captures, threats, then quiet moves. → V.1.</p>
 engine evaluation, from the side to move. → V.6.</p>
 <p><strong>Checkmate.</strong> The side to move is in check and has no
 legal move. It takes precedence over every draw rule. → RB §8; I.6.</p>
+<p><strong>Circuit Grade.</strong> A rank of the 16-grade feudal ladder
+(crown-circuit-grades-1, names proposed), each with sublevels III → II →
+I: 48 steps from Commoner III to High Sovereign I, two grades per
+division. Set by your division and by the standing score at two
+checkpoints a season (after round 8 and at season end), with hysteresis.
+Your highest rank ever is permanent. Not a rating, not a Federation
+title. → V.4.</p>
 <p><strong>Claim (draw).</strong> A request by a player for a draw that
 is not automatic: threefold repetition or the 100-halfmove rule. → RB
 §10.</p>
@@ -10140,6 +10187,10 @@ experimental. → V.6.</p>
 <p><strong>Hedging.</strong> Reducing the spread of possible outcomes,
 in this game by selling shares you hold (no short selling). It costs
 fees and slippage. → VI.5.</p>
+<p><strong>Highest rank ever achieved.</strong> The best Circuit Grade
+(with sublevel) you have held, with the season it was first reached.
+Only a genuine step up raises it; demotion, relegation and rating losses
+never lower it. → V.4.</p>
 <p><strong>Implied probability.</strong> The probability a price
 expresses: a $0.40 share implies 40 %. → VI.1.</p>
 <p><strong>Kelly criterion.</strong> The growth-optimal stake fraction
@@ -10243,12 +10294,18 @@ handicap and a chosen budget of 1/5/10/15/30/60 s per move (rated: 10
 s). Rated 3038 ± 171 (derived). → V.8.</p>
 <p><strong>Stalemate.</strong> The side to move is not in check and has
 no legal move: a draw. → RB §9; I.7.</p>
+<p><strong>Standing score.</strong> 0–100 at a Circuit Grade checkpoint:
+45 % league position, 25 % score in sanctioned rated games, 30 % rating
+percentile in your division. → V.4.</p>
 <p><strong>Style.</strong> A competitor&#39;s label (Universal, Tactical,
 Positional, Defensive, Endgame, Aggressive). Only validated styles
 change play: Tactical, Positional, Defensive and Endgame, through a
 whole-game styled evaluation (Tactical and Positional also through an
 opening repertoire). Aggressive is not validated and plays as Universal.
 → V.3.</p>
+<p><strong>Sublevel.</strong> The III / II / I part of a Circuit Grade
+(III lowest). Shown by one, two or three chevrons under the grade&#39;s
+insignia. → V.4.</p>
 <p><strong>Subsidy.</strong> The maker&#39;s worst-case loss b·ln n, funded
 before a market opens (match market: $131.83). → VI.2.</p>
 <p><strong>Swiss.</strong> A pairing system matching players on similar

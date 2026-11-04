@@ -167,3 +167,13 @@ Two additive, optional fields (docs/PLAYED_LIKE.md):
   keeps the old one; statistics never mix model ids.
 * Tests: `tests/playedLikeRecords.test.ts` (record contents, reload, backup round trip, v0.9 backfill, version separation,
   low-confidence exclusion).
+
+## v0.11: Circuit Grades (no schema change, IndexedDB v4)
+* `Competitor.rank?: [step, protect, highestStep, highestSeason, lastScore×10]` in the existing competitor chunks;
+  `WorldState.player.rank?` (`PlayerRank`: step, protection, highest `{step, season, round, via}`, last checkpoint,
+  log of step changes ≤ 200, origin); `Ceremony.kind` may be `'rank'`. All optional and additive.
+* Saves without them get them at load, deterministically, from their stored season records and the current season's
+  rounds (`migrateRanks`, docs/FEUDAL_RANKS.md §7); nothing else in a record changes. Written with the next commit
+  that touches the record. Backups carry the fields unchanged.
+* Tests: `tests/ranks.test.ts` (reload through a checkpoint and a season end, backup round trip, a save with every
+  rank field removed).
