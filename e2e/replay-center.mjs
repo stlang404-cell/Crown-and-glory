@@ -129,12 +129,16 @@ const fmtSigned = v => `${v > 0 ? '+' : ''}${v < 0 ? '-' : ''}$${(Math.abs(v) / 
 check(5, !!endUi.settle && endUi.realised === fmtSigned(expReal) && endUi.pnl === fmtSigned(expReal), `At the last move the recorded settlement shows: "${endUi.settle}"; realised ${endUi.realised} = received − spent ${fmtSigned(expReal)}; P&L ${endUi.pnl}`);
 
 // 5. flip and play/pause
+// The bar switches from the published evaluation to the Match Analysis once that report completes (after
+// settlement). Wait for the report so both flip readings come from the same source — otherwise the analysis can land
+// between them and change the value (an observed race, not a bar defect).
+await page.waitForSelector('[data-testid="arena-grade-summary"]', { state: 'attached', timeout: 300000 });
 await clickPly(4);
 const bf = await barInfo(page);
 await page.getByRole('button', { name: 'Flip Board' }).first().click();
 const bb = await barInfo(page);
 await page.getByRole('button', { name: 'Flip Board' }).first().click();
-check(6, bf.orientation === 'white' && /white-bottom/.test(bf.cls) && bb.orientation === 'black' && /white-top/.test(bb.cls) && bf.value === bb.value, `Flip: the bar turns with the board (${bf.cls} → ${bb.cls}), same value ${bb.value}`);
+check(6, bf.orientation === 'white' && /white-bottom/.test(bf.cls) && bb.orientation === 'black' && /white-top/.test(bb.cls) && bf.value === bb.value, `Flip: the bar turns with the board (${bf.orientation}/${bf.cls} → ${bb.orientation}/${bb.cls}), same value (${bf.value} → ${bb.value}; sources ${bf.label ?? ''} → ${bb.label ?? ''})`);
 await page.getByRole('button', { name: 'Fast', exact: true }).click();
 await page.locator('[data-testid="replay-pause"]').click();
 await page.waitForTimeout(1600);
