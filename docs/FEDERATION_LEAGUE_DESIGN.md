@@ -143,6 +143,11 @@ review; it is not implemented and no existing data refers to it.
 
 ## 5. Sub-800 competitors (v0.9 engine work)
 
+**Status (v0.10): done** — beginner levels L0a–L0d (664 / 446 / 302 / 71, measured), crown-population-2 for new
+federations and an additive lower-tier migration for existing ones; see docs/RATING_SPECTRUM.md. Legacy worlds are
+not given new competitor records at season start (that would change circuit sizes); beginners enter through the
+normal turnover slots instead. The floor is L0d (~70), not a rating-1 engine.
+
 Requires genuinely weaker play, calibrated by games (never by assigning low numbers to strong engines):
 1. Beginner profiles: L1 search plus calibrated error models — move choice by softmax over shallow scores with a
    temperature, a per-move blunder probability (pick among the bottom half of legal moves), and "missed threat"

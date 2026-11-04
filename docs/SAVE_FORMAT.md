@@ -129,3 +129,11 @@ attempts, chapter completion, plan settings). It is covered by `payloadSha256` l
 without it import unchanged. Restore into an empty career writes all of them; merging into an existing career writes only
 `grim:` learning progress (achievements stay with the career that earned them). Every write is put-if-absent: existing
 records are never overwritten. Tests: `tests/storage.test.ts`.
+
+## v0.10: population model (no schema change)
+Federations founded from v0.10 store `populationModel: "crown-population-2"` in the `world` record (the full 0–4,000+
+strength spectrum, docs/RATING_SPECTRUM.md). A world without the field is `crown-population-1` and is never rescaled:
+no competitor record is rewritten; only its future turnover entrants into divisions 7–8 come from the beginner
+distribution. Game records against the new beginner opponents carry the exact engine profile (`engine.profile`, with an
+`error` model), calibration id `cal-2026-11-04-beginners-crown-error-1`, and per-move `selected` values
+`error-random` / `error-sample`; older builds ignore them. Tests: `tests/ratingSpectrum.test.ts`.

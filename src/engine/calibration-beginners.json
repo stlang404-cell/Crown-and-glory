@@ -1,0 +1,428 @@
+{
+ "id": "cal-2026-11-04-beginners-crown-error-1",
+ "status": "measured 2026-11-04: 1320 engine-vs-engine games on Intel(R) Xeon(R) Processor @ 2.30GHz (crown-search-2+crown-eval-4, crown-levels-6)",
+ "method": "Colour-swapped opening pairs from tools/bench/openings-4ply.json (runs: tools/bench/results/suite-beginners-r2.json at opening offset 60; tools/bench/results/suite-beginners-r3.json at opening offset 120; disjoint openings, pooled); a chain of adjacent-level matches L1→L0a→L0b→L0c→L0d plus one-step-skip matches; Bradley–Terry maximum likelihood, draws = ½, one virtual draw per match; L1 fixed at its published rating 800 (src/engine/calibration.json, id cal-2026-11-03); RD = sqrt(SE² + 40²); ci95 = rating ± 1.96·SE (statistical only, relative to L1).",
+ "anchor": "L1 Novice = 800 (the Crown scale anchor, unchanged). The L1 rating itself carries its own published RD 40.",
+ "caveats": "Engine-vs-engine strength only, no human games. The error-model parameters were chosen in pilot matches on the 2-ply openings (tools/bench/openings.json) and a first 4-ply round (offset 0, not used here). Both pooled runs use the final parameters on fresh openings; tuning stopped after the offset-60 run, so that run may carry a small optional-stopping bias toward the targets, and the offset-120 run alone (listed under runs) is the cleanest check. Node-limited and seed-deterministic, so the ratings do not depend on hardware speed. Capped games (300 plies) are excluded. Ratings below 800 extend the same logistic Crown scale; they are not FIDE or human ratings.",
+ "levels": [
+  {
+   "id": "L0a",
+   "name": "Starter",
+   "rating": 664,
+   "rd": 46,
+   "se": 22,
+   "ci95": [
+    620,
+    707
+   ],
+   "games": 600,
+   "error": {
+    "pRandom": 0,
+    "pBlind": 0.05,
+    "temperatureCp": 220,
+    "marginCp": 400
+   }
+  },
+  {
+   "id": "L0b",
+   "name": "Beginner",
+   "rating": 446,
+   "rd": 49,
+   "se": 28,
+   "ci95": [
+    391,
+    501
+   ],
+   "games": 720,
+   "error": {
+    "pRandom": 0,
+    "pBlind": 0.3,
+    "temperatureCp": 220,
+    "marginCp": 550
+   }
+  },
+  {
+   "id": "L0c",
+   "name": "Newcomer",
+   "rating": 302,
+   "rd": 52,
+   "se": 33,
+   "ci95": [
+    237,
+    367
+   ],
+   "games": 600,
+   "error": {
+    "pRandom": 0.06,
+    "pBlind": 0.45,
+    "temperatureCp": 245,
+    "marginCp": 700
+   }
+  },
+  {
+   "id": "L0d",
+   "name": "First Moves",
+   "rating": 71,
+   "rd": 56,
+   "se": 39,
+   "ci95": [
+    -6,
+    148
+   ],
+   "games": 360,
+   "error": {
+    "pRandom": 0.2,
+    "pBlind": 0.7,
+    "temperatureCp": 300,
+    "marginCp": 1000
+   }
+  }
+ ],
+ "matches": [
+  {
+   "a": "crown-L1",
+   "b": "crown-L0a",
+   "games": 240,
+   "w": 155,
+   "d": 23,
+   "l": 62,
+   "capped": 0
+  },
+  {
+   "a": "crown-L0a",
+   "b": "crown-L0b",
+   "games": 240,
+   "w": 178,
+   "d": 20,
+   "l": 42,
+   "capped": 0
+  },
+  {
+   "a": "crown-L0b",
+   "b": "crown-L0c",
+   "games": 240,
+   "w": 152,
+   "d": 30,
+   "l": 58,
+   "capped": 0
+  },
+  {
+   "a": "crown-L0c",
+   "b": "crown-L0d",
+   "games": 240,
+   "w": 173,
+   "d": 34,
+   "l": 33,
+   "capped": 0
+  },
+  {
+   "a": "crown-L1",
+   "b": "crown-L0b",
+   "games": 120,
+   "w": 102,
+   "d": 6,
+   "l": 12,
+   "capped": 0
+  },
+  {
+   "a": "crown-L0a",
+   "b": "crown-L0c",
+   "games": 120,
+   "w": 106,
+   "d": 3,
+   "l": 11,
+   "capped": 0
+  },
+  {
+   "a": "crown-L0b",
+   "b": "crown-L0d",
+   "games": 120,
+   "w": 104,
+   "d": 8,
+   "l": 8,
+   "capped": 0
+  }
+ ],
+ "runs": [
+  {
+   "file": "tools/bench/results/suite-beginners-r2.json",
+   "offset": 60,
+   "date": "2026-11-04T15:15:53.485Z",
+   "matches": [
+    {
+     "a": "crown-L1",
+     "b": "crown-L0a",
+     "games": 120,
+     "w": 76,
+     "d": 14,
+     "l": 30,
+     "capped": 0,
+     "score": 0.692,
+     "scoreCI": [
+      0.613,
+      0.762
+     ],
+     "eloDiff": 140,
+     "eloCI": [
+      80,
+      203
+     ]
+    },
+    {
+     "a": "crown-L0a",
+     "b": "crown-L0b",
+     "games": 120,
+     "w": 88,
+     "d": 14,
+     "l": 18,
+     "capped": 0,
+     "score": 0.792,
+     "scoreCI": [
+      0.721,
+      0.858
+     ],
+     "eloDiff": 232,
+     "eloCI": [
+      165,
+      313
+     ]
+    },
+    {
+     "a": "crown-L0b",
+     "b": "crown-L0c",
+     "games": 120,
+     "w": 85,
+     "d": 13,
+     "l": 22,
+     "capped": 0,
+     "score": 0.762,
+     "scoreCI": [
+      0.696,
+      0.825
+     ],
+     "eloDiff": 203,
+     "eloCI": [
+      144,
+      269
+     ]
+    },
+    {
+     "a": "crown-L0c",
+     "b": "crown-L0d",
+     "games": 120,
+     "w": 88,
+     "d": 17,
+     "l": 15,
+     "capped": 0,
+     "score": 0.804,
+     "scoreCI": [
+      0.75,
+      0.863
+     ],
+     "eloDiff": 245,
+     "eloCI": [
+      191,
+      319
+     ]
+    },
+    {
+     "a": "crown-L1",
+     "b": "crown-L0b",
+     "games": 60,
+     "w": 51,
+     "d": 3,
+     "l": 6,
+     "capped": 0,
+     "score": 0.875,
+     "scoreCI": [
+      0.8,
+      0.942
+     ],
+     "eloDiff": 338,
+     "eloCI": [
+      241,
+      483
+     ]
+    },
+    {
+     "a": "crown-L0a",
+     "b": "crown-L0c",
+     "games": 60,
+     "w": 57,
+     "d": 1,
+     "l": 2,
+     "capped": 0,
+     "score": 0.958,
+     "scoreCI": [
+      0.908,
+      1
+     ],
+     "eloDiff": 545,
+     "eloCI": [
+      398,
+      null
+     ]
+    },
+    {
+     "a": "crown-L0b",
+     "b": "crown-L0d",
+     "games": 60,
+     "w": 50,
+     "d": 4,
+     "l": 6,
+     "capped": 0,
+     "score": 0.867,
+     "scoreCI": [
+      0.792,
+      0.933
+     ],
+     "eloDiff": 325,
+     "eloCI": [
+      232,
+      458
+     ]
+    }
+   ]
+  },
+  {
+   "file": "tools/bench/results/suite-beginners-r3.json",
+   "offset": 120,
+   "date": "2026-11-04T15:16:13.768Z",
+   "matches": [
+    {
+     "a": "crown-L1",
+     "b": "crown-L0a",
+     "games": 120,
+     "w": 79,
+     "d": 9,
+     "l": 32,
+     "capped": 0,
+     "score": 0.696,
+     "scoreCI": [
+      0.617,
+      0.771
+     ],
+     "eloDiff": 144,
+     "eloCI": [
+      83,
+      211
+     ]
+    },
+    {
+     "a": "crown-L0a",
+     "b": "crown-L0b",
+     "games": 120,
+     "w": 90,
+     "d": 6,
+     "l": 24,
+     "capped": 0,
+     "score": 0.775,
+     "scoreCI": [
+      0.696,
+      0.85
+     ],
+     "eloDiff": 215,
+     "eloCI": [
+      144,
+      301
+     ]
+    },
+    {
+     "a": "crown-L0b",
+     "b": "crown-L0c",
+     "games": 120,
+     "w": 67,
+     "d": 17,
+     "l": 36,
+     "capped": 0,
+     "score": 0.629,
+     "scoreCI": [
+      0.55,
+      0.708
+     ],
+     "eloDiff": 92,
+     "eloCI": [
+      35,
+      154
+     ]
+    },
+    {
+     "a": "crown-L0c",
+     "b": "crown-L0d",
+     "games": 120,
+     "w": 85,
+     "d": 17,
+     "l": 18,
+     "capped": 0,
+     "score": 0.779,
+     "scoreCI": [
+      0.713,
+      0.846
+     ],
+     "eloDiff": 219,
+     "eloCI": [
+      158,
+      296
+     ]
+    },
+    {
+     "a": "crown-L1",
+     "b": "crown-L0b",
+     "games": 60,
+     "w": 51,
+     "d": 3,
+     "l": 6,
+     "capped": 0,
+     "score": 0.875,
+     "scoreCI": [
+      0.775,
+      0.95
+     ],
+     "eloDiff": 338,
+     "eloCI": [
+      215,
+      512
+     ]
+    },
+    {
+     "a": "crown-L0a",
+     "b": "crown-L0c",
+     "games": 60,
+     "w": 49,
+     "d": 2,
+     "l": 9,
+     "capped": 0,
+     "score": 0.833,
+     "scoreCI": [
+      0.733,
+      0.917
+     ],
+     "eloDiff": 280,
+     "eloCI": [
+      176,
+      417
+     ]
+    },
+    {
+     "a": "crown-L0b",
+     "b": "crown-L0d",
+     "games": 60,
+     "w": 54,
+     "d": 4,
+     "l": 2,
+     "capped": 0,
+     "score": 0.933,
+     "scoreCI": [
+      0.875,
+      0.975
+     ],
+     "eloDiff": 458,
+     "eloCI": [
+      338,
+      636
+     ]
+    }
+   ]
+  }
+ ]
+}

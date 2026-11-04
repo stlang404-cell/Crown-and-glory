@@ -12,6 +12,7 @@ import { KoMatch, koNext, leagueOrder, roundRobin, standings, swissOrder, swissP
 import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
 import { sampleResult } from './resultModel';
 import { assignEntrantPersonas } from './rosterPersonas';
+import { LATENT_MAX, LATENT_MIN, POPULATION_V1, PopulationModel, entrantModel, populationModelOf } from './population';
 
 export const WORLD_ID = 'crown-world-1';
 
@@ -45,6 +46,10 @@ export interface WorldState {
   /** v0.9: federation size (docs/FEDERATION_SCALE.md). Absent = crown-topology-1 (16 regions, 2,048), the size of
    *  every federation founded before v0.9; such worlds are never resized. */
   topology?: Topology;
+  /** v0.10: strength spectrum of the population (src/federation/population.ts). Absent = crown-population-1, the model
+   *  of every federation founded before v0.10; such worlds are never rescaled (their entrants into divisions 7–8 are
+   *  drawn from the v0.10 beginner distribution). */
+  populationModel?: PopulationModel;
   /** v0.5: engine build in force from (season, round); appended when a new app version changes it. */
   engineCommitments?: { season: number; round: number; build: string; at: string; liveGamesInProgress: number }[];
   createdAt: string;
@@ -74,7 +79,7 @@ export interface Ctx {
 const isPlayer = (id: string) => id === PLAYER_ID;
 
 /** Initial world state and season-1 plan. */
-export function createWorld(seed: number, competitors: Competitor[], nowIso: string, topology: Topology = TOPOLOGY_V1): { world: WorldState; plan: SeasonPlan } {
+export function createWorld(seed: number, competitors: Competitor[], nowIso: string, topology: Topology = TOPOLOGY_V1, populationModel: PopulationModel = POPULATION_V1): { world: WorldState; plan: SeasonPlan } {
   const world: WorldState = {
     key: 'world', version: 1, seed, season: 1, round: 1, nextIndex: competitors.length,
     player: { joined: false, region: 0, division: DIVISIONS, swissRegistered: false, titles: [], history: [], displaced: null },
@@ -82,6 +87,8 @@ export function createWorld(seed: number, competitors: Competitor[], nowIso: str
   };
   // the legacy topology is left implicit so a v1 world record is byte-identical to the pre-v0.9 format
   if (topology.id !== TOPOLOGY_V1.id) world.topology = topology;
+  // likewise the legacy population model is implicit
+  if (populationModel !== POPULATION_V1) world.populationModel = populationModel;
   return { world, plan: makePlan(seed, 1, competitors, null, topology) };
 }
 
@@ -401,7 +408,9 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     c.reputation = Math.max(0, Math.round(c.reputation * 0.9));
     const age = ageOf(c, season);
     const drift = age < 24 ? 25 + 30 * normal(r) : age <= 31 ? 25 * normal(r) : -20 + 25 * normal(r);
-    c.latent = Math.round(Math.max(750, Math.min(3050, c.latent + Math.max(-90, Math.min(90, drift)))));
+    // v0.10: bounds widened from [750, 3050] to the full spectrum (src/federation/population.ts) so beginners are not
+    // lifted to 750; the drift draw itself is unchanged
+    c.latent = Math.round(Math.max(LATENT_MIN, Math.min(LATENT_MAX, c.latent + Math.max(-90, Math.min(90, drift)))));
     if (c.status === 'active') {
       const pRetire = age >= 40 ? 0.45 : age >= 36 ? 0.12 : 0.004;
       if (r() < pRetire) { c.status = 'retired'; c.retiredSeason = season; res.retirements.push(c.id); }
@@ -413,13 +422,14 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     const old = competitors.get(id)!;
     const region = old.region, division = old.division;
     // The competitor displaced when the player joined re-enters first; otherwise a new entrant is
-    // calibrated for the destination band (latent ~ N(division mean, 120²), public rating = band mean, RD 300).
+    // calibrated for the destination band (latent ~ the population model's division distribution, public rating =
+    // its division centre, RD 300; src/federation/population.ts entrantModel).
     const reserve = world.player.displaced ? competitors.get(world.player.displaced) : undefined;
     if (reserve && reserve.status === 'reserve') {
       reserve.status = 'active'; reserve.region = region; reserve.division = division; world.player.displaced = null;
       continue;
     }
-    const e = makeCompetitor(world.seed, world.nextIndex++, region, division, season + 1, used, true);
+    const e = makeCompetitor(world.seed, world.nextIndex++, region, division, season + 1, used, true, entrantModel(populationModelOf(world), division));
     competitors.set(e.id, e);
     res.entrants.push(e);
   }

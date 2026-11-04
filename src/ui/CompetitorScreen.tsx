@@ -6,6 +6,7 @@ import { Insignia } from './WorldScreen';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, DIVISIONS, regionNamesOf } from '../federation/model';
 import type { Competitor } from '../federation/model';
 import { ageOf } from '../federation/generator';
+import { strengthNote } from '../federation/profiles';
 import { eventName, WorldGame } from '../app/federation';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
 import { fmtCrowns } from '../exchange/ledger';
@@ -47,7 +48,7 @@ export function CompetitorsScreen() {
   const [region, setRegion] = useState(-1);
   const [division, setDivision] = useState(0);
   const [minR, setMinR] = useState(0);
-  const [maxR, setMaxR] = useState(4000);
+  const [maxR, setMaxR] = useState(5000);
   const [title, setTitle] = useState('');
   const [style, setStyle] = useState('');
   const [club, setClub] = useState('');
@@ -91,7 +92,7 @@ export function CompetitorsScreen() {
         <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search Competitors" />
         <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region"><option value={-1}>All Regions</option>{regionNamesOf(fed.topology()).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
         <select value={division} onChange={e => setDivision(+e.target.value)} aria-label="Division"><option value={0}>All Divisions</option>{Array.from({ length: DIVISIONS }, (_, i) => <option key={i} value={i + 1}>{i + 1} · {divisionLabel(i + 1)}</option>)}</select>
-        <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 4000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
+        <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 5000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
         <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation Title"><option value="">Any Title or None</option><option value="any">Any Federation Title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>
         <select value={style} onChange={e => setStyle(e.target.value)} aria-label="Playing Style"><option value="">Any Style</option>{styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x as keyof typeof STYLE_LABEL]}</option>)}</select>
         <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{AI_CLUBS.map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
@@ -210,6 +211,8 @@ export function CompetitorScreen({ id }: { id: string }) {
           </div>
           <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but they play the standard engine style)</span>}</div>
           <div className="small muted">This is their public rating. Their true strength stays hidden, from forecasts and traders too.</div>
+          {/* v0.10: said from the public rating only, so nothing hidden leaks (docs/RATING_SPECTRUM.md) */}
+          {(() => { const n = strengthNote(c.rating); return n.text && (n.kind === 'beyond-measured' || n.kind === 'beginner' || n.kind === 'below-measured') ? <div className="small muted" data-testid="strength-note">{n.text}</div> : null; })()}
           <div className="small" style={{ marginTop: 6 }}><strong>Ambition:</strong> {ambitionOf(c)}{featuredTag ? <> · <span className="chip gold">{featuredTag === 'circle' ? 'Featured Rival · Your Circle' : 'Featured Legend'}</span></> : null}</div>
         </div>
         <div className="emblem-row" data-testid="insignia-row">

@@ -10,6 +10,7 @@
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { applyFoundingPersonas } from '../federation/rosterPersonas';
+import { NEW_FEDERATION_POPULATION } from '../federation/population';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
@@ -330,9 +331,10 @@ export class FederationService {
     if (!Number.isInteger(region) || region < 0 || region >= topology.regions) throw new Error('Choose one of the regions of this federation.');
     return this.run(async () => {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
-      const comps = generateFederation(seed, topology);
+      // v0.10: new federations use the full rating spectrum (crown-population-2); existing worlds keep theirs
+      const comps = generateFederation(seed, topology, NEW_FEDERATION_POPULATION);
       applyFoundingPersonas(seed, comps); // v0.10 historical roster: names only, for newly founded federations
-      const { world, plan } = createWorld(seed, comps, this.now(), topology);
+      const { world, plan } = createWorld(seed, comps, this.now(), topology, NEW_FEDERATION_POPULATION);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
