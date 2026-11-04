@@ -146,6 +146,10 @@ export function wealthPrestige(w: WealthState): { points: number; basis: string[
   return { points: pts, basis };
 }
 
+// ------------------------------------------------------------------ treasury ceiling
+/** v0.11: treasury balance above this at a season end is retired to the sink (1.2 × the $25,000 target). */
+export const TREASURY_CEILING = C(30_000);
+
 // ------------------------------------------------------------------ journals (deterministic ids)
 const j = (id: string, kind: string, memo: string, lines: { account: string; amount: number }[], season: number, at: string): Journal => ({ id, at, kind, memo, lines: lines.filter(l => l.amount !== 0), season });
 export const facilityAccount = (id: string) => `asset:facility:${id}`;
@@ -211,4 +215,7 @@ export function sponsorableEvents(plan: { circuits: { region: number; division: 
   if (round < swissStart) for (const s of plan.swiss) out.push({ event: s.event, label: s.name });
   if (round < champStart) out.push({ event: 'champ', label: 'Crown Championship' });
   return out;
+}
+export function treasurySweepJournal(season: number, amount: number, at: string): Journal {
+  return j(`treasury-sweep:${season}`, 'treasury-sweep', `Treasury above $${TREASURY_CEILING / MICRO}: excess retired`, [{ account: 'treasury', amount: -amount }, { account: 'sink', amount }], season, at);
 }

@@ -36,7 +36,7 @@ import {
 import {
   type WealthState, type FacilityId, type SponsorTier, type EventSponsorship, SPONSOR, SPONSOR_TIERS, ADMIN, LOAN, HARDSHIP, ATTENDANCE_FEE, GALLERY_ATTENDANCE_FEE, GALLERY_SPONSOR_BONUS,
   facility, estate, wealthOf, wealthBookValue, liabilities, sponsorMultiplier, sponsorableEvents, sponsorshipId, facilityAccount, estateAccount,
-  facilityBuildJournal, facilityCloseJournal, upkeepLine, estateBuyJournal, estateSellJournal, sponsorshipStakeJournal, sponsorshipSettleJournals, loanDrawJournal, loanRepayJournal, hardshipJournal,
+  facilityBuildJournal, facilityCloseJournal, upkeepLine, estateBuyJournal, estateSellJournal, sponsorshipStakeJournal, sponsorshipSettleJournals, loanDrawJournal, loanRepayJournal, hardshipJournal, treasurySweepJournal, TREASURY_CEILING,
 } from '../economy/wealth';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import { liveTerminal, plySeed } from './schedulerEngine';
@@ -1244,6 +1244,10 @@ export class FederationService {
           const total = -lines.reduce((a, l) => a + l.amount, 0);
           if (total) this.post(st, [{ id: `comp-expenses:${season}`, at: this.now(), kind: 'expenses', memo: 'Competitor season expenses', lines: [...lines, { account: 'sink', amount: total }], season }], posted);
         }
+        // v0.11 treasury ceiling: the treasury refills toward its target by capped mint, and also receives escrow
+        // remainders, unspent sponsor budgets, fees and market-maker profits; anything above the ceiling is retired
+        // to the sink, so idle federation money cannot accumulate season after season (docs/ECONOMY_V11.md §2)
+        { const tr = st.balances.get('treasury') ?? 0; if (tr > TREASURY_CEILING) this.post(st, [treasurySweepJournal(season, tr - TREASURY_CEILING, this.now())], posted); }
         // new season issuance
         this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits), this.now()), posted);
         plansChanged.push(copyData(oldPlan));
