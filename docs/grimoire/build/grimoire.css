@@ -1,0 +1,18 @@
+
+:root { --ink:#22201c; --paper:#fbf7ee; --rule:#d9cdb3; --accent:#8e2f3a; --muted:#6b6457; --code:#f3ecdc; }
+@media (prefers-color-scheme: dark) { :root { --ink:#ece6d8; --paper:#16151a; --rule:#3a3631; --accent:#e07a85; --muted:#a69f91; --code:#211f24; } }
+html { background: var(--paper); color: var(--ink); }
+body { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; font: 1.05rem/1.65 Georgia, 'Iowan Old Style', 'Palatino Linotype', serif; }
+h1, h2, h3, h4 { font-family: Georgia, serif; line-height: 1.25; color: var(--ink); }
+h1 { font-size: 2.1rem; border-bottom: 2px solid var(--accent); padding-bottom: .3rem; margin-top: 3rem; }
+h2 { font-size: 1.5rem; margin-top: 2.4rem; color: var(--accent); }
+h3 { font-size: 1.2rem; margin-top: 1.8rem; }
+a { color: var(--accent); }
+pre, code { font-family: 'DejaVu Sans Mono', Menlo, Consolas, monospace; font-size: .92rem; }
+pre { background: var(--code); border: 1px solid var(--rule); border-radius: 8px; padding: .8rem 1rem; overflow-x: auto; line-height: 1.25; }
+figure.board { margin: 1rem 0; break-inside: avoid; } figure.board figcaption { font-size: .9rem; color: var(--muted); font-style: italic; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { border-bottom: 1px solid var(--rule); padding: .35rem .5rem; text-align: left; vertical-align: top; }
+blockquote { border-left: 3px solid var(--accent); margin: 1rem 0; padding: .2rem 1rem; color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
+@media print { body { max-width: none; font-size: 10.5pt; } h1 { break-before: page; } pre { break-inside: avoid; } a { color: inherit; } }

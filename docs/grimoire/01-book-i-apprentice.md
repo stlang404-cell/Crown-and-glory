@@ -35,6 +35,20 @@ Notice the shape: only **two empty ranks** (3 and 4) separate the armies. In the
 fen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1
 caption: The starting position. Kings face each other on d1 and d6, queens on c1 and c6. Only ranks 3 and 4 lie between the pawns.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ ♞ ♛ ♚ ♞ ♜
+5 │ ♟ ♟ ♟ ♟ ♟ ♟
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ ♙ ♙ ♙ ♙ ♙ ♙
+1 │ ♖ ♘ ♕ ♔ ♘ ♖
+  └─────────────
+    a b c d e f    White to move
+```
+*The starting position. Kings face each other on d1 and d6, queens on c1 and c6. Only ranks 3 and 4 lie between the pawns.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning
 How do we read a move? Take the line below: White plays a knight to d3, and Black answers with a knight to d4.
@@ -45,6 +59,20 @@ line: Nd3 Nd4
 show: after
 caption: After 1. Nd3 Nd4. White's e1-knight jumped to d3; Black's e6-knight jumped to d4.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ ♞ ♛ ♚ · ♜
+5 │ ♟ ♟ ♟ ♟ ♟ ♟
+4 │ · · · ♞ · ·
+3 │ · · · ♘ · ·
+2 │ ♙ ♙ ♙ ♙ ♙ ♙
+1 │ ♖ ♘ ♕ ♔ · ♖
+  └─────────────
+    a b c d e f    White to move
+```
+*After 1. Nd3 Nd4. White's e1-knight jumped to d3; Black's e6-knight jumped to d4.*
+<!-- /diagram -->
 
 1. `Nd3` — the letter N says "a knight", `d3` says where it lands. Only one White knight can reach d3 (the one on e1), so nothing more is needed.
 2. `Nd4` — Black's e6-knight lands on d4. Again, only one knight can get there.
@@ -78,6 +106,20 @@ line: Nf3 c4
 show: after
 caption: Exercise 2 — the position after the two moves. Check your answer below.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ ♞ ♛ ♚ ♞ ♜
+5 │ ♟ ♟ · ♟ ♟ ♟
+4 │ · · ♟ · · ·
+3 │ · · · · · ♘
+2 │ ♙ ♙ ♙ ♙ ♙ ♙
+1 │ ♖ ♘ ♕ ♔ · ♖
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 2 — the position after the two moves. Check your answer below.*
+<!-- /diagram -->
 
 3. Name every piece and its square in this position.
 
@@ -85,6 +127,20 @@ caption: Exercise 2 — the position after the two moves. Check your answer belo
 fen: k5/6/2n3/6/3R2/5K w - - 0 1
 caption: Exercise 3 — name each piece and its square.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · ♞ · · ·
+3 │ · · · · · ·
+2 │ · · · ♖ · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 3 — name each piece and its square.*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided:** (a) c6. (b) d2 (a White pawn stands there). (c) c3.
@@ -133,6 +189,20 @@ A rook always reaches **10 squares** on an empty board: 5 along its file and 5 a
 fen: k5/6/6/2Q3/6/5K w - - 0 1
 caption: The queen on c3 has 19 moves: 10 along the c-file and 3rd rank, and 9 along the two diagonals.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · ♕ · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*The queen on c3 has 19 moves: 10 along the c-file and 3rd rank, and 9 along the two diagonals.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning
 Count the queen's moves in the diagram one direction at a time:
@@ -146,11 +216,39 @@ Count the queen's moves in the diagram one direction at a time:
 fen: k5/6/6/2R3/6/5K w - - 0 1
 caption: A rook on c3: 10 moves, exactly as on any other square of an empty board.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · ♖ · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*A rook on c3: 10 moves, exactly as on any other square of an empty board.*
+<!-- /diagram -->
 
 ```crown
 fen: 4k1/6/6/6/6/Q4K w - - 0 1
 caption: A queen in the corner a1 reaches 14 squares here (15 if her own king were not standing on f1).
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · ♚ ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♕ · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*A queen in the corner a1 reaches 14 squares here (15 if her own king were not standing on f1).*
+<!-- /diagram -->
 
 ### Common beginner mistakes
 - Letting a rook or queen "jump". If a piece is in the way, the line stops there (on it, if it is an enemy piece you can capture; before it, if it is your own).
@@ -169,6 +267,20 @@ In the position below, how many moves does the White rook on c2 have?
 fen: k5/6/1p2n1/6/2R1P1/5K w - - 0 1
 caption: Worked example — count the rook's moves.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · ♟ · · ♞ ·
+3 │ · · · · · ·
+2 │ · · ♖ · ♙ ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*Worked example — count the rook's moves.*
+<!-- /diagram -->
 
 *Solution.* Along rank 2 to the right: d2, then e2 is White's own pawn, so the rook stops (1). To the left: b2, a2 (2; `Ra2+` is even check). Up the c-file: c3, c4, c5, c6 (4). Down: c1 (1). Total **8**. The Black pawn on b4 and knight on e4 are not on the rook's lines, so it cannot capture them.
 
@@ -181,6 +293,20 @@ Put a queen on c2 in place of the rook in the worked example. How many moves doe
 fen: k5/6/1p2n1/6/2Q1P1/5K w - - 0 1
 caption: Guided exercise — the queen on c2.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · ♟ · · ♞ ·
+3 │ · · · · · ·
+2 │ · · ♕ · ♙ ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*Guided exercise — the queen on c2.*
+<!-- /diagram -->
 
 ### Independent exercises
 1. How many moves does the White king on a1 have here? Why?
@@ -189,6 +315,20 @@ caption: Guided exercise — the queen on c2.
 fen: k5/6/1r4/6/6/K5 w - - 0 1
 caption: Exercise 1 — the cornered king.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · ♜ · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♔ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 1 — the cornered king.*
+<!-- /diagram -->
 
 2. How many moves does a king have on c1 on an empty board? On c3?
 3. True or false: a rook in the corner controls fewer squares than a rook in the centre (empty board).
@@ -246,11 +386,39 @@ When a pawn reaches the last rank (rank 6 for White, rank 1 for Black) it **must
 fen: k5/6/6/2N3/6/5K w - - 0 1
 caption: A knight on c3 has 8 moves: b1, d1, a2, e2, a4, e4, b5, d5. All are light squares; c3 is dark.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · ♘ · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*A knight on c3 has 8 moves: b1, d1, a2, e2, a4, e4, b5, d5. All are light squares; c3 is dark.*
+<!-- /diagram -->
 
 ```crown
 fen: k5/6/6/6/6/N4K w - - 0 1
 caption: The same knight in the corner a1 has only 2 moves: b3 and c2.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♘ · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*The same knight in the corner a1 has only 2 moves: b3 and c2.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning
 Here are pawns in contact. White to move.
@@ -259,6 +427,20 @@ Here are pawns in contact. White to move.
 fen: k5/6/2p3/1P1P2/6/5K w - - 0 1
 caption: White pawns on b3 and d3, a Black pawn on c4.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · · ·
+4 │ · · ♟ · · ·
+3 │ · ♙ · ♙ · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*White pawns on b3 and d3, a Black pawn on c4.*
+<!-- /diagram -->
 
 1. The b3-pawn may step to b4 (empty) or capture diagonally on c4: `bxc4`.
 2. The d3-pawn may step to d4 or capture `dxc4`.
@@ -273,6 +455,20 @@ line: d6=N+
 claim: best d6=N+
 caption: The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♛ · ♙ · ♚
+4 │ · · · · · ·
+3 │ ♙ · · · · ·
+2 │ · · · · · ·
+1 │ ♔ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5.*
+<!-- /diagram -->
 
 5. A new queen on d6 would only give queen against queen; the engine rates it far lower.
 6. A new knight on d6 checks the king on f5 *and* attacks the queen on b5. After the king moves, `Nxb5` wins the queen. White is left with knight and pawn against a bare king, which the engine judges winning (a lone knight could not mate, so the a3-pawn matters).
@@ -295,6 +491,20 @@ How many moves does the White knight on d3 have, and which of them are special?
 fen: k5/4p1/6/3N2/6/5K w - - 0 1
 caption: Worked example — the knight on d3.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ · · · · ♟ ·
+4 │ · · · · · ·
+3 │ · · · ♘ · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*Worked example — the knight on d3.*
+<!-- /diagram -->
 
 *Solution.* d3 is a centre square, so 8: b2, b4, c1, c5, e1, e5, f2, f4. On e5 stands a Black pawn, so that move is the capture `Nxe5`. Two moves give check to the king on a6: `Nb4+` and `Nc5+`.
 
@@ -349,6 +559,20 @@ fen: r2k2/p2n2/1p4/1P1Q2/P5/3K2 w - - 3 25
 claim: puzzle pz-cfbmy9
 caption: Academy puzzle pz-cfbmy9. White to move. Which Black piece is hanging?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ · · ♚ · ·
+5 │ ♟ · · ♞ · ·
+4 │ · ♟ · · · ·
+3 │ · ♙ · ♕ · ·
+2 │ ♙ · · · · ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Academy puzzle pz-cfbmy9. White to move. Which Black piece is hanging?*
+<!-- /diagram -->
 
 The Black rook on a6 is attacked by the queen along the diagonal d3–c4–b5–a6. Is it defended? The pawn on a5 cannot defend it, because pawns capture forwards (for Black, downwards), and the knight on d5 does not reach a6. The rook is **hanging**: `Qxa6+` wins a whole rook, with check along the 6th rank.
 
@@ -359,6 +583,20 @@ Counting matters most when a piece *is* defended. Here White can capture the Bla
 fen: 5k/2p3/3n2/1N4/6/3R1K w - - 0 1
 caption: The knight on d4 is attacked twice (Nb3, Rd1) and defended once (pawn c5).
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · ♟ · · ·
+4 │ · · · ♞ · ·
+3 │ · ♘ · · · ·
+2 │ · · · · · ·
+1 │ · · · ♖ · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*The knight on d4 is attacked twice (Nb3, Rd1) and defended once (pawn c5).*
+<!-- /diagram -->
 
 1. Attackers: White's knight on b3 and rook on d1. Defenders: Black's pawn on c5 (it captures diagonally down onto d4).
 2. Two attackers against one defender: White will end up owning d4. But *which piece captures first* decides the profit.
@@ -370,6 +608,20 @@ line: Nxd4 cxd4 Rxd4
 show: after
 caption: Correct order: knight takes, pawn takes back, rook takes. White gave a knight and won a knight and a pawn.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · · · ♖ · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    Black to move
+```
+*Correct order: knight takes, pawn takes back, rook takes. White gave a knight and won a knight and a pawn.*
+<!-- /diagram -->
 
 4. The wrong order loses material:
 
@@ -379,6 +631,20 @@ line: Rxd4 cxd4 Nxd4
 show: after
 caption: Wrong order: White gave a rook (5) and won only a knight and a pawn (about 4).
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · · · ♘ · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    Black to move
+```
+*Wrong order: White gave a rook (5) and won only a knight and a pawn (about 4).*
+<!-- /diagram -->
 
 ### Common beginner mistakes
 - Seeing only the piece you want to take and not the piece that will take back.
@@ -396,6 +662,20 @@ fen: q2k2/2n1p1/1Q1pr1/3N2/2PP1P/3K1R w - - 2 14
 claim: puzzle pz-kqfffd
 caption: Academy puzzle pz-kqfffd. White to move and win material.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♛ · · ♚ · ·
+5 │ · · ♞ · ♟ ·
+4 │ · ♕ · ♟ ♜ ·
+3 │ · · · ♘ · ·
+2 │ · · ♙ ♙ · ♙
+1 │ · · · ♔ · ♖
+  └─────────────
+    a b c d e f    White to move
+```
+*Academy puzzle pz-kqfffd. White to move and win material.*
+<!-- /diagram -->
 
 *Solution.* The Black knight on c5 is attacked by the White queen on b4. Its only possible defender is the Black king on d6, which stands next to c5. If White plays `Qxc5+`, the queen gives check, and can the king take back? No: the queen on c5 is defended by the White knight on d3. Count: one attacker (the queen) against one "defender" that cannot legally recapture, because a king may never capture a defended piece. **`Qxc5+` wins a knight for nothing.**
 
@@ -406,6 +686,20 @@ fen: 2Q3/6/p2n1p/P3k1/6/2K3 b - - 0 32
 claim: puzzle pz-1u23ob3
 caption: Academy puzzle pz-1u23ob3. Black to move. Is any White piece hanging?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♕ · · ·
+5 │ · · · · · ·
+4 │ ♟ · · ♞ · ♟
+3 │ ♙ · · · ♚ ·
+2 │ · · · · · ·
+1 │ · · ♔ · · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Academy puzzle pz-1u23ob3. Black to move. Is any White piece hanging?*
+<!-- /diagram -->
 
 *Hint:* Look at every square the Black knight on d4 attacks.
 
@@ -416,18 +710,60 @@ fen: 2k3/r2n2/1p4/2p2P/P1Nr2/R3KR b - - 0 29
 claim: puzzle pz-1xa5t37
 caption: Exercise 1 (pz-1xa5t37). Black to move and win material.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ ♜ · · ♞ · ·
+4 │ · ♟ · · · ·
+3 │ · · ♟ · · ♙
+2 │ ♙ · ♘ ♜ · ·
+1 │ ♖ · · · ♔ ♖
+  └─────────────
+    a b c d e f    Black to move
+```
+*Exercise 1 (pz-1xa5t37). Black to move and win material.*
+<!-- /diagram -->
 
 ```crown
 fen: 2qr2/1r2kp/1R4/2p3/P1Q1PP/4KR b - - 2 16
 claim: puzzle pz-1c8fjp0
 caption: Exercise 2 (pz-1c8fjp0). Black to move and win material.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♛ ♜ · ·
+5 │ · ♜ · · ♚ ♟
+4 │ · ♖ · · · ·
+3 │ · · ♟ · · ·
+2 │ ♙ · ♕ · ♙ ♙
+1 │ · · · · ♔ ♖
+  └─────────────
+    a b c d e f    Black to move
+```
+*Exercise 2 (pz-1c8fjp0). Black to move and win material.*
+<!-- /diagram -->
 
 ```crown
 fen: 3k1r/p2q2/3Q1p/2PP1N/1rNK1P/6 w - - 0 19
 claim: puzzle pz-ra3qk4
 caption: Exercise 3 (pz-ra3qk4). White to move and win material.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♚ · ♜
+5 │ ♟ · · ♛ · ·
+4 │ · · · ♕ · ♟
+3 │ · · ♙ ♙ · ♘
+2 │ · ♜ ♘ ♔ · ♙
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 3 (pz-ra3qk4). White to move and win material.*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided (pz-1u23ob3):** `Nxc6`. The White queen on c6 is attacked by the knight on d4 and nothing defends it: the White king on c1 is far away. Black wins the queen.
@@ -469,6 +805,20 @@ line: Rd5+
 show: after
 caption: Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · ♜ · ·
+4 │ · ♘ · · · ·
+3 │ ♖ · · · · ·
+2 │ · · ♙ · ♙ ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available.*
+<!-- /diagram -->
 
 White's legal moves are exactly five:
 - **Move:** `Kc1` or `Ke1`. (Not `Kd2`: that square is still on the d-file, attacked by the rook. Not `Kc2` or `Ke2`: White's own pawns stand there.)
@@ -500,6 +850,20 @@ line: Qd2+
 show: after
 caption: Black's queen has just checked from d2, right next to White's king.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ · · · ♛ · ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Black's queen has just checked from d2, right next to White's king.*
+<!-- /diagram -->
 
 *Solution.* The queen attacks c1, e1, c2 and e2 as well as d1, so every flight square is covered. Nothing can block a piece that is adjacent. But the queen is **undefended**, so the king may capture it: `Kxd2` is White's only legal move, and it wins the queen.
 
@@ -512,6 +876,20 @@ claim: checkmate
 show: after
 caption: The same queen check, but the knight on f3 now defends d2. The king cannot capture, cannot flee and cannot block. Checkmate.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ♞
+2 │ · · · ♛ · ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The same queen check, but the knight on f3 now defends d2. The king cannot capture, cannot flee and cannot block. Checkmate.*
+<!-- /diagram -->
 
 ### Guided exercise
 
@@ -521,6 +899,20 @@ line: Nc3+
 show: after
 caption: Guided exercise. Black's knight has just checked from c3. List every legal move for White.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · ♞ · · ·
+2 │ ♙ ♙ ♙ · · ·
+1 │ · ♔ · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Guided exercise. Black's knight has just checked from c3. List every legal move for White.*
+<!-- /diagram -->
 
 *Hint:* A knight check cannot be blocked. Look for king moves and for captures of c3.
 
@@ -532,6 +924,20 @@ line: Qa3+
 show: after
 caption: Exercise 1. After Black's Qa3+, how many legal moves does White have?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ ♛ · · · · ·
+2 │ · · ♙ ♙ · ·
+1 │ · · ♔ ♖ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 1. After Black's Qa3+, how many legal moves does White have?*
+<!-- /diagram -->
 
 ```crown
 fen: r4k/6/6/6/PP4/3K2 b - - 0 1
@@ -539,6 +945,20 @@ line: Rd6+
 show: after
 caption: Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is Kd2 illegal?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♜ · ♚
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ ♙ ♙ · · · ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is Kd2 illegal?*
+<!-- /diagram -->
 
 ```crown
 fen: 5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1
@@ -546,6 +966,20 @@ line: Rd5+ Nd3
 show: after
 caption: Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · ♜ · ·
+4 │ · · · · · ·
+3 │ ♖ · · ♘ · ·
+2 │ · · ♙ · ♙ ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided:** Three moves: `Ka1`, `Kc1` and `bxc3`. The b2-pawn captures diagonally; the a2- and c2-pawns cannot (a2 attacks only b3; c2 attacks b3 and d3). `bxc3` wins the knight and is clearly best.
@@ -585,6 +1019,20 @@ line: Qa6#
 claim: mate-in-1
 caption: King and queen mate. The kings face each other on d6 and d4; the queen checks along the 6th rank.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♚ · ·
+5 │ · · · · · ·
+4 │ · · · ♔ · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♕ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*King and queen mate. The kings face each other on d6 and d4; the queen checks along the 6th rank.*
+<!-- /diagram -->
 
 After `Qa6#` the Black king cannot go to c5, d5 or e5 (all next to White's king) nor to c6 or e6 (on the queen's rank). Nothing can capture or block. Checkmate.
 
@@ -594,6 +1042,20 @@ line: Rd6#
 claim: only-mate-in-1
 caption: King and rook mate, the same picture: the kings face each other on b6 and b4, and the rook checks along the edge.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · ♚ · · · ·
+5 │ · · · · · ·
+4 │ · ♔ · · · ·
+3 │ · · · ♖ · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*King and rook mate, the same picture: the kings face each other on b6 and b4, and the rook checks along the edge.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning: the queen's box
 The queen should stand a **knight's move away** from the enemy king. That leaves the king a small "box" without ever checking it pointlessly. Then bring your own king up.
@@ -604,6 +1066,20 @@ line: Qd5
 claim: only-mate-in-3
 caption: White mates in 3, and Qd5 (a knight's move from b4) is the only first move that does it. Proven by trying every defence.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · ♕ ·
+4 │ · ♚ · · · ·
+3 │ · · · · · ·
+2 │ · · ♔ · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*White mates in 3, and Qd5 (a knight's move from b4) is the only first move that does it. Proven by trying every defence.*
+<!-- /diagram -->
 
 1. `Qd5` takes away rank 5 and the d-file. The Black king on b4 is confined to a3, a4, b3 and the squares around them.
 2. Black's king shuffles (for example `Ka4`). White's king comes closer: `Kc3`.
@@ -617,6 +1093,20 @@ line: Kc3
 claim: only-mate-in-2
 caption: Mate in 2. The quiet king move Kc3 is the only move that forces it.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · ♕ · ·
+4 │ ♚ · · · · ·
+3 │ · · · · · ·
+2 │ · · ♔ · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Mate in 2. The quiet king move Kc3 is the only move that forces it.*
+<!-- /diagram -->
 
 And after `Kc3 Ka3` there are two different mates:
 
@@ -626,6 +1116,20 @@ line: Qa5#
 claim: mate-in-1
 caption: Mate in 1. Both Qa5# and Qb3# work here.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · ♕ · ·
+4 │ · · · · · ·
+3 │ ♚ · ♔ · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Mate in 1. Both Qa5# and Qb3# work here.*
+<!-- /diagram -->
 
 Here is a whole king-and-queen mate from a central start, as the Academy engine plays it. (This is one good line; the defence is the engine's choice, not a proof that nothing lasts longer.)
 
@@ -635,6 +1139,20 @@ line: Kc2 Kb4 Qc3+ Ka4 Qe5 Kb4 Qd5 Ka4 Kc3 Ka3 Qa5#
 claim: checkmate
 caption: From the centre to mate in eleven half-moves: king up, queen boxes, king closes in, mate on the a-file.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · · ♚ · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♕ · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*From the centre to mate in eleven half-moves: king up, queen boxes, king closes in, mate on the a-file.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning: the rook's method
 The rook cuts the king off along a rank or file; the attacking king walks up to face the enemy king; then the rook checks along the edge. When the kings are not yet facing each other, a **waiting move** with the rook hands the move to the defender.
@@ -645,6 +1163,20 @@ line: Rd3
 claim: mate-in-2
 caption: Mate in 2. The rook confines the king to the 6th rank; a waiting move along the d-file (Rd1, Rd2, Rd3 or Rd4) forces the king to b6, where Rd6 is mate.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · · · ♖ · ·
+4 │ · ♔ · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Mate in 2. The rook confines the king to the 6th rank; a waiting move along the d-file (Rd1, Rd2, Rd3 or Rd4) forces the king to b6, where Rd6 is mate.*
+<!-- /diagram -->
 
 After `Rd3` the Black king on c6 cannot go to d5 or d6 (the rook's file) or to b5 or c5 (next to White's king on b4). It must go to b6, and `Rd6#` follows.
 
@@ -654,6 +1186,20 @@ line: Kc2 Kd4 Ra4+ Kc5 Kc3 Kd5 Rd4+ Kc5 Rd3 Kb5 Rd5+ Kc6 Kc4 Kb6 Kb4 Kc6 Rd3 Kb6
 claim: checkmate
 caption: A whole king-and-rook mate as the engine plays it: cut off, approach, check the king back, wait, and mate on the 6th rank.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · · ♚ · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♖ · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*A whole king-and-rook mate as the engine plays it: cut off, approach, check the king back, wait, and mate on the 6th rank.*
+<!-- /diagram -->
 
 ### Common beginner mistakes
 - Checking again and again with the queen, chasing the king around. Checks are not progress; **shrinking the box** is.
@@ -672,6 +1218,20 @@ line: Kd5 Kf5 Ra4 Kf6 Rf4#
 claim: only-mate-in-3
 caption: White mates in 3, and only the king move Kd5 achieves it. Proven exhaustively; the line shows the forced play.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ ♖ · · · · ·
+4 │ · · ♔ · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*White mates in 3, and only the king move Kd5 achieves it. Proven exhaustively; the line shows the forced play.*
+<!-- /diagram -->
 
 *Reasoning.*
 1. `Kd5`. The king steps towards the Black king. Notice that it now stands *on the rook's rank*, so the rook no longer covers e5 and f5, but the king itself covers e5 and e6. Black's only legal move is `Kf5`.
@@ -687,6 +1247,20 @@ fen: 3R2/6/6/3K1k/6/6 w - - 0 1
 claim: only-mate-in-1
 caption: Guided exercise. White to move and mate in 1. There is only one way.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♖ · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · ♔ · ♚
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Guided exercise. White to move and mate in 1. There is only one way.*
+<!-- /diagram -->
 
 *Hint:* The kings already face each other on the 3rd rank (d3 and f3) with one square between them.
 
@@ -697,18 +1271,60 @@ fen: 6/R5/6/4K1/6/4k1 w - - 0 1
 claim: only-mate-in-1
 caption: Exercise 1. Mate in 1.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ ♖ · · · · ·
+4 │ · · · · · ·
+3 │ · · · · ♔ ·
+2 │ · · · · · ·
+1 │ · · · · ♚ ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 1. Mate in 1.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/6/2K2k/6/6/4Q1 w - - 0 1
 claim: only-mate-in-2
 caption: Exercise 2. King and queen: mate in 2. The first move is quiet.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · · ♔ · · ♚
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · ♕ ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 2. King and queen: mate in 2. The first move is quiet.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/6/3R2/k5/3K2/6 w - - 0 1
 claim: only-mate-in-2
 caption: Exercise 3. King and rook: mate in 2. The first move is quiet.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · · · ♖ · ·
+3 │ ♚ · · · · ·
+2 │ · · · ♔ · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 3. King and rook: mate in 2. The first move is quiet.*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided:** `Rf6#`. The rook checks down the f-file. The Black king on f3 cannot use f2 or f4 (on the file) or e2, e3, e4 (all next to White's king on d3). Checkmate.
@@ -753,6 +1369,20 @@ line: Qb3
 claim: stalemate
 caption: The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♕ · · · ·
+4 │ · · · · · ·
+3 │ · · ♔ · · ·
+2 │ · · · · · ·
+1 │ ♚ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/1Q4/6/2K3/6/k5 w - - 0 1
@@ -760,6 +1390,20 @@ line: Qb2#
 claim: only-mate-in-1
 caption: The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♕ · · · ·
+4 │ · · · · · ·
+3 │ · · ♔ · · ·
+2 │ · · · · · ·
+1 │ ♚ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning
 Before every move in a winning ending, ask: **"After my move, does my opponent have a legal move?"**
@@ -782,6 +1426,20 @@ line: Rxb4+
 claim: best Rxb4+
 caption: Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♜ · · · ·
+4 │ · ♙ · · · ·
+3 │ · ♔ · · ♕ ·
+2 │ · · · · · ·
+1 │ · · · · · ♚
+  └─────────────
+    a b c d e f    Black to move
+```
+*Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/1r4/1P4/1K2Q1/6/5k b - - 0 1
@@ -790,6 +1448,20 @@ claim: stalemate
 show: after
 caption: If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · ♔ · · · ·
+3 │ · · · · ♕ ·
+2 │ · · · · · ·
+1 │ · · · · · ♚
+  └─────────────
+    a b c d e f    Black to move
+```
+*If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking.*
+<!-- /diagram -->
 
 ### Worked example
 Why is this position a draw, with Black to move?
@@ -799,6 +1471,20 @@ fen: 2k3/2P3/2K3/6/6/6 b - - 0 1
 claim: stalemate
 caption: Black to move has no legal move. Stalemate.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · · ♙ · · ·
+4 │ · · ♔ · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Black to move has no legal move. Stalemate.*
+<!-- /diagram -->
 
 *Solution.* The Black king on c6 could go to b6 or d6, but both are attacked by the White pawn on c5 (a White pawn attacks diagonally *forwards*, here b6 and d6). b5 and d5 are next to White's king on c4. c5 itself is occupied by the pawn, which is defended by the king. Black is not in check. Stalemate. **Guidance:** in king-and-pawn endings, a defending king that blocks the square in front of the pawn very often reaches a stalemate like this one.
 
@@ -809,6 +1495,20 @@ fen: 5Q/6/6/6/k5/2K3 w - - 0 1
 claim: only-mate-in-1
 caption: Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♕
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ ♚ · · · · ·
+1 │ · · ♔ · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?*
+<!-- /diagram -->
 
 *Hint:* The Black king on a2 has a1, a3, b1, b2 and b3 to think about.
 
@@ -819,12 +1519,40 @@ fen: 3Q2/6/4K1/6/5k/6 w - - 0 1
 claim: only-mate-in-3
 caption: Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♕ · ·
+5 │ · · · · · ·
+4 │ · · · · ♔ ·
+3 │ · · · · · ·
+2 │ · · · · · ♚
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it.*
+<!-- /diagram -->
 
 ```crown
 fen: 2K2k/1r4/4QP/6/6/6 b - - 0 1
 claim: best Rc5+
 caption: Exercise 2. Black is lost on material. Find the engine's saving idea.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♔ · · ♚
+5 │ · ♜ · · · ·
+4 │ · · · · ♕ ♙
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Exercise 2. Black is lost on material. Find the engine's saving idea.*
+<!-- /diagram -->
 
 3. A game reaches White king on d4 and Black king on c6, with nothing else on the board. What happens?
 4. After 100 halfmoves with no capture and no pawn move, is the game drawn automatically?
@@ -868,6 +1596,20 @@ line: Ra6#
 claim: only-mate-in-1
 caption: Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · ♚ ·
+5 │ · · · ♟ ♟ ♟
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ ♖ · · ♔ · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank.*
+<!-- /diagram -->
 
 ### Step-by-step reasoning: the ladder
 
@@ -877,6 +1619,20 @@ line: Ra3+ Ke4 Rb4+ Ke5 Ra5+ Ke6 Rb6#
 claim: checkmate
 caption: The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♔ · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ♚
+2 │ · ♖ · · · ·
+1 │ ♖ · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated.*
+<!-- /diagram -->
 
 1. The rook on b2 guards the 2nd rank. `Ra3+` checks on the 3rd rank: the king must climb to the 4th.
 2. Now the a3-rook guards the 3rd rank, and `Rb4+` checks on the 4th: the king climbs again.
@@ -899,6 +1655,20 @@ fen: 2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26
 claim: puzzle pz-21w88z
 caption: Academy puzzle pz-21w88z. Black to move. Free material and a mate.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · ♟ · · ♟ ·
+4 │ ♟ ♙ ♜ · ♛ ·
+3 │ ♙ · ♕ · ♙ ♟
+2 │ · · ♙ · · ♙
+1 │ · · · ♔ · ♖
+  └─────────────
+    a b c d e f    Black to move
+```
+*Academy puzzle pz-21w88z. Black to move. Free material and a mate.*
+<!-- /diagram -->
 
 *Solution.* The White queen on c3 stands right in front of Black's rook on c4 and nothing defends it: the king on d1 does not touch c3, and the c2-pawn only defends b3 and d3. `Rxc3` takes the queen. It is more than material: Black now threatens `Qxc2` with mate. The checker proves that Black mates in 3 from the start:
 
@@ -908,6 +1678,20 @@ line: Rxc3 Ke1 Qxc2 e4 Qe2#
 claim: mate-in-3
 caption: Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown).
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · ♟ · · ♟ ·
+4 │ ♟ ♙ ♜ · ♛ ·
+3 │ ♙ · ♕ · ♙ ♟
+2 │ · · ♙ · · ♙
+1 │ · · · ♔ · ♖
+  └─────────────
+    a b c d e f    Black to move
+```
+*Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown).*
+<!-- /diagram -->
 
 For example `1...Rxc3 2. Ke1 Qxc2` (threatening both `Qe2#` and `Qc1#`) `3. e4 Qe2#`. If `2. Kc1` or `2. Re1`, then `2...Qxc2#` at once.
 
@@ -918,6 +1702,20 @@ fen: k5/p3q1/P5/1PR2P/5K/6 w - - 0 32
 claim: puzzle pz-1olai4r
 caption: Academy puzzle pz-1olai4r. White to move and mate in 1.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♚ · · · · ·
+5 │ ♟ · · · ♛ ·
+4 │ ♙ · · · · ·
+3 │ · ♙ ♖ · · ♙
+2 │ · · · · · ♔
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Academy puzzle pz-1olai4r. White to move and mate in 1.*
+<!-- /diagram -->
 
 *Hint:* The Black king on a6 is boxed in by its own a5-pawn and by White's a4-pawn, which attacks b5.
 
@@ -928,18 +1726,60 @@ fen: r2k2/1R1p2/p1nN1r/5P/5K/4R1 w - - 0 20
 claim: puzzle pz-ewndyc
 caption: Exercise 1 (pz-ewndyc). White to move and mate in 1.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ · · ♚ · ·
+5 │ · ♖ · ♟ · ·
+4 │ ♟ · ♞ ♘ · ♜
+3 │ · · · · · ♙
+2 │ · · · · · ♔
+1 │ · · · · ♖ ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 1 (pz-ewndyc). White to move and mate in 1.*
+<!-- /diagram -->
 
 ```crown
 fen: r2kn1/pR1p2/2PN1r/5P/5K/6 w - - 0 21
 claim: puzzle pz-1lq92r
 caption: Exercise 2 (pz-1lq92r). White to move and mate in 1.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ · · ♚ ♞ ·
+5 │ ♟ ♖ · ♟ · ·
+4 │ · · ♙ ♘ · ♜
+3 │ · · · · · ♙
+2 │ · · · · · ♔
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 2 (pz-1lq92r). White to move and mate in 1.*
+<!-- /diagram -->
 
 ```crown
 fen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61
 claim: puzzle pz-1muyn8j
 caption: Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · · · · · ·
+4 │ ♟ · ♔ ♕ ♜ ·
+3 │ ♙ · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something.*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided (pz-1olai4r):** `Rc6#`. The rook runs up the open c-file and checks along the 6th rank. b6 is on the rook's rank, a5 holds Black's own pawn and b5 is attacked by White's a4-pawn. The Black queen on e5 cannot capture on c6 or block on b6.
@@ -953,6 +1793,20 @@ line: Qxe4+ Kd6 Qd5#
 claim: mate-in-3
 caption: Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · ♚ · · ·
+5 │ · · · · · ·
+4 │ ♟ · ♔ ♕ ♜ ·
+3 │ ♙ · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#.*
+<!-- /diagram -->
 
   If `1...Kd6 2. Qd5#`: the queen stands next to the king, protected by White's king on c4. If `1...Kb6`, then `2. Kb4` (or `2. Qd5`) forces `2...Ka6`, and the queen mates on the next move (`3. Qc6#` or `3. Qe6#` after `2. Kb4`; `3. Qb5#` after `2. Qd5`).
 
@@ -985,6 +1839,20 @@ line: c3 f4 d3 c4 d4 exd4 Nf3 d3 b3 dxe2+ Kxe2
 show: after
 caption: A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ ♜ ♞ ♛ ♚ ♞ ♜
+5 │ ♟ ♟ · ♟ · ·
+4 │ · · ♟ · · ♟
+3 │ · ♙ ♙ · · ♘
+2 │ ♙ · · · ♔ ♙
+1 │ ♖ ♘ ♕ · · ♖
+  └─────────────
+    a b c d e f    Black to move
+```
+*A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it.*
+<!-- /diagram -->
 
 ### Illustrated example: the rule of the square
 
@@ -994,6 +1862,20 @@ line: b4 Ke5 b5 Kd6 b6=Q+
 claim: best b4
 caption: White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's "square", so the pawn promotes.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ♚
+3 │ · ♙ · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's "square", so the pawn promotes.*
+<!-- /diagram -->
 
 The **square** of a pawn: draw a square with one side running from the pawn to its promotion square, extending towards the defending king. For the b3-pawn (three moves to b6) the square has corners b3, e3, e6 and b6. **If the defending king can step inside the square on its move, it catches the pawn; otherwise the pawn promotes** (when no other pieces interfere).
 1. White to move plays `b4`; the square shrinks to b4–d4–d6–b6.
@@ -1006,6 +1888,20 @@ line: Ke3 b4 Kd4 b5 Kc5 b6=Q+ Kxb6
 show: after
 caption: Black to move: the king enters the square with Ke3 and wins the pawn.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · ♚ · · · ·
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · · · · ·
+2 │ · · · · · ·
+1 │ · · · · · ♔
+  └─────────────
+    a b c d e f    White to move
+```
+*Black to move: the king enters the square with Ke3 and wins the pawn.*
+<!-- /diagram -->
 
 **Guidance:** the rule of the square is a quick count, not a proof. On a small board the attacking king is often close enough to help. Here, for example, if Black chooses `Ke4` instead of `Ke3`, the engine shows that White's king can walk over in support with `Ke2`, and White keeps winning chances.
 
@@ -1020,6 +1916,20 @@ line: b6=Q
 claim: stalemate
 caption: The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♙ · · · ·
+4 │ ♚ · · · · ·
+3 │ · · · · · ·
+2 │ ♔ · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/1P4/k5/6/K5/6 w - - 0 1
@@ -1027,6 +1937,20 @@ line: b6=R
 claim: best b6=R
 caption: The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6).
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ · ♙ · · · ·
+4 │ ♚ · · · · ·
+3 │ · · · · · ·
+2 │ ♔ · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6).*
+<!-- /diagram -->
 
 ### Common beginner mistakes
 - Pushing a pawn without counting whether the enemy king can catch it.
@@ -1044,6 +1968,20 @@ fen: 5R/6/6/2p3/1k4/3K2 b - - 0 46
 claim: puzzle pz-c0qvzm
 caption: Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♖
+5 │ · · · · · ·
+4 │ · · · · · ·
+3 │ · · ♟ · · ·
+2 │ · ♚ · · · ·
+1 │ · · · ♔ · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1.*
+<!-- /diagram -->
 
 *Solution.* `1...c2+` (the pawn steps forward with check: a Black pawn on c2 attacks b1 and d1). White's king cannot take it, because Black's king on b2 defends c2. After `2. Ke2` (the Academy's line), `2...c1=Q` promotes, and the new queen on c1 is protected by the king on b2. Black wins: queen against rook.
 
@@ -1054,6 +1992,20 @@ fen: 6/p3Pr/k5/4K1/6/6 w - - 0 33
 claim: puzzle pz-12j3cmu
 caption: Academy puzzle pz-12j3cmu. White to move and win.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ ♟ · · · ♙ ♜
+4 │ ♚ · · · · ·
+3 │ · · · · ♔ ·
+2 │ · · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Academy puzzle pz-12j3cmu. White to move and win.*
+<!-- /diagram -->
 
 *Hint:* The pawn on e5 is attacked by the rook on f5 and is not defended. What can it do before it is captured?
 
@@ -1064,18 +2016,60 @@ fen: 5k/6/1Pp1P1/2K3/p5/6 b - - 0 36
 claim: puzzle pz-1cphbbp
 caption: Exercise 1 (pz-1cphbbp). Black to move and win.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ♚
+5 │ · · · · · ·
+4 │ · ♙ ♟ · ♙ ·
+3 │ · · ♔ · · ·
+2 │ ♟ · · · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    Black to move
+```
+*Exercise 1 (pz-1cphbbp). Black to move and win.*
+<!-- /diagram -->
 
 ```crown
 fen: 6/rP2k1/3p1p/6/2N1P1/4K1 w - - 0 25
 claim: puzzle pz-13ahfji
 caption: Exercise 2 (pz-13ahfji). White to move and win.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · · · ·
+5 │ ♜ ♙ · · ♚ ·
+4 │ · · · ♟ · ♟
+3 │ · · · · · ·
+2 │ · · ♘ · ♙ ·
+1 │ · · · · ♔ ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 2 (pz-13ahfji). White to move and win.*
+<!-- /diagram -->
 
 ```crown
 fen: 3K2/2P3/3k2/6/2n3/6 w - - 0 52
 claim: puzzle pz-1ftvz6i
 caption: Exercise 3 (pz-1ftvz6i). White to move and win.
 ```
+<!-- diagram -->
+```text
+  ┌─────────────
+6 │ · · · ♔ · ·
+5 │ · · ♙ · · ·
+4 │ · · · ♚ · ·
+3 │ · · · · · ·
+2 │ · · ♞ · · ·
+1 │ · · · · · ·
+  └─────────────
+    a b c d e f    White to move
+```
+*Exercise 3 (pz-1ftvz6i). White to move and win.*
+<!-- /diagram -->
 
 ### Answers with explanations
 - **Guided (pz-12j3cmu):** `e6=Q`. The pawn steps to the last rank and becomes a queen. The rook on f5 cannot touch e6 (it moves only in straight lines), while the new queen attacks the rook along the diagonal e6–f5. White wins: queen against rook.

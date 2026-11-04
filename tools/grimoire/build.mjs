@@ -48,7 +48,7 @@ h3 { font-size: 1.2rem; margin-top: 1.8rem; }
 a { color: var(--accent); }
 pre, code { font-family: 'DejaVu Sans Mono', Menlo, Consolas, monospace; font-size: .92rem; }
 pre { background: var(--code); border: 1px solid var(--rule); border-radius: 8px; padding: .8rem 1rem; overflow-x: auto; line-height: 1.25; }
-pre.crown, pre:has(code.language-crown) { display: none; }
+figure.board { margin: 1rem 0; break-inside: avoid; } figure.board figcaption { font-size: .9rem; color: var(--muted); font-style: italic; }
 table { border-collapse: collapse; width: 100%; font-size: .95rem; }
 th, td { border-bottom: 1px solid var(--rule); padding: .35rem .5rem; text-align: left; vertical-align: top; }
 blockquote { border-left: 3px solid var(--accent); margin: 1rem 0; padding: .2rem 1rem; color: var(--muted); }
@@ -57,7 +57,36 @@ hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
 `;
 writeFileSync('docs/grimoire/build/grimoire.css', css);
 // the crown source blocks are hidden (the rendered diagram follows each one)
-const md = readFileSync('docs/THE_SOVEREIGNS_GRIMOIRE.md', 'utf8').replace(/```crown\n[\s\S]*?\n```\n?/g, '');
+// HTML/PDF editions draw every diagram as an SVG board (text diagrams stay in the Markdown edition)
+const GLYPH = { K: '♔', Q: '♕', R: '♖', N: '♘', P: '♙', k: '♚', q: '♛', r: '♜', n: '♞', p: '♟' };
+function svgBoard(fen, flip) {
+  const rows = fen.split(' ')[0].split('/').map(r => r.replace(/\d/g, d => '.'.repeat(+d)).split(''));
+  const S = 34, pad = 16, W = pad + 6 * S + 4;
+  let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${W}" width="${W * 1.25}" height="${W * 1.25}" role="img" aria-label="board ${fen.split(' ')[0]}">`;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) {
+    const rr = flip ? 5 - r : r, cc = flip ? 5 - c : c;
+    const light = (rr + cc) % 2 === 0;
+    out += `<rect x="${pad + c * S}" y="${r * S}" width="${S}" height="${S}" fill="${light ? '#efe3c8' : '#b8956a'}"/>`;
+    const p = rows[rr][cc];
+    if (p !== '.') out += `<text x="${pad + c * S + S / 2}" y="${r * S + S * 0.78}" font-size="${S * 0.86}" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">${GLYPH[p]}</text>`;
+  }
+  for (let i = 0; i < 6; i++) {
+    out += `<text x="${pad / 2}" y="${i * S + S * 0.62}" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">${flip ? i + 1 : 6 - i}</text>`;
+    out += `<text x="${pad + i * S + S / 2}" y="${6 * S + 12}" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">${(flip ? 'fedcba' : 'abcdef')[i]}</text>`;
+  }
+  out += `<rect x="${pad}" y="0" width="${6 * S}" height="${6 * S}" fill="none" stroke="#5a4630" stroke-width="1.5"/></svg>`;
+  return out;
+}
+const md = readFileSync('docs/THE_SOVEREIGNS_GRIMOIRE.md', 'utf8').replace(/```crown\n([\s\S]*?)\n```\n?\s*<!-- diagram -->\n```text\n[\s\S]*?\n```\n?((?:\*[^\n]*\*\n)?)<!-- \/diagram -->/g, (all, body, cap) => {
+  const f = Object.fromEntries(body.split('\n').map(l => /^\s*([a-z-]+)\s*:\s*(.*)$/.exec(l)).filter(Boolean).map(m => [m[1], m[2].trim()]));
+  const after = (all.match(/```text\n[\s\S]*?\n```/)[0]);
+  // the rendered text diagram already reflects `show: after`; recover its board from the text art
+  const ranks = after.split('\n').filter(l => /^[1-6] │/.test(l)).map(l => l.slice(4).split(' ').map(ch => ({ '♔': 'K', '♕': 'Q', '♖': 'R', '♘': 'N', '♙': 'P', '♚': 'k', '♛': 'q', '♜': 'r', '♞': 'n', '♟': 'p' }[ch] ?? '.')));
+  const flip = f.flip === 'true';
+  const board = (flip ? [...ranks].reverse().map(r => [...r].reverse()) : ranks).map(r => r.join('').replace(/\.+/g, m => String(m.length))).join('/');
+  const side = /White to move/.test(after) ? 'White to move' : 'Black to move';
+  return `<figure class="board">${svgBoard(board + ' w', flip)}<figcaption>${side}${cap ? ' — ' + cap.trim().replace(/^\*|\*$/g, '') : ''}</figcaption></figure>\n`;
+}).replace(/```crown\n[\s\S]*?\n```\n?/g, '');
 writeFileSync('docs/grimoire/build/grimoire.src.md', md);
 execFileSync('pandoc', ['docs/grimoire/build/grimoire.src.md', '-f', 'gfm', '-t', 'html5', '-s', '--metadata', "title=The Sovereign's Grimoire",
   '--toc', '--toc-depth=2', '-c', 'grimoire.css', '--embed-resources', '--resource-path=docs/grimoire/build', '-o', 'docs/grimoire/build/grimoire.html']);
