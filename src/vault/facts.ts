@@ -23,7 +23,7 @@ const PLAYER = 'player';
 
 // ---------------------------------------------------------------- inputs (structural: FedState satisfies FedInput)
 export interface FedInput {
-  world: Pick<WorldState, 'season' | 'round' | 'player' | 'featured'>;
+  world: Pick<WorldState, 'season' | 'round' | 'player' | 'featured'> & { topology?: { regions: number } };
   plans: Map<string, SeasonPlan>;
   /** The current season's plan (FederationService keeps it fresher than the `plans` map). */
   plan?: SeasonPlan;
@@ -58,10 +58,22 @@ export interface OwnGame {
   termination: string | null; myRating: number | null; oppRating: number | null;
   level: number | null; budgetMs: number | null; quickMatch: boolean; federation: boolean; oppRegion: number | null;
   plies: number; lostMaterial: boolean; worstDiff: number;
+  /** crown-vault-2 additions (derived from the same record; never used by crown-vault-1 rules). */
+  oppEngine: boolean;
+  /** Worst material balance (your points minus theirs) held for at least SUSTAIN_PLIES consecutive plies. */
+  sustainedWorst: number;
+  /** Material balance after the last move. */
+  finalDiff: number;
+  /** Some position had at most ENDGAME_PIECES pieces other than kings and pawns on the whole board. */
+  endgame: boolean;
+  /** Your own pawn promotions, and whether any of them was to a rook or knight. */
+  promotions: number; underpromoted: boolean;
 }
 export interface RatedResult { at: string; score: number; oppId: string; oppName: string; gameId: string; myRating: number; oppRating: number }
 export interface SettledPosition { marketId: string; title: string; season: number; family: string; pnl: number; at: string }
-export interface ScoredFc { marketId: string; title: string; family: string; at: string; brier: number; ref: number | null; model: number | null; price: number | null; topPrice: number | null; topWon: boolean }
+export interface ScoredFc { marketId: string; title: string; family: string; at: string; brier: number; ref: number | null; model: number | null; price: number | null; topPrice: number | null; topWon: boolean;
+  /** crown-vault-2: the forecast's probabilities and the resolution vector (for calibration). */
+  probs?: number[]; y?: number[] }
 
 export interface FedFacts {
   season: number;
@@ -89,14 +101,19 @@ export interface FedFacts {
   peakNetWorth: number;
   nowNetWorth: number | null;
   ruinRecovery: { lowAt: string; highAt: string } | null;
+  /** crown-vault-2: your home region, the federation's number of regions and the recorded net-worth series. */
+  playerRegion: number;
+  regionsTotal: number;
+  netWorthSeries: { netWorth: number; at: string }[];
 }
 export interface Facts {
   games: OwnGame[];
   countedWins: OwnGame[];
   rated: RatedResult[];
   ratedWinsByColour: { white: number; black: number };
-  insignia: { collected: number[]; peakRating: number | null };
-  analyses: { complete: number; deep: number; lastAt: string | null };
+  insignia: { collected: number[]; peakRating: number | null; /** crown-vault-2: the first established rating. */ firstEstablished?: number | null };
+  analyses: { complete: number; deep: number; lastAt: string | null;
+    /** crown-vault-2: analysed own games of at least 20 plies, and analysed rated losses. */ long?: number; ratedLosses?: number };
   bookmarks: number;
   retryWins: number;
   puzzlesClean: number;
@@ -107,7 +124,17 @@ export interface Facts {
   grimoire: GrimoireFacts;
 }
 
+/** A material deficit counts as "sustained" only when it lasts this many plies (a capture-recapture never does). */
+export const SUSTAIN_PLIES = 4;
+/** Endgame: at most this many queens, rooks and knights left on the whole board (both sides together). */
+export const ENDGAME_PIECES = 2;
 const VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+/** Queens, rooks, knights and bishops on the whole board (kings and pawns excluded). */
+export function piecesOf(fen: string): number {
+  let n = 0;
+  for (const ch of fen.split(' ')[0] ?? '') if ('qrnbQRNB'.includes(ch)) n++;
+  return n;
+}
 /** Material of each side from a FEN's piece field: count and value. */
 export function materialOf(fen: string): { white: { n: number; v: number }; black: { n: number; v: number } } {
   const out = { white: { n: 0, v: 0 }, black: { n: 0, v: 0 } };
@@ -141,13 +168,22 @@ function ownGame(g: GameRecord, regionOf: Map<string, number>): OwnGame {
   let worst = 0, lost = false;
   const start = materialOf(g.initialFen);
   const startMine = g.humanColor === 'white' ? start.white.n : start.black.n;
-  for (const m of g.moves) {
+  const diffs: number[] = [];
+  let endgame = false, promotions = 0, underpromoted = false;
+  const whiteFirst = (g.initialFen.split(' ')[1] ?? 'w') === 'w';
+  g.moves.forEach((m, i) => {
     const mat = materialOf(m.fenAfter);
     const mine = g.humanColor === 'white' ? mat.white : mat.black;
     const theirs = g.humanColor === 'white' ? mat.black : mat.white;
     if (mine.n < startMine) lost = true;
     worst = Math.min(worst, mine.v - theirs.v);
-  }
+    diffs.push(mine.v - theirs.v);
+    if (!endgame && piecesOf(m.fenAfter) <= ENDGAME_PIECES) endgame = true;
+    const mover = (i % 2 === 0) === whiteFirst ? 'white' : 'black';
+    if (mover === g.humanColor && /^[a-f][1-6][a-f][1-6][qrn]$/.test(m.ccn)) { promotions++; if (!m.ccn.endsWith('q')) underpromoted = true; }
+  });
+  let sustainedWorst = 0;
+  for (let i = 0; i + SUSTAIN_PLIES <= diffs.length; i++) sustainedWorst = Math.min(sustainedWorst, Math.max(...diffs.slice(i, i + SUSTAIN_PLIES)));
   const quickMatch = g.id.startsWith('qm-') && regionOf.has(opp.id);
   return {
     id: g.id, at, startedAt: g.startedAt, day: at.slice(0, 10), oppId: opp.id, oppName: opp.name, score: scoreOf(g)!,
@@ -156,6 +192,7 @@ function ownGame(g: GameRecord, regionOf: Map<string, number>): OwnGame {
     budgetMs: opp.engine?.profile?.maxTimeMs ?? opp.engine?.config?.maxTimeMs ?? null,
     quickMatch, federation: g.context.kind === 'federation', oppRegion: regionOf.get(opp.id) ?? null,
     plies: g.moves.length, lostMaterial: lost, worstDiff: worst,
+    oppEngine: opp.kind === 'engine', sustainedWorst, finalDiff: diffs.length ? diffs[diffs.length - 1] : 0, endgame, promotions, underpromoted,
   };
 }
 
@@ -230,6 +267,7 @@ export function fedFacts(fed: FedInput, netWorthNow: number | null): FedFacts {
       marketId: s.market.id, title: s.market.title, family: s.market.kind ?? 'match', at: s.f.at, brier: s.brier,
       ref: s.priceBrier ?? s.modelBrier, model: s.modelBrier, price: s.priceBrier,
       topPrice: s.f.prices && s.f.prices.length === s.f.probs.length ? s.f.prices[top] : null, topWon: s.y[top] === 1,
+      probs: s.f.probs, y: s.y,
     };
   });
   const sm = summary(all);
@@ -246,6 +284,7 @@ export function fedFacts(fed: FedInput, netWorthNow: number | null): FedFacts {
     sponsorsPaid: [...fed.extra.sponsorsPaid], settled, scored, legacyForecast: { n: sm.n, brier: sm.brier, modelBrier: sm.modelBrier },
     club: { owned: !!club, level: club ? club.level ?? 1 : 0 },
     peakNetWorth: Math.max(fed.finance.peak, ...fed.finance.points.map(x => x.netWorth), netWorthNow ?? 0), nowNetWorth: netWorthNow, ruinRecovery,
+    playerRegion: p.region, regionsTotal: fed.world.topology?.regions ?? 16, netWorthSeries: fed.finance.points.map(x => ({ netWorth: x.netWorth, at: x.at })),
   };
 }
 
@@ -263,11 +302,15 @@ export function buildFacts(input: VaultInput): Facts {
   const ct = collectedTitles(rapid.map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
   // analyses: own finalized games with at least one complete report (re-analysis never counts twice)
   const ownIds = new Set(input.games.filter(g => g.status === 'finalized').map(g => g.id));
-  const complete = new Set<string>(), deep = new Set<string>();
+  const complete = new Set<string>(), deep = new Set<string>(), long = new Set<string>(), ratedLosses = new Set<string>();
+  const ownById = new Map(input.games.filter(g => g.status === 'finalized').map(g => [g.id, g]));
   let lastAt: string | null = null;
   for (const r of input.reports) {
     if (r.status !== 'complete' || !ownIds.has(r.gameId)) continue;
     complete.add(r.gameId);
+    const og = ownById.get(r.gameId)!;
+    if (og.moves.length >= 20) long.add(r.gameId);
+    if (og.mode === 'rated' && og.ratingEventId && eligible(og) && scoreOf(og) === 0) ratedLosses.add(r.gameId);
     if (r.settings.id === 'deep-d9') deep.add(r.gameId);
     if (!lastAt || r.completedAt > lastAt) lastAt = r.completedAt;
   }
@@ -281,13 +324,19 @@ export function buildFacts(input: VaultInput): Facts {
   }
   return {
     games, countedWins: countWins(games), rated, ratedWinsByColour,
-    insignia: { collected: ct.collected.map(t => t.index), peakRating: ct.peakRating },
-    analyses: { complete: complete.size, deep: deep.size, lastAt },
+    insignia: { collected: ct.collected.map(t => t.index), peakRating: ct.peakRating, firstEstablished: firstEstablished(rapid) },
+    analyses: { complete: complete.size, deep: deep.size, lastAt, long: long.size, ratedLosses: ratedLosses.size },
     bookmarks: marks.size, retryWins: retries.size,
     puzzlesClean: new Set((input.attempts ?? []).filter(a => a.solved && a.clean).map(a => a.puzzleId)).size,
     trainingSets: (input.trainingRuns ?? []).filter(r => r.endedAt && r.attempted > 0).length,
     fed, owned: new Set(input.owned ?? []), grimoire: grimoireFacts(input.grimoire),
   };
+}
+
+/** The rating after the first rapid event that left the rating established (not provisional). */
+function firstEstablished(rapid: RatingEvent[]): number | null {
+  const e = rapid.find(x => !isProvisional(x.gamesBefore + 1, x.after.rd));
+  return e ? e.after.rating : null;
 }
 
 // ---------------------------------------------------------------- sequence helpers (rated results, chronological)
@@ -333,4 +382,87 @@ export function seasonPnl(settled: SettledPosition[]): { season: number; n: numb
   const m = new Map<number, { season: number; n: number; pnl: number }>();
   for (const s of settled) { const x = m.get(s.season) ?? { season: s.season, n: 0, pnl: 0 }; x.n++; x.pnl += s.pnl; m.set(s.season, x); }
   return [...m.values()].sort((a, b) => a.season - b.season);
+}
+
+// ---------------------------------------------------------------- crown-vault-2 anti-farming helpers
+/**
+ * Anti-farming rules of the crown-vault-2 achievements (docs/ARCANE_FEDERATION.md §5.1):
+ *  - only rated games against an engine or Federation competitor count (casual, assisted, training, imported,
+ *    sandbox and practice records never reach these rules);
+ *  - WEAK_GAP: a win against an opponent rated more than 400 below you (both ratings recorded) never counts;
+ *  - one counted win per opponent per UTC day, and at most DAILY_CAP counted wins per UTC day.
+ */
+export const WEAK_GAP = 400;
+export const DAILY_CAP = 10;
+export const isWeakWin = (myRating: number | null, oppRating: number | null) => myRating !== null && oppRating !== null && oppRating < myRating - WEAK_GAP;
+export function qualifiedWins(games: OwnGame[], p: (g: OwnGame) => boolean = () => true): OwnGame[] {
+  const seen = new Set<string>(), perDay = new Map<string, number>(), out: OwnGame[] = [];
+  for (const g of games) {
+    if (g.score !== 1 || !g.rated || !g.oppEngine || isWeakWin(g.myRating, g.oppRating) || !p(g)) continue;
+    const k = `${g.oppId}|${g.day}`, n = perDay.get(g.day) ?? 0;
+    if (seen.has(k) || n >= DAILY_CAP) continue;
+    seen.add(k); perDay.set(g.day, n + 1); out.push(g);
+  }
+  return out;
+}
+/** Rated games only, against engines or competitors. */
+export const ratedGames = (games: OwnGame[]) => games.filter(g => g.rated && g.oppEngine);
+/**
+ * Longest run of consecutive rated wins (rating-event order). A draw or loss always ends the run; a win against an
+ * opponent rated more than WEAK_GAP below you, or a second win against the same opponent on the same UTC day, is
+ * skipped (it neither extends nor breaks the run).
+ */
+export function winStreak(rated: RatedResult[], need: number): { best: number; reached: RatedResult | null } {
+  let run = 0, best = 0, reached: RatedResult | null = null;
+  let seen = new Set<string>();
+  for (const r of rated) {
+    if (r.score !== 1) { run = 0; seen = new Set(); continue; }
+    const k = `${r.oppId}|${r.at.slice(0, 10)}`;
+    if (isWeakWin(r.myRating, r.oppRating) || seen.has(k)) continue;
+    seen.add(k); run++;
+    best = Math.max(best, run);
+    if (!reached && run >= need) reached = r;
+  }
+  return { best, reached };
+}
+/**
+ * Calibration of resolved paper forecasts: the latest forecast per market only (re-forecasting a market never adds
+ * samples). Every outcome probability is one sample; ECE = Σ_bins (n_b / N) · |mean p_b − observed frequency_b| over
+ * 10 equal bins. `skill` = reference Brier − your Brier (market price, or the public model for older records).
+ */
+export function calibrationStats(scored: ScoredFc[]): { n: number; ece: number | null; skill: number | null } {
+  const latest = new Map<string, ScoredFc>();
+  for (const s of scored) if (s.probs && s.y && (!latest.has(s.marketId) || latest.get(s.marketId)!.at <= s.at)) latest.set(s.marketId, s);
+  const xs = [...latest.values()];
+  if (!xs.length) return { n: 0, ece: null, skill: null };
+  const bins = Array.from({ length: 10 }, () => ({ n: 0, p: 0, y: 0 }));
+  let total = 0;
+  for (const s of xs) s.probs!.forEach((p, i) => { const b = bins[Math.min(9, Math.max(0, Math.floor(p * 10)))]; b.n++; b.p += p; b.y += s.y![i] ?? 0; total++; });
+  const ece = bins.reduce((a, b) => a + (b.n ? (b.n / total) * Math.abs(b.p / b.n - b.y / b.n) : 0), 0);
+  const paired = xs.filter(s => s.ref !== null);
+  const skill = paired.length ? paired.reduce((a, s) => a + s.ref! - s.brier, 0) / paired.length : null;
+  return { n: xs.length, ece, skill };
+}
+/**
+ * Net-worth recovery: the first recorded point at least `drop` (fraction) below an earlier peak of at least `minPeak`
+ * (µ), followed later by a point above that peak. Only the Federation's recorded finance series counts (sandbox and
+ * practice money never enter it).
+ */
+export function drawdownRecovery(series: { netWorth: number; at: string }[], minPeak: number, drop: number): { peak: number; lowAt: string; highAt: string } | null {
+  let peak = -Infinity, troughPeak: number | null = null, lowAt = '';
+  for (const pt of series) {
+    if (troughPeak !== null && pt.netWorth > troughPeak) return { peak: troughPeak, lowAt, highAt: pt.at };
+    if (pt.netWorth > peak) peak = pt.netWorth;
+    if (troughPeak === null && peak >= minPeak && pt.netWorth <= peak * (1 - drop)) { troughPeak = peak; lowAt = pt.at; }
+  }
+  return null;
+}
+/** First point below `low` followed later by a point at or above `high` (µ). */
+export function lowToHigh(series: { netWorth: number; at: string }[], low: number, high: number): { lowAt: string; highAt: string } | null {
+  let lowAt: string | null = null;
+  for (const pt of series) {
+    if (pt.netWorth < low) lowAt ??= pt.at;
+    else if (lowAt && pt.netWorth >= high) return { lowAt, highAt: pt.at };
+  }
+  return null;
 }

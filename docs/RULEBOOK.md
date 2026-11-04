@@ -878,20 +878,29 @@ A norm of a higher tier also counts toward lower titles. Titles are **never lost
 
 See section 15. They follow your rating up and down and are descriptions, not honours.
 
-### Achievements — the Sovereign Vault (crown-vault-1)
+### Achievements — the Sovereign Vault (crown-vault-2)
 
-* The Vault holds **134 collectibles**: **94 achievements**, the **9-step Exchange title ladder** and the **31
+* The Vault holds **210 collectibles**: **170 achievements**, the **9-step Exchange title ladder** and the **31
   rating-title insignias**, in nine collections (Chess Mastery, Brilliant Mind, Federation Career, Rivals,
-  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias).
+  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias). v0.11 added 68 achievements; every earlier
+  collectible and every earlier unlock is unchanged.
+* Every collectible belongs to one of **20 families** (e.g. Defensive Resilience, Endgame Technique, Win Streaks,
+  Regional Conquest, Forecasting Calibration, Financial Recovery, Career Longevity) and has a **tier**: Bronze
+  (Common or Uncommon), Silver (Rare), Gold (Epic or Legendary) or Sovereign (Mythic). The Vault shows each family's
+  progress, the count earned per rarity and the collectibles closest to unlocking.
 * Each achievement is a fixed rule over your saved records (games, rating history, federation history, ledger and
   forecasts). It is unlocked once and kept; reloading or re-analysing never unlocks it twice.
 * **11 achievements** depend on move grading (Brilliant moves, accuracy, Played Like) and show as "Awaiting
-  validated grading": they **cannot be earned** while grading is experimental. So **83 achievements** are earnable
+  validated grading": they **cannot be earned** while grading is experimental. So **159 achievements** are earnable
   today.
 * **Anti-exploit rules** (examples): assisted, abandoned, training and unfinished games never count as wins; win
   counters count the same opponent once per day; rating-gap achievements need both ratings recorded; provisional
   ratings never unlock rating thresholds; volume alone (many trades) never qualifies.
-* **4 achievements are secret**: their conditions are shown only once earned.
+* **Anti-farming (v0.11 achievements):** only rated games count; a win against an opponent rated more than 400 below
+  you never counts; win counters count one win per opponent per day and at most 10 wins a day; streaks skip (never
+  count) such wins; material comebacks need the deficit held for 4 plies; calibration uses your latest forecast per
+  market and must not be worse than the market price; profit must hold after removing your single best market.
+* **8 achievements are secret**: their conditions are shown only once earned.
 * **Exchange titles** (Apprentice Forecaster … Sovereign of Probability) need a sample of resolved paper forecasts
   that beat the market price by a margin and, for the higher steps, realized profit that holds even after removing
   your single best market.

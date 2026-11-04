@@ -135,7 +135,8 @@ Safari/iOS may evict site data. Export backups regularly; only an external file 
 
 ## v0.9: progress records in backups
 The `crown-backup-1` payload gains an optional `progress` array of `{ key, value }` meta-store records with the prefixes
-`ach:` / `achtoast:` / `vault:` (Sovereign Vault unlocks, shown notices, backfill flag) and `grim:` (Grimoire lesson
+`ach:` / `achtoast:` / `vault:` (Sovereign Vault unlocks, shown notices, backfill flags — `vault:backfilled` and, from
+v0.11, `vault:backfilled:crown-vault-2` for the expansion's one-time back-fill) and `grim:` (Grimoire lesson
 attempts, chapter completion, plan settings). It is covered by `payloadSha256` like the rest of the payload; older backups
 without it import unchanged. Restore into an empty career writes all of them; merging into an existing career writes only
 `grim:` learning progress (achievements stay with the career that earned them). Every write is put-if-absent: existing
