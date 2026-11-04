@@ -29,6 +29,7 @@ import { fmtCrowns, fmtPrice } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
 import { playOnce, playSound } from './sound';
 import { QuickMatch } from './QuickMatch';
+import { PlayedLikeResultLines } from './PlayedLikeCard';
 import { clearPractice, peekPractice } from '../app/practice';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -609,6 +610,10 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
           </div>
         ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game: saved to your Library, no rating change.'}</p>}
         <p className="small muted">Game saved. Your analysis is being prepared.</p>
+        <PlayedLikeResultLines gameId={g.id} sides={{
+          white: { name: g.white.name, career: g.humanColor === 'white' ? (e ? Math.round(e.after.rating) : null) : g.white.rating ?? null },
+          black: { name: g.black.name, career: g.humanColor === 'black' ? (e ? Math.round(e.after.rating) : null) : g.black.rating ?? null },
+        }} />
         <div className="row" style={{ justifyContent: 'center' }}>
           <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
           {g.context.kind === 'federation'

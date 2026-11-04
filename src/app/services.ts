@@ -8,6 +8,8 @@ import { gameChecksum, sha256Hex } from '../storage/checksum';
 import { EngineChannel, ENGINE_EVENTS } from '../engine/client';
 import { CANON_BUILD } from '../engine/canonical';
 import { DEFAULT_ANALYSIS, ANALYSIS_PRESETS, recommendationsFor, ENGINE_BUILD } from '../analysis/analyzer';
+import { playedLikeRecord } from '../analysis/playedLike';
+import { backfillPlayedLike as backfillPlayedLikeIn, recordPlayedLike as recordPlayedLikeIn } from '../storage/playedLikeStore';
 import { GRADING_ID } from '../analysis/methodology';
 import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/types';
 import type { GameRecord } from '../games/types';
@@ -94,6 +96,8 @@ export class AppServices {
     // Vault: first evaluation (and one-time backfill) after the first screen has rendered, off the boot path
     s.vault = new VaultService(s);
     setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)); }, 800);
+    // Played Like records for analysed games saved before v0.10 / before the current model (cheap, off the boot path)
+    setTimeout(() => { void s.backfillPlayedLike().catch(e => console.error('played like backfill', e)); }, 1200);
     return s;
   }
 
@@ -269,7 +273,10 @@ export class AppServices {
             },
           );
           if (!job.gameId.startsWith('wg:')) report.recommendations = recommendationsFor(report, game.humanColor);
+          // Played Like for both sides, persisted with the report (pure function of the analysed plies; cheap)
+          if (report.status === 'complete') report.playedLike = playedLikeRecord(report);
           await this.db.addReport(report, { ...running, status: report.status === 'complete' ? 'complete' : 'partial', progress: report.plies.length, reportId: report.id, updatedAt: new Date().toISOString() });
+          if (!job.gameId.startsWith('wg:') && report.status === 'complete') await this.recordPlayedLike(job.gameId).catch(e => console.error('played like record', e));
         } catch (e) {
           if ((e as Error).message === 'cancelled') return; // state already written by the canceller
           await this.db.putJob({ ...running, status: 'failed', error: (e as Error).message, updatedAt: new Date().toISOString() });
@@ -304,6 +311,23 @@ export class AppServices {
     const rec = this.fed ? await this.fed.closeForNewCareer(wipe) : await wipe();
     this.notify();
     return rec;
+  }
+
+  /** Store (or refresh) the permanent Played Like record of one of the player's finalized games (src/storage/playedLikeStore.ts). */
+  async recordPlayedLike(gameId: string): Promise<boolean> {
+    if (this.readOnly) return false;
+    const ok = await recordPlayedLikeIn(this.db, gameId);
+    if (ok) this.notify();
+    return ok;
+  }
+
+  /** Backfill for saves from before v0.10 (and after a model update): every finalized game whose analysis exists gets
+   *  its record for the current model. Games without analysis get one when their analysis completes. */
+  async backfillPlayedLike(): Promise<number> {
+    if (this.readOnly) return 0;
+    const n = await backfillPlayedLikeIn(this.db);
+    if (n) this.notify();
+    return n;
   }
 }
 

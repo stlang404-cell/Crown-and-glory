@@ -34,6 +34,13 @@ export interface CareerRecord {
   previousArchiveId?: string | null;
 }
 
+/**
+ * THE initial state of every new career — the only place it is defined. Used by a brand-new database
+ * (CrownDB.open, onupgradeneeded from version 0), by an old but empty database (CrownDB.loadCareer) and by Start New
+ * Career (src/app/career.ts → CrownDB.startNewCareer). Every pool of the career then starts from `ratingStart`
+ * (newPoolState(pool, ratingStart): r 0, RD 350, σ 0.06, 0 games, provisional). Anything else a new career starts
+ * with (e.g. a starting rank) should be added to this record here, so all three paths get it.
+ */
 export const newCareerRecord = (nowIso: string, previousArchiveId: string | null = null): CareerRecord => ({
   model: CAREER_MODEL, id: `career:${nowIso}:${Math.random().toString(36).slice(2, 8)}`, ratingStart: CAREER_START, origin: 'new', createdAt: nowIso, previousArchiveId,
 });

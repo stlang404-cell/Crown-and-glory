@@ -247,6 +247,19 @@ export class CrownDB {
     await done(tx);
   }
 
+  /** Played Like records (v0.10, additive field `playedLike` on finalized games): insert or replace the record of the
+   *  same model id. Only this metadata field is touched; the game's moves, result and checksum never change. */
+  async setPlayedLikeRecord(id: string, rec: import('../analysis/playedLikeRecords').PlayedLikeGameRecord): Promise<boolean> {
+    const tx = this.db.transaction('games', 'readwrite');
+    const s = tx.objectStore('games');
+    const g = (await req(s.get(id))) as GameRecord | undefined;
+    if (!g || g.status !== 'finalized') { await done(tx); return false; }
+    g.playedLike = [...(g.playedLike ?? []).filter(r => r.modelId !== rec.modelId), rec];
+    s.put(g);
+    await done(tx);
+    return true;
+  }
+
   /**
    * Atomically finalize a terminal game: game record (immutable afterwards), rating event + pool
    * state (rated games only) and the analysis intent. Idempotent: a second call returns the
