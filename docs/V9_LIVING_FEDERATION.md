@@ -1,6 +1,6 @@
 # v0.9.0 "The Living Federation" — release report
 
-Release: `release/crown-and-calculation-v0.9.0.zip` (source + prebuilt `dist` from the release commit; checksum in
+Release: `release/crown-and-calculation-v0.9.0.zip` (about 6.2 MB, 486 files: source at the commit that adds this report + the prebuilt `dist` of the gated commit 249f451, which differs only in docs; checksum in
 `release/SHA256SUMS.txt`). Screenshots and evidence logs live in the repository (`docs/screenshots/`, `docs/evidence/`),
 not in the ZIP. All browser checks ran in Chromium (Playwright) on a 4-core Linux VM at desktop and 390 px phone sizes.
 **Not tested on a physical iPhone, in Safari/WebKit, or on a Windows machine.** Everything below is measured, or marked
