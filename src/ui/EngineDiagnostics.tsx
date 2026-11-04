@@ -14,7 +14,7 @@ export function EngineDiagnostics() {
   useEffect(() => { const t = setInterval(() => setEvents([...ENGINE_EVENTS].slice(-12).reverse()), 1000); setEvents([...ENGINE_EVENTS].slice(-12).reverse()); return () => clearInterval(t); }, []);
   const rows: [string, string][] = [
     ['Rated and casual play (L1–L8)', `${LEVELS_ID}, node/time budgets per level`],
-    ['Sovereign Max (L9)', `best move only, 2^20 table, ${MAX_BUDGETS_S.join('/')} s (rated: ${MAX_RATED_BUDGET_S} s)`],
+    ['Sovereign Unbound (L9)', `best move only, 2^20 table, ${MAX_BUDGETS_S.join('/')} s (rated: ${MAX_RATED_BUDGET_S} s)`],
     ['Federation, spectator and sparring games', 'competitor profiles (node budgets)'],
     ['Move assistant and candidate moves', 'exact scores at the chosen depth'],
     ['Match Analysis and grading', `${GRADING_ID} · ${ACCURACY_ID}`],

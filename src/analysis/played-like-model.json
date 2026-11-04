@@ -1,0 +1,81 @@
+{
+ "id": "crown-played-like-1-experimental",
+ "status": "experimental: fitted on engine-vs-engine games only (L1\u2013L8, 800\u20132926 Crown scale); no human games",
+ "analysis": {
+  "engine": "crown-search-2+crown-eval-4",
+  "settings": "std-d7",
+  "grading": "crown-grade-v3-experimental"
+ },
+ "features": [
+  "intercept",
+  "ln(mean expected-score loss + 0.005)",
+  "share of moves losing >= 0.10",
+  "share of moves losing <= 0.005"
+ ],
+ "beta": [
+  496.368,
+  -18.827,
+  550.454,
+  448.706
+ ],
+ "eps": 0.005,
+ "bookPlies": 4,
+ "minMoves": 8,
+ "sd": {
+  "s0sq": 28505.4,
+  "s1sq": 0.0
+ },
+ "calibratedRange": [
+  800,
+  1122
+ ],
+ "validation": {
+  "heldOut": {
+   "n": 16,
+   "mae": 177,
+   "rmse": 182,
+   "r": -0.35,
+   "bias": -13,
+   "cover90": 1.0
+  },
+  "train": {
+   "n": 30,
+   "mae": 149,
+   "rmse": 155,
+   "r": 0.28,
+   "bias": 5,
+   "cover90": 1.0
+  },
+  "naiveAccuracyLine": {
+   "n": 16,
+   "mae": 155,
+   "rmse": 167,
+   "r": 0.129,
+   "bias": -38,
+   "cover90": null
+  },
+  "nullMean": {
+   "n": 16,
+   "mae": 161,
+   "rmse": 161,
+   "r": NaN,
+   "bias": 0,
+   "cover90": null
+  },
+  "heldOutByLevel": {
+   "crown-L1": {
+    "true": 800,
+    "meanPredicted": 964,
+    "n": 8
+   },
+   "crown-L2": {
+    "true": 1122,
+    "meanPredicted": 932,
+    "n": 8
+   }
+  },
+  "monotoneByLevel": false,
+  "excludedInsufficient": 4,
+  "samples": 50
+ }
+}

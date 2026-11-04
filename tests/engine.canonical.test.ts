@@ -79,7 +79,7 @@ describe('Sovereign Max', () => {
     expect(m.nodes).toBe(Infinity);
     expect(m.ttBits).toBe(20);
     expect(m.maxTimeMs).toBe(MAX_RATED_BUDGET_S * 1000);
-    expect(maxProfile(40).maxTimeMs).toBe(40_000);
+    expect(maxProfile(60).maxTimeMs).toBe(60_000);
     expect(maxProfile(7).maxTimeMs).toBe(MAX_RATED_BUDGET_S * 1000); // unknown budget → rated budget
   });
   it('partialRoot is used only by clock-limited levels; node-limited levels search exactly as before', () => {
@@ -99,9 +99,9 @@ describe('Sovereign Max', () => {
   it('the game snapshot records the exact configuration; only the rated budget carries a calibration', () => {
     const o = getOpponent('opp-sovereign')!;
     expect(ROSTER.some(x => x.level === MAX_LEVEL)).toBe(true);
-    const a = opponentSnapshot(o), b = opponentSnapshot(o, 40);
+    const a = opponentSnapshot(o), b = opponentSnapshot(o, 30);
     expect(a.engine!.config).toMatchObject({ build: CANON_BUILD, rules: RULES_FINGERPRINT, ttBits: 20, maxTimeMs: 10_000, selection: 'best' });
-    expect(b.engine!.config!.maxTimeMs).toBe(40_000);
+    expect(b.engine!.config!.maxTimeMs).toBe(30_000);
     expect(b.rating).toBeNull();
     expect(a.engine!.profile!.maxTimeMs).toBe(10_000);
   });

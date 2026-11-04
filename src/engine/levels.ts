@@ -25,7 +25,9 @@ import { mulberry32 } from '../rules/tables';
  */
 export const LEVELS_ID = 'crown-levels-5';
 /** Thinking budgets offered for Sovereign Max (seconds per move, upper bound; the clock can lower it). */
-export const MAX_BUDGETS_S = [5, 10, 20, 40] as const;
+export const MAX_BUDGETS_S = [1, 5, 10, 15, 30, 60] as const;
+/** Names shown for the budgets (targets, not strength guarantees: see docs/V8_SOVEREIGN_STANDARD.md). */
+export const MAX_BUDGET_NAMES: Record<number, string> = { 1: 'Fast', 5: 'Strong', 10: 'Rated', 15: 'Deep', 30: 'Unbound', 60: 'Unbound+' };
 /** Rated games against Sovereign Max always use this budget, so its measured strength stays meaningful. */
 export const MAX_RATED_BUDGET_S = 10;
 export const MAX_LEVEL = 9;
@@ -58,7 +60,7 @@ export const LEVELS: StrengthProfile[] = [
   { level: 6, id: 'L6', name: 'National', depth: 64, nodes: 4_000, maxTimeMs: 800, selection: null, description: 'Full search, 4k nodes per move.' },
   { level: 7, id: 'L7', name: 'Master', depth: 64, nodes: 30_000, maxTimeMs: 2_000, selection: null, description: 'Full search, 30k nodes per move.' },
   { level: 8, id: 'L8', name: 'Crown', depth: 64, nodes: Infinity, maxTimeMs: 6_000, selection: null, description: 'Full search limited only by the clock (up to 6 s per move).' },
-  { level: 9, id: 'L9', name: 'Sovereign Max', depth: 64, nodes: Infinity, maxTimeMs: MAX_RATED_BUDGET_S * 1000, selection: null, ttBits: 20, description: 'Strongest configuration: the canonical engine with no handicap, an 11.5 MB transposition table and your chosen thinking budget (rated games: 10 s per move).' },
+  { level: 9, id: 'L9', name: 'Sovereign Unbound', depth: 64, nodes: Infinity, maxTimeMs: MAX_RATED_BUDGET_S * 1000, selection: null, ttBits: 20, description: 'Strongest configuration: the canonical engine with no handicap, an 11.5 MB transposition table and your chosen thinking budget (rated games: 10 s per move).' },
 ];
 
 /** Sovereign Max with a chosen thinking budget (casual games may pick any offered budget). */

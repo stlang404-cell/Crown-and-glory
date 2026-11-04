@@ -5,7 +5,7 @@ import { Captured, Clock, KingAvatar, MatchHeader, MatchLayout, MoveNav, Notatio
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
 import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
-import { getLevel, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
+import { getLevel, MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
 import { CancelledError } from '../engine/client';
 import { GameSession, createGameRecord } from '../games/session';
 import { TIME_CONTROLS, TimeControlId, GameRecord, poolFor } from '../games/types';
@@ -51,7 +51,7 @@ export function PlayScreen() {
   const [pool, setPool] = useState<PoolState | null>(null);
   const [budget, setBudget] = useState<number>(MAX_RATED_BUDGET_S);
   const isMax = opp.level === MAX_LEVEL;
-  // Sovereign Max is calibrated only at its rated budget; other budgets are casual
+  // Sovereign Unbound is calibrated only at its rated budget; other budgets are casual
   const calibrated = levelRating(opp.level) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
   const ratedAllowed = calibrated && tc !== 'untimed';
 
@@ -146,9 +146,9 @@ export function PlayScreen() {
             <div data-testid="max-budget">
               <div className="small muted">Thinking Time per Move</div>
               <div className="seg" role="group" aria-label="Thinking budget">
-                {MAX_BUDGETS_S.map(b => <button key={b} aria-pressed={budget === b} onClick={() => setBudget(b)}>{b} s</button>)}
+                {MAX_BUDGETS_S.map(b => <button key={b} aria-pressed={budget === b} onClick={() => setBudget(b)} aria-label={`${b} s`}>{MAX_BUDGET_NAMES[b]} · {b} s</button>)}
               </div>
-              <div className="small muted" style={{ marginTop: 4 }}>The most Sovereign Max thinks per move. The clock can cut a move short but never extends it. Rated games use {MAX_RATED_BUDGET_S} s.</div>
+              <div className="small muted" style={{ marginTop: 4 }}>The most Sovereign Unbound thinks per move. The clock can cut a move short but never extends it. Rated games use {MAX_RATED_BUDGET_S} s.</div>
               <details className="small">
                 <summary>Details</summary>
                 <span className="muted">Engine: {maxProfile(budget).description.split(':')[0]} · crown-search-2 + crown-eval-4 · {(1 << (maxProfile(budget).ttBits ?? 18)) * 11 / 1048576 | 0} MB table · no random choices, no handicap.</span>
@@ -428,7 +428,9 @@ export function MatchScreen({ gameId }: { gameId: string }) {
 
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
   const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
-  const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move' : 'Opponent to Move';
+  const budgetMs = opp.engine?.config?.maxTimeMs;
+  const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
+    : thinking && opp.engine?.level === MAX_LEVEL && budgetMs ? `Thinking · up to ${budgetMs / 1000} s` : thinking ? 'Thinking…' : 'Opponent to Move';
 
   const board = (
     <>
