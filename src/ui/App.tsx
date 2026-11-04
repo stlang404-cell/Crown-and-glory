@@ -4,6 +4,8 @@ import { PieceDefs } from './Pieces';
 import { BrandMark } from './Portrait';
 import { PlayScreen, MatchScreen } from './PlayScreen';
 import { AnalysisScreen } from './AnalysisScreen';
+import { AnalysisPicker } from './AnalysisPicker';
+import { ScreenBoundary } from './ScreenBoundary';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
@@ -27,6 +29,7 @@ export type View =
   | { name: 'play' }
   | { name: 'match'; gameId: string }
   | { name: 'analysis'; gameId: string; ply?: number }
+  | { name: 'analyses' }
   | { name: 'library' }
   | { name: 'profile' }
   | { name: 'lab' }
@@ -61,6 +64,7 @@ function parseHash(): View {
   const [name, id, ply] = h.split('/');
   if (name === 'match' && id) return { name: 'match', gameId: decodeURIComponent(id) };
   if (name === 'analysis' && id) return { name: 'analysis', gameId: decodeURIComponent(id), ply: ply ? +ply : undefined };
+  if (name === 'analysis') return { name: 'analyses' };
   if (name === 'competitor' && id) return { name: 'competitor', id: decodeURIComponent(id) };
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
@@ -71,6 +75,7 @@ function parseHash(): View {
 function toHash(v: View): string {
   if (v.name === 'match') return `#/match/${encodeURIComponent(v.gameId)}`;
   if (v.name === 'analysis') return `#/analysis/${encodeURIComponent(v.gameId)}${v.ply !== undefined ? '/' + v.ply : ''}`;
+  if (v.name === 'analyses') return '#/analysis';
   if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
   if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
   return `#/${v.name}`;
@@ -82,6 +87,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'exchange', label: 'Exchange', icon: 'exchange' },
   { id: 'finance', label: 'Finance', icon: 'finance' },
   { id: 'library', label: 'Games', icon: 'library' },
+  { id: 'analyses', label: 'Analysis', icon: 'analysis' },
   { id: 'academy', label: 'Academy', icon: 'academy' },
   { id: 'profile', label: 'Career', icon: 'profile' },
   { id: 'rivals', label: 'Rivals', icon: 'rivals' },
@@ -91,7 +97,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 ];
 /** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the Federation/Career screens and the side rail. */
 const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'library', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -125,28 +131,31 @@ export function App({ services }: { services: AppServices }) {
         </nav>
         <main className="main" id="main">
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
-          {view.name === 'play' && <PlayScreen />}
-          {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
-          {view.name === 'analysis' && <AnalysisScreen key={view.gameId} gameId={view.gameId} initialPly={view.ply} />}
-          {view.name === 'library' && <LibraryScreen />}
-          {view.name === 'profile' && <ProfileScreen />}
-          {view.name === 'lab' && <LabScreen />}
-          {view.name === 'academy' && <AcademyScreen />}
-          {view.name === 'world' && <WorldScreen />}
-          {view.name === 'standings' && <StandingsScreen />}
-          {view.name === 'tournaments' && <TournamentsScreen />}
-          {view.name === 'competitors' && <CompetitorsScreen />}
-          {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
-          {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
-          {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
-          {view.name === 'finance' && <FinanceScreen />}
-          {view.name === 'forecasts' && <ForecastScreen />}
-          {view.name === 'news' && <NewsScreen />}
-          {view.name === 'rivals' && <RivalsScreen />}
-          {view.name === 'hall' && <HallScreen />}
-          {view.name === 'heraldry' && <HeraldryScreen />}
+          <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
+            {view.name === 'play' && <PlayScreen />}
+            {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
+            {view.name === 'analysis' && <AnalysisScreen key={view.gameId} gameId={view.gameId} initialPly={view.ply} />}
+            {view.name === 'library' && <LibraryScreen />}
+            {view.name === 'analyses' && <AnalysisPicker />}
+            {view.name === 'profile' && <ProfileScreen />}
+            {view.name === 'lab' && <LabScreen />}
+            {view.name === 'academy' && <AcademyScreen />}
+            {view.name === 'world' && <WorldScreen />}
+            {view.name === 'standings' && <StandingsScreen />}
+            {view.name === 'tournaments' && <TournamentsScreen />}
+            {view.name === 'competitors' && <CompetitorsScreen />}
+            {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
+            {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
+            {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
+            {view.name === 'finance' && <FinanceScreen />}
+            {view.name === 'forecasts' && <ForecastScreen />}
+            {view.name === 'news' && <NewsScreen />}
+            {view.name === 'rivals' && <RivalsScreen />}
+            {view.name === 'hall' && <HallScreen />}
+            {view.name === 'heraldry' && <HeraldryScreen />}
+          </ScreenBoundary>
           <CeremonyOverlay />
-          {view.name === 'settings' && <SettingsScreen />}
+          <ScreenBoundary key={'s' + toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>{view.name === 'settings' && <SettingsScreen />}</ScreenBoundary>
         </main>
         <nav className="tabbar" aria-label="Main">
           {NAV.filter(n => TABS.includes(n.id)).map(n => (

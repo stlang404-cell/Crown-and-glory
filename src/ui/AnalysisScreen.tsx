@@ -49,10 +49,16 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     services.notify();
   };
 
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'missing' | 'error'>('loading');
+  const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
     void (async () => {
-      const g = await services.db.getGame(gameId);
+      let g: GameRecord | undefined;
+      try { g = await services.db.getGame(gameId); }
+      catch (e) { setLoadError(String((e as Error)?.message ?? e)); setLoadState('error'); return; }
       setGame(g ?? null);
+      setLoadState(g ? 'ready' : 'missing');
+      if (!g) return;
       const reps = await services.reportsFor(gameId);
       setReports(reps);
       setReportIdx(i => (i < 0 || i >= reps.length ? reps.length - 1 : i));
@@ -85,7 +91,17 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     return () => clearTimeout(t);
   }, [auto, ply, total, speedIdx, variation]);
 
-  if (!game) return <p className="muted">Loading game…</p>;
+  if (loadState === 'error') return (
+    <div className="panel" role="alert" data-testid="analysis-load-error"><h2 style={{ marginTop: 0 }}>This game could not be loaded</h2>
+      <p>The saved game could not be read from this device's storage{loadError ? ` (${loadError})` : ''}. Reload the page to try again; your other games are not affected.</p>
+      <div className="row" style={{ gap: 8 }}><button className="btn primary" onClick={() => location.reload()}>Reload</button><button className="btn" onClick={() => go({ name: 'analyses' })}>All Games</button></div></div>
+  );
+  if (loadState === 'missing') return (
+    <div className="panel" data-testid="analysis-missing"><h2 style={{ marginTop: 0 }}>Game not found</h2>
+      <p>This game is not saved on this device. It may have been played in another browser, or the link is out of date.</p>
+      <button className="btn primary" onClick={() => go({ name: 'analyses' })}>Choose a Game</button></div>
+  );
+  if (!game) return <p className="muted" role="status" data-testid="analysis-loading">Loading game…</p>;
   const report = reports[reportIdx] ?? null;
   const live = services.progress?.gameId === gameId ? services.progress : null;
   const plies: PlyAnalysis[] = report?.plies ?? live?.partial ?? [];
@@ -300,7 +316,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   return (
     <div className="mc analysis-screen" onKeyDown={onKey} tabIndex={-1} style={{ outline: 'none' }}>
       <MatchHeader
-        back={{ label: '← Library', onClick: () => go({ name: 'library' }) }}
+        back={{ label: '← All Games', onClick: () => go({ name: 'analyses' }) }}
         kicker="Game Review"
         title={`${resultText(game)} vs ${opp.name}`}
         subtitle={game.context.eventName}
@@ -358,7 +374,7 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
             {ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
           <button className="btn small" disabled={reports.some(r => AppServices.isCurrent(r, preset))} onClick={() => void services.requestAnalysis(game.id, ANALYSIS_PRESETS.find(p => p.id === preset)!)}>
-            {reports.length ? 'Analyse Again' : status === 'cancelled' || status === 'failed' ? 'Retry Analysis' : 'Analyse'}
+            {reports.length ? 'Analyse Again' : status === 'cancelled' || status === 'failed' ? 'Retry Analysis' : 'Analyse Game'}
           </button>
         </div>
       )}
