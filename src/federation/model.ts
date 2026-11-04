@@ -66,6 +66,9 @@ export interface Competitor {
   fedTitle?: import('../heraldry/catalog').FedTitle | null;
   peakRating?: number;
   establishedPeak?: number;
+  /** v0.10: historical roster identity (src/federation/rosterPersonas.ts) — a fictional chess persona named after a
+   *  historical figure; absent for original competitors. The name field holds the persona's display name. */
+  persona?: string;
 }
 
 /** A pairing in a world round. result: 1 white win, 0.5 draw, 0 black win, null pending. */
