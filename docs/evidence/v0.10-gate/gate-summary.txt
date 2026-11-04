@@ -1,0 +1,27 @@
+gate at 31d7654 Arena replays show Played Like for both sides once the Match Analysis exists
+TSC-OK
+ Test Files  62 passed (62)
+      Tests  581 passed (581)
+✓ built in 4.36s
+Release check passed: Crown & Calculation version 0.9.0 · commit 31d7654 · built 2026-11-04T16:55:18.621Z · 11 precached files verified
+run exit 0 :: 1 pass / 0 fail :: [2026-11-04T16:55:35.166Z] PASS: rated-game acceptance journey completed (Gate G)
+offline exit 0 :: 1 pass / 0 fail :: PASS: offline play works in Chromium
+analysis-journey exit 0 :: 16 pass / 0 fail :: [2026-11-04T16:55:59.093Z] ALL CHECKS PASSED
+nav-audit exit 0 :: 6 pass / 0 fail :: [2026-11-04T16:56:58.332Z] ALL CHECKS PASSED
+motion-sound exit 0 :: 11 pass / 0 fail :: [2026-11-04T16:57:24.459Z] ALL CHECKS PASSED
+motion-extra exit 0 :: 9 pass / 0 fail :: [2026-11-04T16:57:34.302Z] ALL CHECKS PASSED
+quick-match exit 0 :: 10 pass / 0 fail :: [2026-11-04T16:57:42.623Z] ALL CHECKS PASSED
+vault exit 0 :: 11 pass / 0 fail :: [2026-11-04T16:58:00.511Z] ALL CHECKS PASSED
+grimoire exit 0 :: 1 pass / 0 fail :: PASS: Grimoire journey
+dashboard exit 0 :: 11 pass / 0 fail :: [2026-11-04T16:58:26.732Z] ALL CHECKS PASSED
+practice exit 0 :: 1 pass / 0 fail :: PASS practice journey
+academy exit 0 :: 1 pass / 0 fail :: PASS: Academy journey
+replay-center exit 0 :: 17 pass / 0 fail :: [2026-11-04T16:59:39.921Z] REPLAY CENTER JOURNEY: 17/17 checks passed
+market-integrity exit 0 :: 10 pass / 0 fail :: [2026-11-04T16:59:45.239Z] ALL CHECKS PASSED
+population exit 0 :: 11 pass / 0 fail :: ALL CHECKS PASSED
+m6-arena exit 0 :: [2026-11-04T17:01:43.525Z] M6 ARENA JOURNEY: 11/11 steps passed
+v5 exit 0 :: [2026-11-04T17:04:16.660Z] v0.5 JOURNEY: 20/20 steps passed
+pages-check exit 0 :: [2026-11-04T17:05:00.354Z] ALL CHECKS PASSED
+GATE10-DONE
+
+[exited with code 0]
