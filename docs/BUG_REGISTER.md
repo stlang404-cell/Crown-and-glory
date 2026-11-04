@@ -1,6 +1,6 @@
 # Bug-fix register
 
-Defects found while verifying v0.5 → v0.7 ("Grandmaster Polish"), with severity, root cause, fix and evidence.
+Defects found while verifying v0.5 → v0.8, with severity, root cause, fix and evidence.
 Severity: **High** = wrong results, lost data or money, or a blocked core flow; **Medium** = wrong or misleading
 behaviour with a workaround; **Low** = presentation.
 
@@ -17,6 +17,10 @@ behaviour with a workaround; **Low** = presentation.
 | 9 | Low | Copy | Internal identifiers (engine builds, grading ids, calibration ids, market revisions, policy ids) and developer wording on gameplay screens; mixed capitalisation. | Development-era text. | Edited to docs/STYLE_GUIDE.md; technical detail moved to Details / Settings → Advanced. | Before/after screenshots. |
 | 10 | Low | Copy | Opponent bio said L7 used "one million nodes" (it uses 30,000). | Stale text. | Corrected. | `src/federation/roster.ts`. |
 | 11 | Low | Test harness | Async predicates in `waitForFunction` did not wait; a stale server from a crashed run could be tested instead of the new build; ceremonies blocked an older journey. | Harness assumptions. | Polling helper; journeys refuse a pre-existing server; older journey dismisses ceremonies like a player. | Journeys pass on the final build. |
+| 12 | **Critical** | Analysis | Clicking **View Analysis** (or a game in Games) showed an empty page; the whole app went blank until reload. Player-reported. | Reproduced in Chromium on the pre-fix build (87fb2f1): React error #310 "Rendered more hooks than during the previous render". The v0.8 replay-autoplay `useState`/`useEffect` were declared after `AnalysisScreen`'s "Loading game…" early return, so the render after the game loaded ran more hooks than the first; with no error boundary React unmounted the entire app. Introduced in v0.8 development, after the last journey run. | Hooks moved above the early return; `react-hooks/rules-of-hooks` lint enforced by a vitest test (shown to flag the original file); `ScreenBoundary` contains any future render failure to one screen with Reload / Back to Play; "Game not found" and load-failure states replace endless loading; Analysis added to the navigation with a game picker, empty state and Analyse Game action. | `e2e/analysis-journey.mjs` 12/12; `tests/hooks.lint.test.ts`. |
+| 13 | Medium | Analysis | A bare `#/analysis` link silently opened Play; there was no way to reach Analysis without first finding a game. | No route or navigation entry for Analysis without a game id. | `#/analysis` opens the game picker; Analysis in the side rail. | `e2e/analysis-journey.mjs` step 1. |
+| 14 | Medium | Board | Stepping back in a replay animated the *previous* move forward; a dragged piece snapped back and slid again; captured pieces vanished instantly. | Animation keyed on `lastMove` (remount with a CSS offset), not on what actually changed. | Transition detection from the previous and new boards (`boardMotion.ts`), Web Animations on the moved piece, capture ghost, drop-aware. | `tests/boardMotion.test.ts`; `e2e/motion-sound.mjs`. |
+| 15 | Medium | Board (found while testing) | An engine reply arriving within ~120 ms of the player's move appeared instantly and silently and cut the player's own slide short. | The replay "rapid scrubbing" rule also applied to live games. | Live boards queue one reply behind the current slide (`fill: backwards`); only a longer backlog is drawn instantly. | `e2e/motion-sound.mjs` step 2–3: 20/20 plies slide and sound. |
 
 Not reproduced in this pass (searched for, none found): illegal engine moves (0 in the ~650 benchmark games and all journey games
 run in this pass), incorrect promotions, duplicate rewards or ceremonies, negative balances, ledger imbalance (every simulated
