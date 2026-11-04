@@ -22,6 +22,19 @@ engine, recalibrated analysis, LMSR markets) and changes none of it. Features na
 Desktop (≥ 1180 px) shows all three columns together; tablets two columns; phones keep the board on top with
 tabs for Moves & eval / Market / Portfolio.
 
+**v0.10 Live Match Center** (docs/V10_PLAN.md Decision 3): an evaluation bar beside the board (the *published*
+evaluation of the shown move while the market can trade; the Match Analysis evaluation after settlement; never a
+market probability), a context strip (names, ratings, score or move number, thinking clocks, W/D/B prices, current
+evaluation), the model forecast labelled as such, match events, turning points, tournament context and Grimoire
+links. Between 760 and 1180 px the Trade column (market and portfolio) sits beside the board. Phones (≤ 700 px) use
+the tabs **Board · Analysis · Trade** with the context strip and the tabs kept at the top while the page scrolls
+(page scroll only, no inner scroll box). A recorded game replays with play/pause, speed, step, jump and flip; the
+*recorded* price points, the trades in each move's window, the player's holdings, value at the recorded prices,
+and the recorded settlement are synchronised to the replay ply (`src/app/replay.ts`; a ply without a published
+point shows the latest earlier point, labelled with its move; nothing is reconstructed). The branching sandbox
+(engine help on the sandbox position) opens only after the market is settled or cancelled, and never changes the
+recorded game. Journey: `e2e/replay-center.mjs`.
+
 ## Information policy (crown-arena-policy-1)
 
 1. **Public live-match information** — published moves, public profiles, thinking time.

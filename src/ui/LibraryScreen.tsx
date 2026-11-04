@@ -104,6 +104,7 @@ export function LibraryScreen() {
         <h1 style={{ margin: 0 }}>Chess Library</h1>
         <span className="chip">{rows.length} Games</span>
         <span className="spacer" />
+        <button className="btn small primary" onClick={() => go({ name: 'replays' })} data-testid="open-replays">Replay Library</button>
         <select value={batch} onChange={e => setBatch(e.target.value)} aria-label="Batch analysis settings">{ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
         <button className="btn small" disabled={services.readOnly} onClick={async () => { const n = await services.batchReanalyze(ANALYSIS_PRESETS.find(p => p.id === batch)!); setMsg(n ? `Queued ${n} game(s) for analysis. Earlier analyses are kept.` : 'Every finished game already has a complete analysis with these settings.'); }}>Analyse All</button>
         {services.progress && <button className="btn small" onClick={() => void services.cancelAllAnalysis()}>Cancel Analysis</button>}
