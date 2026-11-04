@@ -14,7 +14,7 @@ import { MICRO, Books, type Journal } from '../src/exchange/ledger';
 import { hashSeed } from '../src/federation/generator';
 import {
   ADMIN, ESTATES, FACILITIES, HARDSHIP, LOAN, SPONSOR, SPONSOR_TIERS, emptyWealth, estateBuyJournal, facilityBuildJournal, loanDrawJournal, loanRepayJournal,
-  sponsorMultiplier, sponsorshipSettleJournals, sponsorshipStakeJournal, wealthAppealParts, wealthOf, hardshipJournal,
+  sponsorMultiplier, sponsorshipSettleJournals, sponsorshipStakeJournal, wealthAppealParts, wealthOf, hardshipJournal, TREASURY_CEILING,
 } from '../src/economy/wealth';
 import { lifetimeStats } from '../src/economy/stats';
 import { playerClubAppeal } from '../src/app/heraldry';
@@ -170,6 +170,7 @@ describe('wealth service flows', () => {
     const returns = done.reduce((a, s) => a + (s.ret ?? 0), 0);
     expect(returns).toBeLessThanOrEqual(1_200 * MICRO * SPONSOR.returnBudgetShare);
     expect(w.reputation).toBe(50 + 2 * SPONSOR.reputation);
+    expect(svc.balance('treasury')).toBeLessThanOrEqual(TREASURY_CEILING); // idle federation money above the ceiling is retired
     expect(svc.balance('player:cash')).toBeGreaterThanOrEqual(cash0 - 0); // returns only add cash at settlement
     db.close();
   }, 120_000);
