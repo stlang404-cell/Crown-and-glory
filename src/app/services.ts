@@ -16,7 +16,8 @@ import { VaultService } from '../vault/service';
 import { LiveScheduler, detectDevice, loadLiveSettings, poolSizeFor, saveLiveSettings, type LiveSettings } from './scheduler';
 import { START_FEN } from './schedulerEngine';
 
-export const APP_VERSION = '0.8.0';
+/** The release version, from the build identity (package.json); '0.0.0-dev' only outside a Vite build. */
+export const APP_VERSION: string = typeof __BUILD__ !== 'undefined' ? __BUILD__.version : '0.0.0-dev';
 
 type Listener = () => void;
 
