@@ -49,7 +49,7 @@ export const CONFIDENCE_LABEL: Record<PlayedLikeConfidence, string> = {
 
 /** Build the record for a player's game from its report (null when there is nothing to record yet). */
 export function buildPlayedLikeRecord(game: GameRecord, report: AnalysisReport | null, event: RatingEvent | null, nowIso = new Date().toISOString()): PlayedLikeGameRecord | null {
-  if (!report || report.status !== 'complete' || game.status !== 'finalized') return null;
+  if (!report || report.status !== 'complete' || game.status !== 'finalized' || game.id.startsWith('exh:') || report.gameId.startsWith('exh:')) return null;
   const pov = game.humanColor;
   const estimate = playedLike(report, pov);
   if (estimate.status === 'pending') return null;
@@ -70,7 +70,8 @@ export function upsertRecord(list: PlayedLikeGameRecord[] | undefined, rec: Play
 
 /** Does the game need a (new) record for the current model from these reports? */
 export function needsRecord(game: GameRecord, reports: AnalysisReport[]): AnalysisReport | null {
-  if (game.status !== 'finalized') return null;
+  // v0.11: unofficial exhibitions (id "exh:…", src/app/exhibition.ts) never get a permanent record
+  if (game.status !== 'finalized' || game.id.startsWith('exh:')) return null;
   const rep = reportForPlayedLike(reports);
   if (!rep) return null;
   const have = (game.playedLike ?? []).find(r => r.modelId === PLAYED_LIKE_ID);

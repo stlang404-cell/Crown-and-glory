@@ -18,6 +18,7 @@ import { FederationService } from './federation';
 import { VaultService } from '../vault/service';
 import { LiveScheduler, detectDevice, loadLiveSettings, poolSizeFor, saveLiveSettings, type LiveSettings } from './scheduler';
 import { START_FEN } from './schedulerEngine';
+import { ExhibitionRunner, isExhibitionId, loadExhibition, saveExhibitionReport } from './exhibition';
 
 /** The release version, from the build identity (package.json); '0.0.0-dev' only outside a Vite build. */
 export const APP_VERSION: string = typeof __BUILD__ !== 'undefined' ? __BUILD__.version : '0.0.0-dev';
@@ -44,6 +45,21 @@ export class AppServices {
   liveSettings: LiveSettings = loadLiveSettings(this.device);
   readonly livePool = Array.from({ length: poolSizeFor(this.device) }, (_, i) => new EngineChannel(undefined, `live-${i}`));
   live!: LiveScheduler;
+  /** v0.11 Exhibition Arena: one unofficial AI-vs-AI exhibition at a time, on its own engine worker (src/app/exhibition.ts). */
+  readonly exhibitionEngine = new EngineChannel(undefined, 'exhibition');
+  readonly exhibitions: ExhibitionRunner;
+  private makeExhibitions(): ExhibitionRunner { return new ExhibitionRunner({
+    db: this.db,
+    compute: req => this.exhibitionEngine.move({ initialFen: START_FEN, moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
+      .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs })),
+    cancel: () => this.exhibitionEngine.cancel(),
+    now: () => new Date().toISOString(),
+    onChange: () => this.notify(),
+    onFinished: g => { void this.requestExhibitionAnalysis(g.id).catch(e => console.error('exhibition analysis', e)); },
+    // phones run one scheduled-game worker: it pauses while an exhibition computes (mobile limits)
+    onBusy: busy => { if (this.live && this.device.mobile) { if (busy) this.live.pause('exhibition'); else this.live.resume('exhibition'); } },
+    readOnly: () => this.readOnly,
+  }); }
   /** The Sovereign Vault (permanent collectibles), evaluated from saved records after boot. */
   vault!: VaultService;
   private listeners = new Set<Listener>();
@@ -53,7 +69,7 @@ export class AppServices {
   private processing = false;
   revision = 0;
 
-  constructor(readonly db: CrownDB) {}
+  constructor(readonly db: CrownDB) { this.exhibitions = this.makeExhibitions(); }
   /** Engine job log (diagnostics, e2e inspection). */
   engineEvents() { return [...ENGINE_EVENTS]; }
 
@@ -85,7 +101,7 @@ export class AppServices {
     if (!s.readOnly && typeof document !== 'undefined') {
       setTimeout(() => { void s.live.start(); }, 1500);
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) s.live.pause('hidden');
+        if (document.hidden) { s.live.pause('hidden'); s.exhibitions.pause(); }
         else { s.live.resume('hidden'); void s.live.catchUp().catch(e => console.error('live catch-up', e)); }
       });
     }
@@ -176,6 +192,31 @@ export class AppServices {
     void this.processQueue();
     return 'queued';
   }
+  /**
+   * Match Analysis of a finished exhibition: the standard queue and settings (DEFAULT_ANALYSIS, canonical engine), as
+   * for official games. The report is kept with the exhibition (meta `exhrep:<id>`), never in the `reports` store, so
+   * no career record, Vault fact or Played Like history can read it.
+   */
+  async requestExhibitionAnalysis(id: string, settings: AnalysisSettings = DEFAULT_ANALYSIS): Promise<'queued' | 'exists' | 'missing' | 'unfinished'> {
+    if (this.readOnly) return 'missing';
+    const g = await loadExhibition(this.db, id);
+    if (!g) return 'missing';
+    if (g.status !== 'finished' || !g.checksum) return 'unfinished';
+    const jid = AppServices.jobId(id, settings.id);
+    const existing = await this.db.getJob(jid);
+    if (existing && (existing.status === 'complete' || existing.status === 'running' || existing.status === 'queued')) return 'exists';
+    const now = new Date().toISOString();
+    await this.db.putJob({ id: jid, gameId: id, settingsId: settings.id, status: 'queued', createdAt: now, updatedAt: now, progress: 0, total: g.moves.length, generation: (existing?.generation ?? 0) + 1 });
+    this.notify();
+    void this.processQueue();
+    return 'queued';
+  }
+  private async exhibitionAsRecord(id: string): Promise<(Pick<GameRecord, 'id' | 'initialFen' | 'setupMoves' | 'humanColor' | 'checksum'> & { moves: { ccn: string }[] }) | null> {
+    const g = await loadExhibition(this.db, id);
+    if (!g || g.status !== 'finished') return null;
+    return { id: g.id, initialFen: g.initialFen, setupMoves: undefined, humanColor: 'white', checksum: g.checksum, moves: g.moves };
+  }
+
   /** A recorded federation engine game in the shape the analysis queue needs (checksum over the move record). */
   private async worldGameAsRecord(gid: string): Promise<(Pick<GameRecord, 'id' | 'initialFen' | 'setupMoves' | 'humanColor' | 'checksum'> & { moves: { ccn: string }[] }) | null> {
     const wg = await this.fed.worldGame(gid);
@@ -230,6 +271,7 @@ export class AppServices {
     this.matchActive = active;
     // your own game has the CPU: scheduled games pause while it is on the board
     if (this.live) { if (active) this.live.pause('match'); else this.live.resume('match'); }
+    if (active) this.exhibitions.pause();
     if (active && this.progress) {
       // Foreground play has priority: pause (cancel and re-queue) background analysis.
       const p = this.progress;
@@ -249,7 +291,8 @@ export class AppServices {
         const jobs = (await this.db.allJobs()).filter(j => j.status === 'queued').sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const job = jobs[0];
         if (!job) return;
-        const game = job.gameId.startsWith('wg:') ? await this.worldGameAsRecord(job.gameId) : await this.db.getGame(job.gameId);
+        const exh = isExhibitionId(job.gameId);
+        const game = job.gameId.startsWith('wg:') ? await this.worldGameAsRecord(job.gameId) : exh ? await this.exhibitionAsRecord(job.gameId) : await this.db.getGame(job.gameId);
         const settings = ANALYSIS_PRESETS.find(s => s.id === job.settingsId);
         if (!game || !settings || !game.checksum) {
           await this.db.putJob({ ...job, status: 'failed', error: 'The game or its analysis settings could not be found.', updatedAt: new Date().toISOString() });
@@ -268,6 +311,14 @@ export class AppServices {
               this.notify();
             },
           );
+          if (exh) {
+            // exhibitions: the report (with its Played Like for both sides) stays with the exhibition — never in
+            // `reports` and never a permanent Played Like record (isolation from career records)
+            if (report.status === 'complete') report.playedLike = playedLikeRecord(report);
+            await saveExhibitionReport(this.db, report);
+            await this.db.putJob({ ...running, status: report.status === 'complete' ? 'complete' : 'partial', progress: report.plies.length, reportId: report.id, updatedAt: new Date().toISOString() });
+            continue;
+          }
           if (!job.gameId.startsWith('wg:')) report.recommendations = recommendationsFor(report, game.humanColor);
           // Played Like for both sides, persisted with the report (pure function of the analysed plies; cheap)
           if (report.status === 'complete') report.playedLike = playedLikeRecord(report);
