@@ -39,3 +39,18 @@
   .legacy-header { padding-top: 10px; }
   .legacy-header .id-stats.open .legacy-trophies, .legacy-header .id-stats.open .legacy-showcase { flex-basis: 100%; }
 }
+/* feudal rank (package P via src/legacy/ranks.ts) in the header and the Dashboard / Profile headings */
+.legacy-header .id-rank { font-family: var(--display); font-size: var(--fs-lg); }
+.legacy-header .id-title-sub { font-size: var(--fs-sm); color: var(--muted); }
+.legacy-header .id-compact { display: none; font-size: var(--fs-xs); color: var(--muted); overflow-wrap: anywhere; }
+.rank-heading { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; min-width: 0; }
+.rank-heading-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.rank-heading-name { font-family: var(--display); font-size: var(--fs-xl); }
+.rank-heading-meta { font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.rank-heading-elo .elo { font-weight: 600; }
+.career-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--sp-3); }
+@media (max-width: 700px) {
+  .legacy-header .id-compact { display: block; }
+  .legacy-header .id-who { min-width: 0; }
+  .rank-heading-name { font-size: var(--fs-lg); }
+}

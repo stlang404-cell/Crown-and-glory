@@ -84,7 +84,7 @@ export function HallScreen() {
       <div className="grid-2" style={{ marginTop: 14 }}>
         <section className="panel" data-testid="hall-events">
           <h3>Event Champions</h3>
-          <ul className="small" style={{ maxHeight: 360, overflow: 'auto', paddingLeft: 0, listStyle: 'none' }}>
+          <ul className="small" style={{ paddingLeft: 0, listStyle: 'none' }}>
             {data.events.slice(0, 60).map((e, i) => <li key={i} className="row" style={{ gap: 6 }}><Trophy kind={TROPHY_FOR[titleKind(e.title)]} size="sm" title={e.title} /> S{e.season} · {e.title.replace(/ S\d+$/, '')}: <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => e.id !== PLAYER_ID && go({ name: 'competitor', id: e.id })}>{e.name}</button></li>)}
           </ul>
         </section>

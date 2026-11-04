@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { RankHeading } from './RankHeading';
 import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { QuickMatch } from './QuickMatch';
@@ -187,6 +188,7 @@ export function DashboardScreen() {
       <div className="dash-head">
         <div>
           <h1 style={{ margin: 0 }}>Dashboard</h1>
+          <RankHeading />
           <div className="small muted" data-testid="dash-season">{w ? `Season ${w.season} · Round ${w.round}/${ROUNDS_PER_SEASON} · ${phase(w.round)}` : 'The Federation has not been founded yet'}</div>
         </div>
         <span className="spacer" />

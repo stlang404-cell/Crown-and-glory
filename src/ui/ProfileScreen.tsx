@@ -23,6 +23,7 @@ import { TROPHY_FOR } from '../heraldry/catalog';
 import { titleKind } from './HallScreen';
 import { Elo, RatingChangeLine } from './CareerElo';
 import { LegacyCustomise } from './TrophyHall';
+import { CareerStatistics, RankHeading } from './RankHeading';
 import { CAREER_ELO_NOTE, displayCareerElo, fmtCareerElo, fmtInt, ratingChange } from '../ratings/display';
 
 const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
@@ -83,6 +84,8 @@ export function ProfileScreen() {
     <div>
       <PassportBanner />
       <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Career Passport</h1><span className="spacer" /><button className="btn small" data-testid="open-vault" onClick={() => go({ name: 'vault' })}><Icon name="vault" /> Open the Vault</button></div>
+      <RankHeading />
+      <div style={{ height: 12 }} />
       <div className="seg" role="group" aria-label="Rating Pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
@@ -100,6 +103,7 @@ export function ProfileScreen() {
         <p className="small muted">Career Elo is your Glicko-2 rating on the Crown scale (engine level L1 = 800), not a FIDE rating. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
         <details className="small muted"><summary>Details</summary>Glicko-2: start 1500 ±350, τ = 0.5, one rated game per rating period. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.</details>
       </div>
+      <CareerStatistics events={events} />
       <InsigniaCollection events={events.filter(e => e.pool === 'rapid')} />
       <LegacyCustomise />
       <div className="grid-2" style={{ marginTop: 14 }}>
