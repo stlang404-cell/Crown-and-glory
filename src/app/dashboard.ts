@@ -11,7 +11,8 @@ import { claimPrices, claimsOf, liquidationValue, statesOf, type Market, type Po
 import { prices } from '../exchange/lmsr';
 import type { RatingEvent } from '../ratings/ledger';
 import type { PoolId } from '../games/types';
-import { CHALLENGER_POOL, CHAMP_POOL, OPEN_POOL } from '../economy/economy';
+import { CHALLENGER_POOL, CHAMP_POOL, OPEN_POOL, cupPool } from '../economy/economy';
+import { koTitle } from '../federation/competitions';
 import { earnable, type EvalResult, type VaultDef } from '../vault/catalog';
 import type { UnlockRecord } from '../vault/store';
 import { DEFAULT_PLAN, GRIMOIRE_INDEX, dailyPlan, dueReviews, indexChapters, type GrimProgress, type GrimoireIndex } from '../academy/grimoire';
@@ -22,7 +23,7 @@ const PLAYER_CASH = 'player:cash';
 /** The parts of the federation state the dashboard reads (FedState satisfies it). */
 export interface DashFedState {
   world: { season: number; round: number };
-  plan: { swiss: SwissState[]; champ: KoState | null; club: KoState | null };
+  plan: { swiss: SwissState[]; champ: KoState | null; club: KoState | null; cups?: KoState[] };
   competitors: ReadonlyMap<string, { name: string; rating: number; rd: number }>;
   markets: ReadonlyMap<string, Market>;
   positions: ReadonlyMap<string, Position>;
@@ -75,7 +76,8 @@ export function featuredMarketForChart(st: DashFedState, featured: readonly Fixt
 // ---------------------------------------------------------------- tournaments
 export type EventStatus = 'upcoming' | 'in-progress' | 'finished';
 export interface DashEvent {
-  id: 'open' | 'challenger' | 'champ' | 'club'; name: string; status: EventStatus; progress: string;
+  /** 'open' | 'challenger' | 'champ' | 'club', or a crown-competition-2 knockout id (zonal-<z>, cup-<r>). */
+  id: string; name: string; status: EventStatus; progress: string;
   leaders: { id: string; name: string; points: number | null }[]; prize: number | null; playerIn: boolean; champions: string[];
 }
 type Game = { event: string; white: string; black: string; result: number | null };
@@ -85,7 +87,7 @@ function koAlive(ko: KoState): string[] {
   for (const sg of ko.stages) for (const m of sg.matches) { if (m.winner && m.winner !== m.a) out.add(m.a); if (m.winner && m.winner !== m.b) out.add(m.b); }
   return ko.qualifiers.filter(id => !out.has(id)).sort((a, b) => (ko.seeds[a] ?? 99) - (ko.seeds[b] ?? 99));
 }
-function koEvent(id: 'champ' | 'club', ko: KoState, st: DashFedState, round: number, prize: number | null): DashEvent {
+function koEvent(id: string, ko: KoState, st: DashFedState, round: number, prize: number | null): DashEvent {
   const stage = ko.stages.find(sg => sg.round === round) ?? [...ko.stages].reverse().find(sg => sg.matches.length > 0) ?? null;
   const done = ko.champions.length > 0;
   const alive = done ? ko.champions : koAlive(ko);
@@ -114,6 +116,8 @@ export function tournamentEvents(st: DashFedState, games: readonly Game[]): Dash
   if (st.plan.champ) out.push(koEvent('champ', st.plan.champ, st, round, CHAMP_POOL));
   else out.push({ id: 'champ', name: 'Crown Championship', status: 'upcoming', progress: 'Bracket drawn after league round 15', leaders: [], prize: CHAMP_POOL, playerIn: false, champions: [] });
   if (st.plan.club) out.push(koEvent('club', st.plan.club, st, round, null));
+  // v0.11 crown-competition-2: the Zonal Championship / Regional Cup the player is in
+  for (const ko of st.plan.cups ?? []) if (ko.qualifiers.includes(PLAYER_ID)) out.push({ ...koEvent(ko.name, ko, st, round, cupPool(ko.name)), name: koTitle(ko) });
   return out;
 }
 

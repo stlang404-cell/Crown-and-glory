@@ -536,7 +536,7 @@ export class FederationService {
    *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
    *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
    *  Not a league fixture: standings, prize pools and markets are untouched. */
-  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number }): Promise<GameRecord> {
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean }): Promise<GameRecord> {
     const c = this.state?.competitors.get(competitorId);
     if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
     const profile = profileForStrength(c.latent);
@@ -552,7 +552,8 @@ export class FederationService {
       human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
       engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
-      context: { kind: 'quick-match', eventName: `Quick Match vs ${c.name}` },
+      // v0.11 rivalry challenges / rematches are ordinary Quick Matches with their own label (src/app/rivalries.ts)
+      context: { kind: 'quick-match', eventName: opts.challenge ? `Rivalry Challenge vs ${c.name}` : `Quick Match vs ${c.name}` },
     });
   }
 
