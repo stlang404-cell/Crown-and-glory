@@ -24,6 +24,8 @@ const PLAYER = 'player';
 export interface FedInput {
   world: Pick<WorldState, 'season' | 'round' | 'player' | 'featured'>;
   plans: Map<string, SeasonPlan>;
+  /** The current season's plan (FederationService keeps it fresher than the `plans` map). */
+  plan?: SeasonPlan;
   rounds: Map<string, RoundRecord>;
   competitors: Map<string, Pick<Competitor, 'id' | 'region' | 'name'>>;
   markets: Map<string, Market>;
@@ -180,7 +182,9 @@ export function fedFacts(fed: FedInput, netWorthNow: number | null): FedFacts {
   const roundsOf = (s: number) => rounds.filter(r => r.season === s);
   const done = (pl: SeasonPlan) => pl.status === 'complete' || pl.season < fed.world.season;
   const swissEntries: FedFacts['swissEntries'] = [], swissPlaces: FedFacts['swissPlaces'] = [], koAppearances: FedFacts['koAppearances'] = [], clubWins: number[] = [];
-  for (const pl of fed.plans.values()) {
+  const plans = new Map(fed.plans);
+  if (fed.plan) plans.set(fed.plan.id, fed.plan);
+  for (const pl of plans.values()) {
     for (const sw of pl.swiss) {
       if (!sw.entrants.includes(PLAYER)) continue;
       swissEntries.push({ season: pl.season, event: sw.event });

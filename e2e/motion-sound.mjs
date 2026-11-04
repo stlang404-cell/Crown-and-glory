@@ -71,7 +71,7 @@ await page.locator('[data-testid="piece-speed"]').getByRole('button', { name: 'N
 // 2. play a game: slides, sounds, no duplicated/missing pieces
 await page.goto(url + '#/play');
 await page.getByRole('button', { name: /Mira Vell/ }).click();
-await page.getByRole('button', { name: 'Casual', exact: true }).click();
+await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Casual', exact: true }).click();
 await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');

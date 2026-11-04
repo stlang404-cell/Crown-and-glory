@@ -177,7 +177,7 @@ const SPECS: Spec[] = [
     ev: f => { const n = regionsBeaten(f.games.filter(g => g.quickMatch)).size; return count(n, 8, `${n} regions beaten in Quick Matches`); } },
 
   // ---------------------------------------------------------------- E. Tournaments
-  { id: 'event-first', name: 'First Entry', c: 'Tournaments', r: 'common', charge: 'gate', field: 'bronze', d: 'Enter a Swiss event.', rule: 'Take part in the Federation Open or the Challenger Open.',
+  { id: 'event-first', name: 'First Entry', c: 'Tournaments', r: 'common', charge: 'gate', field: 'bronze', d: 'Enter a Swiss event.', rule: 'Enter the Federation Open or the Challenger Open (qualifying or registering both count).',
     ev: f => { const e = f.fed?.swissEntries[0]; return hit(!!e, e && `Season ${e.season}: ${e.event === 'open' ? 'Federation Open' : 'Challenger Open'}`); } },
   { id: 'swiss-podium', name: 'Swiss Laurel', c: 'Tournaments', r: 'rare', charge: 'laurel', field: 'azure', d: 'Finish on a Swiss podium.', rule: 'Finish in the top three of a completed Federation Open or Challenger Open.',
     ev: f => { const p = f.fed?.swissPlaces.find(x => x.place <= 3); return hit(!!p, p && `${p.name}, season ${p.season}: place ${p.place}`); } },

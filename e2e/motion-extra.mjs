@@ -44,7 +44,7 @@ const motion = () => page.evaluate(() => window.__motion);
 
 // ---------- A. promotion with check ----------
 await page.getByRole('button', { name: /Mira Vell/ }).click();
-await page.getByRole('button', { name: 'Casual', exact: true }).click();
+await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Casual', exact: true }).click();
 await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');

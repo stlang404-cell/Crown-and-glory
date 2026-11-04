@@ -45,7 +45,7 @@ check(2, (await page.locator('[data-testid="analysis-missing"]').count()) === 1,
 async function playAndResign(myMoves) {
   await page.goto(url + '#/play');
   await page.getByRole('button', { name: /Mira Vell/ }).click();
-  await page.getByRole('button', { name: 'Casual', exact: true }).click();
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Casual', exact: true }).click();
   await page.getByRole('button', { name: /Start match/i }).click();
   await page.waitForSelector('[data-testid="match"]');
   for (let i = 0; i < myMoves; i++) {

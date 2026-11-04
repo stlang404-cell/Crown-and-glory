@@ -83,7 +83,7 @@ if (OLD_DIST) {
   step(`v0.2.0 build served from ${OLD_DIST}`);
   await page.getByRole('button', { name: /Mira Vell/ }).click();
   await page.getByRole('button', { name: 'Rapid 5+3' }).click();
-  await page.getByRole('button', { name: 'Rated', exact: true }).click();
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Rated', exact: true }).click();
   await page.getByRole('button', { name: 'White', exact: true }).click();
   await page.getByRole('button', { name: /Start match/i }).click();
   const t = await playOut(page);

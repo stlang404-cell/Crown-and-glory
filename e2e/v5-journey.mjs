@@ -79,7 +79,7 @@ async function startMatch(page, opp, { tc = 'Rapid 5+3', mode = 'Casual', color 
   await page.getByRole('button', { name: opp }).first().click();
   if (budget) await page.locator('[data-testid="max-budget"]').getByRole('button', { name: `${budget} s`, exact: true }).click();
   await page.getByRole('button', { name: tc }).click();
-  await page.getByRole('button', { name: mode, exact: true }).click();
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: mode, exact: true }).click();
   await page.getByRole('button', { name: color, exact: true }).click();
   await page.getByRole('button', { name: /Start match/i }).click();
   await page.waitForSelector('[data-testid="match"]');

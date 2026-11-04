@@ -51,7 +51,7 @@ check(1, fresh.length === 0, `Fresh career: every navigation entry opens a worki
 // populate: one finished game (analysed) + founded federation
 await page.locator('nav.rail').getByRole('button', { name: 'Play', exact: true }).click();
 await page.getByRole('button', { name: /Mira Vell/ }).click();
-await page.getByRole('button', { name: 'Rated', exact: true }).click().catch(() => {});
+await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Rated', exact: true }).click().catch(() => {});
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');
 for (let i = 0; i < 4; i++) {

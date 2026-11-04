@@ -22,7 +22,7 @@ const page = ctx.pages()[0] ?? await ctx.newPage();
 page.on('pageerror', e => console.log('pageerror ' + e));
 await page.goto(url); await page.waitForFunction(() => window.__crown);
 await page.getByRole('button', { name: /The Sovereign/ }).click();
-await page.getByRole('button', { name: 'Casual', exact: true }).click();
+await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Casual', exact: true }).click();
 await page.locator('[data-testid="max-budget"]').getByRole('button', { name: `${BUDGET} s`, exact: true }).click();
 await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.getByRole('button', { name: /Start match/i }).click();
