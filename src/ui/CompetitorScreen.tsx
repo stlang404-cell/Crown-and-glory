@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useState } from 'react';
 import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
@@ -109,7 +110,7 @@ export function CompetitorsScreen() {
         <select value={special} onChange={e => setSpecial(e.target.value as typeof special)} aria-label="Show"><option value="">Everyone</option><option value="featured">Featured Rivals</option><option value="rival">Your Rivals</option><option value="favorites">Followed</option><option value="watch">Watchlist ({st.extra.watchlist.length})</option><option value="titled">Event Champions</option><option value="upcoming">Playing This Round</option></select>
       </div>
       <p className="small muted" data-testid="persona-note" style={{ margin: '0 0 10px' }}>{PERSONA_NOTE}{showNames && <> {CONTEMPORARY_NOTE} <strong data-testid="persona-disclosure">{CONTEMPORARY_DISCLOSURE}</strong></>}</p>
-      <div className="panel" style={{ overflowX: 'auto' }}>
+      <div className="panel" style={{ overflowX: 'auto' }} ref={scrollRegion('Competitors table')}>
         <table>
           <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th title="Division and Competitive Rank (Circuit Grade)">Div · Rank</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
@@ -243,7 +244,7 @@ export function CompetitorScreen({ id }: { id: string }) {
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel stack" data-testid="rivalry-panel">
-          <h3>Rivalry with You</h3>
+          <h2 className="h3">Rivalry with You</h2>
           {rivalry && rivalry.meetings > 0 ? <>
             <IntensityBar r={rivalry} />
             <ul className="small" style={{ margin: 0 }}>{rivalry.events.slice(0, 8).map((e, i) => <li key={i}>{e.text} <span className="muted">(+{e.points}, S{e.season})</span></li>)}</ul>
@@ -251,7 +252,7 @@ export function CompetitorScreen({ id }: { id: string }) {
           </> : <p className="small muted">No recorded meetings yet.</p>}
         </div>
         <div className="panel stack" data-testid="following-panel">
-          <h3>This Season</h3>
+          <h2 className="h3">This Season</h2>
           {current.map((x, i) => <div key={i} className="small">{x}</div>)}
           <div className="small" title={FED_TITLE_TOOLTIP}><strong>Federation Title:</strong> {c.fedTitle ?? 'None'} <HonourTag kind="title" />{progress.next ? <> · Next: <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
           <div className="small muted">Norms: {(c.norms ?? []).length ? (c.norms ?? []).slice(-4).map(n => `${n.event} ${n.tpr}`).join(' · ') : 'None'}</div>
@@ -259,7 +260,7 @@ export function CompetitorScreen({ id }: { id: string }) {
       </div>
       {scouting && nextOpp && (
         <div className="panel" style={{ marginTop: 14, borderColor: 'var(--accent)' }} data-testid="dossier">
-          <h3>Scouting Dossier · Your Next Opponent</h3>
+          <h2 className="h3">Scouting Dossier · Your Next Opponent</h2>
           {competitorRank(c) && <div className="small" data-testid="dossier-rank" title={RANK_TOOLTIP}>Competitive Rank (Circuit Grade): <strong>{competitorRank(c)!.label}</strong> <HonourTag kind="rank" />{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` (highest ${competitorHighestRank(c)!.label})` : ''}. Standing score at the last checkpoint: {c.rank && c.rank[4] >= 0 ? (c.rank[4] / 10).toFixed(1) : '—'}.</div>}
           <div className="small" data-testid="dossier-fedtitle" title={FED_TITLE_TOOLTIP}>Federation Title: <strong>{c.fedTitle ?? 'none'}</strong> <HonourTag kind="title" /> <span className="muted">(permanent, earned by norms; separate from the rank)</span></div>
           <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${fmtCareerElo(h.rating)}`).join(' → ') || 'First season'} → now {fmtCareerElo(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
@@ -268,33 +269,33 @@ export function CompetitorScreen({ id }: { id: string }) {
       )}
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Head-to-Head with You</h3>
+          <h2 className="h3">Head-to-Head with You</h2>
           {vsMe.length === 0 ? <p className="small muted">You have not met yet.</p> : <p>You {vsMe.reduce((s, r) => s + (1 - r.score), 0)} – {vsMe.reduce((s, r) => s + r.score, 0)} {c.name} ({vsMe.length} game{vsMe.length > 1 ? 's' : ''})</p>}
-          <h3>Rivalries</h3>
+          <h2 className="h3">Rivalries</h2>
           {topRivals.length === 0 ? <p className="small muted">No repeated opponents yet.</p> : (
-            <ul className="small">{topRivals.map(([o, v]) => <li key={o}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: o })}>{fed.name(o)}</button> — {v.score}/{v.n}</li>)}</ul>
+            <ul className="small">{topRivals.map(([o, v]) => <li key={o}><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: o })}>{fed.name(o)}</button> — {v.score}/{v.n}</li>)}</ul>
           )}
-          <h3>Titles</h3>
+          <h2 className="h3">Titles</h2>
           {c.titles.length === 0 ? <p className="small muted">None yet.</p> : <ul className="small">{c.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul>}
         </div>
         <div className="panel">
-          <h3>Career by Season</h3>
+          <h2 className="h3">Career by Season</h2>
           {c.history.length === 0 ? <p className="small muted">First season in progress.</p> : (
             <table><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Pts</th><th>Rating</th></tr></thead>
               <tbody>{c.history.slice().reverse().map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division} · {REGION_NAMES[h.region]}</td><td>{h.rank}</td><td>{h.points}</td><td>{fmtCareerElo(h.rating)}</td></tr>)}</tbody></table>
           )}
-          {c.milestones.length > 0 && <><h3>Milestones</h3><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
+          {c.milestones.length > 0 && <><h2 className="h3">Milestones</h2><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Recorded Games</h3>
+        <h2 className="h3">Recorded Games</h2>
         {games.world.length + games.mine.length === 0 ? <p className="small muted">No recorded games yet. Only featured matches and your own games are recorded move by move.</p> : (
           <ul className="small">
-            {games.world.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>{fed.name(g.white)} – {fed.name(g.black)} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · Engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
-            {games.mine.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · Your rated game</span></li>)}
+            {games.world.map(g => <li key={g.id}><button className="btn ghost small inline-link" onClick={() => go({ name: 'watch', id: g.fixtureId })}>{fed.name(g.white)} – {fed.name(g.black)} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · Engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
+            {games.mine.map(g => <li key={g.id}><button className="btn ghost small inline-link" onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · Your rated game</span></li>)}
           </ul>
         )}
-        <h3>Recent Results</h3>
+        <h2 className="h3">Recent Results</h2>
         <table><thead><tr><th>S/R</th><th>Event</th><th>Opponent</th><th>Colour</th><th>Score</th><th className="hide-sm">Record</th></tr></thead>
           <tbody>{results.slice(0, 25).map((r, i) => <tr key={i}><td>{r.season}/{r.round}</td><td className="small">{eventName(r.event)}</td><td>{fed.name(r.opp)}</td><td>{r.color === 'white' ? 'White' : 'Black'}</td><td>{r.score === 1 ? 'W' : r.score === 0 ? 'L' : 'D'}</td><td className="hide-sm small muted">{r.tier === 3 ? 'Summary result' : r.tier === 2 ? 'Engine game' : 'Your game'}</td></tr>)}</tbody></table>
       </div>

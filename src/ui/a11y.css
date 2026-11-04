@@ -1,0 +1,21 @@
+/* v1.0 package V: accessibility fixes found by e2e/a11y.mjs (axe-core + target size, focus and heading checks).
+   Kept separate from the visual styles (package U restyles those): only sizes, focus rings and layout-neutral rules. */
+/* board rows/cells exist for screen readers (grid → row → gridcell); the squares stay the CSS grid items */
+.board-row, .board-cell { display: contents; }
+/* WCAG 2.5.8 target size: disclosure summaries, range sliders and name buttons inside lists reach 24 px */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; }
+input[type="range"] { min-height: 24px; }
+.btn.inline-link { padding: 0 2px; min-height: 24px; }
+/* date inputs focus an inner field: show the ring on the input itself */
+input[type="date"]:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+/* scroll containers that receive keyboard focus (tables wider than the screen) */
+.scroll-region:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* heading levels follow the page outline (h1 → h2 → h3); classes keep the previous sizes */
+h2.h3 { font-size: var(--fs-lg); font-weight: 650; letter-spacing: .005em; }
+h3.h4 { font-size: 1em; font-weight: 700; }
+/* segmented tab lists use aria-selected (role="tab"); same look as the pressed segment */
+.seg button[role="tab"][aria-selected="true"] { background: var(--panel-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent), var(--shadow-sm); }
+.rank-step.current .chip.gold { color: var(--text); }
+/* standalone name links and buttons reach the 24 px target size */
+.btn.arena-player-name { min-height: 24px; }
+.rank-heading-name a { display: inline-flex; align-items: center; min-height: 24px; }

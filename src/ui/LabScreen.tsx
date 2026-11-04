@@ -55,7 +55,7 @@ export function LabScreen() {
       <div className="grid-2">
         {dims.dimensions.map(d => (
           <div key={d.id} className="panel" data-testid="lab-dimension">
-            <div className="panel-title"><h3 style={{ margin: 0 }}>{d.name}</h3>
+            <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{d.name}</h2>
               {d.status === 'measured' ? <span className="chip gold">Measured</span> : <span className="chip">Not Enough Data</span>}
             </div>
             <div className="small muted">{d.rubric}</div>
@@ -64,7 +64,7 @@ export function LabScreen() {
         ))}
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Accuracy Trend</h3>
+        <h2 className="h3">Accuracy Trend</h2>
         {pts.length >= 2 ? (
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Per-game accuracy for ${pts.length} analysed games`}>
             <rect width={W} height={H} rx={6} style={{ fill: 'var(--chart-bg)' }} />
@@ -76,8 +76,8 @@ export function LabScreen() {
         <p className="small muted">{trend.note}</p>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Recurring Mistakes</h3>
-        {patterns.length === 0 ? <p className="muted small">No repeated mistakes found yet. Analyse more of your games to see them here.</p> : patterns.slice(0, 6).map(p => (
+        <h2 className="h3">Recurring Mistakes</h2>
+        {patterns.length === 0 ? <p className="muted small" data-testid="lab-empty">No repeated mistakes found yet. Analyse more of your games to see them here. <button className="btn small" onClick={() => go({ name: 'analyses' })}>Analyse a Game</button></p> : patterns.slice(0, 6).map(p => (
           <div key={p.topic} className="coach" style={{ marginBottom: 8 }}>
             <div><strong>{TOPICS[p.topic] ?? p.topic}</strong> — {p.status === 'established' ? <span className="chip neg">Pattern</span> : <span className="chip">Possible Pattern</span>}</div>
             <div className="small">{p.occurrences} occurrence{p.occurrences === 1 ? '' : 's'} in {p.games} game{p.games === 1 ? '' : 's'}{p.status === 'tentative' ? ' (it counts as a pattern at 5 or more across 3 or more games)' : ''}.

@@ -40,7 +40,7 @@ export interface BackupBundle {
 export const bundleCareer = (b: BackupBundle): CareerRecord => b.payload.career ?? legacyCareerRecord(b.exportedAt);
 
 /** Meta-store prefixes carried in backups. */
-export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:', 'trophy:', 'trophyseen:', 'legacy:'] as const;
+export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:', 'trophy:', 'trophyseen:', 'legacy:', 'tour:'] as const;
 /** v0.11 (package I): trophies (`trophy:`), ceremony markers (`trophyseen:`) and the header customisation and back-fill
  *  marker (`legacy:`) belong to the career that earned them, like Vault unlocks. */
 const CAREER_ONLY = ['ach:', 'achtoast:', 'vault:', 'trophy:', 'trophyseen:', 'legacy:'];

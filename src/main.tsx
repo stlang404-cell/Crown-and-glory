@@ -7,6 +7,7 @@ import { updates, CURRENT_BUILD } from './app/updates';
 import { installAudioUnlock } from './ui/sound';
 import './ui/themes.css';
 import './ui/styles.css';
+import './ui/a11y.css';
 
 applyPrefs(); // idempotent with the inline pre-paint script in index.html
 installAudioUnlock(); // audio starts only after the player's first tap or key press

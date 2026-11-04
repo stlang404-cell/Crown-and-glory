@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useState } from 'react';
 import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
@@ -67,7 +68,7 @@ export function RivalsScreen() {
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0 }}>Rivals</h1><span className="spacer" />
         <div className="seg" role="tablist" aria-label="Rivals Sections">
-          {(['featured', 'mine', 'legends', 'clubs'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{{ featured: 'Featured Rivals', mine: 'Your Rivalries', legends: 'Legend Rivalries', clubs: 'Clubs' }[t]}</button>)}
+          {(['featured', 'mine', 'legends', 'clubs'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{{ featured: 'Featured Rivals', mine: 'Your Rivalries', legends: 'Legend Rivalries', clubs: 'Clubs' }[t]}</button>)}
         </div>
       </div>
       <p className="small muted">Rivalries grow from what actually happens between players. They never affect results, pairings or playing strength.</p>
@@ -105,8 +106,8 @@ export function RivalsScreen() {
                 : <ul className="small">{upcoming.map(u => <li key={`${u.rival}:${u.round}:${u.kind}`}><span className="chip">{u.kind === 'league' ? 'League' : 'Knockout'}</span> {u.text}</li>)}</ul>}
             </div>
             <div className="panel" data-testid="my-rivalries">
-              {mine.length === 0 ? <p className="small muted">No rivalries yet. Play federation games to start one.</p> : (
-                <div style={{ overflowX: 'auto' }}><table className="small"><thead><tr><th>Opponent</th><th>Intensity</th><th>Head-to-Head</th><th className="hide-sm">Trophies</th><th></th></tr></thead>
+              {mine.length === 0 ? <p className="small muted" data-testid="rivals-empty">No rivalries yet. Play federation games to start one. <button className="btn small" onClick={() => go({ name: 'world' })}>Your Fixtures</button></p> : (
+                <div style={{ overflowX: 'auto' }} ref={scrollRegion('Your rivalries table')}><table className="small"><thead><tr><th>Opponent</th><th>Intensity</th><th>Head-to-Head</th><th className="hide-sm">Trophies</th><th></th></tr></thead>
                   <tbody>{mine.slice(0, 30).map(r => {
                     const h = headToHead(r, r.b, allMine);
                     const tr = rivalryTrophies(r, kos).filter(t => t.earned);
@@ -129,7 +130,7 @@ export function RivalsScreen() {
         <div className="panel" data-testid="legend-rivalries">
           {legends.length === 0 ? <p className="small muted">The featured rivals have not met yet.</p> : (
             <table className="small"><thead><tr><th>Rivalry</th><th>Intensity</th><th className="hide-sm">Storyline</th></tr></thead>
-              <tbody>{legends.map(r => <tr key={r.a + r.b}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: r.a })}>{fed.name(r.a)}</button> vs <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: r.b })}>{fed.name(r.b)}</button></td><td style={{ minWidth: 160 }}><IntensityBar r={r} /></td><td className="hide-sm muted">{r.events.slice(0, 2).map(e => e.text).join(' · ')}</td></tr>)}</tbody></table>
+              <tbody>{legends.map(r => <tr key={r.a + r.b}><td><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: r.a })}>{fed.name(r.a)}</button> vs <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: r.b })}>{fed.name(r.b)}</button></td><td style={{ minWidth: 160 }}><IntensityBar r={r} /></td><td className="hide-sm muted">{r.events.slice(0, 2).map(e => e.text).join(' · ')}</td></tr>)}</tbody></table>
           )}
         </div>
       )}

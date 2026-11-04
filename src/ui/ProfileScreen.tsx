@@ -1,3 +1,5 @@
+import { scrollRegion } from './scrollRegion';
+import { TourHint } from './Onboarding';
 import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Icon } from './Icons';
@@ -89,6 +91,7 @@ export function ProfileScreen() {
       <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Career Passport</h1><span className="spacer" /><button className="btn small" data-testid="open-vault" onClick={() => go({ name: 'vault' })}><Icon name="vault" /> Open the Vault</button></div>
       <RankHeading />
       <div style={{ height: 12 }} />
+      <TourHint step="honours" />
       <div className="seg" role="group" aria-label="Rating Pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
@@ -124,8 +127,8 @@ export function ProfileScreen() {
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
         <h3>Rated Games ({ev.length})</h3>
-        {ev.length === 0 ? <p className="muted">No rated games in this pool yet.</p> : (
-          <div style={{ overflowX: 'auto' }}>
+        {ev.length === 0 ? <p className="muted" data-testid="profile-empty">No rated games in this pool yet. <button className="btn small" onClick={() => go({ name: 'play' })}>Play a Rated Game</button></p> : (
+          <div style={{ overflowX: 'auto' }} ref={scrollRegion('Rated games table')}>
             <table>
               <thead><tr><th>#</th><th>Date</th><th>Opponent</th><th>Score</th><th>Expected</th><th>Before</th><th>After</th><th>Δ</th><th className="hide-sm">Rank</th></tr></thead>
               <tbody>

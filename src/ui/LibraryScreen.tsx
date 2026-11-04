@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtCareerElo, ratingChange } from '../ratings/display';
 import { useApp, useServices } from './App';
@@ -128,8 +129,8 @@ export function LibraryScreen() {
           <select value={mode} onChange={e => setMode(e.target.value)} aria-label="Mode filter"><option value="all">All modes</option><option value="rated">Rated</option><option value="casual">Casual</option><option value="training">Training</option></select>
           <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} aria-label="Sort"><option value="date">Newest first</option><option value="accuracy">Accuracy</option><option value="delta">Rating change</option><option value="moves">Length</option></select>
         </div>
-        {view.length === 0 ? <p className="muted">{rows.length ? 'No games match these filters.' : 'No games yet. Play a game and it will be saved here.'}</p> : (
-          <div style={{ overflowX: 'auto' }}>
+        {view.length === 0 ? <p className="muted" data-testid="library-empty">{rows.length ? 'No games match these filters.' : <>No games yet. Play a game and it will be saved here. <button className="btn small" onClick={() => go({ name: 'play' })}>Play a Game</button></>}</p> : (
+          <div style={{ overflowX: 'auto' }} ref={scrollRegion('Games table')}>
             <table>
               <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Rating</th><th>Accuracy</th><th className="hide-sm">Mistakes/Blunders</th><th className="hide-sm">Opening</th><th className="hide-sm">Moves</th><th className="hide-sm">Time Control</th><th>Analysis</th></tr></thead>
               <tbody>

@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useState } from 'react';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -51,11 +52,11 @@ export function PrestigeLadders({ bestRating }: { bestRating: number | null }) {
   return (
     <div className="grid-2" data-testid="prestige">
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Chess Prestige</h3><span className="chip gold">{p.chessTier} · {p.chess}</span></div>
+        <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Chess Prestige</h2><span className="chip gold">{p.chessTier} · {p.chess}</span></div>
         <ul className="small">{p.chessBasis.length ? p.chessBasis.map((b, i) => <li key={i}>{b}</li>) : <li className="muted">Earned only through results: titles, promotions, podiums and established rating.</li>}</ul>
       </div>
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={financialEmblem(p.financialTier)} size="md" title={`Financial Prestige: ${p.financialTier}`} /> Financial Prestige</h3><span className="chip info">{p.financialTier} · {p.financial}</span></div>
+        <div className="panel-title"><h2 style={{ margin: 0 }} className="h3 row"><Emblem spec={financialEmblem(p.financialTier)} size="md" title={`Financial Prestige: ${p.financialTier}`} /> Financial Prestige</h2><span className="chip info">{p.financialTier} · {p.financial}</span></div>
         <ul className="small">{p.financialBasis.map((b, i) => <li key={i}>{b}</li>)}</ul>
         <div className="small muted">Money never buys chess prestige or titles.</div>
       </div>
@@ -101,7 +102,7 @@ export function FinanceScreen() {
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Income and Spending</h3>
+          <h2 className="h3">Income and Spending</h2>
           <table className="small"><tbody>
             {[...byKind].sort((a, b) => b[1] - a[1]).map(([k, v]) => <tr key={k}><td>{k}</td><td className={`mono ${v >= 0 ? 'pos' : 'neg'}`}>{v >= 0 ? '+' : ''}{fmtCrowns(v)}</td></tr>)}
           </tbody></table>
@@ -117,7 +118,7 @@ export function FinanceScreen() {
       <EstatesPanel />
       <CosmeticsShop />
       <div className="panel" style={{ marginTop: 14 }} data-testid="assets">
-        <h3>Assets</h3>
+        <h2 className="h3">Assets</h2>
         <div className="grid-2">
           {ASSETS.map(a => {
             const o = owned.get(a.id);
@@ -141,8 +142,8 @@ export function FinanceScreen() {
       </div>
       <div style={{ marginTop: 14 }}><PrestigeLadders bestRating={null} /></div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Cash Ledger</h3>
-        <div style={{ maxHeight: 360, overflow: 'auto' }}>
+        <h2 className="h3">Cash Ledger</h2>
+        <div style={{ maxHeight: 360, overflow: 'auto' }} ref={scrollRegion('Cash ledger')}>
           <table className="small">
             <thead><tr><th>When</th><th>Entry</th><th>Amount</th></tr></thead>
             <tbody>{journal.slice(0, 200).map(j => { const amt = j.lines.filter(l => l.account === 'player:cash').reduce((s, l) => s + l.amount, 0); return <tr key={j.id}><td className="mono">{j.season ? `S${j.season}${j.round ? ` R${j.round}` : ''}` : j.at.slice(0, 10)}</td><td>{j.memo}</td><td className={`mono ${amt >= 0 ? 'pos' : 'neg'}`}>{amt >= 0 ? '+' : ''}{fmtCrowns(amt)}</td></tr>; })}</tbody>
@@ -164,9 +165,9 @@ function PortfolioPanel() {
   const sign = (x: number) => <span className={`mono ${x > 0 ? 'pos' : x < 0 ? 'neg' : ''}`}>{fmtMoneyDelta(x)}</span>;
   return (
     <div className="panel" data-testid="portfolio">
-      <h3>Open Positions</h3>
+      <h2 className="h3">Open Positions</h2>
       {rows.length === 0 ? <p className="small muted">No open positions. <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>Go to Exchange</button></p> : (
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflowX: 'auto' }} ref={scrollRegion('Open positions')}>
           <table className="small"><thead><tr><th>Market</th><th>Holding</th><th>Cost Basis</th><th>Sell Now</th><th>Unrealised</th><th>At Risk</th></tr></thead>
             <tbody>{rows.map(({ market: m, view: v }) => (
               <tr key={m.id} className="clickable" onClick={() => go({ name: 'exchange', id: m.id })}>
@@ -202,7 +203,7 @@ function Institutions() {
   return (
     <div className="grid-2" style={{ marginTop: 14 }} data-testid="institutions">
       <div className="panel stack">
-        <h3>Your Club</h3>
+        <h2 className="h3">Your Club</h2>
         {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
         {!L ? <p className="small">You don't own a club yet. Buy the <strong>Starter Chess Club</strong> below to host a Club Weekend, sign sponsorship contracts and grow it into a Federation Club.</p> : (
           <>
@@ -223,13 +224,13 @@ function Institutions() {
         )}
       </div>
       <div className="panel stack" data-testid="contracts">
-        <h3>Sponsorship Contracts</h3>
+        <h2 className="h3">Sponsorship Contracts</h2>
         <div className="small muted">Pay a competitor a stipend each season and receive {CONTRACT_SHARE * 100}% of every prize they win while signed. Sign from a competitor's profile. While you sponsor someone, you can't buy into markets that involve them.</div>
         {contracts.length === 0 ? <p className="small">No contracts yet. <button className="btn ghost small" onClick={() => go({ name: 'competitors' })}>Browse Competitors</button></p> : (
           <table className="small"><thead><tr><th>Competitor</th><th>Stipend</th><th>Paid</th><th>Prize Share</th><th></th></tr></thead>
-            <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since season {c.signedSeason}{c.status === 'ended' ? ` · ended season ${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
+            <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since season {c.signedSeason}{c.status === 'ended' ? ` · ended season ${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
         )}
-        <h3>Sandbox Money</h3>
+        <h2 className="h3">Sandbox Money</h2>
         <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox dollars for practice markets on your own casual games. Sandbox money is separate: it never counts toward cash, net worth, profit, prestige, ratings or standings.</div>
       </div>
     </div>

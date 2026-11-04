@@ -34,21 +34,21 @@ export function HeraldryScreen() {
       <p className="small muted">Every emblem in the federation, and what it takes to earn one. All art is drawn by the game and follows your colour theme.</p>
       <details className="small muted"><summary>Details</summary>Each emblem family has its own shield shape, field division, fixed tinctures and charge. The highest ranks add crests, wreaths, gold borders and pips.</details>
       <section className="panel stack" data-testid="gallery-sizes">
-        <h3>Sizes</h3>
+        <h2 className="h3">Sizes</h2>
         <div className="emblem-row" style={{ alignItems: 'flex-end' }}>
           {(['sm', 'md', 'lg'] as const).map(s => <div key={s} className="emblem-cell"><Emblem spec={tournamentCrest('champ')} size={s} title={`Crown Championship crest (${s})`} /><span className="small muted">{s === 'sm' ? 'Small · 22 px (lists, phone)' : s === 'md' ? 'Medium · 44 px' : 'Large · 104 px (ceremonies)'}</span></div>)}
           {(['sm', 'md', 'lg'] as const).map(s => <div key={`d${s}`} className="emblem-cell"><Emblem spec={divisionEmblem(1)} size={s} title={`Crown Division (${s})`} /></div>)}
         </div>
       </section>
-      <section className="panel stack" data-testid="gallery-divisions"><h3>Divisions</h3><Row items={Array.from({ length: 8 }, (_, i) => ({ spec: divisionEmblem(i + 1), label: divisionLabel(i + 1), sub: `Division ${i + 1}` }))} /></section>
+      <section className="panel stack" data-testid="gallery-divisions"><h2 className="h3">Divisions</h2><Row items={Array.from({ length: 8 }, (_, i) => ({ spec: divisionEmblem(i + 1), label: divisionLabel(i + 1), sub: `Division ${i + 1}` }))} /></section>
       <section className="panel stack" data-testid="gallery-circuit-grades" title={RANK_TOOLTIP}>
-        <h3>Competitive Ranks (Circuit Grades) <span className="chip info">Current Standing · Goes Up and Down</span></h3>
+        <h2 className="h3">Competitive Ranks (Circuit Grades) <span className="chip info">Current Standing · Goes Up and Down</span></h2>
         <p className="small muted" style={{ margin: 0 }}>16 grades, each with sublevels III → II → I (chevrons on the insignia: one for III, three for I), in a square steel-blue frame tagged <HonourTag kind="rank" />. Set by league and tournament results at each checkpoint. <a href="#/ranks">Rank guide</a></p>
         <Row kind="rank" items={ALL_RANKS.filter(r => r.sublevel === 'II').map(r => ({ spec: r.insignia, label: r.rankName, sub: `${r.gradeId} · ${divisionLabel(r.division)}` }))} />
       </section>
-      <section className="panel stack" data-testid="gallery-ranks" title={RATING_TITLE_TOOLTIP}><h3>Rating Ladder <span className="chip">Temporary · Follows Your Rating</span></h3><Row kind="rating" items={RANK_ORDER.map(r => ({ spec: rankEmblem(r), label: r }))} /></section>
+      <section className="panel stack" data-testid="gallery-ranks" title={RATING_TITLE_TOOLTIP}><h2 className="h3">Rating Ladder <span className="chip">Temporary · Follows Your Rating</span></h2><Row kind="rating" items={RANK_ORDER.map(r => ({ spec: rankEmblem(r), label: r }))} /></section>
       <section className="panel stack" data-testid="gallery-titles">
-        <h3>Federation Titles <span className="chip gold">Permanent · Earned by Norms</span></h3>
+        <h2 className="h3">Federation Titles <span className="chip gold">Permanent · Earned by Norms</span></h2>
         <p className="small muted" style={{ margin: 0 }} title={FED_TITLE_TOOLTIP}>Permanent honours, never lost, shown in a round gold medallion tagged <HonourTag kind="title" />. "Squire" and "Knight" are also names of Competitive Ranks ("Knight II"); the two are earned separately and never affect each other.</p>
         <Row kind="title" items={FED_TITLES.map(t => ({ spec: titleEmblem(t), label: `${t} (${FED_TITLE_ABBR[t]})` }))} />
         <details className="small"><summary>Details</summary>
@@ -58,15 +58,15 @@ export function HeraldryScreen() {
         </details>
         <div className="small muted">Fictional honours of this federation, earned like real chess titles through norms and a peak rating. They are not FIDE titles.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={regionNamesOf(topo).map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
+      <section className="panel stack" data-testid="gallery-regions"><h2 className="h3">Regional Federations</h2><Row items={regionNamesOf(topo).map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
       <section className="panel stack" data-testid="gallery-tournaments">
-        <h3>Major Tournaments and Their Trophies</h3>
+        <h2 className="h3">Major Tournaments and Their Trophies</h2>
         <div className="emblem-row">{TOURNAMENTS.map(t => <div key={t} className="emblem-cell"><span className="row"><Emblem spec={tournamentCrest(t)} size="md" title={`${TOURNAMENT_NAME[t]} crest`} /><Trophy kind={TROPHY_FOR[t]} size="md" title={`${TOURNAMENT_NAME[t]} trophy`} /></span><span className="small"><strong>{TOURNAMENT_NAME[t]}</strong></span></div>)}</div>
         <div className="small muted">Win one of these events to add its trophy to your Hall of Fame.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-finance"><h3>Financial Prestige</h3><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
-      <section className="panel stack" data-testid="gallery-achievements"><h3>Achievements</h3><Row items={ACHIEVEMENTS.map(a => ({ spec: achievementEmblem(a, true), label: a.name, sub: a.description }))} /></section>
-      <section className="panel stack" data-testid="gallery-clubs"><h3>Clubs of the Federation</h3><Row items={clubsOf(topo.regions).map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
+      <section className="panel stack" data-testid="gallery-finance"><h2 className="h3">Financial Prestige</h2><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
+      <section className="panel stack" data-testid="gallery-achievements"><h2 className="h3">Achievements</h2><Row items={ACHIEVEMENTS.map(a => ({ spec: achievementEmblem(a, true), label: a.name, sub: a.description }))} /></section>
+      <section className="panel stack" data-testid="gallery-clubs"><h2 className="h3">Clubs of the Federation</h2><Row items={clubsOf(topo.regions).map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
       <details className="small muted"><summary>Details</summary>Rules versions: rivalries {RIVALRY_ID}, titles {TITLES_ID}. A competitor's profile shows how your rivalry with them was scored.</details>
     </div>
   );

@@ -201,7 +201,7 @@ export function Captured({ fen, color, name }: { fen: string; color: 'white' | '
   const caps = color === 'white' ? cap.byWhite : cap.byBlack;
   const adv = color === 'white' ? cap.advantage : -cap.advantage;
   return (
-    <div className="captured" aria-label={`Captured by ${name}`}>
+    <div className="captured" role="group" aria-label={`Captured by ${name}`}>
       {caps.map((k, i) => <PieceSvg key={i} kind={k.toLowerCase() as PieceKind} color={k === k.toUpperCase() ? 'w' : 'b'} title={`${k === k.toUpperCase() ? 'white' : 'black'} ${PIECE_NAMES[k.toLowerCase() as PieceKind]}`} />)}
       {adv > 0 && <span className="adv">+{adv}</span>}
     </div>

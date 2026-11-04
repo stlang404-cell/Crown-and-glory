@@ -25,7 +25,7 @@ export function LessonLinks({ topics, title = 'Lessons for This Game' }: { topic
   if (!ids.length) return null;
   return (
     <div className="stack mc-lessons" data-testid="lesson-links">
-      <h4 style={{ margin: 0 }}>{title}</h4>
+      <h3 className="h4" style={{ margin: 0 }}>{title}</h3>
       <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
         {ids.map(id => <button key={id} className="btn small ghost mc-lesson" data-chapter={id} onClick={() => go({ name: 'grimoire', path: id })}>{CHAPTERS.get(id)!.title.replace(/^Chapter [IVX0-9.]+ — /, '')}</button>)}
       </div>
@@ -36,7 +36,7 @@ export function LessonLinks({ topics, title = 'Lessons for This Game' }: { topic
 export function TurningPointList({ points, onSelect, current, source }: { points: TurningPoint[]; onSelect: (ply: number) => void; current: number; source: string }) {
   return (
     <div className="stack" data-testid="turning-points">
-      <div className="panel-title"><h4 style={{ margin: 0 }}>Turning Points</h4><span className="small muted">{source}</span></div>
+      <div className="panel-title"><h3 className="h4" style={{ margin: 0 }}>Turning Points</h3><span className="small muted">{source}</span></div>
       {points.length === 0 ? <p className="small muted" style={{ margin: 0 }}>No swing of 10 percentage points or more in White's expected score.</p> : (
         <div className="stack" style={{ gap: 4 }}>
           {points.map(t => (
@@ -60,7 +60,7 @@ export function MatchEventList({ events, onSelect, current }: { events: MatchEve
   const shown = all ? events : events.filter(e => !['capture', 'check'].includes(e.kind) || e.text.includes('checkmate'));
   return (
     <div className="stack" data-testid="match-events">
-      <div className="panel-title"><h4 style={{ margin: 0 }}>Match Events</h4>
+      <div className="panel-title"><h3 className="h4" style={{ margin: 0 }}>Match Events</h3>
         <button className="btn ghost small" aria-pressed={all} onClick={() => setAll(x => !x)}>{all ? 'Key Events Only' : `All Events (${events.length})`}</button></div>
       <ol className="mc-events">
         {shown.map((e, i) => (
