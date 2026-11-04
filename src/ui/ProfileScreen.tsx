@@ -3,7 +3,7 @@ import { useApp, useServices } from './App';
 import { RatingChart } from './Charts';
 import type { PoolId, GameRecord } from '../games/types';
 import type { PoolState, RatingEvent } from '../ratings/ledger';
-import { explainEvent, newPoolState, RANKS, rankFor, RANK_POLICY } from '../ratings/ledger';
+import { explainEvent, newPoolState, RANKS, RANK_POLICY } from '../ratings/ledger';
 import { isProvisional } from '../ratings/glicko2';
 import { personalRecords } from '../academy/lab';
 import type { AnalysisReport } from '../analysis/types';
@@ -11,10 +11,11 @@ import type { Attempt, TrainingRun } from '../academy/academy';
 import { resultText } from './PlayScreen';
 import { PrestigeLadders } from './FinanceScreen';
 import { Emblem } from './Emblem';
-import { rankEmblem, titleEmblem } from '../heraldry/catalog';
+import { titleEmblem } from '../heraldry/catalog';
 import { divisionLabel, REGION_NAMES } from '../federation/model';
 import { CareerStanding } from './CareerStanding';
 import { PlayerAvatar, PassportBanner } from './Cosmetics';
+import { RATING_TITLES, collectedTitles, insigniaSpec, titleFor } from '../ratings/titles';
 import { PLAYED_LIKE_VALIDATED, playedLike, type PlayedLike } from '../analysis/playedLike';
 import { fmtPlayedLike } from './PlayedLikeCard';
 import { Trophy } from './Emblem';
@@ -84,9 +85,9 @@ export function ProfileScreen() {
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
         <div className="panel stat"><span className="k">Rating ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v" data-testid="current-rating">{Math.round(s.rating)}</span><span className="small muted">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span></div>
-        <div className="panel stat"><span className="k">Rank</span><span className="v row" style={{ fontSize: '1.3rem', gap: 8 }}><Emblem spec={rankEmblem(rankFor(s.rating, s.games, s.rd))} size="md" title={`Rank: ${rankFor(s.rating, s.games, s.rd)}`} />{rankFor(s.rating, s.games, s.rd)}</span><span className="small muted">A temporary label from your rating. Federation Titles are separate and permanent.</span></div>
+        <div className="panel stat" data-testid="passport-rating-title"><span className="k">Rating Title</span><span className="v row" style={{ fontSize: '1.15rem', gap: 8 }}><Emblem spec={insigniaSpec(titleFor(s.rating))} size="md" title={`${titleFor(s.rating).name} insignia`} />{titleFor(s.rating).name}</span><span className="small muted">{prov ? 'Provisional rating · ' : ''}Changes with your rating; one title every 100 points. Federation titles are earned separately and kept for good.</span></div>
         <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
-        <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? '—' : Math.round(s.peak)} / {s.lowest === null ? '—' : Math.round(s.lowest)}</span><span className="small muted">Established ratings only</span></div>
+        <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? 'Not yet' : `${Math.round(s.peak)} / ${Math.round(s.lowest ?? s.peak)}`}</span><span className="small muted">{s.peak === null ? `Counts once your rating is established (20 rated games, ±100); ${Math.max(0, 20 - s.games)} games to go` : 'Established ratings only'}</span></div>
       </div>
       <div className="panel">
         <div className="panel-title"><h2>Rating History</h2>
@@ -96,6 +97,7 @@ export function ProfileScreen() {
         <p className="small muted">Game ratings, not FIDE ratings. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
         <details className="small muted"><summary>Details</summary>Glicko-2: start 1500 ±350, τ = 0.5, one rated game per rating period. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.</details>
       </div>
+      <InsigniaCollection events={events.filter(e => e.pool === 'rapid')} />
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
           <h3>By Time Control</h3>
@@ -273,6 +275,26 @@ function FederationCareer({ peak }: { peak: number | null }) {
           : <div className="row" style={{ flexWrap: 'wrap' }}>{w.player.titles.map((t, i) => <span key={i} className={`chip ${cabinet ? 'gold' : ''}`}>{cabinet && <Trophy kind={TROPHY_FOR[titleKind(t.title)]} size="sm" title={t.title} />} {t.title}</span>)}</div>}
       </div>
       <PrestigeLadders bestRating={peak} />
+    </div>
+  );
+}
+
+/** Passport: rating-title insignias held while the (Rapid, Federation) rating was established. Kept after a fall. */
+function InsigniaCollection({ events }: { events: RatingEvent[] }) {
+  const { collected, peak, peakRating } = collectedTitles(events.map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
+  const have = new Set(collected.map(t => t.index));
+  return (
+    <div className="panel" style={{ marginTop: 14 }} data-testid="insignia-collection">
+      <div className="panel-title"><h2 style={{ margin: 0 }}>Insignia Collection</h2><span className="small muted">{collected.length} of {RATING_TITLES.length} · Peak title: {peak ? `${peak.name} (${Math.round(peakRating!)})` : 'none yet'}</span></div>
+      <p className="small muted" style={{ marginTop: 0 }}>Each 100-point rating title has an insignia. You keep every insignia your established Rapid rating has reached, even if it falls later. Provisional ratings do not count.</p>
+      <div className="insignia-grid">
+        {RATING_TITLES.map(t => (
+          <div key={t.index} className={`insignia-cell${have.has(t.index) ? ' have' : ''}`} title={`${t.name} · ${t.min}${t.max === null ? '+' : `–${t.max}`}${have.has(t.index) ? '' : ' · not yet collected'}`}>
+            <Emblem spec={insigniaSpec(t)} size="md" title={`${t.name} insignia${have.has(t.index) ? '' : ' (locked)'}`} />
+            <span className="small">{t.name}</span><span className="small muted mono">{t.min}{t.max === null ? '+' : ''}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

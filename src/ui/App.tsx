@@ -6,6 +6,7 @@ import { PlayScreen, MatchScreen } from './PlayScreen';
 import { AnalysisScreen } from './AnalysisScreen';
 import { AnalysisPicker } from './AnalysisPicker';
 import { ScreenBoundary } from './ScreenBoundary';
+import { IdentityBanner } from './IdentityBanner';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
@@ -134,6 +135,7 @@ export function App({ services }: { services: AppServices }) {
         <main className="main" id="main">
           {updateReady && <div className="notice info row" role="status" data-testid="update-ready" style={{ marginBottom: 12, gap: 8 }}>A new version of Crown &amp; Calculation is ready. Your games are saved.<span className="spacer" /><button className="btn small primary" onClick={() => location.reload()}>Reload Now</button></div>}
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
+          {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="banner" screen="banner" onHome={() => go({ name: 'play' })}><IdentityBanner /></ScreenBoundary>}
           <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
             {view.name === 'play' && <PlayScreen />}
             {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
