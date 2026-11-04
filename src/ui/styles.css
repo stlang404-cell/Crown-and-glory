@@ -470,3 +470,17 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .vault-filters input[type="search"] { grid-column: 1 / -1; }
   .vault-toast { left: 16px; right: 16px; width: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
+
+/* v0.11 Circuit Grades (src/ui/RankScreen.tsx, RankBadge.tsx; docs/FEUDAL_RANKS.md) */
+.rank-badge { display: inline-flex; align-items: center; gap: 6px; min-width: 0; vertical-align: middle; }
+.rank-badge-label { white-space: nowrap; }
+.rank-screen .rank-bar { margin-top: 4px; height: 8px; }
+.rank-ladder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.rank-division { border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.rank-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; }
+.rank-step { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; padding: 6px 2px; border-radius: 10px; min-width: 0; }
+.rank-step-label { font-size: .78rem; line-height: 1.15; overflow-wrap: anywhere; }
+.rank-step.current { outline: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.rank-step.highest { outline: 1px dashed var(--muted, var(--line)); }
+.rank-screen table { width: 100%; }
+.rank-screen .rank-top > * { min-width: 0; }

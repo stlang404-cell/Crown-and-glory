@@ -4,6 +4,7 @@
  */
 import { CHAMPIONSHIP_ROUNDS, Fixture, LEAGUE_ROUNDS, ROUNDS_PER_SEASON, topologyOf } from './model';
 import { Ctx, RoundRecord, SeasonEndResult, applyRound, buildChampionship, advanceKo, endSeason, makePlan, openRound, settleRound } from './world';
+import { MID_ROUND, rankCheckpoint, rankDivisionMoves } from './ranks';
 
 export type SeasonGame = { event: string; white: string; black: string; result: number | null };
 
@@ -35,6 +36,8 @@ export function processRound(ctx: Ctx, rec: RoundRecord, seasonRounds: RoundReco
   rec.processedAt = nowIso;
   const all = [...seasonRounds.filter(r => r.id !== rec.id), rec];
   applyRound(ctx, rec, gamesOf(all));
+  // v0.11 Circuit Grades (src/federation/ranks.ts): mid-season checkpoint
+  if (rec.round === MID_ROUND) rankCheckpoint(ctx, gamesOf(all), ctx.player.rating, 'mid');
   let championshipBuilt = false;
   let koAdvanced: string[] = [];
   if (rec.round === LEAGUE_ROUNDS) { ctx.plan.champ = buildChampionship(ctx, gamesOf(all)); championshipBuilt = true; }
@@ -42,7 +45,10 @@ export function processRound(ctx: Ctx, rec: RoundRecord, seasonRounds: RoundReco
   if (ctx.plan.club && ctx.plan.club.stages.some(s => s.round === rec.round)) advanceKo(ctx.plan.club, rec.round);
   let seasonEnd: SeasonEndResult | null = null;
   if (rec.round === ROUNDS_PER_SEASON) {
-    seasonEnd = endSeason(ctx, gamesOf(all));
+    const finalGames = gamesOf(all);
+    rankCheckpoint(ctx, finalGames, ctx.player.rating, 'end'); // in the divisions the season was played in
+    seasonEnd = endSeason(ctx, finalGames);
+    rankDivisionMoves(ctx, seasonEnd, rec.season, rec.round);
     ctx.world.season += 1;
     ctx.world.round = 1;
     ctx.plan = makePlan(ctx.world.seed, ctx.world.season, [...ctx.competitors.values()], ctx.world.player, topologyOf(ctx.world));

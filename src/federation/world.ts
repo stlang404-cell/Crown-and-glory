@@ -40,7 +40,9 @@ export interface WorldState {
   nextIndex: number; // next competitor index for entrants
   player: { joined: boolean; region: number; division: number; swissRegistered: boolean; titles: { season: number; title: string }[]; history: { season: number; division: number; rank: number; points: number }[]; displaced: string | null;
     /** v0.5: federation-title record (src/heraldry/titles.ts). */
-    norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number };
+    norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number;
+    /** v0.11: Circuit Grade record (src/federation/ranks.ts). Absent in older saves (derived at load). */
+    rank?: import('./ranks').PlayerRank };
   /** v0.5: featured rivals, chosen once and persisted (src/heraldry/rivals.ts). */
   featured?: import('../heraldry/rivals').FeaturedRival[];
   /** v0.9: federation size (docs/FEDERATION_SCALE.md). Absent = crown-topology-1 (16 regions, 2,048), the size of
