@@ -1,4 +1,24 @@
-# Implementation status — v0.6.0-preview.1 (v0.5.0 "Sovereign Intelligence" + M6 Live Arena addendum)
+# Implementation status — v0.9.0 "The Living Federation"
+
+The sections after "v0.9.0" below were written for v0.6.0-preview.1 and remain accurate unless a v0.9 row says
+otherwise. Release reports: docs/V8_SOVEREIGN_STANDARD.md (v0.8.0), docs/V9_LIVING_FEDERATION.md (v0.9.0).
+
+## v0.9.0
+
+| Feature | State | Evidence |
+|---|---|---|
+| Automatic iPhone (PWA) updates: background download, safe switch, "Restart to Update", build identity | V (Chromium) | `e2e/pages-check.mjs` 12/12; physical iPhone NOT RUN |
+| Federation Dashboard landing page | V | `e2e/dashboard.mjs` 10/10 |
+| Live match scheduler (background AI games, resume, adaptive capacity) | V (services) / U (Live Now panel UI) | `tests/scheduler.test.ts`; docs/FEDERATION_SCALE.md |
+| 4,096-competitor topology | U (implemented and tested, off by default) | docs/FEDERATION_SCALE.md |
+| 10,000+ competitors | N (misses the round-time target) | docs/FEDERATION_SCALE.md §1.4 |
+| Live odds crown-odds-2 (rating-aware) | V | docs/ODDS_MODEL.md (800 held-out games) |
+| Full-game styles: Tactical, Positional, Defensive, Endgame | V | docs/STYLES_REPORT.md; Aggressive N (failed validation) |
+| Engine speed (+38 % nodes/s, identical search; +41 [12, 71] Elo at equal time) | V | docs/ENGINE_OPTIMIZATION_PLAN.md |
+| The Sovereign's Grimoire + Academy integration + endgame solver | V | docs/GRIMOIRE_VERIFICATION.md |
+| Replay centre, eval bar, trophies, banners, Trophy Hall, achievement families | N (next milestone) | — |
+
+## v0.6.0-preview.1 (v0.5.0 "Sovereign Intelligence" + M6 Live Arena addendum)
 
 Labels: **V** verified complete (automated test or executed browser journey on the final build) ·
 **U** implemented but unverified · **P** partial · **N** not implemented. Physical iPhone and Windows were
@@ -20,7 +40,7 @@ used; J1–J6 could not be executed as written (see docs/V5_BASELINE_AUDIT.md).
 | Scheduling: foreground priority, cancellation, stale-result discard, event log | V | journey step 26; `src/engine/client.ts` |
 | Engine-commitment record for federation events | V | journey step 25 (`world.engineCommitments`) |
 | Fairy-Stockfish as a shipped backend | N (by decision) | GPL-3.0, threads/COOP-COEP, memory — docs/V5_ENGINE.md |
-| Full-game AI personalities | N (failed validation in M4) | docs/M4_ENGINE_STRENGTH.md §8; opening-repertoire styles only where validated |
+| Full-game AI personalities | V in v0.9 for Tactical, Positional, Defensive, Endgame (Aggressive N) | docs/STYLES_REPORT.md (crown-styles-5); earlier failure: docs/M4_ENGINE_STRENGTH.md §8 |
 
 ## Analysis, Academy, Lab
 
