@@ -17,7 +17,7 @@ import { roundRobin, standings, leagueOrder, swissOrder, swissPairing, StandingR
 import { mulberry32 } from '../rules/tables';
 
 export const MARKETS_ID = 'crown-markets-2';
-export const FAMILY_B: Record<string, number> = { match: 120, winner: 150, promotion: 80, qualification: 80, season: 100, bracket: 100 };
+export const FAMILY_B: Record<string, number> = { match: 120, winner: 150, promotion: 80, qualification: 80, season: 100, bracket: 100, length: 60, advancement: 100 };
 
 // ---------------------------------------------------------------- knockout match probabilities
 /** Distribution of a's score over a two-game pair: [P(>1), P(=1), P(<1)]. Colours alternate, so W/L are symmetric. */
@@ -99,6 +99,39 @@ export function bracketModel(p: string[], states: BracketState[], rating: (id: s
 /** Settlement vector for a decided final four: the winning path, or (joint final) half on each finalist's path. */
 export function bracketPayout(states: BracketState[], semi1: string, semi2: string, champions: string[]): number[] {
   return states.map(s => (s.semi1 === semi1 && s.semi2 === semi2 && champions.includes(s.champion) ? 1 / champions.length : 0));
+}
+
+// ---------------------------------------------------------------- v0.10: quarterfinal advancement (16 product states)
+/**
+ * Crown Championship quarterfinals: four independent two-player matches qf[k] = [a_k, b_k]. State index s (0 … 15)
+ * encodes the four winners: bit k = 0 → a_k advances, 1 → b_k advances. Exhaustive and mutually exclusive.
+ * Claims (canonical, distinct subsets): "X reaches the semifinals" (8 states each) and the conjunction
+ * "X meets Y in the semifinal" for each possible semifinal (X from qf 0/2, Y from qf 1/3; 4 states each).
+ */
+export interface QfState { label: string; winners: string[] }
+export function advancementStates(qf: [string, string][], name: (id: string) => string = x => x): QfState[] {
+  return Array.from({ length: 16 }, (_, s) => { const winners = qf.map((m, k) => m[(s >> k) & 1]); return { winners, label: `${winners.map(name).join(', ')} reach the semifinals` }; });
+}
+export function advancementClaims(qf: [string, string][], name: (id: string) => string = x => x): { id: string; label: string; states: number[] }[] {
+  const all = Array.from({ length: 16 }, (_, s) => s);
+  const claims: { id: string; label: string; states: number[] }[] = [];
+  qf.forEach((m, k) => m.forEach((x, side) => claims.push({ id: `semi:${x}`, label: `${name(x)} reaches the semifinals`, states: all.filter(s => ((s >> k) & 1) === side) })));
+  for (const [k1, k2] of [[0, 1], [2, 3]]) for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+    const x = qf[k1][i], y = qf[k2][j];
+    claims.push({ id: `meet:${x}|${y}`, label: `${name(x)} meets ${name(y)} in the semifinal (both win their quarterfinals)`, states: all.filter(s => ((s >> k1) & 1) === i && ((s >> k2) & 1) === j) });
+  }
+  return claims;
+}
+/** Exact model: independent quarterfinals, each by the two-game knockout probability with the published tiebreaks. */
+export function advancementModel(qf: [string, string][], rating: (id: string) => number, seed: (id: string) => number): number[] {
+  const pa = qf.map(([a, b]) => koMatchProb(rating(a), rating(b), seed(a), seed(b), false).a);
+  return Array.from({ length: 16 }, (_, s) => pa.reduce((acc, p, k) => acc * (((s >> k) & 1) === 0 ? p : 1 - p), 1));
+}
+/** Settlement state for the four recorded quarterfinal winners. */
+export function advancementState(qf: [string, string][], winners: string[]): number {
+  let s = 0;
+  qf.forEach((m, k) => { const i = m.indexOf(winners[k]); if (i < 0) throw new Error(`Quarterfinal ${k} winner ${winners[k]} is not in the match`); s |= i << k; });
+  return s;
 }
 
 // ---------------------------------------------------------------- Monte Carlo models (public ratings)
@@ -208,10 +241,12 @@ export function normaliseModel(xs: number[], floor = 0.002): number[] {
 
 // ---------------------------------------------------------------- published rules
 export const RULES: Record<string, string> = {
-  match: 'States: White wins / Draw / Black wins. Trading: from round opening until the match starts; if you watch it live, also in-play between moves (after each move is published, before the next is computed). Closure: the final move. Settlement: the result. Cancellation (match never played): 1/3 per share.',
+  match: 'States: White wins / Draw / Black wins. Claims: each result, and Decisive (pays $1 if White or Black wins, nothing on a draw; the same market as the three results, so its price is always 1 − the draw price). Trading: from round opening until the match starts; if you watch it live, also in-play between moves (after each move is published, before the next is computed). Closure: the final move. Settlement: the result on the official game record. VOID (cancelled at 1/3 per state, so Decisive pays 2/3): the match is never played, or it is stopped by the 400-ply playing limit (a censored game is not a result).',
   winner: 'States: every entrant. Trading: until the event\'s first round is processed or its first game starts. Settlement: the champion; joint champions split each share equally. Cancellation: 1/n per share — published conflict rule: if you (the player) enter this event, the market is cancelled at 1/n before your entry takes effect.',
   promotion: 'States: Yes (finishes top two of the division and is promoted) / No. Trading: until the last league round starts. Settlement: the promotion list at season end. Cancellation: ½ per share.',
   qualification: 'States: Yes (qualifies for the Crown Championship as one of the 8 best regional Crown Division winners) / No. Trading: until the last league round starts. Settlement: the Championship field. Cancellation: ½ per share.',
   season: 'States: every member of the division. Trading: until the last league round starts. Settlement: the division title holder (league order: points, head-to-head, Sonneborn–Berger, seed). Cancellation: 1/16 per share.',
+  length: 'States: Over X.5 plies / Under X.5 plies, where X is the line shown in the title. Definition: the number of plies (half-moves) on the official game record of this fixture; Over pays $1 if it is X + 1 or more, Under if it is X or fewer. A game stopped by the 400-ply playing limit has 400 plies on its record and settles Over. Trading: from round opening until the match starts (first move, or when you start watching it live). Settlement: the official game record. VOID (cancelled at ½ per share): the fixture never gets an official game record.',
+  advancement: 'States: the 16 possible sets of quarterfinal winners of the Crown Championship. Claims pay $1 in every state of their set: "X reaches the semifinals" (8 states) and "X meets Y in the semifinal" (4 states: both win their quarterfinals; pays nothing if either loses). Trading: from listing after the round of 16 until the quarterfinals start. Settlement: the four recorded quarterfinal winners (tiebreaks as published: classical, rapid, blitz, higher seed). VOID (|S|/16 per share): the quarterfinals are not played.',
   bracket: 'States: the 8 possible final-four paths (both semifinal winners and the champion). Claims pay 1 crown in each state of their set: champion (2 paths), finalist (4 paths), "X beats Y in the final" (1 path). Condition-false pays 0 — a conjunction claim is not refunded if its condition fails. Trading: until the semifinals start. Settlement: the realised path; a joint final splits ½/½ between the two finalists\' paths. Cancellation: |S|/8 per share.',
 };

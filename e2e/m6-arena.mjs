@@ -110,8 +110,9 @@ await page.screenshot({ path: OUT + 'arena-after-move.png' });
 await page.getByRole('button', { name: '1 s', exact: true }).click();
 await page.locator('[data-testid="auto-run"]').click();
 await waitUntil(page, id => window.__crown.fed.liveGame(id)?.status === 'done', champ.id, 1800000);
-const fin = await page.evaluate(async ([id, mid]) => { const f = window.__crown.fed; const m = f.state.markets.get(mid); const p = f.state.positions.get(`${mid}|player:cash`); const wg = await f.worldGame(`wg:${id}`); return { status: m.status, result: m.result, payout: m.payout, shares: p.shares, received: p.received, spent: p.spent, plies: wg.moves.length, gres: wg.result, total: [...f.state.balances.values()].reduce((a, b) => a + b, 0) }; }, [champ.id, champ.market]);
-const expected = fin.status === 'settled' ? Math.floor(fin.shares.reduce((a, s, i) => a + s * (fin.payout ? fin.payout[i] : (i === fin.result ? 1 : 0)), 0) * 1e6 + 1e-6) : null;
+const fin = await page.evaluate(async ([id, mid]) => { const f = window.__crown.fed; const m = f.state.markets.get(mid); const p = f.state.positions.get(`${mid}|player:cash`); const wg = await f.worldGame(`wg:${id}`); return { status: m.status, result: m.result, payout: m.payout, claims: (m.claims ?? [0, 1, 2].map(i => ({ states: [i] }))).map(c => c.states), shares: p.shares, received: p.received, spent: p.spent, plies: wg.moves.length, gres: wg.result, total: [...f.state.balances.values()].reduce((a, b) => a + b, 0) }; }, [champ.id, champ.market]);
+// v0.10: a claim pays the sum of the payout over its states (match markets also list Decisive = White or Black)
+const expected = fin.status === 'settled' ? Math.floor(fin.shares.reduce((a, s, i) => a + s * fin.claims[i].reduce((x, st) => x + (fin.payout ? fin.payout[st] : (st === fin.result ? 1 : 0)), 0), 0) * 1e6 + 1e-6) : null;
 check(5, (fin.status === 'settled' && Math.abs(fin.received - expected) <= 1) || fin.status === 'cancelled', `Match finished (${fin.plies} plies, ${fin.gres}); market ${fin.status} on state ${fin.result}; your ${fin.shares.join('/')} shares received ${(fin.received / 1e6).toFixed(2)} ₵ (expected ${expected === null ? 'cancellation refund' : (expected / 1e6).toFixed(2)}); ledger total ${fin.total}`);
 
 // 6. full post-game analysis (only now allowed)

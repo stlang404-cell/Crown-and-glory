@@ -1,0 +1,806 @@
+{
+ "id": "crown-market-sim-1",
+ "analyst": "v0.10 anchoring analyst",
+ "events": "800 held-out engine games (tools/odds/data, FNV-1a mod 4 = 0), real results and real ply counts; 5 seeds",
+ "note": "All traders are simulated. Public information only, except the Oracle benchmark (hidden strength; impossible in game). Player strategies trade on private copies of each market after the population has traded, and are settled on the real outcome.",
+ "agents": {
+  "population": "simulated agents: skilled, mediocre, contrarian, noisy (3 passes per market)",
+  "marketsPerKind": 4000,
+  "brierPerMarket": {
+   "match": {
+    "close": 0.5494,
+    "open": 0.6667,
+    "model": 0.5334,
+    "truth": 0.4857
+   },
+   "length": {
+    "close": 0.5045,
+    "open": 0.5,
+    "model": 0.5004
+   }
+  },
+  "calibrationOfClosingPrices": {
+   "match": [
+    {
+     "bin": "0–10%",
+     "n": 507,
+     "meanPrice": 0.071,
+     "freq": 0.075
+    },
+    {
+     "bin": "10–20%",
+     "n": 2433,
+     "meanPrice": 0.157,
+     "freq": 0.137
+    },
+    {
+     "bin": "20–30%",
+     "n": 3489,
+     "meanPrice": 0.249,
+     "freq": 0.218
+    },
+    {
+     "bin": "30–40%",
+     "n": 1963,
+     "meanPrice": 0.346,
+     "freq": 0.379
+    },
+    {
+     "bin": "40–50%",
+     "n": 1367,
+     "meanPrice": 0.447,
+     "freq": 0.461
+    },
+    {
+     "bin": "50–60%",
+     "n": 1013,
+     "meanPrice": 0.547,
+     "freq": 0.58
+    },
+    {
+     "bin": "60–70%",
+     "n": 650,
+     "meanPrice": 0.645,
+     "freq": 0.682
+    },
+    {
+     "bin": "70–80%",
+     "n": 378,
+     "meanPrice": 0.743,
+     "freq": 0.783
+    },
+    {
+     "bin": "80–90%",
+     "n": 175,
+     "meanPrice": 0.834,
+     "freq": 0.84
+    },
+    {
+     "bin": "90–100%",
+     "n": 25,
+     "meanPrice": 0.922,
+     "freq": 0.88
+    }
+   ],
+   "length": [
+    {
+     "bin": "0–10%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "10–20%",
+     "n": 14,
+     "meanPrice": 0.169,
+     "freq": 0.5
+    },
+    {
+     "bin": "20–30%",
+     "n": 42,
+     "meanPrice": 0.259,
+     "freq": 0.429
+    },
+    {
+     "bin": "30–40%",
+     "n": 117,
+     "meanPrice": 0.365,
+     "freq": 0.479
+    },
+    {
+     "bin": "40–50%",
+     "n": 3725,
+     "meanPrice": 0.472,
+     "freq": 0.497
+    },
+    {
+     "bin": "50–60%",
+     "n": 3929,
+     "meanPrice": 0.526,
+     "freq": 0.503
+    },
+    {
+     "bin": "60–70%",
+     "n": 117,
+     "meanPrice": 0.635,
+     "freq": 0.521
+    },
+    {
+     "bin": "70–80%",
+     "n": 42,
+     "meanPrice": 0.741,
+     "freq": 0.571
+    },
+    {
+     "bin": "80–90%",
+     "n": 14,
+     "meanPrice": 0.831,
+     "freq": 0.5
+    },
+    {
+     "bin": "90–100%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    }
+   ]
+  },
+  "maker": {
+   "match": {
+    "fundedSubsidy": 131.8335,
+    "meanSubsidyUsed": 20.1878,
+    "worstSubsidyUsed": 127.0197,
+    "meanFeesPerMarket": 1.9494
+   },
+   "length": {
+    "fundedSubsidy": 41.5888,
+    "meanSubsidyUsed": -0.2934,
+    "worstSubsidyUsed": 32.6898,
+    "meanFeesPerMarket": 0.6034
+   }
+  },
+  "agentWealth": {
+   "sim:skilled": {
+    "label": "Skilled (public model, calibrated)",
+    "meanFinal": 20855.74,
+    "min": 19928.28,
+    "max": 22090.37
+   },
+   "sim:mediocre": {
+    "label": "Mediocre (public model + noise σ = 0.06)",
+    "meanFinal": 17355.76,
+    "min": 14237.83,
+    "max": 18988.26
+   },
+   "sim:contrarian": {
+    "label": "Contrarian (adds 8 points to the cheapest state)",
+    "meanFinal": 15478.62,
+    "min": 13729.5,
+    "max": 17821.86
+   },
+   "sim:noisy": {
+    "label": "Noisy (random beliefs, no model)",
+    "meanFinal": 183.13,
+    "min": 97.75,
+    "max": 241.56
+   }
+  },
+  "startWealth": 10000,
+  "giniOfFinalWealth": 0.3093,
+  "inPlayStrategies": null,
+  "strategies": {
+   "match": [
+    {
+     "id": "favourite",
+     "label": "Always back the favourite (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -2.5504,
+     "ci95": [
+      -3.4699,
+      -1.631
+     ],
+     "meanFees": 0.3572
+    },
+    {
+     "id": "longshot",
+     "label": "Always back the longshot (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -15.3031,
+     "ci95": [
+      -16.6997,
+      -13.9065
+     ],
+     "meanFees": 0.3383
+    },
+    {
+     "id": "complete-set",
+     "label": "Buy one of every outcome (complete set, 20 each)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.2,
+     "ci95": [
+      -0.2,
+      -0.2
+     ],
+     "meanFees": 0.2
+    },
+    {
+     "id": "scalper",
+     "label": "Round-trip scalper (buy then sell 30 shares, 5 times)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -1.0693,
+     "ci95": [
+      -1.0724,
+      -1.0661
+     ],
+     "meanFees": 1.0693
+    },
+    {
+     "id": "decisive-arb",
+     "label": "Decisive vs White + Black \"arbitrage\" (buy the cheaper side of the identity)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.1,
+     "ci95": [
+      -0.1,
+      -0.1
+     ],
+     "meanFees": 0.1
+    },
+    {
+     "id": "model-edge",
+     "label": "Public-model edge (buy where the public forecast exceeds the price by > 3 points, budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 2650,
+     "meanPnl": 1.6656,
+     "ci95": [
+      1.2602,
+      2.071
+     ],
+     "meanFees": 0.0675
+    },
+    {
+     "id": "oracle",
+     "label": "Oracle (benchmark, impossible in game: reads hidden strength; budget $50)",
+     "legitimate": false,
+     "markets": 4000,
+     "traded": 3697,
+     "meanPnl": 7.8419,
+     "ci95": [
+      6.9598,
+      8.724
+     ],
+     "meanFees": 0.2093
+    }
+   ],
+   "length": [
+    {
+     "id": "favourite",
+     "label": "Always back the favourite (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -9.8892,
+     "ci95": [
+      -10.8753,
+      -8.9031
+     ],
+     "meanFees": 0.4153
+    },
+    {
+     "id": "longshot",
+     "label": "Always back the longshot (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -6.6703,
+     "ci95": [
+      -7.6668,
+      -5.6737
+     ],
+     "meanFees": 0.3818
+    },
+    {
+     "id": "complete-set",
+     "label": "Buy one of every outcome (complete set, 20 each)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.2,
+     "ci95": [
+      -0.2,
+      -0.2
+     ],
+     "meanFees": 0.2
+    },
+    {
+     "id": "scalper",
+     "label": "Round-trip scalper (buy then sell 30 shares, 5 times)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -1.6839,
+     "ci95": [
+      -1.6848,
+      -1.683
+     ],
+     "meanFees": 1.6839
+    },
+    {
+     "id": "decisive-arb",
+     "label": "Decisive vs White + Black \"arbitrage\" (buy the cheaper side of the identity)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 0,
+     "meanPnl": 0,
+     "ci95": [
+      0,
+      0
+     ],
+     "meanFees": 0
+    },
+    {
+     "id": "model-edge",
+     "label": "Public-model edge (buy where the public forecast exceeds the price by > 3 points, budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 855,
+     "meanPnl": 0.1881,
+     "ci95": [
+      0.0378,
+      0.3384
+     ],
+     "meanFees": 0.0109
+    },
+    {
+     "id": "oracle",
+     "label": "Oracle (benchmark, impossible in game: reads hidden strength; budget $50)",
+     "legitimate": false,
+     "markets": 4000,
+     "traded": 855,
+     "meanPnl": 0.1881,
+     "ci95": [
+      0.0378,
+      0.3384
+     ],
+     "meanFees": 0.0109
+    }
+   ]
+  }
+ },
+ "roster": {
+  "population": "shipped NPC roster (npcTrade, opening role)",
+  "marketsPerKind": 4000,
+  "brierPerMarket": {
+   "match": {
+    "close": 0.5333,
+    "open": 0.6667,
+    "model": 0.5334,
+    "truth": 0.4857
+   },
+   "length": {
+    "close": 0.5005,
+    "open": 0.5,
+    "model": 0.5004
+   }
+  },
+  "calibrationOfClosingPrices": {
+   "match": [
+    {
+     "bin": "0–10%",
+     "n": 970,
+     "meanPrice": 0.071,
+     "freq": 0.057
+    },
+    {
+     "bin": "10–20%",
+     "n": 2725,
+     "meanPrice": 0.156,
+     "freq": 0.141
+    },
+    {
+     "bin": "20–30%",
+     "n": 2940,
+     "meanPrice": 0.244,
+     "freq": 0.229
+    },
+    {
+     "bin": "30–40%",
+     "n": 1426,
+     "meanPrice": 0.349,
+     "freq": 0.403
+    },
+    {
+     "bin": "40–50%",
+     "n": 1290,
+     "meanPrice": 0.447,
+     "freq": 0.457
+    },
+    {
+     "bin": "50–60%",
+     "n": 1103,
+     "meanPrice": 0.548,
+     "freq": 0.545
+    },
+    {
+     "bin": "60–70%",
+     "n": 779,
+     "meanPrice": 0.645,
+     "freq": 0.664
+    },
+    {
+     "bin": "70–80%",
+     "n": 447,
+     "meanPrice": 0.748,
+     "freq": 0.736
+    },
+    {
+     "bin": "80–90%",
+     "n": 290,
+     "meanPrice": 0.846,
+     "freq": 0.862
+    },
+    {
+     "bin": "90–100%",
+     "n": 30,
+     "meanPrice": 0.927,
+     "freq": 0.833
+    }
+   ],
+   "length": [
+    {
+     "bin": "0–10%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "10–20%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "20–30%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "30–40%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "40–50%",
+     "n": 2864,
+     "meanPrice": 0.494,
+     "freq": 0.529
+    },
+    {
+     "bin": "50–60%",
+     "n": 5136,
+     "meanPrice": 0.503,
+     "freq": 0.484
+    },
+    {
+     "bin": "60–70%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "70–80%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "80–90%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    },
+    {
+     "bin": "90–100%",
+     "n": 0,
+     "meanPrice": null,
+     "freq": null
+    }
+   ]
+  },
+  "maker": {
+   "match": {
+    "fundedSubsidy": 131.8335,
+    "meanSubsidyUsed": 102.8011,
+    "worstSubsidyUsed": 130.6265,
+    "meanFeesPerMarket": 10.2609
+   },
+   "length": {
+    "fundedSubsidy": 41.5888,
+    "meanSubsidyUsed": -0.0322,
+    "worstSubsidyUsed": 1.4813,
+    "meanFeesPerMarket": 0.2415
+   }
+  },
+  "agentWealth": {
+   "npc:conservative": {
+    "label": "Old Harbour Fund",
+    "meanFinal": 24388.42,
+    "min": 24117.2,
+    "max": 24786.66
+   },
+   "npc:fan": {
+    "label": "Crown Supporters Club",
+    "meanFinal": 55635.45,
+    "min": 54909.63,
+    "max": 56237.49
+   },
+   "npc:contrarian": {
+    "label": "Lantern Contrarians",
+    "meanFinal": 10629.51,
+    "min": 10012.7,
+    "max": 11236.22
+   },
+   "npc:novice": {
+    "label": "First-Time Forecasters",
+    "meanFinal": 1101.7,
+    "min": 462.45,
+    "max": 2919.69
+   },
+   "npc:momentum": {
+    "label": "Tidewater Momentum",
+    "meanFinal": 1831.11,
+    "min": 1400.61,
+    "max": 2427.28
+   },
+   "npc:specialist": {
+    "label": "Summit Tournament Partners",
+    "meanFinal": 10000,
+    "min": 10000,
+    "max": 10000
+   },
+   "npc:tactician": {
+    "label": "Kestrel Tactical Desk",
+    "meanFinal": 28447.68,
+    "min": 26392.45,
+    "max": 29888.8
+   },
+   "npc:analyst": {
+    "label": "Meridian Analytics",
+    "meanFinal": 21779.32,
+    "min": 20562.9,
+    "max": 22721.54
+   }
+  },
+  "startWealth": 10000,
+  "giniOfFinalWealth": 0.4649,
+  "inPlayStrategies": [
+   {
+    "id": "live-model-edge",
+    "label": "In play: buy where the published live forecast beats the price by > 3 points (budget $50 per window)",
+    "legitimate": true,
+    "markets": 13640,
+    "traded": 0,
+    "meanPnl": 0,
+    "ci95": [
+     0,
+     0
+    ],
+    "meanFees": 0
+   },
+   {
+    "id": "live-favourite",
+    "label": "In play: back the current favourite (budget $50 per window)",
+    "legitimate": true,
+    "markets": 13640,
+    "traded": 13640,
+    "meanPnl": -1.3347,
+    "ci95": [
+     -1.6841,
+     -0.9853
+    ],
+    "meanFees": 0.3348
+   }
+  ],
+  "strategies": {
+   "match": [
+    {
+     "id": "favourite",
+     "label": "Always back the favourite (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -3.7001,
+     "ci95": [
+      -4.6014,
+      -2.7989
+     ],
+     "meanFees": 0.3624
+    },
+    {
+     "id": "longshot",
+     "label": "Always back the longshot (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -16.4194,
+     "ci95": [
+      -17.8258,
+      -15.013
+     ],
+     "meanFees": 0.3394
+    },
+    {
+     "id": "complete-set",
+     "label": "Buy one of every outcome (complete set, 20 each)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.2,
+     "ci95": [
+      -0.2,
+      -0.2
+     ],
+     "meanFees": 0.2
+    },
+    {
+     "id": "scalper",
+     "label": "Round-trip scalper (buy then sell 30 shares, 5 times)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -1.0596,
+     "ci95": [
+      -1.063,
+      -1.0562
+     ],
+     "meanFees": 1.0596
+    },
+    {
+     "id": "decisive-arb",
+     "label": "Decisive vs White + Black \"arbitrage\" (buy the cheaper side of the identity)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.1,
+     "ci95": [
+      -0.1,
+      -0.1
+     ],
+     "meanFees": 0.1
+    },
+    {
+     "id": "model-edge",
+     "label": "Public-model edge (buy where the public forecast exceeds the price by > 3 points, budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 0,
+     "meanPnl": 0,
+     "ci95": [
+      0,
+      0
+     ],
+     "meanFees": 0
+    },
+    {
+     "id": "oracle",
+     "label": "Oracle (benchmark, impossible in game: reads hidden strength; budget $50)",
+     "legitimate": false,
+     "markets": 4000,
+     "traded": 3294,
+     "meanPnl": 5.4829,
+     "ci95": [
+      4.7645,
+      6.2012
+     ],
+     "meanFees": 0.1754
+    }
+   ],
+   "length": [
+    {
+     "id": "favourite",
+     "label": "Always back the favourite (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -9.4476,
+     "ci95": [
+      -10.4394,
+      -8.4558
+     ],
+     "meanFees": 0.4039
+    },
+    {
+     "id": "longshot",
+     "label": "Always back the longshot (budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -6.3562,
+     "ci95": [
+      -7.346,
+      -5.3664
+     ],
+     "meanFees": 0.3992
+    },
+    {
+     "id": "complete-set",
+     "label": "Buy one of every outcome (complete set, 20 each)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -0.2,
+     "ci95": [
+      -0.2,
+      -0.2
+     ],
+     "meanFees": 0.2
+    },
+    {
+     "id": "scalper",
+     "label": "Round-trip scalper (buy then sell 30 shares, 5 times)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 4000,
+     "meanPnl": -1.6855,
+     "ci95": [
+      -1.6856,
+      -1.6854
+     ],
+     "meanFees": 1.6855
+    },
+    {
+     "id": "decisive-arb",
+     "label": "Decisive vs White + Black \"arbitrage\" (buy the cheaper side of the identity)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 0,
+     "meanPnl": 0,
+     "ci95": [
+      0,
+      0
+     ],
+     "meanFees": 0
+    },
+    {
+     "id": "model-edge",
+     "label": "Public-model edge (buy where the public forecast exceeds the price by > 3 points, budget $50)",
+     "legitimate": true,
+     "markets": 4000,
+     "traded": 0,
+     "meanPnl": 0,
+     "ci95": [
+      0,
+      0
+     ],
+     "meanFees": 0
+    },
+    {
+     "id": "oracle",
+     "label": "Oracle (benchmark, impossible in game: reads hidden strength; budget $50)",
+     "legitimate": false,
+     "markets": 4000,
+     "traded": 0,
+     "meanPnl": 0,
+     "ci95": [
+      0,
+      0
+     ],
+     "meanFees": 0
+    }
+   ]
+  }
+ },
+ "seconds": 17
+}

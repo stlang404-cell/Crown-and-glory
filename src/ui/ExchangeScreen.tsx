@@ -3,9 +3,11 @@ import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
-import { quote, liquidationValue, EXCHANGE_ID, claimsOf, statesOf, claimPrices, revisionOf } from '../exchange/market';
+import { EXCHANGE_ID, claimsOf, statesOf, claimPrices, revisionOf, uniformPayout } from '../exchange/market';
+import { exchangeApi } from '../exchange/api';
+import type { PositionView } from '../exchange/portfolio';
 import type { Market, Position } from '../exchange/market';
-import { fmtCrowns, fmtPrice, MICRO } from '../exchange/ledger';
+import { fmtCrowns, fmtPrice, fmtMoneyDelta, MICRO } from '../exchange/ledger';
 import { pregameWdl, ODDS_MODEL_ID } from '../exchange/odds';
 import { REGION_NAMES, divisionLabel, PLAYER_ID } from '../federation/model';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
@@ -14,9 +16,11 @@ import { NPC_TRADERS } from '../exchange/npc';
 import { scoreAll, summary } from '../app/forecasting';
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
-export const KIND_LABEL: Record<string, string> = { match: 'Match', winner: 'Tournament Champion', promotion: 'Promotion', qualification: 'Qualification', season: 'Season Title', bracket: 'Conditional · Final Four', sandbox: 'Sandbox' };
+export const KIND_LABEL: Record<string, string> = { match: 'Match', winner: 'Tournament Champion', promotion: 'Promotion', qualification: 'Qualification', season: 'Season Title', bracket: 'Conditional · Final Four', sandbox: 'Sandbox', length: 'Match Length', advancement: 'Tournament Advancement' };
 /** Player-facing market states (style guide terminology). */
-export const STATUS_LABEL: Record<string, string> = { open: 'Trading Open', closed: 'Trading Closed', settled: 'Market Settled', cancelled: 'Market Cancelled' };
+export const STATUS_LABEL: Record<string, string> = { open: 'Trading Open', closed: 'Trading Closed', settled: 'Market Settled', cancelled: 'Market Cancelled (VOID)' };
+/** Who made a recorded trade (market history). */
+const traderName = (by: string) => (by === 'player:cash' ? 'You' : by === 'open' ? 'Market opened' : NPC_TRADERS.find(t => t.id === by)?.name ?? by);
 export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
 const SERIES = ['var(--text)', 'var(--accent)', 'var(--info)', 'var(--positive)', 'var(--warn)'];
 
@@ -53,9 +57,11 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
   const settled = all.filter(m => m.status === 'settled' || m.status === 'cancelled');
   const mine = (m: Market) => st.positions.get(`${m.id}|player:cash`);
   // [test id key (unchanged), heading, markets]
+  const watch = new Set(fed.marketWatchlist());
   const groups: [string, string, Market[]][] = [
-    ['Matches', 'Matches', live.filter(m => (m.kind ?? 'match') === 'match')],
-    ['Tournaments', 'Tournaments', live.filter(m => m.kind === 'winner')],
+    ...(watch.size ? [['Watchlist', 'Watchlist', all.filter(m => watch.has(m.id))] as [string, string, Market[]]] : []),
+    ['Matches', 'Matches', live.filter(m => (m.kind ?? 'match') === 'match' || m.kind === 'length')],
+    ['Tournaments', 'Tournaments', live.filter(m => m.kind === 'winner' || m.kind === 'advancement')],
     ['Season & league', 'Season & League', live.filter(m => m.kind === 'promotion' || m.kind === 'qualification' || m.kind === 'season')],
     ['Conditional (bounded state model)', 'Conditional Markets', live.filter(m => m.kind === 'bracket')],
   ];
@@ -112,6 +118,8 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
 
 function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) => Position | undefined }) {
   const { go } = useApp();
+  const services = useServices();
+  const suspended = (m: Market) => m.status === 'open' && !!services.fed.suspension(m.id);
   return (
     <div style={{ overflowX: 'auto' }}>
       <table>
@@ -125,7 +133,7 @@ function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) =
             <tr key={m.id} className="clickable" data-testid="market-row" data-kind={m.kind ?? 'match'} onClick={() => go({ name: 'exchange', id: m.id })}>
               <td>{m.title}<div className="small muted">{KIND_LABEL[m.kind ?? 'match']} · Season {m.season}, Round {m.round}{m.live ? ' · live trading' : ''}</div></td>
               <td className="small">{lead}</td>
-              <td><span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span></td>
+              <td>{suspended(m) ? <span className="chip warn" data-testid="suspended-chip">Trading Suspended</span> : <span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span>}</td>
               <td className="hide-sm mono small">{pos && pos.shares.some(x => x) ? `${pos.shares.reduce((a, b) => a + b, 0)} shares` : ''}</td>
             </tr>
           );
@@ -135,78 +143,140 @@ function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) =
   );
 }
 
-/** Generic trade ticket (any claim of any market). Used by the market page and the live spectator. */
+/** Generic trade ticket (any claim of any market). Used by the market page and the live spectator. All quoting and
+ *  execution goes through the trading API (src/exchange/api.ts); the ticket only renders it. */
 export function TradeTicket({ m, compact = false }: { m: Market; compact?: boolean }) {
   const services = useServices();
   const fed = services.fed;
-  const st = fed.state!;
+  const api = exchangeApi(fed, services.readOnly);
   const claims = claimsOf(m);
   const [claim, setClaim] = useState(0);
   const [shares, setShares] = useState(10);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
-  const pos = st.positions.get(`${m.id}|player:cash`);
-  const cash = fed.balance('player:cash');
-  const q = useMemo(() => { try { return { ok: quote(m, claim, shares, side) }; } catch (e) { return { err: (e as Error).message }; } }, [m, claim, shares, side]);
-  const holding = pos?.shares[claim] ?? 0;
-  const canTrade = m.status === 'open' && !services.readOnly && m.white !== PLAYER_ID && m.black !== PLAYER_ID;
-  const tooMuch = q.ok && side === 'buy' && q.ok.total > cash;
-  const tooMany = side === 'sell' && shares > holding;
-  const version = m.history.length;
+  const status = api.status(m.id);
+  const pv = api.quote(m.id, claim, shares, side);
+  const q = pv.quote;
+  const canTrade = status.tradable && m.white !== PLAYER_ID && m.black !== PLAYER_ID;
+  const tooMuch = !!q && side === 'buy' && !pv.affordable;
+  const tooMany = side === 'sell' && shares > pv.holding;
   const revision = revisionOf(m);
   const exec = async () => {
     setBusy(true); setMsg(null);
-    try { await fed.trade(m.id, claim, shares, side, { expectVersion: version, expectRevision: revision }); setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} shares of ${claims[claim].label}.` }); }
-    catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } finally { setBusy(false); }
+    try {
+      // the exact previewed total is the limit: with the revision check the trade fills at exactly this amount or not at all
+      if (side === 'buy') await api.buy(m.id, claim, shares, { revision, maxTotal: q?.total });
+      else await api.sell(m.id, claim, shares, { revision, minTotal: q?.total });
+      setMsg({ kind: 'ok', text: `${side === 'buy' ? 'Bought' : 'Sold'} ${shares} shares of ${claims[claim].label} for ${fmtCrowns(q?.total ?? 0)}.` });
+    } catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } finally { setBusy(false); }
   };
+  const held = pv.after?.holdings.find(h => h.claim === claim);
   return (
     <div className="panel stack" data-testid="ticket" data-revision={revision}>
       <h3>Trade Ticket</h3>
-      {!canTrade && <div className="small notice">{m.status === 'open' ? 'Trading isn’t available here.' : `${statusLabel(m.status)}: trading has ended.`}</div>}
+      {status.suspended && <div className="small notice warn" data-testid="ticket-suspended">{status.reason}</div>}
+      {!canTrade && !status.suspended && <div className="small notice">{m.status === 'open' ? 'Trading isn’t available here.' : `${statusLabel(m.status)}: trading has ended.`}</div>}
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
       <div className="seg" role="group" aria-label="Side"><button aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy</button><button aria-pressed={side === 'sell'} onClick={() => setSide('sell')}>Sell</button></div>
       {claims.length <= 3
         ? <div className="seg" role="group" aria-label="Outcome">{claims.map((c, i) => <button key={c.id} aria-pressed={claim === i} onClick={() => setClaim(i)}>{c.label}</button>)}</div>
         : <label className="small">Outcome <select value={claim} onChange={e => setClaim(+e.target.value)} aria-label="Outcome" data-testid="claim-select">{claims.map((c, i) => <option key={c.id} value={i}>{c.label} — {fmtPrice(claimPrices(m)[i])}</option>)}</select></label>}
       <label className="small">Shares <input type="number" min={1} step={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 90 }} aria-label="Shares" /></label>
-      {q.ok ? (
-        <table className="small"><tbody>
-          <tr><td>{side === 'buy' ? 'Cost' : 'Proceeds'}</td><td className="mono">{fmtCrowns(q.ok.amount)}</td></tr>
-          <tr><td>Fee (1%)</td><td className="mono">{fmtCrowns(q.ok.fee)}</td></tr>
-          <tr><td><strong>{side === 'buy' ? 'You pay' : 'You receive'}</strong></td><td className="mono"><strong>{fmtCrowns(q.ok.total)}</strong></td></tr>
-          {!compact && <tr><td>Average price</td><td className="mono">{fmtPrice(q.ok.avgPrice)}</td></tr>}
-          <tr><td>Price moves</td><td className="mono">{fmtPrice(q.ok.priceBefore)} → {fmtPrice(q.ok.priceAfter)}</td></tr>
-          {side === 'buy' && <><tr><td>Max payout</td><td className="mono">{fmtCrowns(q.ok.maxPayout)}</td></tr><tr><td>Max loss</td><td className="mono">{fmtCrowns(q.ok.maxLoss)}</td></tr></>}
+      {q ? (
+        <table className="small" data-testid="ticket-preview"><tbody>
+          <tr><td>{side === 'buy' ? 'Cost' : 'Proceeds'}</td><td className="mono">{fmtCrowns(q.amount)}</td></tr>
+          <tr><td>Fee (1%)</td><td className="mono">{fmtCrowns(q.fee)}</td></tr>
+          <tr><td><strong>{side === 'buy' ? 'You pay' : 'You receive'}</strong></td><td className="mono"><strong>{fmtCrowns(q.total)}</strong></td></tr>
+          {!compact && <tr><td>Average price</td><td className="mono">{fmtPrice(q.avgPrice)}</td></tr>}
+          <tr><td>Price moves</td><td className="mono">{fmtPrice(q.priceBefore)} → {fmtPrice(q.priceAfter)}</td></tr>
+          {side === 'buy' && <><tr><td>Max payout</td><td className="mono">{fmtCrowns(q.maxPayout)}</td></tr><tr><td>Max loss</td><td className="mono">{fmtCrowns(q.maxLoss)}</td></tr></>}
+          {!compact && pv.after && <tr><td>After this trade</td><td className="mono small">{held ? `${held.shares} held${held.avgCost !== null ? ` · avg ${fmtPrice(held.avgCost / MICRO)}` : ''}` : 'none held'} · worst case {fmtMoneyDelta(pv.after.worst)} · best {fmtMoneyDelta(pv.after.best)}</td></tr>}
         </tbody></table>
-      ) : <div className="small notice warn">{q.err}</div>}
-      {tooMuch && <div className="small notice warn">Not enough cash: you have {fmtCrowns(cash)}.</div>}
-      {tooMany && <div className="small notice warn">You only have {holding} {holding === 1 ? 'share' : 'shares'} of this outcome to sell.</div>}
-      <button className="btn primary" data-testid="confirm-trade" disabled={!canTrade || busy || !q.ok || tooMuch || tooMany} onClick={exec}>{busy ? 'Placing Trade…' : q.ok ? `Confirm: ${side === 'buy' ? 'Pay' : 'Receive'} ${fmtCrowns(q.ok.total)}` : `Confirm ${side === 'buy' ? 'Buy' : 'Sell'}`}</button>
-      <div className="small muted">Cash {fmtCrowns(cash)} · if the price changes before you confirm, the trade is rejected, never filled at a new price.</div>
+      ) : <div className="small notice warn">{pv.error}</div>}
+      {tooMuch && <div className="small notice warn">Not enough cash: you have {fmtCrowns(pv.cash)}.</div>}
+      <button className="btn primary" data-testid="confirm-trade" disabled={!canTrade || busy || !q || tooMuch || tooMany} onClick={exec}>{busy ? 'Placing Trade…' : q ? `Confirm: ${side === 'buy' ? 'Pay' : 'Receive'} ${fmtCrowns(q.total)}` : `Confirm ${side === 'buy' ? 'Buy' : 'Sell'}`}</button>
+      <div className="small muted">Cash {fmtCrowns(pv.cash)} · you pay or receive exactly the amount on the button: if a move or another trade changes the price first, the trade is rejected, never filled at a new price.</div>
     </div>
   );
 }
 
-function PositionPanel({ m }: { m: Market }) {
+/** Position, cost basis, P&L, scenarios and Close Position (exact proceeds preview). */
+export function PositionPanel({ m }: { m: Market }) {
   const services = useServices();
-  const st = services.fed.state!;
-  const pos = st.positions.get(`${m.id}|player:cash`);
-  const claims = claimsOf(m);
+  const api = exchangeApi(services.fed, services.readOnly);
+  const [confirm, setConfirm] = useState(false);
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
+  const v: PositionView | null = api.position(m.id);
+  const status = api.status(m.id);
+  const has = !!v && v.holdings.length > 0;
+  const close = async () => {
+    setMsg(null);
+    try { const net = await api.close(m.id, { revision: status.revision, minTotal: v!.exitValue }); setMsg({ kind: 'ok', text: `Position closed: received ${fmtCrowns(net)}.` }); }
+    catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); } finally { setConfirm(false); }
+  };
+  const sign = (x: number) => <span className={`mono ${x > 0 ? 'pos' : x < 0 ? 'neg' : ''}`}>{fmtMoneyDelta(x)}</span>;
   return (
-    <div className="panel stack">
+    <div className="panel stack" data-testid="position-panel">
       <h3>Your Position</h3>
-      {!pos || (!pos.shares.some(x => x) && !pos.spent) ? <p className="small muted">No shares in this market yet.</p> : (
-        <div className="small">
-          {claims.map((c, i) => pos.shares[i] ? <div key={c.id}>{c.label}: <strong>{pos.shares[i]}</strong> {pos.shares[i] === 1 ? 'share' : 'shares'}</div> : null)}
-          <div>Spent {fmtCrowns(pos.spent)} (including {fmtCrowns(pos.fees)} fees) · received {fmtCrowns(pos.received)}</div>
-          {(m.status === 'open' || m.status === 'closed') && <div>Value if sold now: {fmtCrowns(liquidationValue(m, pos))}{m.status === 'closed' ? ' (trading closed: valued at the cancellation refund)' : ''} · profit or loss if sold now {fmtCrowns(liquidationValue(m, pos) + pos.received - pos.spent)}</div>}
-          {m.status === 'settled' && <div>Market Settled · net {fmtCrowns(pos.received - pos.spent)}</div>}
-          {m.status === 'cancelled' && <div>Market Cancelled and refunded on its published terms · net {fmtCrowns(pos.received - pos.spent)}</div>}
+      {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
+      {!v || (!has && !v.spent) ? <p className="small muted">No shares in this market yet.</p> : (
+        <div className="small stack" style={{ gap: 6 }}>
+          {has && (
+            <table className="small"><thead><tr><th>Outcome</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>{m.status === 'open' ? 'Sell Now' : 'Value'}</th><th>Unrealised</th></tr></thead>
+              <tbody>{v.holdings.map(h => <tr key={h.claim}><td>{h.label}</td><td className="mono">{h.shares}</td><td className="mono">{h.avgCost === null ? '—' : fmtPrice(h.avgCost / MICRO)}</td><td className="mono">{fmtPrice(h.price)}</td><td className="mono">{m.status === 'open' ? fmtCrowns(h.exitValue) : '—'}</td><td>{h.unrealised === null || m.status !== 'open' ? '—' : sign(h.unrealised)}</td></tr>)}</tbody></table>
+          )}
+          <div>Paid {fmtCrowns(v.spent)} (including {fmtCrowns(v.fees)} fees) · received {fmtCrowns(v.received)}</div>
+          {v.basisKnown
+            ? <div data-testid="pnl">Realised {sign(v.realised!)} · {m.status === 'open' ? <>unrealised {sign(v.unrealised!)} (if sold now)</> : m.status === 'closed' ? <>{fmtCrowns(v.pending)} awaiting settlement</> : 'nothing open'}</div>
+            : <div className="muted">Cost basis per outcome was not recorded for trades before v0.10; net so far {sign(v.netIfClosedNow)}.</div>}
+          {(m.status === 'open' || m.status === 'closed') && has && <div>At risk: <strong className="mono">{fmtCrowns(v.atRisk)}</strong> · best case {sign(v.best)} · worst case {sign(v.worst)}</div>}
+          {(m.status === 'open' || m.status === 'closed') && has && (
+            <details><summary>Profit or Loss by Outcome</summary>
+              <table className="small"><tbody>{v.scenarios.map(s => <tr key={s.label}><td>{s.label}</td><td className="mono">pays {fmtCrowns(s.payout)}</td><td>{sign(s.pnl)}</td></tr>)}</tbody></table>
+            </details>
+          )}
+          {m.status === 'settled' && <div>Market Settled · net {sign(v.received - v.spent)}</div>}
+          {m.status === 'cancelled' && <div>Market VOID: refunded on its published cancellation terms · net {sign(v.received - v.spent)}</div>}
+          {m.status === 'open' && has && (confirm
+            ? <div className="row"><button className="btn primary small" data-testid="confirm-close" disabled={!status.tradable} onClick={close}>Confirm: Receive {fmtCrowns(v.exitValue)}</button><button className="btn small" onClick={() => setConfirm(false)}>Keep</button></div>
+            : <button className="btn small" data-testid="close-position" disabled={!status.tradable} onClick={() => setConfirm(true)}>Close Position</button>)}
         </div>
       )}
     </div>
   );
+}
+
+/** Settlement and VOID terms per claim, from the market's published payout rules. */
+function SettlementTerms({ m }: { m: Market }) {
+  const claims = claimsOf(m), n = statesOf(m).length;
+  const v = m.cancelVector ?? uniformPayout(n);
+  return (
+    <details className="small" data-testid="settlement-terms"><summary>Settlement and VOID Terms</summary>
+      <table className="small"><thead><tr><th>Outcome</th><th>Pays if it happens</th><th>Pays if VOID</th></tr></thead>
+        <tbody>{claims.slice(0, 40).map(c => <tr key={c.id}><td>{c.label}</td><td className="mono">$1.000 per share</td><td className="mono">{fmtPrice(c.states.reduce((a, s) => a + v[s], 0))}</td></tr>)}</tbody></table>
+      <div className="muted">VOID means the market is cancelled on its published terms (see the rules); every holding is paid the VOID amount per share, rounded down to the micro-dollar. Settlement and VOID are final and happen once.</div>
+    </details>
+  );
+}
+
+/** Recorded trades (market history), newest first. */
+function TradeHistory({ m }: { m: Market }) {
+  const claims = claimsOf(m);
+  const rows = m.history.slice(-30).reverse();
+  return (
+    <details className="small" data-testid="trade-history"><summary>Market History ({m.history.length - 1} {m.history.length === 2 ? 'trade' : 'trades'})</summary>
+      <table className="small"><thead><tr><th>#</th><th>Trader</th><th>Leading After</th></tr></thead>
+        <tbody>{rows.map(h => { const cp = claims.map(c => c.states.reduce((a, st) => a + (h.prices[st] ?? 0), 0)); const i = cp.indexOf(Math.max(...cp)); return <tr key={`${h.seq}-${h.by}`}><td className="mono">{h.seq}</td><td>{traderName(h.by)}</td><td className="mono">{claims[i]?.label} {fmtPrice(cp[i])}</td></tr>; })}</tbody></table>
+    </details>
+  );
+}
+
+function WatchButton({ m }: { m: Market }) {
+  const services = useServices();
+  const fed = services.fed;
+  const on = fed.marketWatchlist().includes(m.id);
+  return <button className="btn small" data-testid="watch-market" aria-pressed={on} disabled={services.readOnly} onClick={() => void fed.setMarketWatch(m.id, !on)}>{on ? '★ Watching' : '☆ Watch'}</button>;
 }
 
 export function ForecastPanel({ m }: { m: Market }) {
@@ -255,7 +325,9 @@ function MarketScreen({ m }: { m: Market }) {
         <h1 style={{ margin: 0, fontSize: '1.3rem' }}>{m.title}</h1>
         <span className="chip">{KIND_LABEL[kind]}</span>
         <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`} data-testid="market-status">{statusLabel(m.status)}</span>
+        {m.status === 'open' && fed.suspension(m.id) && <span className="chip warn">Trading Suspended</span>}
         <span className="spacer" />
+        <WatchButton m={m} />
         {kind === 'match' && <button className="btn small" onClick={() => go({ name: 'watch', id: m.fixtureId })}>{m.status === 'settled' ? 'Replay Match' : 'Watch Match'}</button>}
       </div>
       <div className="grid-2">
@@ -277,6 +349,8 @@ function MarketScreen({ m }: { m: Market }) {
           <div className="panel small stack" style={{ gap: 6 }}>
             <div><strong>Rules.</strong> {m.rules ?? 'Outcomes: White wins, draw or Black wins. Trading: until the match starts. Settlement: each winning share pays $1. Cancellation: 1/$3 per share.'}</div>
             <div>Fee: 1% on every buy and sell. You can never lose more than you pay.</div>
+            <SettlementTerms m={m} />
+            <TradeHistory m={m} />
             <details className="small muted"><summary>Details</summary>Priced by an automated market maker (LMSR) over {states.length} outcomes · liquidity b = {m.b} · market maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · prices from the {prices(m.q, m.b).length}-state inventory · {MICRO.toLocaleString('en')} µ = $1 · market revision {revisionOf(m)}.</details>
           </div>
           {(analyst || kind !== 'match') && <div className="panel"><h3>Price History</h3><PriceChart m={m} /></div>}
