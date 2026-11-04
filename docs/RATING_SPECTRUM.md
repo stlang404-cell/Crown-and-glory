@@ -95,6 +95,25 @@ Solve rate on the 87 Fairy-Stockfish-verified positions of `tools/bench/tactics.
 (`npx tsx tools/bench/beginner_tactics.ts 8`): L1 53.2 % · L0a 48.0 % · L0b 39.7 % · L0c 35.3 % · L0d 26.3 %.
 Strictly monotone; `tests/beginnerLevels.test.ts` checks the order with 6 seeds.
 
+### Held-out validation: weak engines lose to stronger ones as predicted
+`OPENINGS=4ply OPENING_OFFSET=240 THREADS=2 npx tsx tools/bench/run.ts suite beginners-far 30` (openings 240–269,
+used by no fit; `tools/bench/results/suite-beginners-far*.json`). Expected score from the published ratings (logistic,
+draws ½) against the observed score:
+
+| A | B | Gap | Expected A | Games | A W/D/L | Observed A (95 % CI) |
+|---|---|---|---|---|---|---|
+| L1 | L0c | 498 | 94.6% | 60 | 52/5/3 | 90.8% (84.2%–96.7%) |
+| L1 | L0d | 729 | 98.5% | 60 | 58/1/1 | 97.5% (93.3%–100.0%) |
+| L0a | L0d | 593 | 96.8% | 60 | 54/3/3 | 92.5% (86.7%–97.5%) |
+| L2 | L0a | 458 | 93.3% | 60 | 46/3/11 | 79.2% (69.2%–89.2%) |
+| L3 | L0b | 1136 | 99.9% | 60 | 60/0/0 | 100.0% |
+
+The stronger engine won every match decisively. Within the beginner chain the predictions fall inside the CIs.
+**L2 vs L0a deviates:** the measured gap is ≈ 232 (CI ≈ 140–366) where the published ratings predict 458. Either L2's
+published 1122 (from 40 games vs L1 in cal-2026-11-03) is high, or the error-model levels are less transitive
+against L2's style of selection. Not corrected here (L1–L9 values are not changed by this package); flagged for the
+next L1–L9 recalibration.
+
 ## 2. Latent → engine profile (crown-profile-map-2, `src/federation/profiles.ts`)
 
 | Latent (Crown scale) | Engine actually played |
@@ -119,38 +138,44 @@ Simulated results follow the full strength." No strength above ~3,040 is claimed
 
 ## 3. Population (crown-population-2, `src/federation/population.ts`)
 
-The 8 divisions × 16 per circuit structure is unchanged. New federations draw latent ~ N(centre, sd²) per division,
-clamped to [0, 4,400], with lower divisions packed closer than upper ones:
+**Target (owner, binding, docs/V10_PLAN.md):** per 10,000 competitors 0–399 500 · 400–799 1,500 · 800–1199 2,500 ·
+1200–1599 2,600 · 1600–1999 1,700 · 2000–2399 800 · 2400–2799 280 · 2800–3199 90 · 3200+ 30, with a few 4,000+.
+Refinements (deviations, documented): the 3200+ share is split 22 (3200–3599) / 8 (3600–3999) so the top thins out;
+and an explicit apex of max(2, round(N / 3,000)) Crown-Division competitors at 4,000 + 120·|z| supplies the "few
+4,000+" (2 in a 2,048 world, 3 in 10,000; they come out of the Crown Division's share).
 
-| Division | 1 Crown | 2 | 3 | 4 | 5 | 6 | 7 | 8 Open |
-|---|---|---|---|---|---|---|---|---|
-| centre | 3050 | 2600 | 2150 | 1720 | 1320 | 960 | 640 | 340 |
-| sd | 200 | 190 | 180 | 170 | 160 | 150 | 150 | 160 |
+**Method.** The target defines a piecewise-linear distribution of latent strength (`latentAtQuantile`). The fixed
+8 × 16 structure is kept: division d owns one eighth of the population quantiles ((8 − d)/8 … (9 − d)/8), and each
+competitor's quantile is jittered by N(0, 0.04²) with reflection at 0 and 1 (neighbouring divisions overlap by about a
+third of a division; the reflection keeps the overall distribution exactly on target). Resulting division ranges
+(median): 8 Open 0–600 (433), 7 600–880 (767), 6 880–1080 (980), 5 1080–1277 (1180), 4 1277–1469 (1373),
+3 1469–1694 (1565), 2 1694–1988 (1841), 1 Crown 1988+ (2288). Public ratings start at latent + N(0, 80²) (floored at 0),
+RD 120. Entrants draw from the same rule for their slot's division (public rating = division median, RD 300).
+Ratings afterwards move only through results (Glicko-2); no band quota is ever enforced or rewritten.
 
-plus a tiny apex: one Crown-Division competitor per 1,024 (2 in a 2,048 world, 4 in 4,096) gets 4,000 + 120·|z|, in
-regions chosen by the world seed. Public ratings start at latent + N(0, 80²) (floored at 0), RD 120, as before.
-Entrants: N(centre, sd²), public rating = centre, RD 300.
+Band counts at creation against the target scaled to N (`npx tsx tools/sim/spectrum_target.mts <seed>`; hidden latent):
 
-Band counts of hidden strength at creation (crown-topology-1, 2,048 competitors; `tools/sim/spectrum.mts`):
+| Band | target 2,048 | seed 42 | seed 7 | seed 1234 | target 9,984 | 9,984 (seed 42) |
+|---|---|---|---|---|---|---|
+| 0–399 | 102 | 100 | 103 | 104 | 499 | 502 |
+| 400–799 | 307 | 305 | 292 | 299 | 1498 | 1477 |
+| 800–1199 | 512 | 504 | 521 | 519 | 2496 | 2518 |
+| 1200–1599 | 532 | 547 | 548 | 537 | 2596 | 2580 |
+| 1600–1999 | 348 | 347 | 332 | 348 | 1697 | 1713 |
+| 2000–2399 | 164 | 167 | 174 | 141 | 799 | 819 |
+| 2400–2799 | 57 | 58 | 53 | 58 | 280 | 268 |
+| 2800–3199 | 18 | 12 | 16 | 25 | 90 | 75 |
+| 3200–3999 | 6 | 6 | 7 | 15 | 30 | 29 |
+| 4000+ | (apex) | 2 | 2 | 2 | (apex) | 3 |
 
-| Band | seed 42 | seed 7 | seed 1234 | 4,096 world (seed 5) |
-|---|---|---|---|---|
-| 0–399 | 178 | 173 | 184 | 351 |
-| 400–799 | 315 | 349 | 318 | 665 |
-| 800–1199 | 318 | 297 | 299 | 613 |
-| 1200–1599 | 278 | 253 | 274 | 509 |
-| 1600–1999 | 232 | 247 | 248 | 502 |
-| 2000–2399 | 232 | 234 | 228 | 495 |
-| 2400–2799 | 241 | 235 | 231 | 430 |
-| 2800–3199 | 199 | 201 | 199 | 400 |
-| 3200–3999 | 53 | 57 | 65 | 127 |
-| 4000+ | 2 | 2 | 2 | 4 |
+Averaged over 40 seeds the 2,048 world has 5.7 competitors in 3200–3999 (target 6.1) and 17.6 in 2800–3199 (18.4);
+single seeds vary (seed 1234: 15 and 25). The 9,984 world uses a 78-region custom topology only for this check.
 
-Over 8 simulated seasons (seed 42, `npx tsx tools/sim/spectrum.mts 42 8`, 726 entrants) the shape is stable: after
-season 8 the latent bands read 177 / 326 / 308 / 266 / 240 / 229 / 234 / 204 / 63 / 1, public ratings
-182 / 323 / 304 / 268 / 239 / 228 / 244 / 221 / 39 / 0, lowest public rating 55, highest 3,922. Division 8 is >90 %
-under 800 at creation (tested), so a new player who joins in the Open division meets genuine beginners who play
-L0-level engines.
+**Over time** (seed 42, 8 seasons, 726 entrants, `npx tsx tools/sim/spectrum.mts 42 8`): hidden bands after season 8
+126 / 294 / 496 / 515 / 355 / 165 / 72 / 13 / 11 / 1; public ratings 100 / 345 / 490 / 489 / 361 / 188 / 61 / 9 / 5 / 0
+(lowest 81, highest 3,895). The shape holds through results alone; the top public bands compress somewhat (Glicko-2
+ratings of the strongest few lag their strength because they mostly meet weaker opponents). Division 8 is > 90 % under
+800 at creation (tested), so a new player joining the Open division meets genuine beginners who play L0-level engines.
 
 ## 4. Existing saves (additive migration)
 
@@ -162,7 +187,7 @@ L0-level engines.
   the crown-population-2 beginner distribution (an expanded lower tier); entrants into divisions 1–6 keep the v1 rule
   exactly. Season drift is unchanged, but its bounds widen from [750, 3050] to [0, 4,400] (otherwise beginners would be
   lifted to 750). Legacy worlds therefore gain beginners gradually and keep their measured-range top: seed 42 simulated
-  as a legacy world had 1 competitor under 800 at creation, 78 after 4 seasons and 168 after 8 (of 2,048).
+  as a legacy world had 1 competitor under 800 at creation, 64 after 4 seasons and 156 after 8 (of 2,048).
 * `profileForStrength` changes only below 750 (no legacy competitor was ever there) and above 3,038 (legacy latents
   reach at most 3,050; such a competitor's player games now use the strongest budget, featured games are unchanged).
 * New federations store `populationModel: 'crown-population-2'` in the world record (docs/SAVE_FORMAT.md).
@@ -177,14 +202,35 @@ as for other calibrated opponents. The game record carries the exact beginner pr
 model, and the calibration id `cal-2026-11-04-beginners-crown-error-1`. Verified in Chromium at 390 px: the list
 renders without overflow, a casual game against L0d starts and the engine replies; `e2e/nav-audit.mjs` passes.
 
-## 6. Limits
+## 6. Reusable game corpus (`tools/bench/results/spectrum/`)
+
+Every calibration game with measured engine strengths, for later work such as the "Played Like" performance rating:
+`npx tsx tools/bench/export_spectrum.ts` writes one JSON object per line with both engines' calibrated rating, RD,
+calibration id and exact configuration, the full move list (ccn-1, including opening plies), SAN, result,
+termination and a PGN-like text (`[Variant "crown-la6-v1"]`, `[WhiteElo]`/`[BlackElo]` = calibrated ratings).
+`index.json` lists sources and caveats:
+
+| File | Games | Engines (rating) | Note |
+|---|---|---|---|
+| beginners-r2.jsonl | 660 | L1 800, L0a 664, L0b 446, L0c 302, L0d 71 | used in the beginner fit |
+| beginners-r3.jsonl | 660 | same | used in the beginner fit |
+| beginners-far.jsonl | 300 | + L2 1122, L3 1582 | held-out validation |
+| levels-calibrate.jsonl | 500 | L1–L8 (800–2926) | cal-2026-11-03 games; L8 at a 2 s cap, before the v0.7/v0.8 L8 changes |
+| levels-L9-L8.jsonl | 64 | L9 3038, L8 2926 | v0.5 time-scaled match |
+
+Together: 2,184 games spanning engines rated 71 to 3,038. The tuning round (`suite-beginners-r1-tuning.json`) is
+not exported because three of its engines used other parameters.
+
+## 7. Limits
 
 * Engine-vs-engine only. Nothing here says what a human rated 300 or 3,500 plays like; human calibration needs human
   games. Ratings below 800 extend the same logistic scale; they are not FIDE ratings.
 * The beginner chain hangs from L1 = 800, so every beginner rating also inherits L1's own uncertainty (RD 40) and the
   model error of the L1–L9 calibration.
-* 1,320 games: per-level SE 22–39. L0c sits ~50 above its target. Non-transitivity between error models is possible
+* 1,320 fitted games: per-level SE 22–39. L0c sits ~50 above its target. The L2–L0a validation match disagrees with
+  the published ratings (above). Non-transitivity between error models is possible
   (e.g. r3's L0b–L0c link was only +92); the skip links constrain it.
+* The population target is the owner's illustrative pyramid; small top bands vary by seed (a few competitors).
 * Between measured points and above L5 the maps interpolate; above 3,038 nothing is measured, and computed games there
   are only as strong as the device budget allows.
 * The Bradley–Terry fit, its anchor and the 40-point RD floor follow the existing calibration; they are choices.

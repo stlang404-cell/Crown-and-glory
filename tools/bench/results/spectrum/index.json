@@ -1,0 +1,246 @@
+{
+ "format": "crown-spectrum-games-1",
+ "description": "Engine-vs-engine games with calibrated strengths on the Crown scale (L1 = 800). One JSON object per line: white/black {engine, rating, rd, calibrationId, config}, moves (ccn-1, including the opening plies), san (csan), result, termination, plies, pgn (PGN-like, Variant crown-la6-v1). Ratings are engine-vs-engine, not human or FIDE. Capped games (result \"*\") are kept but were excluded from fits.",
+ "generatedBy": "npx tsx tools/bench/export_spectrum.ts",
+ "sources": [
+  {
+   "source": "beginners-r2",
+   "file": "beginners-r2.jsonl",
+   "from": "tools/bench/results/suite-beginners-r2-games.json",
+   "games": 660,
+   "capped": 0,
+   "note": "beginner chain, final parameters, 4-ply openings offset 60 (used in the beginner fit)",
+   "engines": [
+    {
+     "engine": "L0d",
+     "rating": 71,
+     "rd": 56,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.2 pBlind 0.7 T 300 margin 1000, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0c",
+     "rating": 302,
+     "rd": 52,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.06 pBlind 0.45 T 245 margin 700, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0b",
+     "rating": 446,
+     "rd": 49,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.3 T 220 margin 550, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0a",
+     "rating": 664,
+     "rd": 46,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.05 T 220 margin 400, ≤4,000 nodes"
+    },
+    {
+     "engine": "L1",
+     "rating": 800,
+     "rd": 40,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 320 T 200"
+    }
+   ]
+  },
+  {
+   "source": "beginners-r3",
+   "file": "beginners-r3.jsonl",
+   "from": "tools/bench/results/suite-beginners-r3-games.json",
+   "games": 660,
+   "capped": 0,
+   "note": "beginner chain, final parameters, 4-ply openings offset 120 (used in the beginner fit)",
+   "engines": [
+    {
+     "engine": "L0d",
+     "rating": 71,
+     "rd": 56,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.2 pBlind 0.7 T 300 margin 1000, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0c",
+     "rating": 302,
+     "rd": 52,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.06 pBlind 0.45 T 245 margin 700, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0b",
+     "rating": 446,
+     "rd": 49,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.3 T 220 margin 550, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0a",
+     "rating": 664,
+     "rd": 46,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.05 T 220 margin 400, ≤4,000 nodes"
+    },
+    {
+     "engine": "L1",
+     "rating": 800,
+     "rd": 40,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 320 T 200"
+    }
+   ]
+  },
+  {
+   "source": "beginners-far",
+   "file": "beginners-far.jsonl",
+   "from": "tools/bench/results/suite-beginners-far-games.json",
+   "games": 300,
+   "capped": 0,
+   "note": "held-out validation (not used in any fit): long gaps and L2/L3 vs beginners, 4-ply openings offset 240",
+   "engines": [
+    {
+     "engine": "L0d",
+     "rating": 71,
+     "rd": 56,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.2 pBlind 0.7 T 300 margin 1000, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0c",
+     "rating": 302,
+     "rd": 52,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0.06 pBlind 0.45 T 245 margin 700, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0b",
+     "rating": 446,
+     "rd": 49,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.3 T 220 margin 550, ≤4,000 nodes"
+    },
+    {
+     "engine": "L0a",
+     "rating": 664,
+     "rd": 46,
+     "calibrationId": "cal-2026-11-04-beginners-crown-error-1",
+     "config": "crown-error-1 pRandom 0 pBlind 0.05 T 220 margin 400, ≤4,000 nodes"
+    },
+    {
+     "engine": "L1",
+     "rating": 800,
+     "rd": 40,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 320 T 200"
+    },
+    {
+     "engine": "L2",
+     "rating": 1122,
+     "rd": 86,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 200 T 110"
+    },
+    {
+     "engine": "L3",
+     "rating": 1582,
+     "rd": 116,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 2, 6000 nodes, bounded selection margin 130 T 70"
+    }
+   ]
+  },
+  {
+   "source": "levels-calibrate",
+   "file": "levels-calibrate.jsonl",
+   "from": "tools/bench/results/suite-calibrate-games.json",
+   "games": 500,
+   "capped": 0,
+   "note": "L1–L8 calibration games (cal-2026-11-03, crown-levels-3 play engine crown-search-2+crown-eval-4, 2-ply openings); L8 had a 2 s cap and predates the crown-levels-5/6 partialRoot/fullBudget change",
+   "engines": [
+    {
+     "engine": "L1",
+     "rating": 800,
+     "rd": 40,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 320 T 200"
+    },
+    {
+     "engine": "L2",
+     "rating": 1122,
+     "rd": 86,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 1, 2000 nodes, bounded selection margin 200 T 110"
+    },
+    {
+     "engine": "L3",
+     "rating": 1582,
+     "rd": 116,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 2, 6000 nodes, bounded selection margin 130 T 70"
+    },
+    {
+     "engine": "L4",
+     "rating": 1710,
+     "rd": 121,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "depth 2, 8000 nodes, bounded selection margin 70 T 35"
+    },
+    {
+     "engine": "L5",
+     "rating": 1976,
+     "rd": 129,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, 600 nodes"
+    },
+    {
+     "engine": "L6",
+     "rating": 2375,
+     "rd": 148,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, 4000 nodes"
+    },
+    {
+     "engine": "L7",
+     "rating": 2641,
+     "rd": 157,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, 30000 nodes"
+    },
+    {
+     "engine": "L8",
+     "rating": 2926,
+     "rd": 169,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, clock-limited (2 s cap in calibration; crown-levels-3 L8, before partialRoot/fullBudget)"
+    }
+   ]
+  },
+  {
+   "source": "levels-L9-L8",
+   "file": "levels-L9-L8.jsonl",
+   "from": "tools/bench/results/match-crown-L9-vs-crown-L8-v5max.json",
+   "games": 64,
+   "capped": 0,
+   "note": "v0.5 L9 vs L8 time-scaled match (L9 3.33 s cap + 2^20 table, L8 2 s cap); L9 rating is derived from it",
+   "engines": [
+    {
+     "engine": "L8",
+     "rating": 2926,
+     "rd": 169,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, 2 s cap (v0.5)"
+    },
+    {
+     "engine": "L9",
+     "rating": 3038,
+     "rd": 171,
+     "calibrationId": "cal-2026-11-03-crown-search-2+crown-eval-4",
+     "config": "full search, 3.33 s cap, 2^20 table (v0.5 time-scaled)"
+    }
+   ]
+  }
+ ]
+}

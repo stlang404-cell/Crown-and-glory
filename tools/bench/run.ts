@@ -250,6 +250,8 @@ async function main() {
         : name === 'pilot2' ? [['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
         // v0.10 beginner chain (run with OPENINGS=4ply: disjoint from the 2-ply openings used while choosing parameters)
         : name === 'beginners' ? [['L1', 'L0a'], ['L0a', 'L0b'], ['L0b', 'L0c'], ['L0c', 'L0d'], ['L1', 'L0b', Math.ceil(pairs / 2)], ['L0a', 'L0c', Math.ceil(pairs / 2)], ['L0b', 'L0d', Math.ceil(pairs / 2)]]
+        // held-out validation of the beginner ratings (not used in the fit): long gaps and links to L2/L3
+        : name === 'beginners-far' ? [['L1', 'L0c'], ['L1', 'L0d'], ['L0a', 'L0d'], ['L2', 'L0a'], ['L3', 'L0b']]
         : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6'], ['L8', 'L7'], ['L3', 'L1'], ['L4', 'L2'], ['L5', 'L3'], ['L6', 'L4'], ['L7', 'L5'], ['L8', 'L6', 10]]
         : [];
       if (!plan.length) throw new Error('unknown suite');
