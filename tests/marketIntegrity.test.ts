@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { Books, MICRO, validateJournal, LedgerError } from '../src/exchange/ledger';
-import { cost, prices, claimCost, buyClaimMicro, sellClaimMicro, feeMicro, subsidyMicro, FEE_BPS } from '../src/exchange/lmsr';
+import { cost, prices, claimCost, buyClaimMicro, sellClaimMicro, feeMicro, FEE_BPS } from '../src/exchange/lmsr';
 import {
   Market, Position, openMarket, openGenericMarket, trade, closeMarket, resolveMarket, cancelMarket, settleMarket, acct, claimsOf, claimPrices, statesOf,
   unitPayout, uniformPayout, liquidationValue, quote, MATCH_CLAIMS, revisionOf, MarketError, basisOf,

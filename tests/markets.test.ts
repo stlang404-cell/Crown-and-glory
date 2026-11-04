@@ -242,8 +242,11 @@ describe('player route into the Federation Open', () => {
     const svc = await make();
     await svc.create(6, 6060);
     await svc.trade('mk:open-winner:1', 3, 10, 'buy');
-    const paid = svc.state!.positions.get('mk:open-winner:1|player:cash')!.spent;
     (svc.state!.world.player as { division: number }).division = 3; // promoted player (test shortcut on the cached state)
+    // v0.10 (bug #31): a holder cannot trigger the 1/n cancellation of a market it holds; sell first
+    await expect(svc.registerChallenger(false)).rejects.toThrow(/sell your shares first/);
+    await svc.closePosition('mk:open-winner:1');
+    const npcHolders = [...svc.state!.positions.values()].filter(p => p.marketId === 'mk:open-winner:1' && p.holder !== 'player:cash' && p.shares.some(x => x));
     const cash0 = svc.balance('player:cash');
     await svc.registerChallenger(false);
     const open = svc.state!.plan.swiss.find(s => s.event === 'open')!;
@@ -251,9 +254,12 @@ describe('player route into the Federation Open', () => {
     expect(open.entrants).toHaveLength(32);
     const m = svc.state!.markets.get('mk:open-winner:1')!;
     expect(m.status).toBe('cancelled');
-    // 10 shares × 1/32 crown, minus the 25 ₵ entry fee
-    expect(svc.balance('player:cash') - cash0).toBe(Math.floor(10 / 32 * 1e6 + 1e-6) - 25_000_000);
-    expect(paid).toBeGreaterThan(0);
+    expect(svc.balance('player:cash') - cash0).toBe(-25_000_000); // only the entry fee
+    // the other holders are paid 1/32 per share
+    for (const p of npcHolders) {
+      const after = svc.state!.positions.get(p.id)!;
+      expect(after.received - p.received).toBe(Math.floor(p.shares.reduce((a, x) => a + x / 32, 0) * 1e6 + 1e-6));
+    }
     expect([...svc.state!.balances.values()].reduce((a, b) => a + b, 0)).toBe(0);
   }, 60_000);
 });
