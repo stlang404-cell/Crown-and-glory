@@ -19,7 +19,8 @@ competitive rank — and every flow is a balanced, idempotent ledger journal. Ne
 | Treasury replenishment | mint → treasury, toward $25,000, capped | ≤ $8,000 / season | same | same |
 | Genesis, starting grant | mint → treasury / player | $25,000 / $1,000, once | same | same |
 
-Issuance per competitor is 9% lower at 10,240 (the Open, Challenger, Championship and sponsor budget are federation-
+Package K (merged after the 10-seed sweep) adds Zonal and Regional Cup pools: +$10,400 (2,048) / +$20,000 (10,240)
+per season (§5.4). Issuance per competitor is 9% lower at 10,240 (the Open, Challenger, Championship and sponsor budget are federation-
 wide, not per circuit), so the larger world is not more inflationary per player.
 
 ### 1.2 Transfers and sinks (who pays, who receives)
@@ -202,6 +203,44 @@ Circulating money per competitor (minted − sink, $): S1 61.4 · S6 68.7 · S12
 | treasury-sweep (v0.11) | treasury −873 → sink | treasury −882 → sink |
 | sponsor (player milestones) | sponsor budget −119 → player | −109 → player |
 
+
+### 5.4 Confirmation after merging package K (crown-competition-2: Zonal Championships and Regional Cups)
+
+The 10-seed sweep above ran on crown-competition-1, before package K's knockouts were merged. K adds issuance of
+8 × $1,000 Zonal pools + $150 per region for Regional Cups ($10,400 per season at 2,048, $20,000 at 10,240). The
+same simulator was re-run on the merged code (`docs/sim/wealth/merged-*.json`, summary `summary-merged.json`) for
+**3 seeds (101–103)** per size — a confirmation, not a distribution:
+#### 2,048 competitors (16 regions) — 3 seeds × 24 seasons
+
+| Archetype | Runs | Final net worth mean ± sd | min / median / max | Final division (mean) | Runs with administration | Episodes | Recovered (mean seasons) | Still in administration at the end | Ledger exact & conserved |
+|---|---|---|---|---|---|---|---|---|---|
+| chess-only | 3 | $4,916 ± 593 | $4,398 / $4,785 / $5,563 | 3.0 | 0 | 0 | 0 (—) | 0 | yes |
+| club-owner | 3 | $6,443 ± 494 | $5,874 / $6,698 / $6,758 | 2.7 | 0 | 0 | 0 (—) | 0 | yes |
+| sponsor | 3 | $4,776 ± 796 | $3,958 / $4,820 / $5,548 | 3.0 | 0 | 0 | 0 (—) | 0 | yes |
+| trader | 3 | $5,227 ± 519 | $4,793 / $5,088 / $5,802 | 3.0 | 0 | 0 | 0 (—) | 0 | yes |
+| magnate | 3 | $2,342 ± 577 | $1,713 / $2,465 / $2,847 | 2.7 | 0 | 0 | 0 (—) | 0 | yes |
+| reckless | 3 | $683 ± 333 | $334 / $718 / $997 | 3.0 | 3 | 6 | 6 (1.0) | 0 | yes |
+
+Circulating money per competitor (minted − sink, $): S1 86.8 · S6 107.5 · S12 108.3 · S18 108.1 · S24 108.1; growth per season over seasons 13–24: mean -0.02%, max 0.67%. Season 24: minted 55.91 $/competitor, sunk 56.07 $/competitor; treasury $29,012.
+
+#### 10,240 competitors (80 regions) — 3 seeds × 24 seasons
+
+| Archetype | Runs | Final net worth mean ± sd | min / median / max | Final division (mean) | Runs with administration | Episodes | Recovered (mean seasons) | Still in administration at the end | Ledger exact & conserved |
+|---|---|---|---|---|---|---|---|---|---|
+| chess-only | 3 | $5,001 ± 1,732 | $3,437 / $4,705 / $6,863 | 2.3 | 0 | 0 | 0 (—) | 0 | yes |
+| club-owner | 3 | $6,164 ± 2,048 | $4,946 / $5,017 / $8,528 | 2.7 | 0 | 0 | 0 (—) | 0 | yes |
+| sponsor | 3 | $4,765 ± 2,443 | $2,572 / $4,325 / $7,398 | 2.3 | 0 | 0 | 0 (—) | 0 | yes |
+| trader | 3 | $4,500 ± 1,173 | $3,597 / $4,077 / $5,826 | 2.3 | 0 | 0 | 0 (—) | 0 | yes |
+| magnate | 3 | $2,188 ± 587 | $1,760 / $1,947 / $2,858 | 2.7 | 0 | 0 | 0 (—) | 0 | yes |
+| reckless | 3 | $947 ± 418 | $514 / $979 / $1,347 | 2.3 | 3 | 8 | 7 (1.0) | 1 | yes |
+
+Circulating money per competitor (minted − sink, $): S1 63.9 · S6 71.3 · S12 71.5 · S18 71.5 · S24 71.4; growth per season over seasons 13–24: mean -0.01%, max 0.49%. Season 24: minted 48.37 $/competitor, sunk 48.22 $/competitor; treasury $29,167.
+
+Same ordering and the same bounds: club ownership ahead (+31% at 2,048, +23% at 10,240 on these 3 seeds), sponsor
+and trader near chess-only, magnate and reckless behind, every reckless episode left after one season except one that
+began in the final season, the ledger exact and conserved in every run, and circulating money per competitor flat
+from season 12 (mean growth −0.02% / −0.01% per season over seasons 13–24).
+
 ## 6. Tests and journeys
 
 * `tests/wealth.test.ts` (13 tests): every v0.11 journal balances and never mints, re-posting is a no-op; sponsorship
@@ -216,7 +255,7 @@ Circulating money per competitor (minted − sink, $): S1 61.4 · S6 68.7 · S12
   no-pay-to-win**: two worlds of the same seed, one spending on a facility, sponsorships or an estate, have identical
   ratings, RDs, divisions, every fixture and result, Championship qualifiers and player record (rank/division,
   titles); a v0.9 save (player record without `wealth`) loads, keeps its net worth, finishes a season and can build.
-* Full suite: see the hand-back report. Journeys against a production build (`npx vite build && node
+* Full suite after merging the integration branch: 70 files, 773 tests passed; `npx tsc --noEmit -p .` clean. Journeys against a production build (`npx vite build && node
   scripts/serve.mjs --dir dist --port 4436`): `e2e/finance.mjs` (new, 8/8: panels present, fresh career $0
   liabilities and $0 earnings, club + Lounge + Supporter sponsorship bought with on-screen buttons → cash $50 and net
   worth $500 equal to the ledger, one journal per action, reload changes nothing, unaffordable buttons disabled, 390 px
