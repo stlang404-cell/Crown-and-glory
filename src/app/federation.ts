@@ -670,7 +670,7 @@ export class FederationService {
       const { market, journal } = openGenericMarket({
         id, kind: 'sandbox', sandbox: true, title: `Your casual game vs ${opp.name}`, outcomes: ['You win', 'Draw', 'You lose'],
         claims: [{ id: 'win', label: 'You win', states: [0] }, { id: 'nolose', label: 'You draw or win', states: [0, 1] }],
-        model: p0, prior: p0, rules: 'Sandbox practice market on your own casual game. Opens at the rating-based prior; you may only back yourself (win, or draw-or-win), never your own loss. Trading closes at the first move. Settlement: the result. Cancelled at the published opening prices if the game is assisted, abandoned, or ends before move 10. Sandbox money never affects official cash, net worth, ratings, standings, or prestige.',
+        model: p0, prior: p0, rules: 'Sandbox practice market on your own casual game. Opens at the rating-based prior; you may only back yourself (win, or draw-or-win), never your own loss. Trading closes at the first move. Settlement: the result. Cancelled at the published opening prices if the game is assisted, or ends within its first 20 half-moves other than by checkmate. Sandbox money never affects official cash, net worth, ratings, standings, or prestige.',
         season: st.world.season, round: st.world.round, b: 60, at: this.now(), ref: { gameId: g.id },
       });
       market.cancelVector = p0;

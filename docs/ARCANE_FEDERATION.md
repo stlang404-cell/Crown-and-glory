@@ -6,7 +6,8 @@
 | Insignias (heraldry grammar) | **Implemented** — 31 unique, prestige rises by era |
 | Federation identity banner | **Implemented** — `src/ui/IdentityBanner.tsx`, desktop + phone verified in Chromium |
 | Passport: current title, peak title, insignia collection | **Implemented** |
-| Achievement framework, Achievement Hall, 100+ achievements, ceremonies | **PLANNED v0.9** (catalog and rules below) |
+| Achievement framework + Sovereign Vault | **Implemented (v0.8.0, Vault v1)** — 134 collectibles: 83 earnable achievements, 9 Exchange titles, 31 insignias, 11 awaiting validated grading; see `src/vault/catalog.ts` (the catalog below was the design; the implemented set is in the code) |
+| Ceremonies, collection sets, equippable identity | **PLANNED v0.9** |
 
 ## 1. Concepts (kept separate everywhere)
 

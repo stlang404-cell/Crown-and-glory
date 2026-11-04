@@ -6,7 +6,7 @@
  */
 import { updateRating } from '../ratings/glicko2';
 import {
-  CHAMPIONSHIP_ROUNDS, Competitor, DIVISIONS, Fixture, LEAGUE_EVENT, LEAGUE_ROUNDS, PLAYER_ID, REGIONS, ROUNDS_PER_SEASON, SWISS_ROUNDS,
+  CHAMPIONSHIP_ROUNDS, Competitor, DIVISIONS, Fixture, LEAGUE_EVENT, LEAGUE_ROUNDS, PLAYER_ID, REGIONS, REGION_NAMES, ROUNDS_PER_SEASON, SWISS_ROUNDS,
 } from './model';
 import { KoMatch, koNext, leagueOrder, roundRobin, standings, swissOrder, swissPairing, StandingRow } from './formats';
 import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
@@ -359,7 +359,7 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
       }
     });
     const champ = t[0].id;
-    const title = `${['Crown', 'Grand', 'Premier', 'Masters', 'Senior', 'District', 'Club', 'Open'][c.division - 1]} Division champion (${c.region + 1}) S${season}`;
+    const title = `${['Crown', 'Grand', 'Premier', 'Masters', 'Senior', 'District', 'Club', 'Open'][c.division - 1]} Division champion (${REGION_NAMES[c.region] ?? c.region + 1}) S${season}`;
     res.titles.push({ id: champ, title });
   }
   for (const ev of plan.swiss) {
