@@ -1,5 +1,5 @@
 import { scrollRegion } from './scrollRegion';
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -50,6 +50,22 @@ function personaMatches(sp: ShownPersona | null, identity: '' | 'persona' | 'his
   return !category || sp?.identity.category === category;
 }
 
+/** One roster row. Memoised: the live scheduler re-renders the screen about twice a second, and a page has 100 rows with
+ *  three emblems each; unchanged competitors (same record object) are not re-rendered (docs/PERFORMANCE_BUDGETS.md). */
+const CompetitorRow = memo(function CompetitorRow({ c, n, showNames, watched }: { c: Competitor; n: number; showNames: boolean; watched: boolean }) {
+  const { go } = useApp();
+  const sp = shownPersona(c, showNames);
+  return (
+              <tr className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
+                <td>{n}</td>
+                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}<TitleBadge title={c.fedTitle} abbr plain testId="competitor-row-title" />{watched && <span className="chip gold">★</span>}</span></td>
+                <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
+                <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
+                <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
+              </tr>
+  );
+});
+
 export function CompetitorsScreen() {
   const services = useServices();
   const { go } = useApp();
@@ -57,6 +73,7 @@ export function CompetitorsScreen() {
   const st = fed.state;
   const games = usePlayerGames();
   const [q, setQ] = useState('');
+  const dq = useDeferredValue(q);
   const [region, setRegion] = useState(-1);
   const [division, setDivision] = useState(0);
   const [minR, setMinR] = useState(0);
@@ -79,9 +96,9 @@ export function CompetitorsScreen() {
       favorites: new Set(st.extra.favorites ?? []),
     };
     // fast pass (app/discovery), then the persona and rating-band filters of the v0.10 roster browser
-    return filterCompetitors(st.competitors.values(), { q, region, division, minR, maxR, title, style, club, special }, sets)
+    return filterCompetitors(st.competitors.values(), { q: dq, region, division, minR, maxR, title, style, club, special }, sets)
       .filter(c => personaMatches(shownPersona(c, showNames), identity, category) && (band < 0 || (c.rating >= RATING_BANDS[band][0] && c.rating < RATING_BANDS[band][1] + 1)));
-  }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, identity, category, band, showNames, services.revision]);
+  }, [st, dq, region, division, minR, maxR, title, style, club, special, rivals, identity, category, band, showNames, services.revision]);
   // any filter change returns to the first page; pageOf clamps a page past the end (after a round)
   useEffect(() => { setPage(0); }, [q, region, division, minR, maxR, title, style, club, special, identity, category, band]);
   const pg = pageOf(list, page);
@@ -114,15 +131,7 @@ export function CompetitorsScreen() {
         <table>
           <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th title="Division and Competitive Rank (Circuit Grade)">Div · Rank</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
-            {pg.rows.map((c, i) => { const sp = shownPersona(c, showNames); return (
-              <tr key={c.id} className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
-                <td>{pg.from + i + 1}</td>
-                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}<TitleBadge title={c.fedTitle} abbr plain testId="competitor-row-title" />{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
-                <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
-                <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
-                <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
-              </tr>
-            ); })}
+            {pg.rows.map((c, i) => <CompetitorRow key={c.id} c={c} n={pg.from + i + 1} showNames={showNames} watched={st.extra.watchlist.includes(c.id)} />)}
           </tbody>
         </table>
         {list.length > PAGE_SIZE && (

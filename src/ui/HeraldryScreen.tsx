@@ -2,7 +2,7 @@ import { Emblem, Trophy } from './Emblem';
 import { divisionLabel, regionNamesOf, TOPOLOGY_V1 } from '../federation/model';
 import { divisionEmblem, rankEmblem, RANK_ORDER, titleEmblem, FED_TITLES, FED_TITLE_ABBR, regionEmblem, tournamentCrest, TOURNAMENTS, TOURNAMENT_NAME, TROPHY_FOR, financialEmblem, FIN_TIERS, ACHIEVEMENTS, achievementEmblem } from '../heraldry/catalog';
 import { clubEmblem, clubsOf } from '../heraldry/clubs';
-import { useServices } from './App';
+import { useApp, useServices } from './App';
 import { TITLE_RULES, TITLES_ID } from '../heraldry/titles';
 import { RIVALRY_ID } from '../heraldry/rivalry';
 import type { EmblemSpec } from '../heraldry/spec';
@@ -26,6 +26,7 @@ function Row({ items, kind }: { items: { spec: EmblemSpec; label: string; sub?: 
 /** The federation's heraldry: every emblem family, its sizes, and the rules behind earned insignia. */
 export function HeraldryScreen() {
   const fed = useServices().fed;
+  const { go } = useApp();
   // the regions and clubs of your federation (the original 16 regions before one is founded)
   const topo = fed.ready ? fed.topology() : TOPOLOGY_V1;
   return (
@@ -62,7 +63,7 @@ export function HeraldryScreen() {
       <section className="panel stack" data-testid="gallery-tournaments">
         <h2 className="h3">Major Tournaments and Their Trophies</h2>
         <div className="emblem-row">{TOURNAMENTS.map(t => <div key={t} className="emblem-cell"><span className="row"><Emblem spec={tournamentCrest(t)} size="md" title={`${TOURNAMENT_NAME[t]} crest`} /><Trophy kind={TROPHY_FOR[t]} size="md" title={`${TOURNAMENT_NAME[t]} trophy`} /></span><span className="small"><strong>{TOURNAMENT_NAME[t]}</strong></span></div>)}</div>
-        <div className="small muted">Win one of these events to add its trophy to your Hall of Fame.</div>
+        <div className="small muted">Win one of these events to add its trophy to your Hall of Fame. {fed.ready && <button className="btn small" data-testid="heraldry-tournaments" onClick={() => go({ name: 'tournaments' })}>This Season's Tournaments</button>}</div>
       </section>
       <section className="panel stack" data-testid="gallery-finance"><h2 className="h3">Financial Prestige</h2><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
       <section className="panel stack" data-testid="gallery-achievements"><h2 className="h3">Achievements</h2><Row items={ACHIEVEMENTS.map(a => ({ spec: achievementEmblem(a, true), label: a.name, sub: a.description }))} /></section>

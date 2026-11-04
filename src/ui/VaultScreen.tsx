@@ -113,6 +113,7 @@ function Detail({ it, onClose }: { it: Item; onClose: () => void }) {
 
 export function VaultScreen() {
   const v = useVault();
+  const { go } = useApp();
   const [collection, setCollection] = useState<Collection | 'all'>('all');
   const [rarity, setRarity] = useState<Rarity | 'all'>('all');
   const [family, setFamily] = useState<FamilyId | 'all'>('all');
@@ -167,7 +168,7 @@ export function VaultScreen() {
 
       <section className="panel" data-testid="vault-next">
         <div className="panel-title"><h2>Next Goals</h2><span className="small muted">Closest to unlocking</span></div>
-        {next.length === 0 ? <p className="small muted" style={{ margin: 0 }}>No collectible is under way yet. Play rated games, study the Grimoire or forecast a market to start one.</p>
+        {next.length === 0 ? <p className="small muted" style={{ margin: 0 }} data-testid="vault-next-empty">No collectible is under way yet. Play rated games, study the Grimoire or forecast a market to start one. <button className="btn small" onClick={() => go({ name: 'play' })}>Play</button> <button className="btn small ghost" onClick={() => go({ name: 'grimoire' })}>Grimoire</button> <button className="btn small ghost" onClick={() => go({ name: 'exchange' })}>Exchange</button></p>
           : <div className="vault-strip">{next.map(it => <button key={it.def.id} className="vault-mini locked" onClick={() => setOpen(it.def.id)} data-testid="vault-next-item" data-id={it.def.id}><Emblem spec={it.art} size="md" title={it.name} /><span className="small"><strong>{it.name}</strong><br /><span className="muted mono">{it.result!.progress!.have.toLocaleString('en')} / {it.result!.progress!.need.toLocaleString('en')}</span></span></button>)}</div>}
       </section>
 

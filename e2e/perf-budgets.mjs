@@ -96,6 +96,8 @@ async function device(kind) {
   // ---- startup (reload, warm service-worker cache and IndexedDB)
   const st = [];
   for (let i = 0; i < RUNS; i++) {
+    // a real document load each time (a hash-only navigation would not restart the app)
+    await page.goto('about:blank');
     await page.goto(url + '#/dashboard', { waitUntil: 'commit' });
     await page.waitForFunction(() => window.__ready, null, { timeout: 60000 }).catch(() => {});
     st.push(await page.evaluate(() => window.__ready ?? -1));
@@ -124,7 +126,7 @@ async function device(kind) {
   await page.getByRole('button', { name: /Start match/i }).click();
   await page.waitForSelector('[data-testid="match"]');
   const mv = [];
-  for (let i = 0; i < RUNS + 4 && mv.length < RUNS; i++) {
+  for (let i = 0; i < RUNS * 4 && mv.length < RUNS; i++) {
     const t = await page.waitForFunction(() => ['human', 'over'].includes(document.querySelector('[data-testid="match"]')?.getAttribute('data-turn')), null, { timeout: 30000 }).then(() => page.getAttribute('[data-testid="match"]', 'data-turn'));
     if (t === 'over') break;
     const ms = await page.evaluate(async () => {
@@ -146,6 +148,11 @@ async function device(kind) {
   await page.getByRole('button', { name: 'View Analysis' }).click();
   await page.waitForSelector('[data-testid="ply-indicator"]');
   await page.waitForTimeout(1500);
+  const rpBusy = [];
+  for (let i = 0; i < RUNS; i++) { rpBusy.push(await page.evaluate(i => window.__measure('[data-testid="ply-indicator"]', () => document.querySelector(`[aria-label="${i % 2 ? 'Previous Move' : 'Next Move'}"]`)?.click()), i)); await page.waitForTimeout(120); }
+  R.replayWhileAnalysing = { ...stats(rpBusy.filter(x => x >= 0)), samples: rpBusy };
+  await page.waitForFunction(async () => (await window.__crown.db.allReports()).some(r => r.status === 'complete'), null, { timeout: 240000 }).catch(() => step('  analysis did not finish in 240 s'));
+  await page.waitForTimeout(1500);
   const rp = [];
   for (let i = 0; i < RUNS * 2; i++) {
     const ms = await page.evaluate(i => window.__measure('[data-testid="ply-indicator"]', () => document.querySelector(`[aria-label="${i % 2 ? 'Previous Move' : 'Next Move'}"]`)?.click()), i);
@@ -154,14 +161,18 @@ async function device(kind) {
   put('replay', rp);
 
   // ---- engine moves (the play worker, as in a game; one warm-up excluded) and the featured budget (spectator worker)
-  const positions = [[], ['c2c3', 'c5c4', 'e1f3', 'e6f4'], ['c2c3', 'c5c4', 'e1f3', 'e6f4', 'b1a3', 'b6a4', 'd2d3', 'd5d4']];
+  // middlegame positions outside the opening book (book moves return in ~1 ms and would not measure the search)
+  const positions = ['2rk2/1pp1pp/6/2q1n1/PPPPPP/R1NKNR w - - 0 1', '2rk2/1q3p/p1n3/3N2/PP1Q1P/3K1R w - - 0 20', '2rk2/qnp1pp/1p4/6/PPPPPP/R1NKNR w - - 0 1'];
+  const engineMs = {};
   for (const level of [1, 2, 3, 4, 5]) {
     const xs = [];
     await page.evaluate(lv => window.__crown.play.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: [], level: lv, seed: 99, clock: { remainingMs: 600000, incrementMs: 0 }, newGame: true }), level);
     for (let i = 0; i < RUNS; i++) {
-      xs.push(await page.evaluate(async ({ level, moves, i }) => { const t = performance.now(); await window.__crown.play.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves, level, seed: i, clock: { remainingMs: 600000, incrementMs: 0 }, newGame: true }); return performance.now() - t; }, { level, moves: positions[i % 3], i }));
+      const r = await page.evaluate(async ({ level, fen, i }) => { const t = performance.now(); const res = await window.__crown.play.move({ initialFen: fen, moves: [], level, seed: i, clock: { remainingMs: 600000, incrementMs: 0 }, newGame: true }); return { wall: performance.now() - t, engine: res.timeMs, nodes: res.nodes }; }, { level, fen: positions[i % 3], i });
+      xs.push(r.wall); (engineMs[level] ??= []).push(r);
     }
     put(`engineL${level}`, xs);
+    R[`engineL${level}`].engine = { medianEngineMs: stats(engineMs[level].map(x => x.engine)).median, medianNodes: stats(engineMs[level].map(x => x.nodes)).median };
   }
   const prof = await page.evaluate(() => {
     const f = window.__crown.fed;
@@ -175,7 +186,7 @@ async function device(kind) {
       const xs = [];
       await page.evaluate(() => window.__crown.live.pause('perf'));
       const p = { ...prof.profile, nodes: 30000 };
-      for (let i = 0; i < RUNS; i++) xs.push(await page.evaluate(async ({ p, style, moves, i }) => { const t = performance.now(); await window.__crown.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves, level: 0, seed: i, profile: p, style, newGame: true, purpose: 'spectator' }); return performance.now() - t; }, { p, style: prof.style, moves: positions[i % 3], i }));
+      for (let i = 0; i < RUNS; i++) xs.push(await page.evaluate(async ({ p, style, fen, i }) => { const t = performance.now(); await window.__crown.spectator.move({ initialFen: fen, moves: [], level: 0, seed: i, profile: p, style, newGame: true, purpose: 'spectator' }); return performance.now() - t; }, { p, style: prof.style, fen: positions[i % 3], i }));
       await page.evaluate(() => window.__crown.live.resume('perf'));
       put('engineFeatured', xs);
       R.engineFeatured.profile = { id: prof.profile.id, nodes: 30000 };
