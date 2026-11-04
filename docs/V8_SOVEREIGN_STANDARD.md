@@ -1,7 +1,7 @@
 # v0.8.0 "The Sovereign Standard" — release report
 
-Release: `release/crown-and-calculation-v0.8.0.zip` (1.8 MB; source + prebuilt `dist`, built from commit 95ea66b; SHA-256
-`dd99203e270adf0b9a7a6e76748a476228a2c83f68e2608e584d45940b770c0d`). Screenshots and evidence logs live in the
+Release: `release/crown-and-calculation-v0.8.0.zip` (about 1.8 MB; source + prebuilt `dist` from the commit that adds it;
+checksum in `release/SHA256SUMS.txt`). Screenshots and evidence logs live in the
 repository (`docs/screenshots/`, `docs/evidence/`), not in the ZIP. All browser checks ran in Chromium (Playwright) on
 Linux at desktop and 390 px phone sizes. **Not tested on a physical iPhone or a Windows machine.** Everything below is
 measured or marked PENDING/PLANNED.
@@ -26,7 +26,7 @@ measured or marked PENDING/PLANNED.
 | Sovereign Vault v1: 134 collectibles (83 earnable achievements, 9 Exchange titles, 31 insignias, 11 awaiting validated grading) | Verified | `tests/vault.test.ts` (110), `e2e/vault.mjs` 10/10 on the combined build |
 | Sovereign Unbound: thinking times 1/5/10 (rated)/15/30/60 s; thinking indicator; fullBudget time use | Verified (UI + time use); strength per budget PENDING | §3 |
 | Played Like | Shipped as **Calibrating** (fails validation) | §4 |
-| Economy re-sweep after the club-sponsorship change | **Not re-run** (CPU went to engine benchmarks) | §5 |
+| Economy after the club-sponsorship change | Re-simulated for one seed (24 seasons); more seeds PENDING | §5 |
 | League rebalance, beginner opponents, achievements Hall expansion, Living Federation | PLANNED | docs/V9_MASTER_PROMPT.md |
 
 Tests: full vitest **344 passed, 1 skipped** (the skipped test needs a validated Played Like model). Production build
@@ -97,13 +97,26 @@ exists below 800. Next: difficulty features (legal-move count, criticality, eval
 games, and beginner profiles once they exist.
 
 ## 5. Economy
-The club-sponsorship change (appeal-scaled sponsorship from the existing sponsor budget, no new money) is in the game
-and unit-tested, but the 24-season multi-seed re-sweep did **not** run: the CPU guard kept it paused while timed engine
-benchmarks ran, and two container restarts lost in-flight runs (about 15 minutes per run on this machine). Reproduce
-each run with `npx tsx tools/sim/economy.ts 24 out.json <strategy> <seed>` (new policy) and the same command prefixed
-with `CROWN_SIM_NO_PLAYER_CLUB_DUES=1` (old policy), for strategies business, magnate, organizer and chess-only and
-seeds 101–105. The v0.7 sweep (before this change) is in
-docs/GRANDMASTER_POLISH.md.
+The club-sponsorship change (appeal-scaled sponsorship paid from the existing season sponsor budget; no new money) was
+re-simulated for **one seed (101), 24 seasons**, after the engine benchmarks freed the CPU (`tools/sim/economy.ts`;
+old policy = `CROWN_SIM_NO_PLAYER_CLUB_DUES=1`). Starting money $1,000.
+
+| Policy | Strategy | Net worth after 24 seasons | Peak net worth | Lowest cash | Rounds below $100 | Below recovery threshold | Ledger conserved every season |
+|---|---|---|---|---|---|---|---|
+| old | business | $554 | $1,205 | $3.1 | 19 | seasons 8→12 (recovered) | True |
+| new | business | $3,064 | $3,064 | $432.2 | 0 | never | True |
+| old | magnate | $665 | $1,074 | $32.2 | 0 | seasons 1→2 (recovered) | True |
+| new | magnate | $758 | $1,424 | $5.6 | 0 | season 4 (recovered) | True |
+| old | organizer | $561 | $1,205 | $51.0 | 12 | seasons 8→11 (recovered) | True |
+| new | organizer | $3,162 | $3,162 | $465.0 | 0 | never | True |
+| new | chess-only | $2,694 | $2,844 | $1,025.0 | 0 | never | True |
+
+Reading: owning a club went from losing money (business and organizer ended near $550–560 after dipping below the $100
+recovery line) to slightly ahead of a chess-only career ($3,064 / $3,162 vs $2,694), with cash never below $100. The
+magnate strategy (buys every asset type) is still weak ($758): upkeep of the tools outweighs their income — a v0.9
+balance item. The ledger balanced in every season of every run and no account went negative. **One seed only**:
+indicative, not a distribution. Remaining seeds 102–105 reproduce with `npx tsx tools/sim/economy.ts 24 out.json
+<strategy> <seed>` (prefix `CROWN_SIM_NO_PLAYER_CLUB_DUES=1` for the old policy); about 8–15 minutes per run.
 
 ## 6. Federation, ratings, leagues
 docs/FEDERATION_LEAGUE_DESIGN.md: 8 divisions × 16 regional leagues (2,048 competitors); 4 Federation titles;
@@ -122,7 +135,7 @@ ladder (docs/ARCANE_FEDERATION.md) is the descriptive band system now shown in t
 ## 8. Known issues
 1. Engine gap to Fairy-Stockfish remains large (−283 to −379 Elo at equal time, 100–1000 ms); only +23 gained this cycle.
 2. Played Like not validated (Calibrating).
-3. Economy re-sweep not run (§5).
+3. Economy re-simulated for one seed only; the magnate strategy is still unprofitable (§5).
 4. Vault: three legacy achievement ids use broader rules than the Hall of Fame's old evaluator (first-win, giant-slayer,
    patron) — the two screens can disagree until the Hall reads from the Vault; backups do not export unlock records
    (they are rebuilt from history on import, so wealth/Exchange unlocks that no longer hold could be lost).
