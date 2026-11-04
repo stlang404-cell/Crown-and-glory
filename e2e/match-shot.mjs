@@ -7,7 +7,7 @@ const p = await b.newPage({ viewport: { width: +w, height: +h } });
 const errs = [];
 p.on('pageerror', e => errs.push(String(e)));
 p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
-await p.goto(url);
+await p.goto(url + '#/play');
 await p.getByRole('button', { name: 'White' }).click();
 await p.getByRole('button', { name: /Start match/i }).click();
 await p.waitForSelector('[data-square="c2"]');

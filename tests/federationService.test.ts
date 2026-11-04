@@ -7,7 +7,7 @@ import { playSelfplay } from '../src/engine/selfplay';
 import { PLAYER_ID, ROUNDS_PER_SEASON } from '../src/federation/model';
 import { MICRO } from '../src/exchange/ledger';
 import { exportBundle, importBundle } from '../src/storage/backup';
-import { wdl } from '../src/federation/resultModel';
+import { pregameWdl } from '../src/exchange/odds';
 import type { GameRecord } from '../src/games/types';
 
 let clock = 0;
@@ -197,7 +197,7 @@ describe('federation service', () => {
     for (const fx of svc.featuredFixtures()) {
       const m = svc.marketFor(fx.id)!;
       const w = svc.state!.competitors.get(fx.white)!, b = svc.state!.competitors.get(fx.black)!;
-      const pub = wdl(w.rating, b.rating), hidden = wdl(w.latent, b.latent);
+      const pub = pregameWdl({ rating: w.rating, rd: w.rd }, { rating: b.rating, rd: b.rd }), hidden = pregameWdl({ rating: w.latent, rd: w.rd }, { rating: b.latent, rd: b.rd });
       expect(m.forecast.w).toBeCloseTo(pub.w, 12);
       expect(m.forecast.l).toBeCloseTo(pub.l, 12);
       expect(Math.abs(hidden.w - pub.w)).toBeGreaterThan(0); // they differ, and the market used the public one

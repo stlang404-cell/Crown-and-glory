@@ -1,11 +1,12 @@
 import { useSyncExternalStore } from 'react';
-import { APP_VERSION } from '../app/services';
+import { CURRENT_BUILD } from '../app/updates';
 import { DB_VERSION } from '../storage/db';
 import { RULES_VERSION } from '../rules/types';
 import { PieceSvg } from './Pieces';
 import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS, ENGINE_BUILD } from '../analysis/analyzer';
 import SPEED from '../analysis/analysis-speed.json';
 import { EngineDiagnostics } from './EngineDiagnostics';
+import { LiveSchedulerSettings } from './LiveSchedulerSettings';
 import { PREMIUM_BOARDS } from './theme';
 import { useServices } from './App';
 import { BOARDS, MOTIONS, PIECE_SPEEDS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPieceSpeed, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
@@ -103,13 +104,15 @@ export function SettingsScreen() {
 
       <SoundSettings />
 
+      <LiveSchedulerSettings />
+
       <section className="panel about" aria-labelledby="set-about">
         <div className="panel-title"><h2 id="set-about" style={{ margin: 0 }}>About</h2>
           <button className="btn small ghost" onClick={() => setPrefs(DEFAULT_PREFS)}>Reset Display Settings</button>
         </div>
         <dl>
           <dt>Game</dt><dd>Crown &amp; Calculation: The Six-Square Federation</dd>
-          <dt>Version</dt><dd className="mono">v{APP_VERSION}</dd>
+          <dt>Version</dt><dd className="mono" data-testid="build-info">Version {CURRENT_BUILD.version} · commit {CURRENT_BUILD.commit}{CURRENT_BUILD.builtAt ? ` · built ${CURRENT_BUILD.builtAt.slice(0, 16).replace('T', ' ')} UTC` : ''}</dd>
           <dt>Saves</dt><dd>Stored on this device only.</dd>
           <dt>Money</dt><dd>Federation dollars ($) are fictional and have no cash value.</dd>
           <dt>Network</dt><dd>Works fully offline. The engine, Match Analysis and the federation all run on this device. No accounts, ads or tracking.</dd>

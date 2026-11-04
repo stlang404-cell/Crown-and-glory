@@ -3,7 +3,7 @@ import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Insignia } from './WorldScreen';
-import { REGION_NAMES, divisionLabel, PLAYER_ID, DIVISIONS } from '../federation/model';
+import { REGION_NAMES, divisionLabel, PLAYER_ID, DIVISIONS, regionNamesOf } from '../federation/model';
 import type { Competitor } from '../federation/model';
 import { ageOf } from '../federation/generator';
 import { eventName, WorldGame } from '../app/federation';
@@ -74,7 +74,7 @@ export function CompetitorsScreen() {
       </div>
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }} data-testid="discovery-filters">
         <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search Competitors" />
-        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region"><option value={-1}>All Regions</option>{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region"><option value={-1}>All Regions</option>{regionNamesOf(fed.topology()).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
         <select value={division} onChange={e => setDivision(+e.target.value)} aria-label="Division"><option value={0}>All Divisions</option>{Array.from({ length: DIVISIONS }, (_, i) => <option key={i} value={i + 1}>{i + 1} · {divisionLabel(i + 1)}</option>)}</select>
         <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 4000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
         <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation Title"><option value="">Any Title or None</option><option value="any">Any Federation Title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>

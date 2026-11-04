@@ -25,6 +25,7 @@ import { fmtCrowns, fmtPrice } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
 import { playOnce, playSound } from './sound';
 import { QuickMatch } from './QuickMatch';
+import { clearPractice, peekPractice } from '../app/practice';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtClock = (ms: number) => {
@@ -43,9 +44,13 @@ export const resultText = (g: GameRecord) => {
 export function PlayScreen() {
   const services = useServices();
   const { go } = useApp();
-  const [opp, setOpp] = useState<Opponent>(ROSTER[2]);
-  const [tc, setTc] = useState<TimeControlId>('rapid');
-  const [mode, setMode] = useState<'rated' | 'casual'>('rated');
+  // A practice game handed over by another screen (the Grimoire's Today's Plan): preselect its opponent and time
+  // control, and Casual — a practice setup never starts a rated game by itself (src/app/practice.ts).
+  const [practice] = useState(() => peekPractice());
+  useEffect(() => { if (practice) clearPractice(); }, [practice]);
+  const [opp, setOpp] = useState<Opponent>(() => (practice && getOpponent(practice.opponentId)) || ROSTER[2]);
+  const [tc, setTc] = useState<TimeControlId>(practice?.timeControl ?? 'rapid');
+  const [mode, setMode] = useState<'rated' | 'casual'>(practice ? 'casual' : 'rated');
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
   const [unfinished, setUnfinished] = useState<GameRecord[]>([]);
   const [recent, setRecent] = useState<GameRecord | null>(null);
@@ -138,6 +143,9 @@ export function PlayScreen() {
         </div>
         <div className="panel stack">
           <h2>Match Settings</h2>
+          {practice && mode === 'casual' && opp.id === practice.opponentId && (
+            <div className="notice" data-testid="practice-preset">Practice game from Today’s Plan: {opp.name}, {TIME_CONTROLS[tc].label}, Casual — saved and analysed, never rated.</div>
+          )}
           <div>
             <div className="small muted">Time Control</div>
             <div className="seg" role="group" aria-label="Time control">

@@ -63,13 +63,20 @@ export function standings(ids: string[], games: Game[], seeds: Map<string, numbe
 export function leagueOrder(rows: StandingRow[], games: Game[]): StandingRow[] {
   const byPts = new Map<number, StandingRow[]>();
   for (const r of rows) byPts.set(r.points, [...(byPts.get(r.points) ?? []), r]);
-  const h2h = (group: Set<string>, id: string) => games.filter(g => g.result !== null && group.has(g.white) && group.has(g.black) && (g.white === id || g.black === id))
-    .reduce((a, g) => a + (g.white === id ? g.result! : 1 - g.result!), 0);
   const out: StandingRow[] = [];
   for (const p of [...byPts.keys()].sort((a, b) => b - a)) {
     const group = byPts.get(p)!;
+    if (group.length < 2) { out.push(...group); continue; }
+    // head-to-head score inside the tied group, computed once per group (previously re-filtered all games on every
+    // comparison). Each player's sum adds the same terms in the same game order, so the values are bit-identical.
     const ids = new Set(group.map(r => r.id));
-    out.push(...group.sort((a, b) => h2h(ids, b.id) - h2h(ids, a.id) || b.sb - a.sb || a.seed - b.seed));
+    const h2h = new Map<string, number>(group.map(r => [r.id, 0]));
+    for (const g of games) {
+      if (g.result === null || !ids.has(g.white) || !ids.has(g.black)) continue;
+      h2h.set(g.white, h2h.get(g.white)! + g.result);
+      h2h.set(g.black, h2h.get(g.black)! + (1 - g.result));
+    }
+    out.push(...group.sort((a, b) => h2h.get(b.id)! - h2h.get(a.id)! || b.sb - a.sb || a.seed - b.seed));
   }
   return out;
 }

@@ -1,5 +1,8 @@
 # AI personality validation
 
+> **Superseded (v0.9):** crown-styles-5 validates Tactical, Positional, Defensive and Endgame for the whole
+> game; Aggressive still fails. See docs/STYLES_REPORT.md. The text below is the v0.3–v0.8 history.
+
 **Verdict: two styles are validated and in play — Tactical attacker and Positional strategist** (policy
 `crown-styles-3`, opening repertoire `crown-repertoire-1`, validation file `src/engine/styles-validation.json`).
 Aggressive, Defensive and Endgame failed and play the common engine policy; the UI shows them as "Universal"

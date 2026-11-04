@@ -87,8 +87,10 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   const fixture = st ? [...st.rounds.values()].flatMap(r => r.fixtures).find(f => f.id === fixtureId) : undefined;
   const liveMoves = fed.live.get(fixtureId);
   const lg = fed.liveGame(fixtureId);
-  const inPlay = !!lg && lg.status === 'live';
-  const isLive = fed.isLive(fixtureId) || inPlay;
+  // v0.9: a scheduled game is played by the live scheduler (no market, no step controls); in-play = featured + market
+  const scheduled = lg?.kind === 'scheduled';
+  const inPlay = !!lg && lg.status === 'live' && !scheduled;
+  const isLive = fed.isLive(fixtureId) || inPlay || (scheduled && lg!.status === 'live');
   const moves: SelfplayMove[] = game?.moves ?? (lg ? lg.moves : liveMoves) ?? [];
   const generationDone = !!game;
   if (isLive) startedHere.current = true;
@@ -142,7 +144,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   const fen = ply === 0 ? (game?.initialFen ?? START_FEN) : moves[ply - 1]?.fen ?? START_FEN;
   const last = ply > 0 ? moves[ply - 1]?.ccn : null;
   // status text: the LIVE / REPLAY prefixes are part of the contract with the journeys
-  const status = game ? (game.mode === 'watched-live' && startedHere.current && revealed < moves.length ? 'LIVE · Revealing Moves' : 'REPLAY · Recorded Game') : inPlay ? 'LIVE · In-Play Trading' : isLive ? 'LIVE · Being Played' : fixture.result === null ? 'Not Started' : 'Summary Result';
+  const status = game ? (game.mode === 'fast-forwarded' ? 'REPLAY · Fast-Forwarded Game' : (game.mode === 'watched-live' || game.mode === 'scheduled-live') && startedHere.current && revealed < moves.length ? 'LIVE · Revealing Moves' : 'REPLAY · Recorded Game')
+    : inPlay ? 'LIVE · In-Play Trading' : scheduled && isLive ? 'LIVE · Scheduled Game' : isLive ? 'LIVE · Being Played' : fixture.result === null ? 'Not Started' : fixture.resolution === 'abstract' ? 'Abstract Result' : 'Summary Result';
   const finalShown = allRevealed ? game!.result : null;
   const nav = (to: number) => { setFollow(to >= revealed); setPly(Math.max(0, Math.min(revealed, to))); };
   const think = [0, 0];
@@ -297,7 +300,9 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
         </div>
       )}
       {finalShown && <div className="notice" data-testid="final-result"><strong>Final result: {finalShown}</strong> · {game!.termination.replace(/-/g, ' ')}</div>}
-      {fixture.result === null && !isLive && !game && (
+      {scheduled && lg!.status === 'live' && <div className="small muted" data-testid="scheduled-note">Scheduled live game: the federation plays one move about every {Math.round(services.liveSettings.plyIntervalMs / 1000)} s while the app is open, whether or not you watch. There is no market on it.</div>}
+      {game?.mode === 'fast-forwarded' && <div className="notice" data-testid="ff-note">Fast-forwarded: every move is a real engine move, but part of this game was computed after the app reopened rather than shown live.</div>}
+      {fixture.result === null && !isLive && !game && !fixture.slate && (
         <div className="stack">
           <p className="small" style={{ margin: 0 }}>Not played yet. Once it starts, each move is played only after the previous trading window closes.</p>
           <div className="row" style={{ flexWrap: 'wrap' }}>
@@ -306,7 +311,9 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           </div>
         </div>
       )}
-      {fixture.result !== null && !game && <div className="small">This match was decided without a recorded game, so there is nothing to replay.</div>}
+      {fixture.result !== null && !game && <div className="small" data-testid="abstract-note">{fixture.resolution === 'abstract'
+        ? <>Abstract result: decided by the federation's result model, not by a finished game{lg?.moves.length ? ` (${lg.moves.length} moves had been played live)` : ''}. {lg?.note ?? ''} There is no replay.</>
+        : 'This match was decided without a recorded game, so there is nothing to replay.'}</div>}
     </div>
   );
 

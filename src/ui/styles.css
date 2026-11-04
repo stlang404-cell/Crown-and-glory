@@ -418,7 +418,6 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .id-stats.open .id-stat.sec { display: flex; }
   .id-more { display: inline-flex; grid-column: 1 / -1; justify-self: start; min-height: 32px; padding: 2px 8px; }
 }
-}
 .insignia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
 .insignia-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); text-align: center; }
 .insignia-cell:not(.have) .emblem { filter: grayscale(1) opacity(.35); }

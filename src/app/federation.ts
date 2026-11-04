@@ -8,11 +8,11 @@
  * The UI reads from this service and never mutates money, ratings or results directly.
  */
 import { CrownDB, FederationStore } from '../storage/db';
-import { generateFederation, hashSeed } from '../federation/generator';
+import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
-import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId } from '../federation/model';
-import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
+import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
+import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } from '../exchange/odds';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
@@ -31,6 +31,8 @@ import {
   CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
+import { liveTerminal, plySeed } from './schedulerEngine';
+import { sampleResult } from '../federation/resultModel';
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
@@ -39,7 +41,7 @@ export interface WorldGame {
   id: string; fixtureId: string; season: number; round: number; event: string; stage?: string;
   white: string; black: string; whiteName: string; blackName: string; whiteRating: number; blackRating: number;
   initialFen: string; moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string;
-  createdAt: string; mode: 'watched-live' | 'background'; seed: number; profiles: string[];
+  createdAt: string; mode: 'watched-live' | 'background' | 'scheduled-live' | 'fast-forwarded'; seed: number; profiles: string[];
 }
 export interface FinanceHistory { key: 'history'; points: { season: number; round: number; at: string; cash: number; assets: number; positions: number; netWorth: number }[]; peak: number }
 /** A featured game played move by move with in-play trading windows (persisted after every move). */
@@ -48,6 +50,14 @@ export interface LiveGame {
   status: 'live' | 'done'; startedAt: string; marketId: string | null;
   /** Public information published after each move: market prices and the live model (for charts). */
   points: { ply: number; prices: number[]; model: number[]; at: string; revision?: string }[];
+  /** v0.9: 'scheduled' = driven by the live scheduler (src/app/scheduler.ts), no market; absent = in-play featured game. */
+  kind?: 'in-play' | 'scheduled';
+  /** v0.9 scheduled games: when the last move was committed (pacing and reopen catch-up). */
+  lastMoveAt?: string;
+  /** v0.9 scheduled games: how the game ended or is being completed (see Fixture.resolution). */
+  resolution?: 'simulated' | 'fast-forwarded' | 'abstract';
+  /** Why a scheduled game was resolved abstractly (shown with the label). */
+  note?: string;
 }
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
@@ -89,6 +99,8 @@ export class FederationService {
   private busy = false;
   live = new Map<string, SelfplayMove[]>();
   onChange: (() => void) | null = null;
+  /** Change notification for live-scheduler commits (the app throttles these); falls back to onChange. */
+  onLiveChange: (() => void) | null = null;
   /** Featured-game runner: the app plugs in a Web Worker; tests run in-process. */
   runSelfplay: (req: { initialFen: string; white: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; black: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; seed: number; maxPlies: number }, onMove: (m: SelfplayMove) => void) => Promise<{ moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string }>
     = async (req, onMove) => playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, m => onMove(m));
@@ -120,11 +132,17 @@ export class FederationService {
   }
 
   // ------------------------------------------------------------------ helpers
-  private clone(): FedState {
+  /**
+   * Working copy for one command. Competitor records are deep-copied only for the commands that change them
+   * (`competitors: true`: round advance); every other command shares the committed (immutable-by-convention) records,
+   * which was the dominant cost of a command at scale (docs/FEDERATION_SCALE.md; tests/federationScale.test.ts
+   * freezes the records to prove those commands never write to them).
+   */
+  private clone(opts: { competitors?: boolean } = {}): FedState {
     const s = this.state!;
     return {
       world: structuredClone(s.world), plan: structuredClone(s.plan), plans: new Map(s.plans),
-      competitors: new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])),
+      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])) : new Map(s.competitors),
       rounds: new Map(s.rounds), markets: new Map(s.markets), positions: new Map(s.positions),
       balances: new Map(s.balances), journalIds: new Set(s.journalIds), assets: new Map(s.assets),
       finance: structuredClone(s.finance), extra: structuredClone(s.extra),
@@ -248,11 +266,23 @@ export class FederationService {
     return { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
   }
 
-  /** Serialize commands: one at a time, guarded by the committed cursor. */
-  private async run<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.busy) throw new Error('Another federation action is still running. Wait a moment and try again.');
+  /**
+   * Serialize commands: one at a time, guarded by the committed cursor. A user command that meets another user
+   * command fails fast (as before); a short live-scheduler commit is waited for instead, and scheduler commits wait
+   * behind anything (docs/FEDERATION_SCALE.md).
+   */
+  private busyKind: 'user' | 'scheduler' = 'user';
+  private idle: Promise<void> = Promise.resolve();
+  private async run<T>(fn: () => Promise<T>, kind: 'user' | 'scheduler' = 'user'): Promise<T> {
+    while (this.busy) {
+      if (kind === 'user' && this.busyKind === 'user') throw new Error('Another federation action is still running. Wait a moment and try again.');
+      await this.idle;
+    }
     this.busy = true;
-    try { return await fn(); } finally { this.busy = false; }
+    this.busyKind = kind;
+    let release!: () => void;
+    this.idle = new Promise<void>(r => { release = r; });
+    try { return await fn(); } finally { this.busy = false; release(); }
   }
 
   private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[]; liveGames?: LiveGame[]; contracts?: Contract[] }, expect: { season: number; round: number } | null): Promise<void> {
@@ -279,7 +309,7 @@ export class FederationService {
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
     this.state = next;
-    this.onChange?.();
+    if (this.busyKind === 'scheduler' && this.onLiveChange) this.onLiveChange(); else this.onChange?.();
   }
 
   private snapshotFinance(st: FedState): void {
@@ -293,11 +323,14 @@ export class FederationService {
   }
 
   // ------------------------------------------------------------------ creation
-  async create(region: number, seed = Date.now() % 2_147_483_647): Promise<void> {
+  /** Found a federation. New worlds get NEW_FEDERATION_TOPOLOGY unless a topology is given (tests, scale probes);
+   *  the topology is stored in the world record and never changes afterwards. */
+  async create(region: number, seed = Date.now() % 2_147_483_647, topology: Topology = NEW_FEDERATION_TOPOLOGY): Promise<void> {
+    if (!Number.isInteger(region) || region < 0 || region >= topology.regions) throw new Error('Choose one of the regions of this federation.');
     return this.run(async () => {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
-      const comps = generateFederation(seed);
-      const { world, plan } = createWorld(seed, comps, this.now());
+      const comps = generateFederation(seed, topology);
+      const { world, plan } = createWorld(seed, comps, this.now(), topology);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
@@ -331,8 +364,8 @@ export class FederationService {
       // a market opens only with its worst-case subsidy funded; otherwise the match is still featured, unlisted
       if ((st.balances.get('treasury') ?? 0) < subsidyMicro(MARKET_B, 3)) continue;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
-      const p = wdl(w.rating, b.rating);
-      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${RESULT_MODEL_ID} on public ratings` }, at: this.now() });
+      const p = pregameWdl({ rating: w.rating, rd: w.rd }, { rating: b.rating, rd: b.rd });
+      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now() });
       this.post(st, [journal], posted);
       // NPC trading on public information; all-or-nothing per market so the market and ledger never diverge
       const res = npcRound(market, new Map(), a => st.balances.get(a) ?? 0, st.world.seed, this.now(), 1);
@@ -378,7 +411,11 @@ export class FederationService {
   currentRound(): RoundRecord | null { const s = this.state; return s ? s.rounds.get(`${s.world.season}:${s.world.round}`) ?? null : null; }
   seasonRounds(season?: number): RoundRecord[] { const s = this.state!; const n = season ?? s.world.season; return [...s.rounds.values()].filter(r => r.season === n).sort((a, b) => a.round - b.round); }
   playerFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
-  featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2) ?? []; }
+  featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2 && !f.slate) ?? []; }
+  /** v0.9: fixtures of the current round promoted to scheduled live games (src/app/scheduler.ts). */
+  slateFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.slate) ?? []; }
+  /** The federation's topology (fixed when it was founded). */
+  topology(): Topology { return topologyOf(this.state?.world); }
   marketFor(fixtureId: string): Market | undefined { return this.state?.markets.get(`mk:${fixtureId}`); }
   name(id: string): string { return id === PLAYER_ID ? 'You' : this.state?.competitors.get(id)?.name ?? id; }
   ratingOf(id: string): number { return this.state?.competitors.get(id)?.rating ?? 0; }
@@ -640,10 +677,18 @@ export class FederationService {
   sandboxBalance(): number { return this.balance('sandbox:player'); }
   sandboxMarketFor(gameId: string): Market | undefined { return this.state?.markets.get(`sb:${gameId}`); }
 
+  /** A Training Hall sparring game (see sparringGameFor: id `spar-…`, engine participant `spar:<competitor>`). */
+  static isSparring(g: GameRecord): boolean {
+    return g.id.startsWith('spar-') || g.white.id.startsWith('spar:') || g.black.id.startsWith('spar:');
+  }
+
   /** Why a game cannot carry a sandbox market, or null if it can. */
   static sandboxIneligible(g: GameRecord): string | null {
     if (g.mode === 'rated' || g.rated) return 'Rated games never carry markets';
     if (g.context.kind !== 'quick-match') return 'Only casual quick matches (federation and training games are excluded)';
+    // Training Hall sparring is created with context 'quick-match' but is a training game, not one started from Play or
+    // Random Match (RULEBOOK §Sandbox; RULES_TRACEABILITY D10): it never carries a practice market.
+    if (FederationService.isSparring(g)) return 'Only casual quick matches (federation and training games are excluded)';
     if (g.initialFen !== START_FEN || (g.setupMoves?.length ?? 0) > 0) return 'Only games from the standard start position';
     if (g.assistance.length) return 'Assisted games are excluded';
     if (g.moves.length) return 'The sandbox market closes when the game starts';
@@ -670,7 +715,7 @@ export class FederationService {
       const { market, journal } = openGenericMarket({
         id, kind: 'sandbox', sandbox: true, title: `Your casual game vs ${opp.name}`, outcomes: ['You win', 'Draw', 'You lose'],
         claims: [{ id: 'win', label: 'You win', states: [0] }, { id: 'nolose', label: 'You draw or win', states: [0, 1] }],
-        model: p0, prior: p0, rules: 'Sandbox practice market on your own casual game. Opens at the rating-based prior; you may only back yourself (win, or draw-or-win), never your own loss. Trading closes at the first move. Settlement: the result. Cancelled at the published opening prices if the game is assisted, abandoned, or ends before move 10. Sandbox money never affects official cash, net worth, ratings, standings, or prestige.',
+        model: p0, prior: p0, rules: 'Sandbox practice market on your own casual game. Opens at the rating-based prior; you may only back yourself (win, or draw-or-win), never your own loss. Trading closes at the first move. Settlement: the result. Cancelled at the published opening prices if the game is assisted, or ends within its first 20 half-moves other than by checkmate. Sandbox money never affects official cash, net worth, ratings, standings, or prestige.',
         season: st.world.season, round: st.world.round, b: 60, at: this.now(), ref: { gameId: g.id },
       });
       market.cancelVector = p0;
@@ -823,12 +868,9 @@ export class FederationService {
       if (m && lockedRevision !== null && revisionOf(m) !== lockedRevision) throw new Error('Market revision changed while the move was computed'); // invariant
       if (m && m.status === 'open' && move && !end) {
         // public information after the move: the engine's evaluation → live model (a forecast, never the price)
+        // crown-odds-2 (src/exchange/odds.ts): pre-game prior from public ratings/RDs + published evaluation, ply, material
         const u = expectedU(toPov(move.score, 'white'));
-        const d0 = m.forecast.d;
-        const d = Math.max(0.01, d0 * (1 - Math.abs(2 * u - 1)));
-        const live = [Math.max(0.005, u - d / 2), d, Math.max(0.005, 1 - u - d / 2)];
-        const sum = live.reduce((a, x) => a + x, 0);
-        const model = live.map(x => x / sum);
+        const model = liveModelVector({ white: { rating: w.rating, rd: w.rd }, black: { rating: b.rating, rd: b.rd }, ply: lg.moves.length, evalCp: whiteCp(move.score), material: materialOfFen(move.fen) });
         const prev = lg.points.length ? lg.points[lg.points.length - 1].prices : undefined;
         const ops = this.opsOf(st, posted);
         m = npcBatch(ops, { ...m, live: { plies: lg.moves.length, lastEval: u } }, 'live', model, prev);
@@ -851,6 +893,152 @@ export class FederationService {
     });
   }
 
+  // ------------------------------------------------------------------ v0.9 live scheduler (scheduled slate games)
+  /** Scheduled live games of the current round that are still being played. */
+  activeScheduled(): LiveGame[] {
+    const s = this.state;
+    if (!s) return [];
+    return [...s.liveGames.values()].filter(g => g.kind === 'scheduled' && g.status === 'live' && g.season === s.world.season && g.round === s.world.round);
+  }
+
+  /** Background fixtures of the current round in the order the scheduler promotes them (deterministic for a round:
+   *  your own circuit, then the Swiss events, then the leagues from the Crown Division down; higher public rating
+   *  sum first; ties by event and ids). */
+  slateCandidates(): [string, string, string][] {
+    const s = this.state, rec = this.currentRound();
+    if (!s || !rec || rec.status !== 'open') return [];
+    const home = `league:${s.world.player.region}:${s.world.player.division}`;
+    const rating = (id: string) => s.competitors.get(id)?.rating ?? 0;
+    const pri = (e: string) => (e === home ? 0 : e === 'open' || e === 'challenger' ? 1 : 2 + Number(e.split(':')[2] ?? 9));
+    // (an abstract entry may already hold its tier-3 draw — settleRound draws them when a featured game finishes; the
+    // draw is deterministic, so a promoted fixture resolved abstractly later gets the same value)
+    return rec.abstract.map(a => [a[0], a[1], a[2]] as [string, string, string])
+      .sort((a, b) => pri(a[0]) - pri(b[0]) || (rating(b[1]) + rating(b[2])) - (rating(a[1]) + rating(a[2])) || a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[2].localeCompare(b[2]));
+  }
+
+  /**
+   * Promote up to `count` background fixtures of the open round to scheduled live games (one commit). A promoted
+   * fixture keeps its pairing; its result will come from the engine game, or — if the round closes first — from
+   * exactly the tier-3 draw it would have had anyway. Never touches the player's games, featured games or markets.
+   * `maxPerRound` bounds how many fixtures of one round are ever promoted.
+   */
+  async startSlate(count: number, maxPerRound = 64): Promise<LiveGame[]> {
+    if (!this.state || count <= 0) return [];
+    return this.run(async () => {
+      const st = this.clone();
+      const key = `${st.world.season}:${st.world.round}`;
+      const rec0 = st.rounds.get(key);
+      if (!rec0 || rec0.status !== 'open') return [];
+      const promoted = rec0.fixtures.filter(f => f.slate).length;
+      const n = Math.min(count, maxPerRound - promoted);
+      if (n <= 0) return [];
+      const cands = this.slateCandidates().slice(0, n);
+      if (!cands.length) return [];
+      const rec = structuredClone(rec0);
+      const out: LiveGame[] = [];
+      const at = this.now();
+      for (const [event, white, black] of cands) {
+        const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black);
+        if (idx < 0) continue;
+        rec.abstract.splice(idx, 1);
+        const id = `${rec.season}:${rec.round}:${event}:s-${white}-${black}`;
+        rec.fixtures.push({ id, season: rec.season, round: rec.round, event, white, black, result: null, tier: 2, gameId: null, slate: true });
+        const lg: LiveGame = { id, fixtureId: id, season: rec.season, round: rec.round, seed: hashSeed(st.world.seed, 'featured', id), moves: [], status: 'live', startedAt: at, marketId: null, points: [], kind: 'scheduled', lastMoveAt: at };
+        st.liveGames.set(id, lg);
+        out.push(lg);
+      }
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec], liveGames: out }, { season: st.world.season, round: st.world.round });
+      return out;
+    }, 'scheduler');
+  }
+
+  /** Everything an engine needs to compute the next move of a scheduled game (read from committed state). */
+  scheduledRequest(fixtureId: string): { moves: string[]; ply: number; profile: ReturnType<typeof profileForStrength>; style: StyleId; seed: number } | null {
+    const s = this.state;
+    const lg = s?.liveGames.get(fixtureId);
+    if (!s || !lg || lg.kind !== 'scheduled' || lg.status !== 'live') return null;
+    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
+    if (!f || f.result !== null) return null;
+    const side = s.competitors.get(lg.moves.length % 2 === 0 ? f.white : f.black)!;
+    return { moves: lg.moves.map(m => m.ccn), ply: lg.moves.length, profile: profileForStrength(side.latent, FEATURED_NODE_CAP), style: side.style, seed: plySeed(lg.seed, lg.moves.length) };
+  }
+
+  /**
+   * Commit one engine move of a scheduled game, computed outside the command lock by a scheduler worker for ply
+   * `expectPly`. Stale results (the game moved on, ended, or the round closed) are discarded, never applied twice.
+   * At the end of the game the result, game record and fixture are committed with the move (settlement path of
+   * featured games; there is no market). `fastForward` marks moves computed during reopen catch-up.
+   */
+  async scheduledStep(fixtureId: string, expectPly: number, mv: { ccn: string; score: SelfplayMove['score']; depth: number; nodes: number; ms: number }, fastForward = false): Promise<{ applied: boolean; done: boolean; game?: WorldGame }> {
+    if (!this.state) return { applied: false, done: false };
+    return this.run(async () => {
+      const st = this.clone();
+      const lg0 = st.liveGames.get(fixtureId);
+      const rec0 = st.rounds.get(`${st.world.season}:${st.world.round}`);
+      const f0 = rec0?.fixtures.find(x => x.id === fixtureId);
+      if (!lg0 || lg0.kind !== 'scheduled' || lg0.status !== 'live' || !f0 || f0.result !== null || lg0.moves.length !== expectPly) return { applied: false, done: false };
+      const [{ Position }, { parseLegalCcn, moveToCcn, moveToSan }] = await Promise.all([import('../rules/position'), import('../rules/notation')]);
+      const pos = Position.fromFen(START_FEN);
+      for (const m of lg0.moves) pos.makeMove(parseLegalCcn(pos, m.ccn));
+      const m = parseLegalCcn(pos, mv.ccn);
+      if (m < 0 || !pos.legalMoves().includes(m)) throw new Error('Engine produced an illegal move');
+      const lg: LiveGame = structuredClone(lg0);
+      const san = moveToSan(pos, m);
+      pos.makeMove(m);
+      lg.moves.push({ ccn: moveToCcn(m), san, fen: pos.toFen(), score: mv.score, depth: mv.depth, nodes: mv.nodes, ms: mv.ms });
+      lg.lastMoveAt = this.now();
+      if (fastForward) lg.resolution = 'fast-forwarded';
+      const end = liveTerminal(pos, lg.moves.length);
+      if (!end) {
+        st.liveGames.set(fixtureId, lg);
+        await this.commit(st, [], { liveGames: [lg] }, { season: st.world.season, round: st.world.round });
+        return { applied: true, done: false };
+      }
+      lg.status = 'done';
+      lg.resolution = lg.resolution ?? 'simulated';
+      const w = st.competitors.get(f0.white)!, b = st.competitors.get(f0.black)!;
+      const posted: Journal[] = [];
+      const fin = await this.finishFeaturedIn(st, posted, fixtureId, lg.moves, end.result, end.termination, lg.resolution === 'fast-forwarded' ? 'fast-forwarded' : 'scheduled-live', lg.seed, [profileForStrength(w.latent, FEATURED_NODE_CAP).id, profileForStrength(b.latent, FEATURED_NODE_CAP).id]);
+      const ff = fin.rec.fixtures.find(x => x.id === fixtureId)!;
+      ff.resolution = lg.resolution;
+      st.liveGames.set(fixtureId, lg);
+      await this.commit(st, posted, { liveGames: [lg], rounds: [fin.rec], worldGames: [fin.game], markets: fin.markets, positions: fin.positions, plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      return { applied: true, done: true, game: fin.game };
+    }, 'scheduler');
+  }
+
+  /** Resolve scheduled games abstractly (labelled; no game record). Used by reopen catch-up beyond its bound. */
+  async resolveScheduledAbstract(fixtureIds: string[], note: string): Promise<number> {
+    if (!this.state || !fixtureIds.length) return 0;
+    return this.run(async () => {
+      const st = this.clone();
+      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const lgs = this.abstractSlate(st, rec, fixtureIds, note);
+      if (!lgs.length) return 0;
+      settleRound(this.ctxOf(st, await this.playerRating()), rec);
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec], liveGames: lgs, plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      return lgs.length;
+    }, 'scheduler');
+  }
+
+  /** Abstract resolution of unfinished slate fixtures in a working round record: the exact tier-3 draw of the
+   *  pairing (same seed and formula as resolveAbstract), so a promoted fixture never changes the result it would
+   *  otherwise have had. Partial moves stay in the live-game record but no replay (WorldGame) is created. */
+  private abstractSlate(st: FedState, rec: RoundRecord, fixtureIds: string[] | null, note: string): LiveGame[] {
+    const out: LiveGame[] = [];
+    for (const f of rec.fixtures) {
+      if (!f.slate || f.result !== null || (fixtureIds && !fixtureIds.includes(f.id))) continue;
+      const u = rng01(hashSeed(st.world.seed, 'result', rec.season, rec.round, f.event, f.white, f.black))();
+      f.result = sampleResult(st.competitors.get(f.white)!.latent, st.competitors.get(f.black)!.latent, u);
+      f.resolution = 'abstract';
+      const lg0 = st.liveGames.get(f.id);
+      if (lg0) { const lg = { ...lg0, status: 'done' as const, resolution: 'abstract' as const, note }; st.liveGames.set(f.id, lg); out.push(lg); }
+    }
+    return out;
+  }
+
   // ------------------------------------------------------------------ round advance
   /** Advance the world by one round. Player fixtures must be played or forfeited; featured games are played in the background first. */
   async advanceRound(): Promise<ProcessedRound> {
@@ -860,11 +1048,13 @@ export class FederationService {
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
     if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
     return this.run(async () => {
-      const st = this.clone();
+      const st = this.clone({ competitors: true });
       const expect = { season: st.world.season, round: st.world.round };
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       const rec = structuredClone(st.rounds.get(`${expect.season}:${expect.round}`)!);
+      // scheduled live games still in progress when the round closes take their tier-3 draw (labelled abstract)
+      const slateClosed = this.abstractSlate(st, rec, null, 'The round closed before this game finished.');
       const seasonRounds = [...st.rounds.values()].filter(r => r.season === expect.season && r.id !== rec.id);
       const posted: Journal[] = [];
       const plansChanged: SeasonPlan[] = [];
@@ -1025,7 +1215,7 @@ export class FederationService {
       st.rounds.set(opened.rec.id, opened.rec);
       openSeasonMarkets(ops); // new season: lists all families; otherwise only fills gaps within their windows
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts, liveGames: slateClosed }, expect);
       return res;
     });
   }

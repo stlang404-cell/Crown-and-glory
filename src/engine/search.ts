@@ -523,7 +523,7 @@ export class Searcher {
       alpha = mAlpha; beta = mBeta;
     }
     if (ply >= MAX_PLY - 2) return this.evalCached();
-    const inCheck = inCheckIn >= 0 ? inCheckIn === 1 : pos.inCheck();
+    const inCheck = inCheckIn >= 0 ? inCheckIn === 1 : pos.inCheckFast();
     if (inCheck && F.checkExtension && ply < MAX_PLY / 2) depth++;
     if (depth <= 0) return F.quiescence ? this.qsearch(alpha, beta, ply, inCheck) : this.evalCached();
 
@@ -596,7 +596,7 @@ export class Searcher {
     const scores = this.scoreBufs[ply];
     const quiets = this.quietBufs[ply];
     let nQuiets = 0;
-    let n = pos.generatePseudo(moves);
+    let n = pos.generatePseudoFast(moves);
     if (ply === 0 && this.rootMovesFilter) {
       let k = 0;
       for (let i = 0; i < n; i++) if (this.rootMovesFilter.includes(moves[i])) moves[k++] = moves[i];
@@ -630,10 +630,10 @@ export class Searcher {
       if (F.seeMain && !pvNode && !inCheck && legal > 0 && depth <= 4 && isCapture && !isPromo && bestScore > -MATE_BOUND
         && SEE_VALUE[b[from] & 7] > SEE_VALUE[b[to] & 7] && see(pos, m) < -90 * depth) continue;
       pos.makeMove(m);
-      if (pos.lastMoveLeftKingInCheck()) { pos.unmakeMove(); continue; }
+      if (pos.lastMoveLeftKingInCheckFast()) { pos.unmakeMove(); continue; }
       legal++;
       this.moveStack[ply] = m;
-      const givesCheck = pos.inCheck();
+      const givesCheck = pos.inCheckFast();
       const gc = givesCheck ? 1 : 0;
       const quietMove = !isCapture && !isPromo;
       let ext = m === ttMove ? singularExt : 0;
@@ -758,7 +758,7 @@ export class Searcher {
     }
     const moves = this.moveBufs[ply];
     const scores = this.scoreBufs[ply];
-    const n = pos.generatePseudo(moves, !inCheck);
+    const n = pos.generatePseudoFast(moves, !inCheck);
     this.scoreMoves(moves, scores, n, ttMove, ply, 0);
     const b = pos.board;
     let legal = 0;
@@ -777,11 +777,11 @@ export class Searcher {
         if (F.seePruning && see(pos, m) < 0) continue;
       }
       pos.makeMove(m);
-      if (pos.lastMoveLeftKingInCheck()) { pos.unmakeMove(); continue; }
+      if (pos.lastMoveLeftKingInCheckFast()) { pos.unmakeMove(); continue; }
       legal++;
       let s: number;
       try {
-        s = -this.qsearch(-beta, -alpha, ply + 1, pos.inCheck());
+        s = -this.qsearch(-beta, -alpha, ply + 1, pos.inCheckFast());
       } finally {
         pos.unmakeMove();
       }

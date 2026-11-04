@@ -1,6 +1,7 @@
 # Engine optimisation plan (next milestone)
 
-Status: **plan only — nothing in this document is implemented in v0.8.0.** It follows from the v0.8 measurements in
+Status: **steps 1–3 (and part of 5) implemented in v0.9, behaviour-identical — see “v0.9 results” at the end.** Steps 4, 6, 7 remain plans.
+Original status: plan only — nothing in this document is implemented in v0.8.0. It follows from the v0.8 measurements in
 docs/V8_SOVEREIGN_STANDARD.md (§ Engine).
 
 ## Why speed and evaluation, not more search heuristics
@@ -94,3 +95,87 @@ worker build for the PWA; measure startup cost on iPhone-class hardware before a
 ## Not acceptable
 Bundling or linking Fairy-Stockfish (GPL); any change to `src/rules` semantics; any adoption without the
 confirmation match; claims of strength not backed by a recorded match file.
+
+## v0.9 results (steps 1–3 + cheap parts of step 5; behaviour-identical)
+
+All changes are behaviour-preserving: the speed probe checksum is unchanged, node for node.
+
+| Probe | v0.8.0 (8d69a32) | v0.9 |
+|---|---|---|
+| `speed_probe.ts 300000 12` checksum | `9be425be` | `9be425be` |
+| `speed_probe.ts` (24 positions, 300 k) checksum | `428895a0` | `428895a0` |
+| nodes/s, wall clock, median of 3 interleaved runs | **463 k** | **639 k (+38 %)** |
+| nodes/s, process CPU time, median of 3 interleaved runs | 440 k | 588 k (+34 %) |
+
+The machine was shared (load average 4–9 on 4 cores), so every comparison ran old and new trees alternately
+(git worktree of 8d69a32 against the working tree), and CPU-time nodes/s (3.6 M nodes ÷ user+sys time of the
+whole process, so tsx start-up is included) is reported next to the probe's wall-clock figure.
+Per-step medians (3 round-robin rounds over the step snapshots, wall / CPU nodes/s):
+base 453 k / 444 k → step 1 464 k / 448 k → step 2 (first version) 461 k / 455 k → step 3 (attack map, improved pawn
+cache) 508 k / 511 k → undo stack + monomorphic move buffers + zone pawns 574 k / 562 k → occupancy masks
+(movegen, eval piece pass, gated `isAttacked`) 599 k / 595 k.
+Profile share of `evaluate4` (incl. pawn cache) fell from 44.5 % to ≈ 40 % of a run that is 1.38× faster.
+
+What was done:
+
+1. **Incremental material + PST** (`Position.pieceCnt`, `psqTab`/`psqMg`/`psqEg`, `setPsqTable`). `evaluate4` folds
+   MAT + PST of both sides, with the style split (`own` for `styleColor`, `opp`/`p` for the other side) into one
+   signed table per (own, opp, styleColor) array combination (small identity-keyed cache, so parameter arrays are
+   treated as immutable once used) and installs it on the position; make/unmake keep the sums exact (integers, so
+   the floating-point taper is bit-identical). Phase, pawn counts, non-pawn material and the mop-up "bare king"
+   test come from `pieceCnt`. The trace path still emits per-piece MAT/PST coefficients. Gain alone: ≈ +2 %.
+2. **Pawn-structure cache** keyed *exactly* by the two pawn masks (`Position.pawnBits`, pawns only stand on
+   squares 6–29, so a mask fits an int32 — no hash collisions are possible, which is stronger than a pawn Zobrist
+   key). Cached: pawns per file, pawn attack counts, per-colour doubled/isolated/supported/phalanx counts and the
+   passed-pawn masks (weight-independent, so styles share entries). Per call: PASSED/PASSED_FREE/king distances/
+   UNSTOPPABLE for the passed pawns, king-zone pawn attacks (zone square sums + a pawn-square mask popcount),
+   shield, open files; outposts use a precomputed attack-span mask. 2¹⁴ entries (≈ 1.8 MB), hit rate 75 % on
+   the probe. Measured in the final code against an always-miss variant: +12 % wall / +8 % CPU, kept.
+3. **Shared attack map**: one stamped attack map per side (no clearing), plus knight and rook attack maps, built in
+   the piece pass and reused by THREAT_MINOR/THREAT_ROOK/HANGING; the threat pass visits only the collected
+   non-pawn pieces instead of 36 squares with ray walks.
+4. **Move generation / make-unmake** (part of step 5): undo records in a growable `Int32Array` instead of one object
+   per move; `legalMoves`/`hasLegalMove` use an `Int32Array` scratch buffer so the generator's stores stay
+   monomorphic (`generatePseudo` 18.7 % → 13.3 % of the profile); per-colour occupancy masks (`Position.occ`) drive
+   `generatePseudoFast` (same moves, same order) and the evaluation's piece pass; `isAttackedFast` skips knight
+   and slider scans when the attacker has no such pieces.
+
+Rules authority: the reference methods (`generatePseudo`, `isAttacked`, `inCheck`, `lastMoveLeftKingInCheck`,
+`legalMoves`) do **not** read the derived state, so code that writes `board` directly (the Grimoire endgame
+solver) stays correct. The `*Fast` variants and `evaluate4` need the derived state, which `setFen`,
+`makeMove/unmakeMove`, `clone` (rebuilds it from the board) and `syncDerived()` maintain; the search only uses them
+on its own clone.
+
+Tests added: `tests/engine.eval4diff.test.ts` — `evaluate4` equals the frozen v0.8 copy
+(`tests/helpers/eval4Reference.ts`) on 531 394 evaluations (97 613 corpus positions from FEN, plus 2-ply
+make/unmake walks and null moves from each, plus 400 random games), 17 weight sets (plain, synthetic own/opp/
+simplify/styleColor combinations, opp without styleColor, and every `styledWeights` style for both colours),
+30 446 of them also comparing the full trace vector and trace scale; incremental state == from-scratch at every
+node of depth-2 trees from 200 corpus positions. `tests/rules.movegen.diff.test.ts` — perft 1–5 unchanged;
+`generatePseudo`, `generatePseudoFast` (all moves and captures-only) and the v0.8 generator
+(`tests/helpers/movegenReference.ts`) emit identical lists in identical order, legal lists and
+`isAttacked`/`isAttackedFast`/`inCheckFast`/`lastMoveLeftKingInCheckFast` agree with the v0.8 `isAttacked`, and
+make/unmake/null-move restore FEN, hash, kings, counters and derived state, at all 266 970 nodes of depth-2 trees
+from 1 304 roots (corpus + random games; 47 028 promotion moves, 26 712 checks, 662 mates, 88 stalemates); FEN
+validation with every checker kind; direct board writes keep the reference methods valid.
+
+Not done / reverted: nothing was reverted (every step measured faster). An earlier pawn-cache version that also
+cached an "enemy pawn can still attack" byte map was replaced by a mask (cheaper misses). Move-picking
+(selection sort in `searchNode`, ≈ 16 % of its self time) was left alone: any change to its tie order would
+change the search. Step 4 (lazy eval) is behaviour-changing and still needs its confirmation match.
+
+
+### Equal-time strength of the v0.9 speed-up (measured)
+
+The search is node-for-node identical (same checksums), so the speed-up is worth exactly what 1.38× more thinking
+time is worth. Measured as the v0.9 engine at 200 ms against itself at 145 ms (200 / 1.38), L8/L9 configuration
+(partialRoot + fullBudget), 4-ply opening book, colour-swapped pairs, 320 games
+(`tools/bench/results/chunks/speed9-T200-vs-T145-o*.json`):
+
+| Games | W / D / L | Score | Elo [95 % CI] | Avg time used per move | Illegal moves |
+|---|---|---|---|---|---|
+| 320 | 114 / 130 / 76 | 55.9 % | **+41 [12, 71]** | 162 ms vs 119 ms | 0 |
+
+This is the expected value of v0.9 against v0.8 at equal time on this machine. The match ran partly while browser
+journeys used the same 4-core VM; both sides were slowed alike. A device with a different speed ratio between the
+old and new code (e.g. Safari's JavaScript engine) may gain more or less; that was not measured.

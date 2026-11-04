@@ -13,6 +13,7 @@ import { evaluateAll, loadUnlocks, newUnlocks, saveUnlocks, loadToasted, markToa
 import { CrownDB } from '../src/storage/db';
 import { SHAPES, CHARGES } from '../src/heraldry/charges';
 import { MICRO } from '../src/exchange/ledger';
+import { chaptersOfBook, chaptersTagged, indexChapters } from '../src/academy/grimoire';
 
 // ---------------------------------------------------------------- synthetic records
 const START = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
@@ -103,6 +104,11 @@ const ps = (n: number, pnl: (i: number) => number, o: (i: number) => Partial<Mar
   const ms = Array.from({ length: n }, (_, i) => market(`m${i}-${JSON.stringify(o(i))}`, o(i)));
   return { markets: ms, positions: ms.map((m, i) => pos(m.id, pnl(i))) };
 };
+// Grimoire lesson records: chapter completions and first-try exercise sessions
+const grimDone = (ids: string[]) => ids.map((chapterId, i) => ({ chapterId, book: +chapterId.slice(1, chapterId.indexOf('-')), at: seqAt(i) }));
+const grimFirstTry = (ids: string[]) => ids.map((exerciseId, i) => ({ id: `${exerciseId}:s`, exerciseId, chapterId: exerciseId.split('/')[0], outcome: 'first-try' as const, solved: true, at: seqAt(i) }));
+const grim = (chapters: string[], firstTry: string[] = []): Partial<VaultInput> => ({ grimoire: { completions: grimDone(chapters), attempts: grimFirstTry(firstTry) } });
+const bookIds = (...books: number[]) => books.flatMap(b => chaptersOfBook(b).map(c => c.id));
 const SCENARIOS: Record<string, () => Partial<VaultInput>> = {
   'first-win': () => ({ games: [game()] }),
   'first-draw': () => ({ games: [game({ score: 0.5 })] }),
@@ -176,6 +182,14 @@ const SCENARIOS: Record<string, () => Partial<VaultInput>> = {
   'academy-set': () => ({ trainingRuns: [{ endedAt: 'x', attempted: 10 }] }),
   'puzzles-100': () => ({ attempts: Array.from({ length: 100 }, (_, i) => ({ puzzleId: `p${i}`, solved: true, clean: true })) }),
   'puzzles-500': () => ({ attempts: Array.from({ length: 500 }, (_, i) => ({ puzzleId: `p${i}`, solved: true, clean: true })) }),
+  'first-lesson': () => grim([indexChapters()[0].id]),
+  'apprentice-graduate': () => grim(bookIds(1)),
+  'tactical-scholar': () => grim(bookIds(2)),
+  'fork-specialist': () => grim([], chaptersTagged('fork').flatMap(c => c.exercises)),
+  'endgame-apprentice': () => grim(chaptersTagged('endgame').map(c => c.id)),
+  'calculation-adept': () => { const chs = chaptersTagged('calculation'); return grim(chs.map(c => c.id), chs.flatMap(c => c.exercises)); },
+  'academy-graduate': () => grim(bookIds(1, 2, 3, 4)),
+  'sovereign-trial': () => grim(bookIds(5)),
   'full-season': () => ({ fed: fed({ player: { history: [{ season: 1, division: 8, rank: 5, points: 20 }] }, rounds: leagueFixtures(1, Array(15).fill(0)) }) }),
   'ten-seasons': () => ({ fed: fed({ player: { history: Array.from({ length: 10 }, (_, i) => ({ season: i + 1, division: 8, rank: 9, points: 10 })) } }) }),
   'comeback-run': () => ({ ratingEvents: streak([0, 0, 0, 0, 0, 1, 1, 1, 1, 1]) }),

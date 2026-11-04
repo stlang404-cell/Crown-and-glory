@@ -6,7 +6,7 @@
  */
 import { updateRating } from '../ratings/glicko2';
 import {
-  CHAMPIONSHIP_ROUNDS, Competitor, DIVISIONS, Fixture, LEAGUE_EVENT, LEAGUE_ROUNDS, PLAYER_ID, REGIONS, ROUNDS_PER_SEASON, SWISS_ROUNDS,
+  CHAMPIONSHIP_ROUNDS, Competitor, DIVISIONS, Fixture, LEAGUE_EVENT, LEAGUE_ROUNDS, PLAYER_ID, ROUNDS_PER_SEASON, SWISS_ROUNDS, Topology, TOPOLOGY_V1, regionName, topologyOf,
 } from './model';
 import { KoMatch, koNext, leagueOrder, roundRobin, standings, swissOrder, swissPairing, StandingRow } from './formats';
 import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
@@ -41,6 +41,9 @@ export interface WorldState {
     norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number };
   /** v0.5: featured rivals, chosen once and persisted (src/heraldry/rivals.ts). */
   featured?: import('../heraldry/rivals').FeaturedRival[];
+  /** v0.9: federation size (docs/FEDERATION_SCALE.md). Absent = crown-topology-1 (16 regions, 2,048), the size of
+   *  every federation founded before v0.9; such worlds are never resized. */
+  topology?: Topology;
   /** v0.5: engine build in force from (season, round); appended when a new app version changes it. */
   engineCommitments?: { season: number; round: number; build: string; at: string; liveGamesInProgress: number }[];
   createdAt: string;
@@ -70,20 +73,25 @@ export interface Ctx {
 const isPlayer = (id: string) => id === PLAYER_ID;
 
 /** Initial world state and season-1 plan. */
-export function createWorld(seed: number, competitors: Competitor[], nowIso: string): { world: WorldState; plan: SeasonPlan } {
+export function createWorld(seed: number, competitors: Competitor[], nowIso: string, topology: Topology = TOPOLOGY_V1): { world: WorldState; plan: SeasonPlan } {
   const world: WorldState = {
     key: 'world', version: 1, seed, season: 1, round: 1, nextIndex: competitors.length,
     player: { joined: false, region: 0, division: DIVISIONS, swissRegistered: false, titles: [], history: [], displaced: null },
     createdAt: nowIso,
   };
-  return { world, plan: makePlan(seed, 1, competitors, null) };
+  // the legacy topology is left implicit so a v1 world record is byte-identical to the pre-v0.9 format
+  if (topology.id !== TOPOLOGY_V1.id) world.topology = topology;
+  return { world, plan: makePlan(seed, 1, competitors, null, topology) };
 }
 
-export function makePlan(seed: number, season: number, competitors: Competitor[], player: WorldState['player'] | null): SeasonPlan {
+export function makePlan(seed: number, season: number, competitors: Competitor[], player: WorldState['player'] | null, topology: Topology = TOPOLOGY_V1): SeasonPlan {
   const active = competitors.filter(c => c.status === 'active');
+  // bucket once (O(n)) instead of filtering the whole population per circuit (O(n · circuits)); same order
+  const buckets = new Map<string, Competitor[]>();
+  for (const c of active) { const k = `${c.region}:${c.division}`; const b = buckets.get(k); if (b) b.push(c); else buckets.set(k, [c]); }
   const circuits: Circuit[] = [];
-  for (let region = 0; region < REGIONS; region++) for (let division = 1; division <= DIVISIONS; division++) {
-    const members = active.filter(c => c.region === region && c.division === division).sort((a, b) => b.rating - a.rating || a.id.localeCompare(b.id)).map(c => c.id);
+  for (let region = 0; region < topology.regions; region++) for (let division = 1; division <= topology.divisions; division++) {
+    const members = (buckets.get(`${region}:${division}`) ?? []).sort((a, b) => b.rating - a.rating || a.id.localeCompare(b.id)).map(c => c.id);
     if (player?.joined && player.region === region && player.division === division) members.push(PLAYER_ID);
     circuits.push({ region, division, members });
   }
@@ -118,7 +126,8 @@ export function registerChallenger(ctx: Ctx): { replaced: string } {
   if (!ev) throw new Error('Crown Division players qualify for the Championship through their league');
   const sw = ctx.plan.swiss.find(x => x.event === ev)!;
   if (!ctx.world.player.joined) throw new Error('Join the federation first');
-  if (ctx.world.round > SWISS_ROUNDS[0] - 1 && ctx.world.round !== SWISS_ROUNDS[0]) throw new Error('Registration is closed');
+  // Registration closes before the first Swiss round (rounds 1–3), as the rulebook and the service say (D9).
+  if (ctx.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration is closed');
   if (sw.rounds.length) throw new Error('Registration is closed');
   if (sw.entrants.includes(PLAYER_ID)) throw new Error('Already registered');
   const replaced = sw.entrants[sw.entrants.length - 1];
@@ -359,7 +368,7 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
       }
     });
     const champ = t[0].id;
-    const title = `${['Crown', 'Grand', 'Premier', 'Masters', 'Senior', 'District', 'Club', 'Open'][c.division - 1]} Division champion (${c.region + 1}) S${season}`;
+    const title = `${['Crown', 'Grand', 'Premier', 'Masters', 'Senior', 'District', 'Club', 'Open'][c.division - 1]} Division champion (${regionName(c.region)}) S${season}`;
     res.titles.push({ id: champ, title });
   }
   for (const ev of plan.swiss) {
@@ -373,7 +382,8 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
   }
   // promotion / relegation (simultaneous exchange between adjacent divisions within a region)
   const moves: { id: string; region: number; from: number; to: number }[] = [];
-  for (let region = 0; region < REGIONS; region++) for (let d = 1; d < DIVISIONS; d++) {
+  const topo = topologyOf(world);
+  for (let region = 0; region < topo.regions; region++) for (let d = 1; d < topo.divisions; d++) {
     const upper = tables.get(`${region}:${d}`)!, lower = tables.get(`${region}:${d + 1}`)!;
     for (const r of upper.slice(-2)) moves.push({ id: r.id, region, from: d, to: d + 1 });
     for (const r of lower.slice(0, 2)) moves.push({ id: r.id, region, from: d + 1, to: d });

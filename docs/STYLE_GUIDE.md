@@ -28,9 +28,9 @@ errors, confirmations and empty states.
 | Rank | rank band, rank policy | temporary label from your rating band |
 | Federation Title | fed title, earned title | permanent honour earned by norms (Squire, Knight, Paladin, Sovereign) |
 | Financial Prestige | wealth tier | money-based standing, separate from chess |
-| Crowns, ₵ | currency units | fictional money only |
+| Dollars, $ | currency units (formerly shown as crowns, ₵) | fictional money only |
 | Match Analysis | engine report, canonical analysis report | post-game analysis |
-| Live Odds | market price revision, probability | current market prices (shown in ¢ per share) |
+| Live Odds | market price revision, probability | current market prices (shown in $ per $1 share, e.g. $0.436) |
 | Trading Open / Trading Closed / Market Settled / Market Cancelled | open/closed/settled statuses in lowercase | market states |
 | Position | holding, exposure (in headings) | your shares in a market |
 | Moves | plies (in player text) | counting half-moves is fine in Analysis details |
@@ -51,12 +51,12 @@ errors, confirmations and empty states.
 * Success: past tense, specific — "Bought 10 shares of White Wins."
 * Errors: what happened + what to do — "Prices moved since you opened this ticket. Check the new price and try again."
 * Empty states: what will appear and how to get it — "No trophies yet. Win an event to fill your cabinet."
-* Confirmations: name the action and its cost on the button — "Confirm: Pay 400 ₵".
+* Confirmations: name the action and its cost on the button — "Confirm: Pay $400".
 
 ## Numbers and formatting
 
-* Money: `1,234.50 ₵` (two decimals in trading and finance tables; whole crowns in headlines).
-* Odds: `43.6¢` per share; probabilities as `44%`.
+* Money: `$1,234.50`, sign first for losses `-$19.20` (two decimals in trading and finance tables; whole dollars in headlines). Always via `fmtMoney`/`fmtMoneyDelta`.
+* Prices: `$0.436` per share that pays $1 (via `fmtPrice`); probabilities as `44%` — never mix the two.
 * Ratings: whole numbers; uncertainty as `±80` only where it helps.
 * Use the en dash for score lines (`3–1–0`) and ranges, "vs" without a full stop.
 

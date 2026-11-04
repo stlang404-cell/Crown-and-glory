@@ -14,13 +14,10 @@ import {
   ZOBRIST_HI, ZOBRIST_LO, ZOBRIST_SIDE_HI, ZOBRIST_SIDE_LO,
 } from './tables';
 
-interface Undo {
-  move: Move;
-  captured: number;
-  halfmove: number;
-  hashLo: number;
-  hashHi: number;
-}
+/** Undo record stride in Position.undoBuf: move, captured piece, halfmove clock, hashLo, hashHi. */
+const U_STRIDE = 5;
+/** Scratch move buffer for legalMoves / hasLegalMove (synchronous, never re-entered). */
+const scratchMoves = new Int32Array(256);
 
 export class FenError extends Error {}
 
@@ -35,7 +32,68 @@ export class Position {
   /** Hash history of every position reached so far (including the current one at index `ply`). */
   histLo: number[] = [];
   histHi: number[] = [];
-  private undo: Undo[] = [];
+  private undoBuf = new Int32Array(64 * U_STRIDE);
+  private undoLen = 0;
+  /**
+   * Incremental evaluation support (engine hot path; no rules semantics). Maintained by setFen, makeMove,
+   * unmakeMove and clone; null moves do not change them.
+   * pieceCnt[pieceCode] = number of such pieces on the board; pawnBits[color] has bit sq set for every pawn
+   * of that color (pawns only ever stand on squares 6..29, so the mask fits an int32).
+   */
+  pieceCnt = new Int8Array(16);
+  pawnBits = new Int32Array(2);
+  /**
+   * Occupancy per colour: occ[c * 2] has bit sq for squares 0..29, occ[c * 2 + 1] bit sq − 30 for squares
+   * 30..35. Lets move generation and evaluation visit pieces in ascending square order without a board scan.
+   */
+  occ = new Int32Array(4);
+  /**
+   * Optional piece-square table (psqTab[(piece * 36 + sq) * 2] = mg, + 1 = eg; entries of piece code 0 must be 0)
+   * installed by the evaluation;
+   * while set, psqMg / psqEg hold the sum of the table over all pieces on the board.
+   */
+  psqTab: Int32Array | null = null;
+  psqMg = 0;
+  psqEg = 0;
+
+  /** Install (or re-install) a piece-square table and recompute its sums from scratch. */
+  setPsqTable(tab: Int32Array | null): void {
+    this.psqTab = tab;
+    let mg = 0, eg = 0;
+    if (tab) {
+      const b = this.board;
+      for (let sq = 0; sq < NUM_SQUARES; sq++) {
+        const p = b[sq];
+        if (p) { mg += tab[(p * 36 + sq) * 2]; eg += tab[(p * 36 + sq) * 2 + 1]; }
+      }
+    }
+    this.psqMg = mg; this.psqEg = eg;
+  }
+
+  /**
+   * Rebuild the derived state (piece counts, pawn and occupancy masks, piece-square sums) from the board. Call
+   * after writing `board` directly before using the engine fast paths or the evaluation on this position.
+   */
+  syncDerived(): void {
+    this.recomputeCounts();
+    this.setPsqTable(this.psqTab);
+  }
+
+  private recomputeCounts(): void {
+    const cnt = this.pieceCnt, b = this.board, occ = this.occ;
+    cnt.fill(0);
+    occ.fill(0);
+    let w = 0, bl = 0;
+    for (let sq = 0; sq < NUM_SQUARES; sq++) {
+      const p = b[sq];
+      if (!p) continue;
+      cnt[p]++;
+      if (sq < 30) occ[(p >> 3) * 2] |= 1 << sq; else occ[(p >> 3) * 2 + 1] |= 1 << (sq - 30);
+      if (p === PAWN) w |= 1 << sq;
+      else if (p === (PAWN | 8)) bl |= 1 << sq;
+    }
+    this.pawnBits[0] = w; this.pawnBits[1] = bl;
+  }
 
   static fromFen(fen: string): Position {
     const p = new Position();
@@ -91,9 +149,10 @@ export class Position {
     // The side NOT to move must not be in check.
     if (this.isAttacked(this.kingSq[this.side ^ 1], this.side)) throw new FenError('Side not to move is in check');
     this.recomputeHash();
+    this.syncDerived();
     this.histLo = [this.hashLo];
     this.histHi = [this.hashHi];
-    this.undo = [];
+    this.undoLen = 0;
   }
 
   toFen(): string {
@@ -131,7 +190,12 @@ export class Position {
     p.hashHi = this.hashHi;
     p.histLo = this.histLo.slice();
     p.histHi = this.histHi.slice();
-    p.undo = this.undo.slice();
+    p.undoBuf = this.undoBuf.slice();
+    p.undoLen = this.undoLen;
+    // derived state is rebuilt from the board, so a clone is always consistent even if the source's board was
+    // written directly
+    p.psqTab = this.psqTab;
+    p.syncDerived();
     return p;
   }
 
@@ -156,8 +220,13 @@ export class Position {
     for (let i = 0; i < kn.length; i++) if (b[kn[i]] === (KNIGHT | byFlag)) return true;
     const kg = KING_TARGETS[sq];
     for (let i = 0; i < kg.length; i++) if (b[kg[i]] === (KING | byFlag)) return true;
+    return this.sliderAttacks(sq, by, 8);
+  }
+
+  private sliderAttacks(sq: number, by: Color, dEnd: number): boolean {
+    const b = this.board;
     const rays = RAYS[sq];
-    for (let d = 0; d < 8; d++) {
+    for (let d = 0; d < dEnd; d++) {
       const ray = rays[d];
       for (let i = 0; i < ray.length; i++) {
         const p = b[ray[i]];
@@ -170,6 +239,48 @@ export class Position {
       }
     }
     return false;
+  }
+
+  // ---- engine fast paths (v0.9) ----
+  // Same answers as isAttacked / inCheck / lastMoveLeftKingInCheck / generatePseudo, but they read the derived
+  // state (pieceCnt, occ), so they require a position whose board was only changed through setFen, makeMove /
+  // unmakeMove, clone or syncDerived. The search uses them on its own clone; the reference methods above stay
+  // independent of the derived state (code that writes `board` directly, e.g. the endgame solver, keeps working).
+
+  /** isAttacked, skipping piece kinds `by` does not have (needs the derived state). */
+  isAttackedFast(sq: number, by: Color): boolean {
+    const b = this.board;
+    const byFlag = by << 3;
+    const pa = PAWN_ATTACKERS[by][sq];
+    for (let i = 0; i < pa.length; i++) if (b[pa[i]] === (PAWN | byFlag)) return true;
+    const cnt = this.pieceCnt;
+    if (cnt[KNIGHT | byFlag]) {
+      const kn = KNIGHT_TARGETS[sq];
+      for (let i = 0; i < kn.length; i++) if (b[kn[i]] === (KNIGHT | byFlag)) return true;
+    }
+    const kg = KING_TARGETS[sq];
+    for (let i = 0; i < kg.length; i++) if (b[kg[i]] === (KING | byFlag)) return true;
+    // sliders: diagonals only matter with a queen, orthogonals with a queen or rook
+    const dEnd = cnt[QUEEN | byFlag] ? 8 : cnt[ROOK | byFlag] ? 4 : 0;
+    return dEnd ? this.sliderAttacks(sq, by, dEnd) : false;
+  }
+
+  inCheckFast(color: Color = this.side): boolean {
+    return this.isAttackedFast(this.kingSq[color], (color ^ 1) as Color);
+  }
+
+  lastMoveLeftKingInCheckFast(): boolean {
+    return this.isAttackedFast(this.kingSq[this.side ^ 1], this.side);
+  }
+
+  /** generatePseudo visiting own pieces through the occupancy masks (same moves, same order; needs the derived state). */
+  generatePseudoFast(out: Int32Array, capturesOnly = false): number {
+    const us = this.side;
+    let n = 0;
+    let lo = this.occ[us * 2], hi = this.occ[us * 2 + 1];
+    while (lo) { const from = 31 - Math.clz32(lo & -lo); lo &= lo - 1; n = this.genFrom(from, out, n, capturesOnly); }
+    while (hi) { const from = 61 - Math.clz32(hi & -hi); hi &= hi - 1; n = this.genFrom(from, out, n, capturesOnly); }
+    return n;
   }
 
   inCheck(color: Color = this.side): boolean {
@@ -187,48 +298,57 @@ export class Position {
     for (let from = 0; from < NUM_SQUARES; from++) {
       const p = b[from];
       if (p === EMPTY || (p >> 3) !== us) continue;
-      const t = p & 7;
-      if (t === PAWN) {
-        const dir = us === WHITE ? 6 : -6;
-        const to = from + dir;
-        const promoRank = us === WHITE ? 5 : 0;
-        const toRank = rankOf(to);
-        if (b[to] === EMPTY) {
+      n = this.genFrom(from, out, n, capturesOnly);
+    }
+    return n;
+  }
+
+  /** Append the pseudo-legal moves of the side-to-move piece on `from` to `out` at index `n`; returns the new count. */
+  private genFrom(from: number, out: Move[] | Int32Array, n: number, capturesOnly: boolean): number {
+    const b = this.board;
+    const us = this.side;
+    const p = b[from];
+    const t = p & 7;
+    if (t === PAWN) {
+      const dir = us === WHITE ? 6 : -6;
+      const to = from + dir;
+      const promoRank = us === WHITE ? 5 : 0;
+      const toRank = rankOf(to);
+      if (b[to] === EMPTY) {
+        if (toRank === promoRank) {
+          for (const pt of PROMOTION_TYPES) out[n++] = encodeMove(from, to, pt);
+        } else if (!capturesOnly) out[n++] = encodeMove(from, to);
+      }
+      const caps = PAWN_ATTACKS[us][from];
+      for (let i = 0; i < caps.length; i++) {
+        const c = caps[i];
+        const q = b[c];
+        if (q !== EMPTY && (q >> 3) !== us) {
           if (toRank === promoRank) {
-            for (const pt of PROMOTION_TYPES) out[n++] = encodeMove(from, to, pt);
-          } else if (!capturesOnly) out[n++] = encodeMove(from, to);
+            for (const pt of PROMOTION_TYPES) out[n++] = encodeMove(from, c, pt);
+          } else out[n++] = encodeMove(from, c);
         }
-        const caps = PAWN_ATTACKS[us][from];
-        for (let i = 0; i < caps.length; i++) {
-          const c = caps[i];
-          const q = b[c];
-          if (q !== EMPTY && (q >> 3) !== us) {
-            if (toRank === promoRank) {
-              for (const pt of PROMOTION_TYPES) out[n++] = encodeMove(from, c, pt);
-            } else out[n++] = encodeMove(from, c);
-          }
-        }
-      } else if (t === KNIGHT || t === KING) {
-        const targets = t === KNIGHT ? KNIGHT_TARGETS[from] : KING_TARGETS[from];
-        for (let i = 0; i < targets.length; i++) {
-          const to = targets[i];
+      }
+    } else if (t === KNIGHT || t === KING) {
+      const targets = t === KNIGHT ? KNIGHT_TARGETS[from] : KING_TARGETS[from];
+      for (let i = 0; i < targets.length; i++) {
+        const to = targets[i];
+        const q = b[to];
+        if (q === EMPTY) { if (!capturesOnly) out[n++] = encodeMove(from, to); }
+        else if ((q >> 3) !== us) out[n++] = encodeMove(from, to);
+      }
+    } else {
+      const d0 = 0;
+      const d1 = t === ROOK ? 4 : 8;
+      const rays = RAYS[from];
+      for (let d = d0; d < d1; d++) {
+        const ray = rays[d];
+        for (let i = 0; i < ray.length; i++) {
+          const to = ray[i];
           const q = b[to];
-          if (q === EMPTY) { if (!capturesOnly) out[n++] = encodeMove(from, to); }
-          else if ((q >> 3) !== us) out[n++] = encodeMove(from, to);
-        }
-      } else {
-        const d0 = 0;
-        const d1 = t === ROOK ? 4 : 8;
-        const rays = RAYS[from];
-        for (let d = d0; d < d1; d++) {
-          const ray = rays[d];
-          for (let i = 0; i < ray.length; i++) {
-            const to = ray[i];
-            const q = b[to];
-            if (q === EMPTY) { if (!capturesOnly) out[n++] = encodeMove(from, to); continue; }
-            if ((q >> 3) !== us) out[n++] = encodeMove(from, to);
-            break;
-          }
+          if (q === EMPTY) { if (!capturesOnly) out[n++] = encodeMove(from, to); continue; }
+          if ((q >> 3) !== us) out[n++] = encodeMove(from, to);
+          break;
         }
       }
     }
@@ -241,7 +361,7 @@ export class Position {
     const from = moveFrom(m), to = moveTo(m), promo = movePromo(m);
     const piece = b[from];
     const captured = b[to];
-    this.undo.push({ move: m, captured, halfmove: this.halfmove, hashLo: this.hashLo, hashHi: this.hashHi });
+    this.pushUndo(m, captured);
     let lo = this.hashLo, hi = this.hashHi;
     lo ^= ZOBRIST_LO[piece * 36 + from]; hi ^= ZOBRIST_HI[piece * 36 + from];
     if (captured) { lo ^= ZOBRIST_LO[captured * 36 + to]; hi ^= ZOBRIST_HI[captured * 36 + to]; }
@@ -250,6 +370,27 @@ export class Position {
     lo ^= ZOBRIST_SIDE_LO; hi ^= ZOBRIST_SIDE_HI;
     b[to] = placed;
     b[from] = EMPTY;
+    // incremental evaluation state
+    const occ = this.occ, ou = this.side * 2;
+    if (from < 30) occ[ou] ^= 1 << from; else occ[ou + 1] ^= 1 << (from - 30);
+    if (to < 30) { occ[ou] ^= 1 << to; if (captured) occ[ou ^ 2] ^= 1 << to; }
+    else { occ[ou + 1] ^= 1 << (to - 30); if (captured) occ[(ou ^ 2) + 1] ^= 1 << (to - 30); }
+    const cnt = this.pieceCnt;
+    if (captured) {
+      cnt[captured]--;
+      if ((captured & 7) === PAWN) this.pawnBits[captured >> 3] ^= 1 << to;
+    }
+    if ((piece & 7) === PAWN) {
+      const pb = this.pawnBits;
+      if (promo) { cnt[piece]--; cnt[placed]++; pb[this.side] ^= 1 << from; }
+      else pb[this.side] ^= (1 << from) | (1 << to);
+    }
+    const tab = this.psqTab;
+    if (tab) {
+      const a = (placed * 36 + to) * 2, r = (piece * 36 + from) * 2, c = (captured * 36 + to) * 2;
+      this.psqMg += tab[a] - tab[r] - tab[c];
+      this.psqEg += tab[a + 1] - tab[r + 1] - tab[c + 1];
+    }
     if ((piece & 7) === KING) this.kingSq[this.side] = to;
     this.halfmove = (piece & 7) === PAWN || captured ? 0 : this.halfmove + 1;
     if (this.side === BLACK) this.fullmove++;
@@ -259,24 +400,60 @@ export class Position {
   }
 
   unmakeMove(): void {
-    const u = this.undo.pop();
-    if (!u) throw new Error('unmakeMove with empty undo stack');
+    if (this.undoLen === 0) throw new Error('unmakeMove with empty undo stack');
+    const ub = this.undoBuf, uo = --this.undoLen * U_STRIDE;
+    const move = ub[uo];
     this.histLo.pop(); this.histHi.pop();
     this.side = (this.side ^ 1) as Color;
     if (this.side === BLACK) this.fullmove--;
-    const from = moveFrom(u.move), to = moveTo(u.move), promo = movePromo(u.move);
+    const from = moveFrom(move), to = moveTo(move), promo = movePromo(move);
     const b = this.board;
-    const moved = promo ? makePiece(PAWN, this.side) : b[to];
+    const placed = b[to];
+    const moved = promo ? makePiece(PAWN, this.side) : placed;
+    const captured = ub[uo + 1];
     b[from] = moved;
-    b[to] = u.captured;
+    b[to] = captured;
+    // incremental evaluation state (exact inverse of makeMove)
+    const occ = this.occ, ou = this.side * 2;
+    if (from < 30) occ[ou] ^= 1 << from; else occ[ou + 1] ^= 1 << (from - 30);
+    if (to < 30) { occ[ou] ^= 1 << to; if (captured) occ[ou ^ 2] ^= 1 << to; }
+    else { occ[ou + 1] ^= 1 << (to - 30); if (captured) occ[(ou ^ 2) + 1] ^= 1 << (to - 30); }
+    const cnt = this.pieceCnt;
+    if (captured) {
+      cnt[captured]++;
+      if ((captured & 7) === PAWN) this.pawnBits[captured >> 3] ^= 1 << to;
+    }
+    if ((moved & 7) === PAWN) {
+      const pb = this.pawnBits;
+      if (promo) { cnt[moved]++; cnt[placed]--; pb[this.side] ^= 1 << from; }
+      else pb[this.side] ^= (1 << from) | (1 << to);
+    }
+    const tab = this.psqTab;
+    if (tab) {
+      const a = (placed * 36 + to) * 2, r = (moved * 36 + from) * 2, c = (captured * 36 + to) * 2;
+      this.psqMg -= tab[a] - tab[r] - tab[c];
+      this.psqEg -= tab[a + 1] - tab[r + 1] - tab[c + 1];
+    }
     if ((moved & 7) === KING) this.kingSq[this.side] = from;
-    this.halfmove = u.halfmove;
-    this.hashLo = u.hashLo; this.hashHi = u.hashHi;
+    this.halfmove = ub[uo + 2];
+    this.hashLo = ub[uo + 3]; this.hashHi = ub[uo + 4];
+  }
+
+  private pushUndo(m: Move, captured: number): void {
+    let ub = this.undoBuf;
+    const uo = this.undoLen * U_STRIDE;
+    if (uo + U_STRIDE > ub.length) {
+      const nb = new Int32Array(ub.length * 2);
+      nb.set(ub);
+      this.undoBuf = ub = nb;
+    }
+    ub[uo] = m; ub[uo + 1] = captured; ub[uo + 2] = this.halfmove; ub[uo + 3] = this.hashLo; ub[uo + 4] = this.hashHi;
+    this.undoLen++;
   }
 
   /** Null move for search pruning only (never part of a game record). */
   makeNullMove(): void {
-    this.undo.push({ move: 0xffff, captured: 0, halfmove: this.halfmove, hashLo: this.hashLo, hashHi: this.hashHi });
+    this.pushUndo(0xffff, 0);
     this.hashLo ^= ZOBRIST_SIDE_LO; this.hashHi ^= ZOBRIST_SIDE_HI;
     this.side = (this.side ^ 1) as Color;
     this.halfmove++;
@@ -284,11 +461,12 @@ export class Position {
   }
 
   unmakeNullMove(): void {
-    const u = this.undo.pop()!;
+    if (this.undoLen === 0) throw new Error('unmakeNullMove with empty undo stack');
+    const ub = this.undoBuf, uo = --this.undoLen * U_STRIDE;
     this.histLo.pop(); this.histHi.pop();
     this.side = (this.side ^ 1) as Color;
-    this.halfmove = u.halfmove;
-    this.hashLo = u.hashLo; this.hashHi = u.hashHi;
+    this.halfmove = ub[uo + 2];
+    this.hashLo = ub[uo + 3]; this.hashHi = ub[uo + 4];
   }
 
   /** True if the last made move left the mover's own king attacked (i.e. was illegal). */
@@ -298,7 +476,7 @@ export class Position {
   }
 
   legalMoves(): Move[] {
-    const buf: Move[] = [];
+    const buf = scratchMoves;
     const n = this.generatePseudo(buf);
     const out: Move[] = [];
     for (let i = 0; i < n; i++) {
@@ -311,7 +489,7 @@ export class Position {
   }
 
   hasLegalMove(): boolean {
-    const buf: Move[] = [];
+    const buf = scratchMoves;
     const n = this.generatePseudo(buf);
     for (let i = 0; i < n; i++) {
       this.makeMove(buf[i]);

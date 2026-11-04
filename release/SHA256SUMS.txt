@@ -1,1 +1,2 @@
 3b853340011b63424f9b43ca81c05868755aa4e7142dd8b679d790c3978b6e62  crown-and-calculation-v0.8.0.zip
+3bfc3009cf11f7e1723b9c9fce57af6a74e55f41c6f9c3aba2e0ef8925f87229  crown-and-calculation-v0.9.0.zip

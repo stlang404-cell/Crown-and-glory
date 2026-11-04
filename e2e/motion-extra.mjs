@@ -37,7 +37,7 @@ await page.addInitScript(() => {
   new MutationObserver(ms => { for (const m of ms) if (m.target.classList?.contains('check') && !String(m.oldValue).includes('check')) window.__checks.push(m.target.getAttribute('data-square')); })
     .observe(document, { subtree: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
 });
-await page.goto(url);
+await page.goto(url + '#/play');
 await page.waitForFunction(() => window.__crown && window.__crownSound);
 const sounds = () => page.evaluate(() => window.__crownSound.soundLog.map(x => x.id));
 const motion = () => page.evaluate(() => window.__motion);

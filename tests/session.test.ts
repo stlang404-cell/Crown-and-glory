@@ -60,7 +60,7 @@ describe('game session', () => {
     expect(s.remaining(0, 101_000)).toBe(294_000);
     expect(s.record.pauses).toHaveLength(1);
   });
-  it('untimed games are never rated; assistance makes a rated game unrated', () => {
+  it('untimed games are never rated; assistance is refused in a rated game', () => {
     expect(mk(TIME_CONTROLS.untimed).record.rated).toBe(false);
     const s = mk();
     expect(s.record.rated).toBe(true);

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, KeyboardEvent, P
 import { PieceSvg, PieceKind, PIECE_NAMES } from './Pieces';
 import { detectTransition, isForward, parseBoard as parseCells, type Cell } from './boardMotion';
 import { pieceMoveMs } from './theme';
-import { moveSoundId, playSound } from './sound';
+import { moveSoundId, playSound, type SoundId } from './sound';
 
 const FILES = 'abcdef';
 export interface BoardArrow { from: string; to: string; color?: string }
@@ -52,6 +52,7 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
   const busyUntil = useRef(0);
   const chained = useRef(false);
   const timers = useRef<number[]>([]);
+  const pendingSound = useRef<SoundId | null>(null);
   useLayoutEffect(() => {
     const prev = prevBoard.current;
     prevBoard.current = board;
@@ -63,7 +64,10 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
     const t = flipped ? null : detectTransition(prev, board);
     const forward = !!t && isForward(t, lastMove);
     const ms = pieceMoveMs();
-    let rapid = since < Math.max(90, ms * 0.6);
+    // Rapid changes (scrubbing a replay, a catch-up burst) skip animation and sound. On a live board a forward move
+    // is a real move — the player's own click right after the engine's reply included — so only near-simultaneous
+    // changes (a burst drawn in one go, < 60 ms apart) count as rapid there.
+    let rapid = since < (live && forward ? 60 : Math.max(90, ms * 0.6));
     // Live boards: a reply that arrives while the previous move is still sliding (an instant engine move) waits for
     // that slide, then slides itself. Only one move is ever queued; a longer backlog is drawn instantly.
     const chain = !!live && rapid && forward && !chained.current && busyUntil.current > now;
@@ -74,6 +78,9 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
       running.current = [];
       for (const id of timers.current) clearTimeout(id);
       timers.current = [];
+      // A queued reply's sound that has not played yet is played now rather than lost (a quick next move cancels
+      // the queued slide, but every move still gets its sound).
+      if (pendingSound.current) { const id = pendingSound.current; pendingSound.current = null; playSound(id, { distinct: true }); }
       setGhost(null);
     }
     if (!t) return;
@@ -83,7 +90,10 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
     // Rapid stepping (scrubbing, holding an arrow key) skips animation and sound to stay responsive.
     if (sounds && forward && !rapid) {
       const id = moveSoundId({ capture: !!t.captured, check: !!checkSquare, promotion: t.promotion });
-      if (delay > 0) timers.current.push(window.setTimeout(() => playSound(id), delay)); else playSound(id);
+      if (delay > 0) {
+        pendingSound.current = id;
+        timers.current.push(window.setTimeout(() => { pendingSound.current = null; playSound(id, { distinct: true }); }, delay));
+      } else playSound(id, { distinct: true });
     }
     if (!ms || rapid) { busyUntil.current = 0; return; }
     const root = boardRef.current;

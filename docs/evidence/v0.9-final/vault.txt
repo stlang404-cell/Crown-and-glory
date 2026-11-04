@@ -1,0 +1,11 @@
+[2026-11-04T14:14:11.564Z] PASS 1: Fresh career: "0 of 131" earned, 142 items (131 locked, 11 awaiting grading), insignias "0 of 31", 0 unlock records
+[2026-11-04T14:14:11.925Z] PASS 2: Filters: Insignias → 31 collectibles; Awaiting → 11 collectibles (incl. brilliant-1); Mythic → 8 all Mythic; search "giant" → giant-slayer; secret condition search → 0 collectibles
+[2026-11-04T14:14:12.060Z] PASS 3: Detail shows rule and state, Escape closes; secret card masked ("Secret Collectible (not earned)Secret CollectibleUncommonSec…")
+[2026-11-04T14:14:14.396Z] PASS 4: After a resigned rated Quick Match the Vault re-evaluated (1 → 2; 1 game, 1 rating event); owned: [] — no win/draw/Quick Match award, every unlock backed by its rule
+[2026-11-04T14:14:16.241Z] PASS 5: After a resigned casual Quick Match: still no win/draw award (owned: [])
+[2026-11-04T14:14:18.155Z] PASS 6: Registering for the Challenger Open unlocked "First Entry" (backfill false); notice: "First EntryUnlockedFirst EntryView in Vault×" role=status
+[2026-11-04T14:14:22.608Z] PASS 7: Dismissed (0 left); after reload + forced re-evaluation: notice shown again 0×, unlock records 1 → 1 (unique 1)
+[2026-11-04T14:14:22.696Z] PASS 8: Insignias follow the rating state: 1 rated game (RD 325, provisional) → 0 collected, UI "0 of 31"; First Entry shown as earned; totals "1 of 131"
+[2026-11-04T14:14:24.864Z] PASS 9: Phone (390 px, reached from Career Passport): horizontal overflow 0px, 0 elements past the edge, detail overflow 0px
+[2026-11-04T14:14:24.864Z] PASS 10: No page errors (0)
+[2026-11-04T14:14:24.896Z] ALL CHECKS PASSED

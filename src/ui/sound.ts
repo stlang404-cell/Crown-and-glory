@@ -133,10 +133,12 @@ export function canPlay(id: SoundId, p: SoundPrefs = getSoundPrefs()): boolean {
   return p.enabled && p.volume > 0 && p.categories[SOUND_CATEGORY[id]];
 }
 
-export function playSound(id: SoundId): boolean {
+/** `distinct`: the caller guarantees this is a separate event (the board plays one sound per position change), so
+ *  the time-based de-duplication does not apply — two quick moves must give two sounds. */
+export function playSound(id: SoundId, opts?: { distinct?: boolean }): boolean {
   if (!canPlay(id)) return false;
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  if (now - (lastAt.get(id) ?? -1e9) < DEDUPE_MS) return false;
+  if (!opts?.distinct && now - (lastAt.get(id) ?? -1e9) < DEDUPE_MS) return false;
   lastAt.set(id, now);
   soundLog.push({ id, at: now }); if (soundLog.length > 200) soundLog.shift();
   if (!ctx || !master || ctx.state !== 'running') return false; // locked until a user gesture: skip silently

@@ -1,0 +1,108 @@
+{
+ "id": "crown-odds-2",
+ "pre": {
+  "beta": 1.11477,
+  "gamma": 1,
+  "alpha": 0.31719,
+  "t0": -0.93271,
+  "t1": 0.39789,
+  "levelMin": -2.751,
+  "levelMax": 1.117
+ },
+ "live": {
+  "knots": [
+   0,
+   1,
+   10,
+   20,
+   40,
+   80,
+   160
+  ],
+  "a": [
+   1,
+   1.00827,
+   0.82953,
+   0.75681,
+   0.59134,
+   0.34936,
+   0.15023
+  ],
+  "b": [
+   0,
+   0.46381,
+   0.78379,
+   0.97688,
+   1.22514,
+   1.02293,
+   0.26839
+  ],
+  "d": [
+   0,
+   0.00245,
+   0.15865,
+   0.39061,
+   0.76972,
+   1.31573,
+   1.63103
+  ],
+  "m": 0.58035,
+  "clampCp": 1600
+ },
+ "fit": {
+  "method": "Two-stage maximum likelihood (BFGS, numerical gradients): pre-game ordered logit on ply-0 results; then live knots on every training ply ≤ 240 with the pre-game part fixed. Eval clamp chosen from the grid by training likelihood.",
+  "data": "tools/odds/generate.ts federation-style engine games: 3200 games (0 censored by the 400-ply limit and excluded), worlds s1, s2, s3, s4",
+  "split": "by game: FNV-1a(game id) mod 4 = 0 held out",
+  "trainGames": 2400,
+  "testGames": 800,
+  "trainLivePoints": 109163,
+  "preGameStdErr": {
+   "beta": 0.0561,
+   "alpha": 0.0415,
+   "t0": 0.0487,
+   "t1": 0.0606
+  },
+  "freeGammaCheck": {
+   "gamma": 0,
+   "beta": 1.048,
+   "trainLogLoss": 0.9084,
+   "fixedGammaTrainLogLoss": 0.90897
+  },
+  "liveStdErr": [
+   0.0277,
+   0.0225,
+   0.0213,
+   0.0266,
+   0.0551,
+   0.0879,
+   0.0738,
+   0.0221,
+   0.0166,
+   0.014,
+   0.0254,
+   0.0552,
+   0.0262,
+   0.02,
+   0.0194,
+   0.0314,
+   0.0432,
+   0.0497,
+   0.0404
+  ],
+  "clampTrainLogLoss": {
+   "400": 0.60301,
+   "800": 0.60087,
+   "1600": 0.6008
+  },
+  "heldOutLogLoss": {
+   "ply0": {
+    "logLoss": 0.8999,
+    "brier": 0.5334
+   },
+   "allPlies": {
+    "logLoss": 0.4959,
+    "brier": 0.2815
+   }
+  }
+ }
+}

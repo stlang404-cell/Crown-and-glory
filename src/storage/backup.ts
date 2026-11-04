@@ -22,12 +22,20 @@ export interface BackupBundle {
   appVersion: string;
   counts: { games: number; ratingEvents: number; reports: number };
   payloadSha256: string;
-  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[]; federation?: Record<string, unknown[]> };
+  payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[]; federation?: Record<string, unknown[]>;
+    /** v0.9: Vault unlocks/notices (ach:, achtoast:, vault:) and Grimoire progress (grim:) from the meta store. Optional: older backups have none. */
+    progress?: { key: string; value: unknown }[] };
 }
+
+/** Meta-store prefixes carried in backups. */
+export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:'] as const;
+const CAREER_ONLY = ['ach:', 'achtoast:', 'vault:'];
 
 export async function exportBundle(db: CrownDB, appVersion: string): Promise<BackupBundle> {
   const d = await db.dump();
-  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation };
+  const progress: { key: string; value: unknown }[] = [];
+  for (const p of PROGRESS_PREFIXES) progress.push(...(await db.metaWithPrefix(p)));
+  const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation, progress };
   return {
     format: BACKUP_FORMAT, appSchema: APP_SCHEMA, variantId: VARIANT_ID, exportedAt: new Date().toISOString(), appVersion,
     counts: { games: d.games.length, ratingEvents: d.ratingEvents.length, reports: d.reports.length },
@@ -47,6 +55,8 @@ export async function validateBundle(raw: unknown): Promise<BackupBundle> {
   const p = b.payload;
   if (!p || !Array.isArray(p.games) || !Array.isArray(p.ratingEvents) || !Array.isArray(p.reports) || !Array.isArray(p.ratingState)) throw new ImportError('Backup payload is incomplete.');
   if ((await sha256Hex(JSON.stringify(p))) !== b.payloadSha256) throw new ImportError('Backup checksum mismatch: the file is corrupted or was modified.');
+  if (p.progress !== undefined && (!Array.isArray(p.progress) || p.progress.some(e => !e || typeof e.key !== 'string' || !PROGRESS_PREFIXES.some(pre => e.key.startsWith(pre)))))
+    throw new ImportError('Backup progress records are malformed.');
   for (const g of p.games) {
     if (typeof g.id !== 'string' || g.variantId !== VARIANT_ID || !Array.isArray(g.moves)) throw new ImportError(`Game ${g?.id ?? '?'} is malformed.`);
     let pos: Position;
@@ -90,9 +100,13 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
       validateFederation(fed);
       await db.commit(FEDERATION_STORES.map(store => ({ store, put: fed[store] ?? [] })));
     }
+    if (b.payload.progress?.length) await db.putMetaIfAbsent(b.payload.progress);
     return { mode: 'restore', ...r };
   }
   const r = await db.importRecords({ games: b.payload.games, reports: b.payload.reports, ratingEvents: [], ratingState: [], attempts: b.payload.attempts, trainingRuns: b.payload.trainingRuns, bookmarks: b.payload.bookmarks }, false);
+  // merging into another career: learning progress only (achievements belong to the career that earned them)
+  const learning = (b.payload.progress ?? []).filter(e => !CAREER_ONLY.some(pre => e.key.startsWith(pre)));
+  if (learning.length) await db.putMetaIfAbsent(learning);
   return { mode: 'merge', ...r };
 }
 

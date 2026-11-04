@@ -13,26 +13,33 @@ import type { GameRecord } from '../games/types';
 import { TIME_CONTROLS } from '../games/types';
 import { createGameRecord } from '../games/session';
 import { ROSTER, opponentSnapshot } from '../federation/roster';
+import { practiceForLevel, requestPractice } from '../app/practice';
+import {
+  DEFAULT_PLAN, GRIMOIRE_INDEX, LEVELS, LEVEL_LABEL, LEVEL_PLAN, MINUTES, dailyPlan, dueReviews, loadProgress, savePlan, suggestLevel,
+  type GrimProgress, type Level, type PlanSettings,
+} from '../academy/grimoire';
 
 const themeLabel = (t: string) => MOTIF_LABEL[t as Motif] ?? t.replace(/-/g, ' ');
 const uid = (p: string) => `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
-interface Data { puzzles: Puzzle[]; meta: { id: string; engine: string; policy: string }; attempts: Attempt[]; runs: TrainingRun[]; reports: AnalysisReport[]; games: GameRecord[] }
+interface Data { puzzles: Puzzle[]; meta: { id: string; engine: string; policy: string }; attempts: Attempt[]; runs: TrainingRun[]; reports: AnalysisReport[]; games: GameRecord[]; grimoire: GrimProgress }
 
 export function AcademyScreen() {
   const services = useServices();
   const [data, setData] = useState<Data | null>(null);
   const [mode, setMode] = useState<AcademyMode | null>(null);
   const [theme, setTheme] = useState<string | null>(null);
+  const [planIds, setPlanIds] = useState<string[] | null>(null);
+  const { go } = useApp();
   useEffect(() => {
     void (async () => {
       const set = await loadPuzzleSet();
-      const [attempts, runs, reports, games] = await Promise.all([services.db.getAll<Attempt>('attempts'), services.db.getAll<TrainingRun>('trainingRuns'), services.db.allReports(), services.db.allGames()]);
-      setData({ puzzles: set.puzzles, meta: { id: set.id, engine: set.engine, policy: set.policy }, attempts, runs, reports, games });
+      const [attempts, runs, reports, games, grimoire] = await Promise.all([services.db.getAll<Attempt>('attempts'), services.db.getAll<TrainingRun>('trainingRuns'), services.db.allReports(), services.db.allGames(), loadProgress(services.db)]);
+      setData({ puzzles: set.puzzles, meta: { id: set.id, engine: set.engine, policy: set.policy }, attempts, runs, reports, games, grimoire });
     })();
   }, [services, services.revision]);
   if (!data) return <p className="muted">Loading the Academy…</p>;
-  if (mode) return <PuzzleSession key={`${mode}:${theme}`} mode={mode} theme={theme} data={data} onExit={() => { setMode(null); setTheme(null); }} />;
+  if (mode) return <PuzzleSession key={`${mode}:${theme}:${planIds?.join(',') ?? ''}`} mode={mode} theme={theme} ids={planIds} data={data} onExit={() => { setMode(null); setTheme(null); setPlanIds(null); }} />;
 
   const mistakes = mistakePuzzles(data.reports, data.games);
   const count = (m: AcademyMode) => (m === 'mistakes' ? mistakes.length : data.puzzles.filter(p => modeFilter(m, p)).length);
@@ -49,6 +56,10 @@ export function AcademyScreen() {
         <div className="panel stat"><span className="k">Solved First Try</span><span className="v">{first.filter(a => a.clean).length}</span><span className="small muted">{cleanRate === null ? 'No attempts yet' : `${Math.round(cleanRate * 100)}% of ${first.length} first attempts, without hints`}</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rushBest}</span><span className="small muted">{data.runs.filter(r => r.mode === 'rush').length} runs</span></div>
         <div className="panel stat"><span className="k">Puzzles Available</span><span className="v">{data.puzzles.filter(p => !p.retired).length}</span><span className="small muted">{data.puzzles.filter(p => p.split === 'heldout' && !p.retired).length} kept for assessments{data.puzzles.some(p => p.retired) ? ` · ${data.puzzles.filter(p => p.retired).length} retired after a recheck` : ''}</span></div>
+      </div>
+      <div className="grid-2" style={{ marginBottom: 14 }}>
+        <GrimoireCard progress={data.grimoire} onOpen={() => go({ name: 'grimoire' })} />
+        <LearningPlan data={data} onPuzzles={ids => { setPlanIds(ids); setMode('tactics'); }} />
       </div>
       <div className="panel" style={{ marginBottom: 14 }}>
         <div className="panel-title"><h3 style={{ margin: 0 }}>Recommended Next</h3><span className="chip gold">Adaptive</span></div>
@@ -85,7 +96,7 @@ export function AcademyScreen() {
   );
 }
 
-function PuzzleSession({ mode, theme, data, onExit }: { mode: AcademyMode; theme: string | null; data: Data; onExit: () => void }) {
+function PuzzleSession({ mode, theme, ids, data, onExit }: { mode: AcademyMode; theme: string | null; ids?: string[] | null; data: Data; onExit: () => void }) {
   const services = useServices();
   const { go } = useApp();
   const [attempts, setAttempts] = useState<Attempt[]>(data.attempts);
@@ -98,7 +109,7 @@ function PuzzleSession({ mode, theme, data, onExit }: { mode: AcademyMode; theme
   const sessionSeen = useRef(new Set<string>());
   const adaptive = useMemo(() => adaptiveThemes(data.attempts, data.puzzles, data.reports, data.games), [data]);
   const mistakes = useMemo(() => mistakePuzzles(data.reports, data.games), [data]);
-  const pool = mode === 'mistakes' ? mistakes : data.puzzles;
+  const pool = ids ? data.puzzles.filter(p => ids.includes(p.id)) : mode === 'mistakes' ? mistakes : data.puzzles;
 
   const pick = (t = targetRef.current) => {
     const themes = mode === 'adaptive' ? adaptive.themes : theme ? [theme] : undefined;
@@ -163,7 +174,7 @@ function PuzzleSession({ mode, theme, data, onExit }: { mode: AcademyMode; theme
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="btn ghost small" onClick={() => { if (run && !runState.done) void finishRun(); onExit(); }}>← Academy</button>
-        <h1 style={{ margin: 0 }}>{MODE_INFO[mode].title}{theme ? `: ${themeLabel(theme)}` : ''}</h1>
+        <h1 style={{ margin: 0 }}>{ids ? "Today's Plan: Puzzles" : `${MODE_INFO[mode].title}${theme ? `: ${themeLabel(theme)}` : ''}`}</h1>
         {run && <span className="chip gold" data-testid="run-score">Score {runState.score}{mode === 'rush' ? ` · Strikes ${runState.strikes}/3` : ` · ${runState.attempted}/10`}</span>}
         {left !== null && <span className="chip" role="timer">{Math.floor(left / 60000)}:{String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}</span>}
       </div>
@@ -264,6 +275,65 @@ function PuzzlePlayer({ p, onDone, onNext, onPlayOut, reveal, autoNext }: {
           </details>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- The Sovereign's Grimoire: home card and learning plan
+function GrimoireCard({ progress, onOpen }: { progress: GrimProgress; onOpen: () => void }) {
+  const books = GRIMOIRE_INDEX.books.filter(b => b.kind === 'book');
+  const total = books.reduce((a, b) => a + b.chapters.length, 0);
+  const done = books.reduce((a, b) => a + b.chapters.filter(c => progress.completions.has(c.id)).length, 0);
+  const due = dueReviews(progress.attempts, new Date().toISOString()).length;
+  return (
+    <div className="panel" data-testid="academy-grimoire">
+      <div className="panel-title"><h3 style={{ margin: 0 }}>The Sovereign’s Grimoire</h3><span className="chip gold">Lessons</span></div>
+      <p className="small muted">The Academy’s textbook in six books: read each chapter, step through its boards and solve its exercises on the board. Missed exercises return for review.</p>
+      <p className="small">{done} of {total} chapters complete{due ? ` · ${due} review${due > 1 ? 's' : ''} due` : ''}</p>
+      <button className="btn primary" onClick={onOpen}>Open the Grimoire</button>
+    </div>
+  );
+}
+
+function LearningPlan({ data, onPuzzles }: { data: Data; onPuzzles: (ids: string[]) => void }) {
+  const services = useServices();
+  const { go } = useApp();
+  const [settings, setSettings] = useState<PlanSettings>(data.grimoire.plan ?? DEFAULT_PLAN);
+  const [editing, setEditing] = useState(!data.grimoire.plan);
+  const suggestion = suggestLevel(data.runs);
+  const plan = dailyPlan({ settings, progress: data.grimoire, nowIso: new Date().toISOString(), puzzles: data.puzzles, academyAttemptIds: new Set(data.attempts.map(a => a.puzzleId)) });
+  const opp = plan.game ? ROSTER.find(o => o.level === plan.game!.opponentLevel) : undefined;
+  const save = async (p: PlanSettings) => { setSettings(p); if (!services.readOnly) await savePlan(services.db, p); };
+  const bookOf = (n: number) => GRIMOIRE_INDEX.books.find(b => b.number === n)?.title.split(' — ')[0] ?? `Book ${n}`;
+  return (
+    <div className="panel" data-testid="learning-plan">
+      <div className="panel-title"><h3 style={{ margin: 0 }}>Today’s Plan</h3><span className="chip">{LEVEL_LABEL[settings.level]} · {settings.minutes} min</span></div>
+      {editing ? (
+        <div className="stack">
+          <label className="small">Level{' '}
+            <select value={settings.level} onChange={e => void save({ ...settings, level: e.target.value as Level })} data-testid="plan-level">
+              {LEVELS.map(l => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
+            </select>
+          </label>
+          <label className="small">Daily minutes{' '}
+            <select value={settings.minutes} onChange={e => void save({ ...settings, minutes: +e.target.value as PlanSettings['minutes'] })} data-testid="plan-minutes">
+              {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
+          <p className="small muted" style={{ margin: 0 }}>{suggestion ? `Suggested from your Assessments: ${LEVEL_LABEL[suggestion.level]} (${suggestion.basis}).` : 'Take a Held-out Assessment for a level suggestion. The plan never assigns a rating.'}</p>
+          <button className="btn small" onClick={() => { void save(settings); setEditing(false); }}>Save Plan</button>
+        </div>
+      ) : (
+        <ol className="small" style={{ paddingLeft: 18, margin: '0 0 8px' }}>
+          {plan.chapter && <li>Read <button className="btn ghost small" onClick={() => go({ name: 'grimoire', path: plan.chapter!.id })}>{bookOf(plan.chapter.book)}: {plan.chapter.title}</button></li>}
+          {plan.reviews.length > 0 && <li>Review {plan.reviews.length} missed exercise{plan.reviews.length > 1 ? 's' : ''} <button className="btn ghost small" onClick={() => go({ name: 'grimoire', path: 'review' })}>Start Review</button></li>}
+          {plan.puzzles && <li>{plan.puzzles.ids.length} Academy puzzles on {themeLabel(plan.puzzles.theme)} <span className="muted">({plan.puzzles.reason})</span> <button className="btn ghost small" onClick={() => onPuzzles(plan.puzzles!.ids)}>Solve</button></li>}
+          {opp && plan.game && <li data-testid="plan-practice">Practice game vs {opp.name} (L{opp.level}, {opp.title}) <span className="muted">· {TIME_CONTROLS[plan.game.timeControl].label} · Casual</span> <button className="btn ghost small" data-testid="plan-practice-play" onClick={() => { const s = practiceForLevel(opp.level, plan.game!.timeControl); if (s) requestPractice(s); go({ name: 'play' }); }}>Play</button></li>}
+          {!plan.chapter && !plan.reviews.length && !plan.puzzles && !opp && <li>Everything is done for today.</li>}
+        </ol>
+      )}
+      {!editing && <button className="btn ghost small" onClick={() => setEditing(true)}>Change Level or Time</button>}
+      <p className="small muted" style={{ margin: '6px 0 0' }}>Reading starts at {bookOf(LEVEL_PLAN[settings.level].book)} for this level; earlier unread chapters follow once it is done.</p>
     </div>
   );
 }

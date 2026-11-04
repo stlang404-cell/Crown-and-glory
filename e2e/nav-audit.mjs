@@ -14,8 +14,8 @@ rmSync(OUT, { recursive: true, force: true }); mkdirSync(OUT, { recursive: true 
 const log = []; let failed = 0;
 const step = m => { const l = `[${new Date().toISOString()}] ${m}`; log.push(l); console.log(l); };
 const check = (id, ok, m) => { step(`${ok ? 'PASS' : 'FAIL'} ${id}: ${m}`); if (!ok) failed++; };
-const NAV = ['Play', 'Federation', 'Exchange', 'Finance', 'Games', 'Analysis', 'Academy', 'Career', 'Rivals', 'Hall of Fame', 'Lab', 'Settings'];
-const TABS = ['Play', 'Federation', 'Exchange', 'Finance', 'Career', 'Settings'];
+const NAV = ['Dashboard', 'Play', 'Federation', 'Exchange', 'Finance', 'Games', 'Analysis', 'Academy', 'Career', 'Rivals', 'Hall of Fame', 'Lab', 'Settings'];
+const TABS = ['Dashboard', 'Play', 'Federation', 'Exchange', 'Career', 'Settings'];
 
 async function audit(page, label, entries, navSel, errors) {
   const bad = [];

@@ -1,0 +1,21 @@
+Academy home shows the Grimoire card and Today’s Plan
+Grimoire home: 8 book cards
+Forks chapter open: 3 example boards, 4 interactive exercises
+Guided exercise: status=solved; feedback "Correct — solved on the first try. Line: Qc6+ Ke5 Qxb5+"
+Wrong move a3b3 on exercise 1: feedback "Not the book’s move. Try again."
+Stored attempts: ex-1=failed, guided=first-try+solved
+Exercise 1: solved
+Exercise 2: solved
+Exercise 3: solved
+Forks chapter complete (all exercises solved; the missed one stays scheduled for review)
+Book I chapter 1 (no exercises) complete after reading to the end
+After reload: review queue holds 1 scheduled exercise(s) (due after 1 day)
+After reload: forks chapter status = complete
+Completion records: b1-1-the-board-and-its-coordinates, b2-1-double-attacks-and-forks
+Vault: first-lesson unlocked
+Offline reload: forks chapter loaded from the service-worker cache (4 exercises, complete=yes)
+Phone #/academy: scrollWidth 390 / clientWidth 390
+Phone #/grimoire: scrollWidth 390 / clientWidth 390
+Phone #/grimoire/b2-1-double-attacks-and-forks: scrollWidth 390 / clientWidth 390
+Phone #/grimoire/b3-iii-1-the-first-ten-doors-development-on-six-files: scrollWidth 390 / clientWidth 390
+PASS: Grimoire journey

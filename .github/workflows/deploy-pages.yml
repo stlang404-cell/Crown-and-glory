@@ -1,5 +1,7 @@
 # Builds Crown & Calculation and publishes it to GitHub Pages (free HTTPS hosting, no server code).
 # Runs on every push to main, and on demand from the Actions tab ("Run workflow").
+# The build carries its identity (package.json version + short commit + build time) in dist/version.json and in the
+# app (Settings → About); the verify step refuses to deploy a build whose service worker or version file is wrong.
 # One-time setup in GitHub: Settings → Pages → Build and deployment → Source: "GitHub Actions".
 name: Deploy to GitHub Pages
 
@@ -21,6 +23,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      version: ${{ steps.verify.outputs.version }}
+      commit: ${{ steps.verify.outputs.commit }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,6 +38,9 @@ jobs:
         run: npx vitest run
       - name: Production build
         run: npm run build
+      - name: Verify release (service worker precache, version.json, manifest)
+        id: verify
+        run: node scripts/verify-dist.mjs dist
       - name: Prepare Pages artifact
         run: |
           touch dist/.nojekyll
@@ -51,3 +59,5 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Summary
+        run: echo "Deployed Crown & Calculation v${{ needs.build.outputs.version }} (commit ${{ needs.build.outputs.commit }}) to ${{ steps.deployment.outputs.page_url }} — check Settings → About on the phone shows the same commit." >> "$GITHUB_STEP_SUMMARY"
