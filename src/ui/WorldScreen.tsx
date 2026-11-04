@@ -1,4 +1,6 @@
 import { NeedsFederation } from './NeedsFederation';
+import { fmtCareerElo } from '../ratings/display';
+import { CompetitorElo } from './CareerElo';
 import { useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
@@ -122,7 +124,7 @@ export function WorldScreen() {
                 <Portrait seed={c.portraitSeed} size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
-                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {Math.round(c.rating)} ±{Math.round(c.rd)} · Rapid 5+3, rated</div>
+                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {fmtCareerElo(c.rating, { rd: c.rd })} · Rapid 5+3, rated</div>
                   {f.postponedFrom !== undefined && <div className="small"><span className="chip neg" data-testid="postponed-chip">Postponed from round {f.postponedFrom}</span> <span className="muted">Play by the end of round {LEAGUE_ROUNDS}.</span></div>}
                 </div>
                 <button className="btn primary small" disabled={!!busy} data-testid="play-fixture" onClick={() => act('play', async () => {
@@ -215,14 +217,14 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
   return (
     <div style={{ overflowX: 'auto' }}>
       <table>
-        <thead><tr><th>#</th><th>Competitor</th><th>Pts</th><th className="hide-sm">P</th><th className="hide-sm">W–D–L</th><th className="hide-sm">SB</th><th>Rating</th></tr></thead>
+        <thead><tr><th>#</th><th>Competitor</th><th>Pts</th><th className="hide-sm">P</th><th className="hide-sm">W–D–L</th><th className="hide-sm">SB</th><th>Career Elo</th></tr></thead>
         <tbody>
           {rows.map((r, i) => {
             const promo = division > 1 && i < 2, releg = division < DIVISIONS && i >= rows.length - 2;
             const c = fed.state!.competitors.get(r.id);
             return (
               <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
-                <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td>{r.id === PLAYER_ID ? '—' : Math.round(c!.rating)}</td>
+                <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td><CompetitorElo id={r.id} /></td>
               </tr>
             );
           })}
@@ -289,8 +291,8 @@ export function TournamentsScreen() {
               <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · Top 8 qualify for the Crown Championship · $1,500 in prizes' : 'Divisions 5–8, plus you if registered · $600 in prizes'}</div>
               <details className="small" style={{ marginBottom: 6 }}><summary>Details</summary>Swiss pairing with no rematches; a bye goes to the lowest-placed player who hasn't had one. BH-1: Buchholz Cut-1. Tiebreak order: points, Buchholz Cut-1, Buchholz, Sonneborn–Berger, seed.</details>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
-                <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th></tr></thead>
-                  <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td></tr>)}</tbody></table>
+                <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th><th>Elo</th></tr></thead>
+                  <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td><td><CompetitorElo id={r.id} compact /></td></tr>)}</tbody></table>
               </div>
               {sw.rounds.some(r => r.repeats > 0) && <div className="small notice warn">One round needed a rematch because no other pairing was possible.</div>}
             </div>
@@ -306,7 +308,7 @@ export function TournamentsScreen() {
                 <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{sg.label} · Round {sg.round}</div>
                 {sg.matches.length === 0 ? <div className="small muted">To be decided</div> : sg.matches.map((m, i) => (
                   <div key={i} className="panel" style={{ padding: 8, margin: '6px 0' }}>
-                    {[m.a, m.b].map(id => <div key={id} className="row small" style={{ fontWeight: m.winner === id || (m.joint) ? 700 : 400 }}><span>({m.a === id ? m.seedA : m.seedB}) {fed.name(id)}</span><span className="spacer" /><span className="mono">{m.games.filter(g => g.result !== null).reduce((s, g) => s + (g.white === id ? g.result! : g.black === id ? 1 - g.result! : 0), 0)}</span></div>)}
+                    {[m.a, m.b].map(id => <div key={id} className="row small" style={{ fontWeight: m.winner === id || (m.joint) ? 700 : 400 }}><span>({m.a === id ? m.seedA : m.seedB}) {fed.name(id)} <CompetitorElo id={id} compact className="muted" /></span><span className="spacer" /><span className="mono">{m.games.filter(g => g.result !== null).reduce((s, g) => s + (g.white === id ? g.result! : g.black === id ? 1 - g.result! : 0), 0)}</span></div>)}
                     {m.decidedBy && <div className="small muted">{m.joint ? 'Joint champions' : `Decided by ${m.decidedBy}`}</div>}
                     {(() => { const r = previewRivalry(m.a, m.b); return r && r.meetings > 0 ? <div className="small" data-testid="rivalry-preview"><span className="chip">{r.level}</span> {r.w}–{r.d}–{r.l} in {r.meetings}{r.events[0] ? ` · ${r.events[0].text}` : ''}</div> : null; })()}
                   </div>

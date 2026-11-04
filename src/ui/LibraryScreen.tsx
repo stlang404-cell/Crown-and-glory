@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { fmtCareerElo, ratingChange } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { resultText } from './PlayScreen';
 import type { GameRecord } from '../games/types';
@@ -137,7 +138,7 @@ export function LibraryScreen() {
                     <td>{new Date(r.game.startedAt).toLocaleDateString()}</td>
                     <td>{r.opponent}{r.game.mode === 'training' && <span className="chip" style={{ marginLeft: 4 }}>Training</span>}</td>
                     <td><span className={`chip ${r.result === 'Victory' ? 'pos' : r.result === 'Defeat' ? 'neg' : ''}`}>{r.result}</span></td>
-                    <td>{r.delta !== null ? <>{Math.max(0, Math.round(r.ratingBefore!))}→{Math.max(0, Math.round(r.ratingAfter!))} <span style={{ color: r.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>({r.delta >= 0 ? '+' : ''}{r.delta.toFixed(1)})</span></> : <span className="muted">{r.game.rated ? 'pending' : 'unrated'}</span>}</td>
+                    <td>{r.delta !== null ? <span className="mono">{fmtCareerElo(r.ratingBefore!)} → {fmtCareerElo(r.ratingAfter!)} <span style={{ color: r.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>({ratingChange(r.ratingBefore!, r.ratingAfter!).deltaText})</span></span> : <span className="muted">{r.game.rated ? 'pending' : 'unrated'}</span>}</td>
                     <td>{r.accuracy === null ? <span className="muted">—</span> : r.accuracy.toFixed(1)}</td>
                     <td className="hide-sm">{r.mistakes === null ? '—' : `${r.mistakes}/${r.blunders}`}</td>
                     <td className="hide-sm small">{r.game.opening?.name ?? '—'}</td>

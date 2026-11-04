@@ -1,4 +1,5 @@
 import { AppServices } from '../app/services';
+import { fmtCareerElo } from '../ratings/display';
 import { useEffect, useMemo, useState, KeyboardEvent } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
@@ -223,14 +224,14 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     return (
       <PlayerBar color={color} active={!variation && ply < n && sideToMove === color}
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={meta?.portraitSeed ?? 1} size={40} crown={(meta?.level ?? 0) >= 8} />}
-        name={p.name} meta={p.rating !== null ? `${isHuman ? Math.max(0, Math.round(p.rating)) : Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+        name={p.name} meta={p.rating !== null ? `${fmtCareerElo(p.rating, { rd: p.rd })}` : isHuman ? 'Unrated' : 'Not yet rated'}
         aside={ms !== null && Number.isFinite(ms) ? <Clock text={fmtClock(ms)} label={`${p.name} clock after this move`} /> : undefined}>
         <Captured fen={fen} color={color} name={p.name} />
       </PlayerBar>
     );
   };
   const topColor = orientation === 'white' ? 'black' : 'white';
-  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? fmtCareerElo(p.rating) : null);
 
   const board = (
     <>
@@ -350,7 +351,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
           <p className="small">{explainEvent(event)}</p>
           <details className="small">
             <summary>Details</summary>
-            <span className="muted">Glicko-2 (rating/RD/volatility): {Math.round(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {Math.round(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</span>
+            <span className="muted">Glicko-2 (rating/RD/volatility): {fmtCareerElo(event.before.rating)}/{Math.round(event.before.rd)}/{event.before.sigma.toFixed(4)} → {fmtCareerElo(event.after.rating)}/{Math.round(event.after.rd)}/{event.after.sigma.toFixed(4)} · event {event.id}</span>
           </details>
         </div>
       )}

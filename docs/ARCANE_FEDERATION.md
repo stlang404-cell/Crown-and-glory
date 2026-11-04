@@ -92,6 +92,10 @@ standings, leaderboards, tournament brackets, Live Arena player cards, rivalry s
 the rating, using each competitor's public Federation rating).
 
 ## 4. Identity banner (implemented)
+
+*v0.11:* superseded by the legacy header (docs/LEGACY.md): career Elo shown as the Glicko-2 rating on the Crown scale
+(not FIDE), feudal rank, customisation from earned items, featured trophies.
+
 Insignia · title (+ "provisional") · rating ±RD · progress bar and "N to <next title>" · division and regional league
 · cash (₵) · career Brilliant moves · last rated result and rating change · latest ceremony. Phone: insignia, title,
 rating, cash and the progress bar; "More" reveals the rest. Hidden during live play and live spectating so the board
