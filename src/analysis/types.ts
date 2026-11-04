@@ -1,4 +1,5 @@
 /** Analysis report schema (crown-report v1). Reports are immutable once stored. */
+import type { PlayedLikeRecord } from './playedLike';
 
 export type Pov = 'white' | 'black';
 export type EngineScore =
@@ -113,4 +114,7 @@ export interface AnalysisReport {
   startedAt: string;
   completedAt: string;
   elapsedMs: number;
+  /** Additive (v0.10): Played Like for both sides, computed when the report completed (versioned by modelId).
+   *  Absent on older reports; src/analysis/playedLike.ts computes it from the stored plies instead. */
+  playedLike?: PlayedLikeRecord;
 }

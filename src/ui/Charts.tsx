@@ -58,8 +58,8 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
 
 export interface RatingPoint { at: string; rating: number; rd: number; label: string }
 
-export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; height?: number }) {
-  if (points.length < 2) return <p className="muted">Your rating chart appears after your first rated game at this time control.</p>;
+export function RatingChart({ points, height = 220, caption = 'Shaded band: how uncertain your rating is', empty = 'Your rating chart appears after your first rated game at this time control.', label = 'Rating history' }: { points: RatingPoint[]; height?: number; caption?: string; empty?: string; label?: string }) {
+  if (points.length < 2) return <p className="muted">{empty}</p>;
   const W = 640, H = height, pad = 36;
   const lo = Math.min(...points.map(p => p.rating - p.rd));
   const hi = Math.max(...points.map(p => p.rating + p.rd));
@@ -73,7 +73,7 @@ export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; h
   const step = Math.max(50, Math.ceil((max - min) / 5 / 50) * 50);
   for (let t = min; t <= max; t += step) ticks.push(t);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Rating history with uncertainty band, ${points.length} points, latest ${Math.round(points[points.length - 1].rating)}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`${label} with uncertainty band, ${points.length} points, latest ${Math.round(points[points.length - 1].rating)}`}>
       {ticks.map(t => (
         <g key={t}>
           <line x1={pad} x2={W - 10} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--chart-grid)' }} />
@@ -83,7 +83,7 @@ export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; h
       <path d={band} style={{ fill: 'color-mix(in srgb, var(--info) 16%, transparent)' }} />
       <path d={line} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth="2.5" />
       {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.rating)} r="3.5" style={{ fill: 'var(--panel)', stroke: 'var(--accent)' }} strokeWidth="2"><title>{p.label}</title></circle>)}
-      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">Shaded band: how uncertain your rating is</text>
+      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">{caption}</text>
     </svg>
   );
 }

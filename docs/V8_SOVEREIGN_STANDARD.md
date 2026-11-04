@@ -88,6 +88,9 @@ docs/ENGINE_STRENGTH_RESEARCH.md (approach A native engine incl. NNUE-style eval
 licensing options B1–B4 for the owner to decide).
 
 ## 4. Played Like
+> **Superseded in v0.10:** crown-played-like-2 (docs/PLAYED_LIKE.md) passed held-out validation on the 2,184-game
+> spectrum corpus and ships with numbers. The v0.8 record below is kept as history.
+
 Fitted on 214 analysed calibration games (430 player-game samples, engine levels L1–L7, 800–2641 on the Crown scale;
 the run was stopped at 214 of 500 games by the compute stopping rule). Held-out (every third opening pair):
 MAE 293, r 0.678, 90 % interval coverage 0.89, monotone by level — **but no better than a naive accuracy line**

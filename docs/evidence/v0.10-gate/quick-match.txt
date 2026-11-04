@@ -1,0 +1,10 @@
+[2026-11-04T16:57:36.973Z] PASS 1: Defaults: pool "Anyone", type "Rated"
+[2026-11-04T16:57:37.626Z] PASS 2: Card shows a real active competitor: Mira Coldhurst 1320 ±120 (roster: {"id":"c6452","rating":1320,"rd":120,"status":"active"})
+[2026-11-04T16:57:37.905Z] PASS 3: 5 rerolls gave 6 different opponents; rerolls and Cancel created no game (0 → 0)
+[2026-11-04T16:57:38.310Z] PASS 4: Rated game created vs Nemira Everstead (snapshot rating 2275, own calibrated profile fed-n4943)
+[2026-11-04T16:57:40.629Z] PASS 5: One rating event (1500 → 1490, games 0 → 1); still 1 after reload
+[2026-11-04T16:57:41.404Z] PASS 6: Casual quick match: rating unchanged (1490.5), still 1 rating event
+[2026-11-04T16:57:41.541Z] PASS 7: Elite filter drew a 3390 ±120 competitor
+[2026-11-04T16:57:42.573Z] PASS 8: Phone: card shown, horizontal overflow 0px
+[2026-11-04T16:57:42.573Z] PASS 9: No page errors (0)
+[2026-11-04T16:57:42.623Z] ALL CHECKS PASSED
