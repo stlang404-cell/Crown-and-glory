@@ -6,6 +6,7 @@ import { EvalGraph, formatScore, whiteU } from './Charts';
 import { fmtClock, resultText } from './PlayScreen';
 import { Captured, Clock, GRADE_LABEL, GradeIcon, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar } from './MatchCenter';
 import { Portrait } from './Portrait';
+import { PlayedLikeCard } from './PlayedLikeCard';
 import { Position } from '../rules/position';
 import { parseLegalCcn } from '../rules/notation';
 import { squareName } from '../rules/types';
@@ -241,6 +242,9 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
 
   const summaryPanel = (
     <>
+      {report && report.status === 'complete' && (
+        <PlayedLikeCard report={report} human={humanPov} humanName="You" oppName={opp.name} oppRating={opp.rating ?? null} event={event} onOpenMoves={() => { setTab('moves'); goPly(1); }} />
+      )}
       {report && mine && theirs && (
         <div className="panel">
           <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>

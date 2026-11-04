@@ -13,69 +13,79 @@
   "share of moves losing <= 0.005"
  ],
  "beta": [
-  496.368,
-  -18.827,
-  550.454,
-  448.706
+  1405.401,
+  -208.2,
+  -1078.236,
+  -831.405
  ],
  "eps": 0.005,
  "bookPlies": 4,
  "minMoves": 8,
  "sd": {
-  "s0sq": 28505.4,
-  "s1sq": 0.0
+  "s0sq": 51471.7,
+  "s1sq": 712189.7
  },
  "calibratedRange": [
   800,
-  1122
+  1710
  ],
  "validation": {
   "heldOut": {
-   "n": 16,
-   "mae": 177,
-   "rmse": 182,
-   "r": -0.35,
-   "bias": -13,
-   "cover90": 1.0
+   "n": 52,
+   "mae": 240,
+   "rmse": 295,
+   "r": 0.493,
+   "bias": 35,
+   "cover90": 0.904
   },
   "train": {
-   "n": 30,
-   "mae": 149,
-   "rmse": 155,
-   "r": 0.28,
-   "bias": 5,
-   "cover90": 1.0
+   "n": 131,
+   "mae": 243,
+   "rmse": 297,
+   "r": 0.426,
+   "bias": 20,
+   "cover90": 0.931
   },
   "naiveAccuracyLine": {
-   "n": 16,
-   "mae": 155,
-   "rmse": 167,
-   "r": 0.129,
-   "bias": -38,
+   "n": 52,
+   "mae": 236,
+   "rmse": 272,
+   "r": 0.556,
+   "bias": 3,
    "cover90": null
   },
   "nullMean": {
-   "n": 16,
-   "mae": 161,
-   "rmse": 161,
-   "r": NaN,
-   "bias": 0,
+   "n": 52,
+   "mae": 302,
+   "rmse": 329,
+   "r": null,
+   "bias": 37,
    "cover90": null
   },
   "heldOutByLevel": {
    "crown-L1": {
     "true": 800,
-    "meanPredicted": 964,
-    "n": 8
+    "meanPredicted": 1093,
+    "n": 12
    },
    "crown-L2": {
     "true": 1122,
-    "meanPredicted": 932,
-    "n": 8
+    "meanPredicted": 1257,
+    "n": 20
+   },
+   "crown-L3": {
+    "true": 1582,
+    "meanPredicted": 1411,
+    "n": 14
+   },
+   "crown-L4": {
+    "true": 1710,
+    "meanPredicted": 1377,
+    "n": 6
    }
   },
   "monotoneByLevel": false,
-  "excludedInsufficient": 4,
-  "samples": 50
+  "excludedInsufficient": 21,
+  "samples": 204
  }
 }

@@ -51,7 +51,7 @@ def metrics(rs, f):
     e = np.array([f(r) - r['rating'] for r in rs]); t = np.array([r['rating'] for r in rs]); p = t + e
     inside = np.mean([abs(f(r) - r['rating']) <= 1.645 * sd(r['n']) for r in rs]) if f is predict else None
     return {'n': len(rs), 'mae': round(float(np.abs(e).mean())), 'rmse': round(float(np.sqrt((e ** 2).mean()))),
-            'r': round(float(np.corrcoef(p, t)[0, 1]), 3), 'bias': round(float(e.mean())), 'cover90': None if inside is None else round(float(inside), 3)}
+            'r': (lambda c: None if math.isnan(c) else round(c, 3))(float(np.corrcoef(p, t)[0, 1]) if np.std(p) > 0 else float('nan')), 'bias': round(float(e.mean())), 'cover90': None if inside is None else round(float(inside), 3)}
 
 # naive baseline: rating as a straight line in accuracy (the "accuracy × constant" family)
 Xa = np.array([[1.0, r['acc'] or 0] for r in train]); ba, *_ = np.linalg.lstsq(Xa, y, rcond=None)
