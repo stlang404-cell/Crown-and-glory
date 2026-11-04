@@ -25,7 +25,8 @@ else {
   }
 }
 
-const pkg = JSON.parse(readFileSync(path.resolve(dist, '..', 'package.json'), 'utf8'));
+// The repository's package.json (next to scripts/), so a build output outside the repo is checked too.
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 let v = null;
 if (!exists('version.json')) problems.push('dist/version.json is missing');
 else {
