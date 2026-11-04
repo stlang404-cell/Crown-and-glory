@@ -29,15 +29,21 @@ export function eligibleLosses(plies: PlyAnalysis[], pov: Pov): number[] {
  *  and correlate usefully (r ≥ 0.6) with it on games not used for fitting. */
 export const PLAYED_LIKE_VALIDATED = MODEL.validation.monotoneByLevel === true && (MODEL.validation.heldOut.r ?? 0) >= 0.6;
 
-export function estimateFromLosses(losses: number[]): PlayedLike {
-  if (!PLAYED_LIKE_VALIDATED) return { status: 'uncalibrated', modelId: MODEL.id };
+/** The model's raw value for a list of losses (no gates, no rounding); exported for tests and calibration tools. */
+export function rawPlayedLike(losses: number[]): number {
   const n = losses.length;
-  if (n < MODEL.minMoves) return { status: 'insufficient', moves: n, needed: MODEL.minMoves, modelId: MODEL.id };
   const mean = losses.reduce((a, b) => a + b, 0) / n;
   const big = losses.filter(l => l >= 0.10).length / n;
   const exact = losses.filter(l => l <= 0.005).length / n;
   const [b0, b1, b2, b3] = MODEL.beta;
-  const r = b0 + b1 * Math.log(mean + MODEL.eps) + b2 * big + b3 * exact;
+  return b0 + b1 * Math.log(mean + MODEL.eps) + b2 * big + b3 * exact;
+}
+
+export function estimateFromLosses(losses: number[]): PlayedLike {
+  if (!PLAYED_LIKE_VALIDATED) return { status: 'uncalibrated', modelId: MODEL.id };
+  const n = losses.length;
+  if (n < MODEL.minMoves) return { status: 'insufficient', moves: n, needed: MODEL.minMoves, modelId: MODEL.id };
+  const r = rawPlayedLike(losses);
   const sd = Math.sqrt(MODEL.sd.s0sq + MODEL.sd.s1sq / n);
   const [lo, hi] = MODEL.calibratedRange;
   if (r < lo - 50) return { status: 'below-range', bound: lo, moves: n, modelId: MODEL.id };
