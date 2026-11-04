@@ -67,10 +67,19 @@ reached. Screening at 128 games proved unreliable (every positive screen except 
 |---|---|---|---|---|
 | 100 ms | 128 | +5 =16 −107 | −379 [−482, −309] | 8.9 / 38.8* |
 | 300 ms | 96 | +3 =19 −74 | −330 [−405, −267] | 10.7 / 44.8* |
-| 1000 ms | 32 of 64 (PENDING) | +3 =7 −22 | −237 [−364, −137] | 12.4 / 49.2* |
+| 1000 ms | 64 | +3 =15 −46 | −283 [−379, −213] | 12.9 / 52.5* |
 \*Fairy reports selective depth differently; not comparable to ours. These runs used the pre-fullBudget configuration
 (partialRoot) and shared the CPU with other jobs (both sides equally time-limited).
-Doubling-time ladder (does more time help?): **PENDING** — queued in `tools/bench/v8_driver.sh`.
+Doubling-time ladder (does more thinking time help? shipped configuration vs itself, 128 games each, 4-ply book):
+| Comparison | Result | Elo [95 %] | Avg depth |
+|---|---|---|---|
+| 100 ms vs 50 ms | +61 =43 −24 | +103 [55, 153] | 9.6 vs 8.6 |
+| 200 ms vs 100 ms | +58 =41 −29 | +80 [38, 128] | 10.7 vs 9.6 |
+| 400 ms vs 200 ms | +59 =48 −21 | +106 [63, 150] | 12.0 vs 10.8 |
+Each doubling of time is worth roughly +80 to +106 Elo at these budgets, so Sovereign Unbound's longer budgets
+(15/30/60 s) are genuinely stronger than its 1/5 s settings; the size of the gain at multi-second budgets was not
+measured (doubling gains usually shrink as time grows). The gap to Fairy-Stockfish narrows with time in this data
+(−379 → −330 → −283 from 100 to 1000 ms) but stays large.
 
 ### Profile and plan
 Evaluation 43.5 % of search time, move generation 16 %, bookkeeping ≈ 20 %. Plans: docs/ENGINE_OPTIMIZATION_PLAN.md
@@ -111,7 +120,7 @@ ladder (docs/ARCANE_FEDERATION.md) is the descriptive band system now shown in t
   offline. Not tested on physical iPhone hardware.
 
 ## 8. Known issues
-1. Engine gap to Fairy-Stockfish remains large (≈ −240 to −380 Elo at equal time); only +23 gained this cycle.
+1. Engine gap to Fairy-Stockfish remains large (−283 to −379 Elo at equal time, 100–1000 ms); only +23 gained this cycle.
 2. Played Like not validated (Calibrating).
 3. Economy re-sweep not run (§5).
 4. Vault: three legacy achievement ids use broader rules than the Hall of Fame's old evaluator (first-win, giant-slayer,
