@@ -12,6 +12,7 @@ import type { ChargeId, ShapeId, Tincture } from '../heraldry/charges';
 import { FED_TITLES, type FedTitle } from '../heraldry/catalog';
 import { RATING_TITLES, insigniaSpec, type Era } from '../ratings/titles';
 import { GRADING_ID } from '../analysis/methodology';
+import { PLAYED_LIKE_ID, PLAYED_LIKE_VALIDATED } from '../analysis/playedLike';
 import { fmtMoney, MICRO } from '../exchange/ledger';
 import { chaptersOfBook, chaptersTagged, indexChapters } from '../academy/grimoire';
 import { calibrationStats, comebackRun, drawdownRecovery, exchangeStats, lowToHigh, qualifiedWins, ratedGames, seasonPnl, unbeatenRun, winStreak, DAILY_CAP, WEAK_GAP, type Facts, type OwnGame } from './facts';
@@ -40,6 +41,8 @@ export interface VaultDef {
   secret?: boolean;
   /** Needs validated move grading; never earned while GRADING_VALIDATED is false. */
   requiresValidatedGrading?: boolean;
+  /** crown-vault-2: needs the validated Played Like model; never earned while PLAYED_LIKE_VALIDATED is false. */
+  requiresValidatedPlayedLike?: boolean;
   /** crown-vault-2: the family this collectible belongs to, and its tier (a fixed reading of rarity). */
   family: FamilyId;
   tier: Tier;
@@ -94,7 +97,7 @@ const chaptersDone = (f: Facts, ids: string[], evidence: string): EvalResult => 
 const booksDone = (f: Facts, books: number[], evidence: string) => chaptersDone(f, books.flatMap(b => chaptersOfBook(b).map(c => c.id)), evidence);
 const chapterTitle = (id: string) => indexChapters().find(c => c.id === id)?.title ?? id;
 
-interface Spec { id: string; name: string; c: Collection; r: Rarity; charge: ChargeId; field: Tincture; d: string; rule: string; secret?: boolean; grading?: boolean; kind?: VaultDef['kind']; mono?: string; fam?: FamilyId; ev: (f: Facts) => EvalResult }
+interface Spec { id: string; name: string; c: Collection; r: Rarity; charge: ChargeId; field: Tincture; d: string; rule: string; secret?: boolean; grading?: boolean; pl?: boolean; kind?: VaultDef['kind']; mono?: string; fam?: FamilyId; ev: (f: Facts) => EvalResult }
 const AWAIT = (): EvalResult => ({ earned: false });
 
 const WIN_TIERS: [number, string, Rarity][] = [[10, 'Ten Victories', 'common'], [50, 'Fifty Victories', 'uncommon'], [100, 'Hundred Victories', 'rare'], [500, 'Five Hundred Victories', 'epic'], [1000, 'Thousand Victories', 'legendary']];
@@ -367,6 +370,14 @@ const V2: Spec[] = [
     rule: 'Win a rated game by checkmate within 30 plies (15 moves each) against an opponent rated no more than 100 below you (both ratings recorded).',
     ev: f => ratedFirst(f, g => g.score === 1 && g.termination === 'checkmate' && g.plies <= 30 && atLeast(g, -100), g => vs(g, ` by checkmate in ${g.plies} plies`)) },
 
+  // Played Like performance (crown-played-like-2, validated on held-out games; docs/PLAYED_LIKE.md). The two
+  // crown-vault-1 Played Like entries keep their definitions (they still wait for validated move grading).
+  ...([[1200, 'Measured Strength', 'uncommon'], [1800, 'Played Like a Master', 'rare'], [2400, 'Played Like a Legend', 'epic'], [3000, 'Played Like a Sovereign', 'mythic']] as [number, string, Rarity][]).map(([n, name, r]): Spec => ({
+    id: `pl-${n}`, name, c: 'Brilliant Mind', r, fam: 'mastery', pl: true, charge: 'moon', field: n >= 3000 ? 'sable' : n >= 2400 ? 'purpure' : n >= 1800 ? 'azure' : 'celeste',
+    d: `Play a rated game at a Played Like ${n.toLocaleString('en')}.`,
+    rule: `A counted Played Like estimate (model ${PLAYED_LIKE_ID}, at least 15 informative moves, inside the calibrated range) of ${n.toLocaleString('en')} or more in an unassisted rated game against an opponent rated at least ${(n - 800).toLocaleString('en')} (recorded).`,
+    ev: f => ratedFirst(f, g => !!g.pl && g.pl.rating >= n && g.oppRating !== null && g.oppRating >= n - 800, g => vs(g, `: Played Like ${Math.round(g.pl!.rating)} (${Math.round(g.pl!.low)}–${Math.round(g.pl!.high)}, ${g.pl!.moves} moves)`)) })),
+
   // Tactical brilliance (without move grading: the Brilliant-move collectibles stay "Awaiting validated grading")
   { id: 'sacrificial-mate', name: 'Sacrificial Mate', c: 'Brilliant Mind', r: 'epic', fam: 'tactics', charge: 'flame', field: 'gules', d: 'Mate with less material.',
     rule: 'Win a rated game by checkmate while at least 2 points down in material in the final position, against an opponent rated no more than 200 below you (both ratings recorded).',
@@ -531,7 +542,7 @@ const INSIGNIAS: VaultDef[] = RATING_TITLES.map(t => ({
 
 const def = (s: Spec, family: FamilyId, since: VaultDef['since']): VaultDef => ({
   id: s.id, name: s.name, collection: s.c, rarity: s.r, kind: s.kind ?? 'achievement', description: s.d, rule: s.rule,
-  ...(s.secret ? { secret: true } : {}), ...(s.grading ? { requiresValidatedGrading: true } : {}),
+  ...(s.secret ? { secret: true } : {}), ...(s.grading ? { requiresValidatedGrading: true } : {}), ...(s.pl ? { requiresValidatedPlayedLike: true } : {}),
   family, tier: TIER_OF_RARITY[s.r], since,
   art: vaultArt(s.c, s.r, s.charge, s.field, s.mono), evaluate: s.ev,
 });
@@ -554,7 +565,7 @@ export const VAULT: VaultDef[] = DEFS_BASE();
 export const vaultDef = (id: string) => VAULT.find(d => d.id === id);
 
 /** Can this collectible be earned in this build? (Grading-based ones wait for validated grading.) */
-export const earnable = (d: VaultDef) => !d.requiresValidatedGrading || GRADING_VALIDATED;
+export const earnable = (d: VaultDef) => (!d.requiresValidatedGrading || GRADING_VALIDATED) && (!d.requiresValidatedPlayedLike || PLAYED_LIKE_VALIDATED);
 
 /** Evaluate one definition safely; grading-based entries are never earned while grading is experimental. */
 export function evaluateDef(d: VaultDef, f: Facts): EvalResult {

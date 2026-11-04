@@ -880,9 +880,9 @@ See section 15. They follow your rating up and down and are descriptions, not ho
 
 ### Achievements — the Sovereign Vault (crown-vault-2)
 
-* The Vault holds **210 collectibles**: **170 achievements**, the **9-step Exchange title ladder** and the **31
+* The Vault holds **214 collectibles**: **174 achievements**, the **9-step Exchange title ladder** and the **31
   rating-title insignias**, in nine collections (Chess Mastery, Brilliant Mind, Federation Career, Rivals,
-  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias). v0.11 added 68 achievements; every earlier
+  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias). v0.11 added 72 achievements (four of them for Played Like performances); every earlier
   collectible and every earlier unlock is unchanged.
 * Every collectible belongs to one of **20 families** (e.g. Defensive Resilience, Endgame Technique, Win Streaks,
   Regional Conquest, Forecasting Calibration, Financial Recovery, Career Longevity) and has a **tier**: Bronze
@@ -891,7 +891,7 @@ See section 15. They follow your rating up and down and are descriptions, not ho
 * Each achievement is a fixed rule over your saved records (games, rating history, federation history, ledger and
   forecasts). It is unlocked once and kept; reloading or re-analysing never unlocks it twice.
 * **11 achievements** depend on move grading (Brilliant moves, accuracy, Played Like) and show as "Awaiting
-  validated grading": they **cannot be earned** while grading is experimental. So **159 achievements** are earnable
+  validated grading": they **cannot be earned** while grading is experimental. So **163 achievements** are earnable
   today.
 * **Anti-exploit rules** (examples): assisted, abandoned, training and unfinished games never count as wins; win
   counters count the same opponent once per day; rating-gap achievements need both ratings recorded; provisional

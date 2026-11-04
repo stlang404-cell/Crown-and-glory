@@ -19,6 +19,7 @@ import { VaultService, type VaultHost } from '../src/vault/service';
 import { CrownDB } from '../src/storage/db';
 import { MICRO } from '../src/exchange/ledger';
 import { chaptersOfBook } from '../src/academy/grimoire';
+import { PLAYED_LIKE_ID, PLAYED_LIKE_VALIDATED } from '../src/analysis/playedLike';
 
 // ---------------------------------------------------------------- synthetic records
 const START = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
@@ -29,7 +30,8 @@ const ENDING = 'k5/pp4/6/6/PP4/K4R w - - 0 1'; // one rook left
 let seq = 0;
 const dayN = (n: number) => new Date(Date.UTC(2025, 0, 1) + n * 86_400_000).toISOString().slice(0, 10);
 interface G { id?: string; score?: 1 | 0.5 | 0; color?: 'white' | 'black'; oppId?: string; myRating?: number | null; oppRating?: number | null; mode?: 'rated' | 'casual' | 'training';
-  at?: string; termination?: string; plies?: number; fens?: string[]; ccns?: string[]; assisted?: boolean; context?: GameRecord['context']; oppKind?: 'engine' | 'human' }
+  at?: string; termination?: string; plies?: number; fens?: string[]; ccns?: string[]; assisted?: boolean; context?: GameRecord['context']; oppKind?: 'engine' | 'human';
+  pl?: { rating: number; moves?: number; capped?: boolean; modelId?: string; confidence?: 'adequate' | 'low' } }
 function game(o: G = {}): GameRecord {
   const n = ++seq;
   const id = o.id ?? `g${n}`;
@@ -51,7 +53,10 @@ function game(o: G = {}): GameRecord {
     createdAt: at, startedAt: at, endedAt: at,
     moves: fens.map((f, i) => ({ ply: i + 1, ccn: o.ccns?.[i] ?? 'a2a3', san: 'a3', preHash: '', postHash: '', fenAfter: f, clockBeforeMs: null, clockAfterMs: null, elapsedMs: 1 })),
     assistance: o.assisted ? [{ ply: 1, kind: 'hint', at }] : [], pauses: [], result, termination: (o.termination ?? 'resignation') as never, clocks: null,
-    context: o.context ?? { kind: 'quick-match' }, opening: null, finalizationKey: `final:${id}`, ratingEventId: rated ? `rating:${id}:rapid` : null, reportIds: [], bookmarks: [], checksum: 'x', engineSeed: 1,
+    context: o.context ?? { kind: 'quick-match' }, opening: null,
+    ...(o.pl ? { playedLike: [{ schema: 'crown-pl-record-1' as const, modelId: o.pl.modelId ?? PLAYED_LIKE_ID, reportId: 'r', gameId: id, at, recordedAt: at, pov: color, opponent: { id: oppId, name: oppId }, result: score, pool: 'rapid', career: null,
+      estimate: { status: 'ok' as const, rating: o.pl.rating, low: o.pl.rating - 150, high: o.pl.rating + 150, low95: o.pl.rating - 250, high95: o.pl.rating + 250, half80: 150, sd: 117, moves: o.pl.moves ?? 20, capped: !!o.pl.capped, modelId: o.pl.modelId ?? PLAYED_LIKE_ID },
+      confidence: o.pl.confidence ?? 'adequate' }] } : {}), finalizationKey: `final:${id}`, ratingEventId: rated ? `rating:${id}:rapid` : null, reportIds: [], bookmarks: [], checksum: 'x', engineSeed: 1,
   };
 }
 const seqAt = (i: number) => `2026-03-01T00:00:${String(Math.floor(i / 1000)).padStart(2, '0')}.${String(i % 1000).padStart(3, '0')}Z`;
@@ -113,6 +118,10 @@ const vsComps = (cs: { id: string }[], o: (i: number) => G = () => ({})) => cs.m
 const SCENARIOS: Record<string, () => Partial<VaultInput>> = {
   'mates-10': () => ({ games: wins(10, () => ({ termination: 'checkmate' })) }),
   'mates-50': () => ({ games: wins(50, () => ({ termination: 'checkmate' })) }),
+  'pl-1200': () => ({ games: [game({ score: 0, pl: { rating: 1250 }, oppRating: 400 })] }),
+  'pl-1800': () => ({ games: [game({ score: 0.5, pl: { rating: 1800 }, oppRating: 1000 })] }),
+  'pl-2400': () => ({ games: [game({ pl: { rating: 2450 }, oppRating: 1700 })] }),
+  'pl-3000': () => ({ games: [game({ pl: { rating: 3010 }, oppRating: 2300 })] }),
   miniature: () => ({ games: [game({ termination: 'checkmate', plies: 30, oppRating: 1400 })] }),
   'sacrificial-mate': () => ({ games: [game({ termination: 'checkmate', fens: [START, DOWN3], oppRating: 1300 })] }),
   'puzzles-25': () => ({ attempts: Array.from({ length: 25 }, (_, i) => ({ puzzleId: `p${i}`, solved: true, clean: true })) }),
@@ -190,15 +199,17 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
     expect(VAULT.slice(0, v1.length).every(d => d.since === 'crown-vault-1')).toBe(true);
     expect(VAULT.slice(v1.length).every(d => d.since === 'crown-vault-2')).toBe(true);
   });
-  it('counts: 142 → 210 collectibles; 102 → 170 achievements (68 new, all earnable); 9 titles and 31 insignias unchanged', () => {
-    expect(VAULT).toHaveLength(210);
-    expect(VAULT.filter(d => d.kind === 'achievement')).toHaveLength(170);
+  it('counts: 142 → 214 collectibles; 102 → 174 achievements (72 new, all earnable); 9 titles and 31 insignias unchanged', () => {
+    expect(VAULT).toHaveLength(214);
+    expect(VAULT.filter(d => d.kind === 'achievement')).toHaveLength(174);
     const added = VAULT.filter(d => d.since === 'crown-vault-2');
-    expect(added).toHaveLength(68);
+    expect(added).toHaveLength(72);
+    expect(PLAYED_LIKE_VALIDATED).toBe(true);
     expect(added.every(d => d.kind === 'achievement' && earnable(d) && !d.requiresValidatedGrading)).toBe(true);
+    expect(added.filter(d => d.requiresValidatedPlayedLike).map(d => d.id)).toEqual(['pl-1200', 'pl-1800', 'pl-2400', 'pl-3000']);
     expect(VAULT.filter(d => d.kind === 'exchange-title')).toHaveLength(9);
     expect(VAULT.filter(d => d.kind === 'insignia')).toHaveLength(31);
-    expect(VAULT.filter(d => d.kind === 'achievement' && earnable(d))).toHaveLength(159);
+    expect(VAULT.filter(d => d.kind === 'achievement' && earnable(d))).toHaveLength(163);
     expect(new Set(VAULT.map(d => d.id)).size).toBe(VAULT.length);
     expect(VAULT_ID).toBe('crown-vault-2');
   });
@@ -211,7 +222,9 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
     for (const f of ['defence', 'endgames', 'streaks', 'forecasting', 'recovery', 'longevity']) expect(new Set(VAULT.filter(d => d.family === f).map(d => d.tier)).size, f).toBeGreaterThanOrEqual(3);
   });
   it('no new achievement depends on move grading (the Brilliant-move set stays awaiting validated grading)', () => {
-    for (const d of VAULT.filter(x => x.since === 'crown-vault-2')) expect(/brilliant|accuracy|played like/i.test(d.rule), d.id).toBe(false);
+    for (const d of VAULT.filter(x => x.since === 'crown-vault-2')) expect(/brilliant|accuracy/i.test(d.rule), d.id).toBe(false);
+    // the crown-vault-1 Played Like entries are unchanged and still wait for validated move grading
+    for (const id of ['played-like-high', 'played-like-steady']) expect(earnable(vaultDef(id)!)).toBe(false);
   });
   it('every crown-vault-2 achievement has a positive scenario', () => {
     expect(VAULT.filter(d => d.since === 'crown-vault-2').map(d => d.id).filter(id => !SCENARIOS[id])).toEqual([]);
@@ -224,6 +237,16 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
 });
 
 describe('crown-vault-2 negatives (each predicate)', () => {
+  it('Played Like: only counted estimates of the validated model, unassisted rated games, worthy opponents', () => {
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1799 }, oppRating: 1200 })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900, moves: 14, confidence: 'low' }, oppRating: 1200 })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900, modelId: 'crown-played-like-1' }, oppRating: 1200 })] })).toBe(false);
+    expect(earned('pl-3000', { games: [game({ pl: { rating: 3038, capped: true }, oppRating: 2500 })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900 }, oppRating: 999 })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900 }, oppRating: 1200, mode: 'casual' })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900 }, oppRating: 1200, assisted: true })] })).toBe(false);
+    expect(earned('pl-1800', { games: [game({ pl: { rating: 1900 }, oppRating: 1200, myRating: null })] })).toBe(true); // a career rating is not needed
+  });
   it('mastery and tactics', () => {
     expect(earned('mates-10', { games: wins(9, () => ({ termination: 'checkmate' })) })).toBe(false);
     expect(earned('mates-10', { games: wins(10) })).toBe(false); // resignations are not mates
@@ -413,6 +436,15 @@ describe('crown-vault-2 storage: migration and idempotency', () => {
     expect(await db.getMeta(BACKFILL_V2_KEY)).toBeTruthy();
     // every unlock is justified by its rule (except the pre-existing v0.9 record that is kept for good)
     expect([...owned.keys()].filter(id => !v.results.get(id)?.earned)).toEqual(['rating-2000']);
+    db.close();
+  });
+  it('a Played Like record write moves the change key (event-driven re-evaluation without a new record count)', async () => {
+    const db = await openDb();
+    const h = host(db);
+    const v = new VaultService(h);
+    const k0 = await v.changeKey();
+    h.playedLikeVersion = 1;
+    expect(await v.changeKey()).not.toBe(k0);
     db.close();
   });
   it('reloading never duplicates or rewrites an unlock; a later rated game unlocks with one notice', async () => {

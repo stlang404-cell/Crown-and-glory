@@ -17,6 +17,8 @@ export interface VaultHost {
   fed: FederationService;
   readonly readOnly: boolean;
   matchActive: boolean;
+  /** Bumped when a Played Like record is written onto a game (those writes do not change record counts). */
+  playedLikeVersion?: number;
   subscribe(l: () => void): () => void;
 }
 const THROTTLE_MS = 1500;
@@ -78,7 +80,7 @@ export class VaultService {
       fed = [st.world.season, st.world.round, p.division, p.swissRegistered ? 1 : 0, st.balances.get('player:cash') ?? 0, p.history.length, p.titles.length, p.norms?.length ?? 0, p.fedTitle ?? '', settled, st.positions.size,
         st.extra.forecasts.length, st.assets.size, [...st.assets.values()].map(a => a.level ?? 1).join('.'), st.finance.points.length, Math.round(st.finance.peak)].join(':');
     }
-    return `${Object.values(c).join(':')}|${fed}`;
+    return `${Object.values(c).join(':')}|${this.host.playedLikeVersion ?? 0}|${fed}`;
   }
 
   /** Evaluate every collectible from saved records and record new unlocks (put-if-absent). */

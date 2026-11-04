@@ -17,6 +17,7 @@ import type { FedTitle } from '../heraldry/catalog';
 import { scoreAll, summary, type ForecastRecord } from '../app/forecasting';
 import { collectedTitles } from '../ratings/titles';
 import { isProvisional } from '../ratings/glicko2';
+import { PLAYED_LIKE_ID } from '../analysis/playedLike';
 import { grimoireFacts, type GrimAttempt, type GrimCompletion, type GrimoireFacts } from '../academy/grimoire';
 
 const PLAYER = 'player';
@@ -68,6 +69,9 @@ export interface OwnGame {
   endgame: boolean;
   /** Your own pawn promotions, and whether any of them was to a rook or knight. */
   promotions: number; underpromoted: boolean;
+  /** Played Like (crown-played-like-2) estimate of this game when it is "adequate" (validated model, at least 15
+   *  informative moves) and inside the calibrated range (not capped); otherwise null. */
+  pl: { rating: number; low: number; high: number; moves: number } | null;
 }
 export interface RatedResult { at: string; score: number; oppId: string; oppName: string; gameId: string; myRating: number; oppRating: number }
 export interface SettledPosition { marketId: string; title: string; season: number; family: string; pnl: number; at: string }
@@ -192,8 +196,15 @@ function ownGame(g: GameRecord, regionOf: Map<string, number>): OwnGame {
     budgetMs: opp.engine?.profile?.maxTimeMs ?? opp.engine?.config?.maxTimeMs ?? null,
     quickMatch, federation: g.context.kind === 'federation', oppRegion: regionOf.get(opp.id) ?? null,
     plies: g.moves.length, lostMaterial: lost, worstDiff: worst,
+    pl: plOf(g),
     oppEngine: opp.kind === 'engine', sustainedWorst, finalDiff: diffs.length ? diffs[diffs.length - 1] : 0, endgame, promotions, underpromoted,
   };
+}
+
+function plOf(g: GameRecord): OwnGame['pl'] {
+  const r = g.playedLike?.find(x => x.modelId === PLAYED_LIKE_ID && x.confidence === 'adequate');
+  const e = r?.estimate;
+  return e && e.status === 'ok' && !e.capped ? { rating: e.rating, low: e.low, high: e.high, moves: e.moves } : null;
 }
 
 /** Wins that count toward win counters: at most one per opponent per calendar day (UTC). */

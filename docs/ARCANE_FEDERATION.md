@@ -6,7 +6,7 @@
 | Insignias (heraldry grammar) | **Implemented** — 31 unique, prestige rises by era |
 | Federation identity banner | **Implemented** — `src/ui/IdentityBanner.tsx`, desktop + phone verified in Chromium |
 | Passport: current title, peak title, insignia collection | **Implemented** |
-| Achievement framework + Sovereign Vault | **Implemented (v0.8.0, Vault v1; v0.11 crown-vault-2, §5.1)** — 210 collectibles: 170 achievements (159 earnable, 11 awaiting validated grading), 9 Exchange titles, 31 insignias, in 20 tiered families; see `src/vault/catalog.ts` (the catalog below was the design; the implemented set is in the code) |
+| Achievement framework + Sovereign Vault | **Implemented (v0.8.0, Vault v1; v0.11 crown-vault-2, §5.1)** — 214 collectibles: 174 achievements (163 earnable, 11 awaiting validated grading), 9 Exchange titles, 31 insignias, in 20 tiered families; see `src/vault/catalog.ts` (the catalog below was the design; the implemented set is in the code) |
 | Ceremonies, collection sets, equippable identity | **PLANNED v0.9** |
 
 ## 1. Concepts (kept separate everywhere)
@@ -128,14 +128,19 @@ The implemented catalog is `src/vault/catalog.ts` (rules) + `src/vault/families.
 * **Preservation.** All 142 crown-vault-1 collectibles keep their id, name, description, rule, rarity, collection,
   art and order (asserted byte for byte against `tests/fixtures/vault-v1-catalog.json`). No id was re-keyed or
   removed; no collection was added (so `all-collections` keeps its meaning). Existing `ach:<id>` records are never
-  rewritten. 68 achievements were added: **210 collectibles, 170 achievements (159 earnable), 9 Exchange titles,
+  rewritten. 72 achievements were added: **214 collectibles, 174 achievements (163 earnable), 9 Exchange titles,
   31 insignias, 11 awaiting validated grading, 8 secret.**
 * **Families and tiers.** Every collectible belongs to one of 20 families (the 17 skill and career threads below, plus
   Federation Career, Patron's Treasury and Rating Insignias). The tier is a fixed reading of rarity — Common/Uncommon =
   **Bronze**, Rare = **Silver**, Epic/Legendary = **Gold**, Mythic = **Sovereign** — so old and new entries share one
   ladder without changing any old definition.
-* **Grading.** No new achievement reads the move grading. The Brilliant / accuracy / Played Like entries stay
-  "Awaiting validated grading (experimental)" and can never be earned while `GRADING_ID` is experimental.
+* **Grading.** No new achievement reads the move grading. The Brilliant / accuracy entries and the two crown-vault-1
+  Played Like entries (unchanged definitions) stay "Awaiting validated grading (experimental)" and can never be earned
+  while `GRADING_ID` is experimental.
+* **Played Like.** Four new entries (`pl-1200/1800/2400/3000`) read the validated Played Like Performance Elo
+  (crown-played-like-2, held-out gate passed, docs/PLAYED_LIKE.md): only "counted" records (≥ 15 informative moves),
+  inside the calibrated range (not capped), of unassisted rated games, against an opponent rated at least the
+  threshold − 800. They are flagged `requiresValidatedPlayedLike` and become unearnable if the model's gate fails.
 * **Event-driven, idempotent.** The VaultService re-evaluates when a record is committed (finalized game, rating
   event, report, Academy/Grimoire record, Federation round, title, settlement, forecast, asset, finance point) and
   writes unlocks put-if-absent under `ach:<id>`. On the first start of v0.11 on an older save, the expansion is
@@ -146,6 +151,7 @@ The implemented catalog is `src/vault/catalog.ts` (rules) + `src/vault/families.
 
 | Rule | Applies to | Why |
 |---|---|---|
+| Played Like: counted records of the validated model only, in rated games against an opponent rated ≥ threshold − 800 | pl-N | playing weak engines cannot inflate a performance rating into a trophy |
 | Rated games only (a rating event exists, so never casual, assisted, training, retry, imported, abandoned or set-up positions); the opponent must be an engine or Federation competitor (never self-play) | every new chess rule | unrated/assisted/sandbox/practice play is never rewarded |
 | A win against an opponent rated **more than 400 below you** (both ratings recorded) never counts | all new win counters, mates, endgames, streaks, rivalries, regions, secrets | no farming a weak opponent |
 | **One counted win per opponent per UTC day** and **at most 10 counted wins per UTC day** | mates, endgame wins, promotions, regions, home region, marathon, anniversary | repeat-opponent and rate limit |
@@ -166,7 +172,7 @@ day rules then count them, but every other rule (rated, weak-opponent, distinct-
 
 | Family | crown-vault-1 | added | Bronze | Silver | Gold | Sovereign |
 |---|---|---|---|---|---|---|
-| Chess Mastery | 13 | 3 | 7 | 4 | 4 | 1 |
+| Chess Mastery | 13 | 7 | 8 | 5 | 5 | 2 |
 | Tactical Brilliance | 9 | 2 | 4 | 2 | 5 | 0 |
 | Defensive Resilience | 2 | 4 | 1 | 3 | 1 | 1 |
 | Endgame Technique | 0 | 5 | 2 | 1 | 2 | 0 |
@@ -186,15 +192,19 @@ day rules then count them, but every other rule (rated, weak-opponent, distinct-
 | Replay Analysis | 7 | 3 | 5 | 3 | 2 | 0 |
 | Rare Secrets | 4 | 4 | 2 | 2 | 3 | 1 |
 | Rating Insignias | 31 | 0 | 12 | 4 | 14 | 1 |
-| **Total** | **142** | **68** | 66 | 52 | 73 | 19 |
+| **Total** | **142** | **72** | 67 | 53 | 74 | 20 |
 
-Tiers, crown-vault-1 / added: Bronze 49 / 17, Silver 36 / 16, Gold 49 / 24, Sovereign 8 / 11.
+Tiers, crown-vault-1 / added: Bronze 49 / 18, Silver 36 / 17, Gold 49 / 25, Sovereign 8 / 12.
 
 | id | Name | Family | Tier (rarity) | Rule |
 |---|---|---|---|---|
 | `mates-10` | Mating Net | Chess Mastery | Bronze (uncommon) | Win 10 rated games by checkmate. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
 | `mates-50` | Executioner's Art | Chess Mastery | Gold (epic) | Win 50 rated games by checkmate. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
 | `miniature` | Miniature | Chess Mastery | Silver (rare) | Win a rated game by checkmate within 30 plies (15 moves each) against an opponent rated no more than 100 below you (both ratings recorded). |
+| `pl-1200` | Measured Strength | Chess Mastery | Bronze (uncommon) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 1,200 or more in an unassisted rated game against an opponent rated at least 400 (recorded). |
+| `pl-1800` | Played Like a Master | Chess Mastery | Silver (rare) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 1,800 or more in an unassisted rated game against an opponent rated at least 1,000 (recorded). |
+| `pl-2400` | Played Like a Legend | Chess Mastery | Gold (epic) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 2,400 or more in an unassisted rated game against an opponent rated at least 1,600 (recorded). |
+| `pl-3000` | Played Like a Sovereign | Chess Mastery | Sovereign (mythic) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 3,000 or more in an unassisted rated game against an opponent rated at least 2,200 (recorded). |
 | `sacrificial-mate` | Sacrificial Mate | Tactical Brilliance | Gold (epic) | Win a rated game by checkmate while at least 2 points down in material in the final position, against an opponent rated no more than 200 below you (both ratings recorded). |
 | `puzzles-25` | Puzzle Apprentice | Tactical Brilliance | Bronze (common) | Solve 25 different Academy puzzles on the first try without hints. |
 | `fortress` | Fortress | Defensive Resilience | Bronze (uncommon) | Draw a rated game after being at least 3 points down in material for at least 4 consecutive plies. Rated games only. |
@@ -260,7 +270,6 @@ Tiers, crown-vault-1 / added: Bronze 49 / 17, Silver 36 / 16, Gold 49 / 24, Sove
 | `humble-crown` | Humble Crown (secret) | Rare Secrets | Silver (rare) | Win a rated game in which you promoted a pawn to a rook or a knight. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
 | `marathon` | Marathon (secret) | Rare Secrets | Bronze (uncommon) | Win a rated game of at least 200 plies. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
 | `anniversary` | Anniversary (secret) | Rare Secrets | Gold (epic) | Win a rated game on the calendar anniversary (same month and day, UTC) of your first counted rated win, a year or more later. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
-
 
 ### Catalog (112; ids stable; ★ = already implemented in v0.5–v0.8 under the same id)
 
