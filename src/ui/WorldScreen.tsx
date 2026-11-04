@@ -14,7 +14,7 @@ import { LiveNow } from './LiveNow';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
 import { leagueTable, swissTable, swissEventFor } from '../federation/world';
 import { gamesOf } from '../federation/driver';
-import { RankBadge } from './RankBadge';
+import { RankBadge, TitleBadge } from './RankBadge';
 import { currentRank, competitorRank } from '../federation/ranks';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
@@ -226,7 +226,7 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
             const c = fed.state!.competitors.get(r.id);
             return (
               <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
-                <td>{i + 1}</td><td><span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}><RankBadge rank={r.id === PLAYER_ID ? currentRank(fed.state) : competitorRank(c)} compact />{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</span></td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td><CompetitorElo id={r.id} /></td>
+                <td>{i + 1}</td><td><span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}><RankBadge rank={r.id === PLAYER_ID ? currentRank(fed.state) : competitorRank(c)} compact />{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}<TitleBadge title={r.id === PLAYER_ID ? fed.state!.world.player.fedTitle : c?.fedTitle} abbr plain /></span></td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td><CompetitorElo id={r.id} /></td>
               </tr>
             );
           })}

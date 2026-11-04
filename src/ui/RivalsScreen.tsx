@@ -5,7 +5,9 @@ import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Emblem } from './Emblem';
 import { PLAYER_ID, divisionLabel, REGION_NAMES } from '../federation/model';
-import { personalEmblem, titleEmblem, divisionEmblem } from '../heraldry/catalog';
+import { personalEmblem, divisionEmblem } from '../heraldry/catalog';
+import { RankBadge, TitleBadge } from './RankBadge';
+import { competitorRank } from '../federation/ranks';
 import { clubEmblem, clubOf, clubsOf } from '../heraldry/clubs';
 import type { Competitor } from '../federation/model';
 import { ambitionOf } from '../heraldry/rivals';
@@ -80,7 +82,7 @@ export function RivalsScreen() {
               <div key={f.id} className="panel rival-card clickable" data-testid="rival-card" onClick={() => go({ name: 'competitor', id: c.id })} style={{ cursor: 'pointer' }}>
                 <div className="stack" style={{ alignItems: 'center', gap: 4 }}><Portrait seed={c.portraitSeed} size={56} crown={c.titles.some(t => /Crown Champion/.test(t.title))} /><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s insignia`} /></div>
                 <div className="stack" style={{ gap: 4 }}>
-                  <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}><strong>{c.name}</strong>{c.fedTitle && <span className="chip gold"><Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={c.fedTitle} /> {c.fedTitle}</span>}{f.tag === 'circle' && <span className="chip info">Your Circle</span>}{favs.has(c.id) && <span className="chip">★ Followed</span>}{c.status === 'retired' && <span className="chip">Retired</span>}</div>
+                  <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}><strong>{c.name}</strong><RankBadge rank={competitorRank(c)} testId="rival-rank" /><TitleBadge title={c.fedTitle} testId="rival-fedtitle" />{f.tag === 'circle' && <span className="chip info">Your Circle</span>}{favs.has(c.id) && <span className="chip">★ Followed</span>}{c.status === 'retired' && <span className="chip">Retired</span>}</div>
                   <div className="small"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /> {divisionLabel(c.division)} · {REGION_NAMES[c.region]} · {fmtCareerElo(c.rating, { rd: c.rd })} · Form <span className="mono">{c.form || '—'}</span></div>
                   <div className="small"><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} /> {club.identity.name} · {c.titles.length} {c.titles.length === 1 ? 'title' : 'titles'} · Reputation {c.reputation}</div>
                   <div className="small muted">{ambitionOf(c)}</div>

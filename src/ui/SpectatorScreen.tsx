@@ -37,7 +37,9 @@ import { fmtCrowns, fmtPrice, fmtPriceDelta } from '../exchange/ledger';
 import { TradeTicket, PriceChart, statusLabel } from './ExchangeScreen';
 import './arena.css';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
-import { divisionEmblem, titleEmblem } from '../heraldry/catalog';
+import { divisionEmblem } from '../heraldry/catalog';
+import { RankBadge, TitleBadge } from './RankBadge';
+import { competitorRank } from '../federation/ranks';
 import { clubEmblem, clubOf } from '../heraldry/clubs';
 import { divisionLabel } from '../federation/model';
 import { claimModel } from '../exchange/api';
@@ -232,7 +234,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
         meta={<>
           <span className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</span>
           <Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} />
-          {c.fedTitle && <Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={`Federation Title: ${c.fedTitle}`} />}
+          <RankBadge rank={competitorRank(c)} compact testId={`arena-rank-${side ? 'black' : 'white'}`} />
+          <TitleBadge title={c.fedTitle} compact testId={`arena-fedtitle-${side ? 'black' : 'white'}`} />
           {sp && <span className="chip" data-testid={`arena-persona-${side ? 'black' : 'white'}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE}>Persona</span>}
           <span>{isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'} · {side ? 'Black' : 'White'}</span>
         </>}
@@ -250,7 +253,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     <div className={`arena-ctx-side ${side ? 'black' : 'white'}${sideToMove === side && isLive && ply === revealed ? ' to-move' : ''}`}>
       <span className={`mc-pip ${side ? 'black' : 'white'}`} aria-hidden />
       <span className="arena-ctx-name">{c?.name ?? '—'}</span>
-      <span className="arena-ctx-rating mono">{c ? fmtCareerElo(c.rating) : ''}{c?.fedTitle ? ` ${c.fedTitle}` : ''}</span>
+      <span className="arena-ctx-rating mono">{c ? fmtCareerElo(c.rating) : ''}{c?.fedTitle ? <> <TitleBadge title={c.fedTitle} abbr plain /></> : null}</span>
       <span className="arena-ctx-clock mono" aria-label={`${side ? 'Black' : 'White'} thinking time`}>{fmtT(think[side])}</span>
     </div>
   );

@@ -2,7 +2,9 @@
  * Legacy journey (v0.11 package I): identity header on desktop and at 390 px (compact, expand/collapse, safe flow),
  * scrolling to the bottom of every main screen at 390 px, a rated game's "Previous → New (±)" career Elo line, the
  * Trophy Hall with a trophy awarded from a recorded Federation season (one restrained ceremony, reduced motion),
- * customisation from earned items only, persistence and no duplicates across a reload. Screenshots → docs/screenshots/v0.11/.
+ * customisation from earned items only, persistence and no duplicates across a reload. Package Q: the header and the
+ * Dashboard heading show the Competitive Rank and the Federation Title in separate labelled areas, each with its own
+ * tag, frame and tooltip, and the rating title tagged apart, at 1366 and 390 px. Screenshots → docs/screenshots/v0.11/.
  *   npx vite build && node scripts/serve.mjs --dir dist --port 4430 &  node e2e/legacy.mjs http://127.0.0.1:4430/
  */
 import { createRequire } from 'node:module';
@@ -18,6 +20,20 @@ const step = m => { const l = `[${new Date().toISOString()}] ${m}`; log.push(l);
 const check = (id, ok, m) => { step(`${ok ? 'PASS' : 'FAIL'} ${id}: ${m}`); if (!ok) failed++; };
 const errors = [];
 const watch = p => { p.on('pageerror', e => { errors.push(String(e).slice(0, 300)); step('pageerror: ' + String(e).slice(0, 300)); }); p.on('console', m => { if (m.type() === 'error') { errors.push(m.text().slice(0, 300)); step('console.error: ' + m.text().slice(0, 300)); } }); };
+const RANK_TIP = /current competitive standing.*up or down/i, TITLE_TIP = /permanent honour earned by title norms.*never lost/i;
+/** Separate labelled areas for the Competitive Rank, the Federation Title and the rating title (header + heading). */
+const honours = p => p.evaluate(() => {
+  const q = s => document.querySelector(s); const vis = e => !!e && e.getBoundingClientRect().height > 0;
+  const area = q('[data-testid="header-rank-area"]'), head = q('[data-testid="rank-heading-kind"]'), ht = q('[data-testid="rank-heading-fedtitle"]'), rt = q('[data-testid="banner-title"]');
+  const frame = q('[data-testid="identity-banner"] [data-honour-frame]'), hframe = q('[data-testid="rank-heading"] > [data-honour-frame]'), tframe = q('[data-testid="rank-heading-fedtitle"] [data-honour-frame], [data-testid="rank-heading-fedtitle"] [data-honour-tag]');
+  return { area: area?.textContent.replace(/\s+/g, ' ').trim(), areaVisible: vis(area), aria: area?.getAttribute('aria-label'), tip: area?.getAttribute('title') ?? '', fedArea: q('[data-testid="header-fedtitle-area"]')?.textContent.replace(/\s+/g, ' ').trim() ?? null,
+    fed: !!q('[data-testid="identity-banner"]') && (window.__crown.fed.state?.world.player.fedTitle ?? null),
+    ratingTag: rt?.querySelector('[data-honour-tag]')?.textContent, ratingTip: rt?.getAttribute('title') ?? '', frame: frame?.getAttribute('data-honour-frame'), frameRadius: frame ? parseFloat(getComputedStyle(frame).borderTopLeftRadius) : null,
+    head: head?.textContent.trim(), headTip: head?.getAttribute('title') ?? '', headFrame: hframe?.getAttribute('data-honour-frame'), title: ht?.textContent.replace(/\s+/g, ' ').trim(), titleTip: ht?.getAttribute('title') ?? '', titleTag: tframe?.getAttribute('data-honour-tag') ?? tframe?.getAttribute('data-honour-frame') };
+});
+const honoursOk = h => /^Competitive Rank \S.* (III|II|I) Rank$/.test(h.area ?? '') && h.areaVisible && /^Competitive Rank: /.test(h.aria ?? '') && RANK_TIP.test(h.tip) && h.frame === 'rank' && h.frameRadius < 8
+  && (h.fed ? h.fedArea === `Federation Title ${h.fed} Title` : h.fedArea === null) && h.ratingTag === 'Rating' && /neither a Competitive Rank nor a Federation Title/.test(h.ratingTip)
+  && h.head === 'Competitive Rank Rank' && RANK_TIP.test(h.headTip) && h.headFrame === 'rank' && /^Federation Title: /.test(h.title ?? '') && TITLE_TIP.test(h.titleTip) && h.titleTag === 'title';
 const legacyReady = p => p.waitForFunction(() => window.__crown?.legacy?.ready, null, { timeout: 30000 });
 
 let ctx = await chromium.launchPersistentContext(OUT + 'profile', { viewport: { width: 1366, height: 900 }, reducedMotion: 'reduce' });
@@ -112,6 +128,8 @@ await page.goto(url + '#/dashboard');
 await page.waitForTimeout(1600);
 await page.evaluate(() => scrollTo(0, 0));
 await page.screenshot({ path: SHOTS + 'header-desktop.png', clip: { x: 0, y: 0, width: 1366, height: 260 } });
+const hd = await honours(page);
+check('Q-1366', honoursOk(hd), `1366 px: header "${hd.area}" (rank frame r=${hd.frameRadius}px, rank tooltip)${hd.fedArea ? `, "${hd.fedArea}"` : ', no Federation Title yet (no title area)'}; rating title tagged "${hd.ratingTag}"; heading "${hd.head}" / "${hd.title}" with separate tooltips`);
 
 // ---- reload: no duplicates, choices kept, no repeated ceremony
 const before = await page.evaluate(() => window.__crown.legacy.awards.size);
@@ -127,6 +145,8 @@ watch(page);
 await page.goto(url + '#/dashboard'); await legacyReady(page); await page.waitForTimeout(1600);
 const compact = await page.evaluate(() => { const b = document.querySelector('[data-testid="identity-banner"]'); const vis = s => { const e = b.querySelector(s); return !!e && e.getBoundingClientRect().height > 0 && getComputedStyle(e).display !== 'none'; }; return { h: Math.round(b.getBoundingClientRect().height), division: vis('[data-testid="header-division"]'), trophies: vis('[data-testid="header-trophies"]'), elo: vis('[data-testid="banner-rating"]'), toggle: vis('[data-testid="header-toggle"]') }; });
 await page.screenshot({ path: SHOTS + 'header-phone-compact.png', clip: { x: 0, y: 0, width: 390, height: 300 } });
+const hp = await honours(page);
+check('Q-390', honoursOk(hp), `390 px (compact header): "${hp.area}" visible ${hp.areaVisible}${hp.fedArea ? `, "${hp.fedArea}"` : ''}; rating title tagged "${hp.ratingTag}"; heading "${hp.head}" / "${hp.title}" with separate tooltips`);
 await page.locator('[data-testid="header-toggle"]').click();
 const expanded = await page.evaluate(() => { const b = document.querySelector('[data-testid="identity-banner"]'); const vis = s => { const e = b.querySelector(s); return !!e && e.getBoundingClientRect().height > 0; }; return { h: Math.round(b.getBoundingClientRect().height), division: vis('[data-testid="header-division"]'), trophies: vis('[data-testid="header-trophies"]'), networth: vis('[data-testid="header-networth"]'), aria: document.querySelector('[data-testid="header-toggle"]').getAttribute('aria-expanded'), overflow: document.documentElement.scrollWidth - innerWidth }; });
 await page.screenshot({ path: SHOTS + 'header-phone-expanded.png', clip: { x: 0, y: 0, width: 390, height: 520 } });

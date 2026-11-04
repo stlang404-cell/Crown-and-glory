@@ -8,14 +8,13 @@ Code: `src/federation/rankNames.ts` (names), `src/federation/ranks.ts` (rule, re
 
 ## 0. Status of the names (read first)
 
-The owner referred to a "newly approved 16-rank Medieval Feudal hierarchy" with "16 stable Circuit Grade IDs". That
-list was never delivered and did not exist anywhere in the code or docs (docs/DESIGN_SYSTEM.md recorded that "Circuit
-Grades" did not exist; docs/V10_PLAN.md allowed them only as an explicit, documented mapping). **This package
-therefore created the list as a proposal.** The ids are stable; the names live in one module
-(`src/federation/rankNames.ts`, `CIRCUIT_GRADE_LIST_STATUS = 'proposed'`) and can be renamed there without touching
-saves, tests or any other code (everything refers to the id or the index).
+**APPROVED (v0.11 package Q).** The owner approved the 16 names below and the 48 sublevels (III → II → I) exactly as
+they are; `CIRCUIT_GRADE_LIST_STATUS = 'approved'` in `src/federation/rankNames.ts`. (History: the owner referred to an
+approved 16-rank hierarchy that was never delivered, so package P wrote this list as a proposal; the owner then
+approved it unchanged.) The ids are stable and the names live in that one module; everything else refers to the id or
+the index, so saves never depend on a name.
 
-| Id | Grade (proposed name) | Division | Steps (III · II · I) |
+| Id | Grade (approved name) | Division | Steps (III · II · I) |
 |---|---|---|---|
 | cg-01 | Commoner | 8 Open | 1 · 2 · 3 |
 | cg-02 | Page | 8 Open | 4 · 5 · 6 |
@@ -37,10 +36,32 @@ saves, tests or any other code (everything refers to the id or the index).
 Sublevels are a separate value, ordered **III → II → I** (III lowest): 48 steps, Commoner III (step 1) … High
 Sovereign I (step 48). Labels are always full ("Knight II"). Grade ids are never renumbered.
 
-**Name collision to note:** "Squire" and "Knight" are also two of the four permanent *Federation titles* earned by
-norms (Squire, Knight, Paladin, Sovereign; `src/heraldry/catalog.ts`). The UI always shows a grade with its sublevel and
-as a "Circuit Grade", with a different insignia family, so they do not read the same; the owner may still prefer to
-rename cg-03/cg-05.
+**Competitive Rank vs Federation Title (owner decision, package Q).** "Squire" and "Knight" are both Circuit Grades
+and two of the four permanent *Federation Titles* earned by norms (Squire, Knight, Paladin, Sovereign;
+`src/heraldry/catalog.ts`). The names are kept; instead the two concepts are always displayed apart
+(`src/ui/RankBadge.tsx`):
+
+| | Competitive Rank | Federation Title | Rating title |
+|---|---|---|---|
+| What | Circuit Grade + sublevel ("Knight II") | Squire · Knight · Paladin · Sovereign | Name of the 100-point Career Elo band |
+| Changes | Up and down by season (checkpoints, promotion/relegation) | Earned by norms, permanent, never lost | With every rating change |
+| Label | "Competitive Rank: Knight II" | "Federation Title: Knight" | "Rating title" |
+| Insignia | Grade insignia with sublevel chevrons, square steel-blue frame with a chevron (`--rank-tone`) | Title standard in a round gold double-ring medallion with a star (`--title-tone`) | Dashed frame |
+| Tag (kept in compact rows) | `RANK` | `TITLE` | `RATING` |
+| Tooltip | `RANK_TOOLTIP` | `FED_TITLE_TOOLTIP` | `RATING_TITLE_TOOLTIP` |
+
+Shown apart in: the identity header (separate "Competitive Rank" and "Federation Title" areas), the Dashboard/Profile
+rank heading, Career Statistics (current/highest Competitive Rank and Federation Title as separate stats), Career
+Standing, Competitor list rows/profile/scouting dossier, league tables, Hall of Fame, Rivals, the Live Match Center,
+Exhibitions, the Heraldry gallery (separate Competitive Rank, Rating Ladder and Federation Title sections) and
+ceremonies (headlines "Competitive Rank: …" / "Federation Title: …"; stored ceremony titles are unchanged). Compact
+rows abbreviate (insignia or "KT") but always keep the tag and an accessible label.
+
+The data were already independent (`rank` and `fedTitle` are separate fields; checkpoints never read or write
+`fedTitle`, `awardNorms` never reads or writes `rank`); `tests/rank-title-independence.test.ts` verifies it: rank
+Knight II with title Squire and rank Squire III with title Knight are both valid; a full season of checkpoints,
+promotions and relegations leaves every title as it was; earning a title leaves every rank and highest-rank record as
+it was.
 
 **Concepts kept separate:** a Circuit Grade is a *rank*. It is not the Career Elo (the Glicko-2 rating), not Played
 Like Performance Elo, not a rating title (100-point bands), not a Federation title (norms) and not the division
@@ -250,7 +271,7 @@ table lookup); they accept `null` state (Commoner III before a career).
 
 ## 10. Not done / open
 
-* The names are a proposal awaiting the owner's approval or renaming (one file).
+* (Done in package Q: the names are approved; rank and title are displayed apart.)
 * The relegation-places gate uses the bottom two of every league, including the Open Division (which has no
   relegation), so it is not K's `leagueZone` (which returns null there).
 * Mid-season checkpoints of past seasons cannot be back-filled (§7).
