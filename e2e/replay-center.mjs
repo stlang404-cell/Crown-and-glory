@@ -13,6 +13,13 @@ import { createRequire } from 'node:module';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
+
+/** Pick an outcome on the trade ticket: buttons for ≤ 3 claims, a select for more (v0.10 match markets add Decisive). */
+async function pickOutcome(page, label) {
+  const sel = page.locator('[data-testid="claim-select"]');
+  if (await sel.count()) { const v = await sel.evaluate((el, l) => [...el.options].find(o => o.text.startsWith(l))?.value, label); await sel.selectOption(v); }
+  else await page.getByRole('group', { name: 'Outcome' }).getByRole('button', { name: label }).click();
+}
 const url = process.argv[2] ?? 'http://127.0.0.1:4410/';
 const SHOTS = new URL('../docs/screenshots/v0.10/', import.meta.url).pathname;
 const OUT = new URL('../docs/evidence/v0.10-replay-center/', import.meta.url).pathname;
@@ -76,12 +83,15 @@ await waitUntil(page, mid => { const p = window.__crown.fed.state.positions.get(
 const tradePly2 = await page.evaluate(id => window.__crown.fed.liveGame(id).moves.length, fx.id);
 await stepMove();
 await page.getByLabel('Shares').fill('6');
-await page.getByRole('group', { name: 'Outcome' }).getByRole('button', { name: 'Draw' }).click();
+await pickOutcome(page, 'Draw');
 await page.locator('[data-testid="confirm-trade"]').click();
 await page.waitForSelector('text=Bought 6');
 const tradePly3 = await page.evaluate(id => window.__crown.fed.liveGame(id).moves.length, fx.id);
 const posLive = await page.evaluate(mid => window.__crown.fed.state.positions.get(`${mid}|player:cash`).shares, fx.market);
-check(2, hadExit === 1 && posLive.join('/') === '0/6/0', `Bought 10 at move ${tradePly1}, exited the position with the Exit button at move ${tradePly2}, bought 6 Draw at move ${tradePly3}; holdings ${posLive.join('/')}`);
+// one share count per claim (v0.10 match markets add Decisive): 6 Draw, nothing else
+const sixDraw = posLive.map((_, i) => (i === 1 ? 6 : 0)).join('/');
+const noneHeld = posLive.map(() => 0).join('/');
+check(2, hadExit === 1 && posLive.join('/') === sixDraw, `Bought 10 at move ${tradePly1}, exited the position with the Exit button at move ${tradePly2}, bought 6 Draw at move ${tradePly3}; holdings ${posLive.join('/')}`);
 
 // 3. finish and settle
 await page.getByRole('button', { name: '1 s', exact: true }).click();
@@ -101,10 +111,14 @@ for (const k of [tradePly1, tradePly2, tradePly3, Math.min(fin.plies - 1, tradeP
   await clickPly(k);
   const ui = await page.evaluate(() => ({ ply: document.querySelector('[data-testid="arena-history"]')?.getAttribute('data-ply'), prices: [0, 1, 2].map(i => document.querySelector(`[data-testid="hist-price-${i}"]`)?.textContent), holdings: document.querySelector('[data-testid="hist-holdings"]')?.textContent?.replace(/\s/g, ''), strip: [0, 1, 2].map(i => document.querySelector(`[data-testid="strip-price-${i}"] .mono`)?.textContent) }));
   const rec = [...fin.points].reverse().find(p => p.ply <= k);
-  const exp = k < tradePly1 ? '0/0/0' : k < tradePly2 ? null : k < tradePly3 ? '0/0/0' : '0/6/0';
-  sync.push({ k, ok: ui.ply === String(rec.ply) && ui.prices.join() === rec.prices.map(usd).join() && ui.strip.join() === rec.prices.map(usd).join() && (exp === null || ui.holdings === exp), ui, rec: rec.prices.map(usd) });
+  const exp = k < tradePly1 ? noneHeld : k < tradePly2 ? null : k < tradePly3 ? noneHeld : sixDraw;
+  // recorded points carry the W/D/B prices plus the Decisive claim (v0.10), which must equal 1 − Draw; the panel shows W/D/B
+  const wdb = rec.prices.slice(0, 3).map(usd).join();
+  const decisiveOk = rec.prices.length === 3 || Math.abs(rec.prices[3] - (1 - rec.prices[1])) < 1e-9;
+  sync.push({ k, ok: ui.ply === String(rec.ply) && decisiveOk && ui.prices.join() === wdb && ui.strip.join() === wdb && (exp === null || ui.holdings === exp), ui, rec: rec.prices.map(usd) });
 }
 step('sync detail: ' + JSON.stringify(sync));
+if (!sync.every(x => x.ok)) step("sync detail: " + JSON.stringify(sync.filter(x => !x.ok)).slice(0, 1200));
 check(4, sync.every(x => x.ok), `Replay at moves ${sync.map(x => x.k).join(', ')}: the market panel and the context strip show exactly the recorded prices of the latest published point at or before that move, and your holdings at that point (${sync.map(x => x.ui.holdings).join(' → ')})`);
 await page.screenshot({ path: SHOTS + '02-replay-recorded-market-desktop.png' });
 await page.getByRole('button', { name: 'Latest move' }).click();

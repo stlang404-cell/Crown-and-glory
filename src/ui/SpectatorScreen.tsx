@@ -358,7 +358,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           {atPly.windowTrades.length > 0 && <div className="small" data-testid="arena-window-trades">{atPly.windowTrades.length} trade{atPly.windowTrades.length === 1 ? '' : 's'} recorded in this move’s window{atPly.windowTrades.some(t => t.by === 'player:cash') ? ', including yours' : ''}.</div>}
           {timeline.playerTrades.length > 0 && (
             <table className="small arena-pos-table" data-testid="arena-history-portfolio"><tbody>
-              <tr><td>Your shares (W/D/B)</td><td className="mono" data-testid="hist-holdings">{atPly.holdings.join(' / ')}</td></tr>
+              <tr><td>Your shares ({claims.map(c => c.label).join(' / ')})</td><td className="mono" data-testid="hist-holdings">{atPly.holdings.join(' / ')}</td></tr>
               <tr><td>Net cash so far</td><td className="mono">{fmtSigned(atPly.netCash)}</td></tr>
               <tr><td>{atPly.resolved ? 'Paid at settlement' : 'Value at recorded prices'}</td><td className="mono" data-testid="hist-value">{fmtCrowns(atPly.markValue)}</td></tr>
               <tr><td>{atPly.resolved ? 'Profit/loss' : 'Profit/loss at recorded prices'}</td><td className={`mono ${atPly.pnl >= 0 ? 'pos' : 'neg'}`} data-testid="hist-pnl">{fmtSigned(atPly.pnl)}</td></tr>
