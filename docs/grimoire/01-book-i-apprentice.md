@@ -119,13 +119,13 @@ A piece **controls** (or **attacks**) every square it could move to, and it can 
 
 On an empty 6 × 6 board the numbers are small and exact:
 
-| Piece | In a corner | On an edge (not corner) | In the centre (c3, d3, c4, d4) |
-|---|---|---|---|
-| Rook | 10 | 10 | 10 |
-| Queen | 15 | 15 to 17 | 19 |
-| King | 3 | 5 | 8 |
+| Piece | Corner | Other edge square | Second ring (b2–e2–e5–b5) | Centre (c3, d3, c4, d4) |
+|---|---|---|---|---|
+| Rook | 10 | 10 | 10 | 10 |
+| Queen | 15 | 15 | 17 | 19 |
+| King | 3 | 5 | 8 | 8 |
 
-A rook always reaches **10 squares** on an empty board: 5 along its file and 5 along its rank, wherever it stands. The queen adds the diagonals: 5 in a corner, 9 in the centre. (These counts were made with the rules engine's own move generator.)
+A rook always reaches **10 squares** on an empty board: 5 along its file and 5 along its rank, wherever it stands. The queen adds the diagonals: 5 on any edge square, 7 on the second ring, 9 in the centre. (These counts were made with the rules engine's own move generator.)
 
 ### Illustrated example
 
@@ -274,8 +274,8 @@ claim: best d6=N+
 caption: The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5.
 ```
 
-5. A new queen on d6 would be a queen against a queen, roughly equal.
-6. A new knight on d6 checks the king on f5 *and* attacks the queen on b5. After the king moves, `Nxb5` wins the queen, and the a3-pawn decides the game. The engine rates the knight promotion clearly best.
+5. A new queen on d6 would only give queen against queen; the engine rates it far lower.
+6. A new knight on d6 checks the king on f5 *and* attacks the queen on b5. After the king moves, `Nxb5` wins the queen. White is left with knight and pawn against a bare king, which the engine judges winning (a lone knight could not mate, so the a3-pawn matters).
 
 ### Common beginner mistakes
 - Trying to move a pawn two squares on its first move. Illegal here.
@@ -397,7 +397,7 @@ claim: puzzle pz-kqfffd
 caption: Academy puzzle pz-kqfffd. White to move and win material.
 ```
 
-*Solution.* The Black knight on c5 is attacked by the White queen on b4. Its only possible defender is the Black king on d6, which stands next to c5. If White plays `Qxc5+`, the queen gives check, and can the king take back? No: the queen on c5 is defended by the White pawn on d4. Count: one attacker (the queen) against one "defender" that cannot legally recapture, because a king may not capture a defended piece. **`Qxc5+` wins a knight for nothing.**
+*Solution.* The Black knight on c5 is attacked by the White queen on b4. Its only possible defender is the Black king on d6, which stands next to c5. If White plays `Qxc5+`, the queen gives check, and can the king take back? No: the queen on c5 is defended by the White knight on d3. Count: one attacker (the queen) against one "defender" that cannot legally recapture, because a king may never capture a defended piece. **`Qxc5+` wins a knight for nothing.**
 
 ### Guided exercise
 
@@ -464,7 +464,7 @@ If none of these is possible, the king is **checkmated** and the game is over (C
 ### Illustrated example
 
 ```crown
-fen: 3r1k/6/1N4/R5/2P1P1/3K2 b - - 0 1
+fen: 5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1
 line: Rd5+
 show: after
 caption: Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available.
@@ -516,7 +516,7 @@ caption: The same queen check, but the knight on f3 now defends d2. The king can
 ### Guided exercise
 
 ```crown
-fen: 5k/6/6/4n1/PPP3/1K4 b - - 0 1
+fen: 5k/6/4n1/6/PPP3/1K4 b - - 0 1
 line: Nc3+
 show: after
 caption: Guided exercise. Black's knight has just checked from c3. List every legal move for White.
@@ -541,7 +541,7 @@ caption: Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is
 ```
 
 ```crown
-fen: 3r1k/6/1N4/R5/2P1P1/3K2 b - - 0 1
+fen: 5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1
 line: Rd5+ Nd3
 show: after
 caption: Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?
@@ -551,7 +551,7 @@ caption: Exercise 3. White blocked with Nd3 instead of capturing. Is Black's roo
 - **Guided:** Three moves: `Ka1`, `Kc1` and `bxc3`. The b2-pawn captures diagonally; the a2- and c2-pawns cannot (a2 attacks only b3; c2 attacks b3 and d3). `bxc3` wins the knight and is clearly best.
 - **1.** Exactly one: `Kb1`. The queen checks along a3–b2–c1. The king cannot go to b2 (still on the diagonal), c2 and d2 hold White pawns, d1 holds a White rook. Nothing can capture on a3 or block on b2.
 - **2.** Four moves: `Kc1`, `Kc2`, `Ke1`, `Ke2`. `Kd2` is illegal because d2 is still on the d-file, attacked by the rook.
-- **3.** After `Nd3` the knight on d3 stands in front of the rook and is attacked by it, but it is defended by the c2- and e2-pawns and by the king, so `Rxd3+` would lose the rook for a knight. White is safe, yet `Nxd5+` was better: it simply won a rook.
+- **3.** After `Nd3` the knight on d3 stands in front of the rook and is attacked by it, but it is defended by the c2- and e2-pawns, so `Rxd3+` would lose the rook for a knight. White is safe, yet `Nxd5+` was better: it simply won a rook.
 
 ### Summary
 Check must be answered at once: move the king (not along the line!), block a line check, or capture the checker. Always look at all three before you choose.
@@ -721,3 +721,370 @@ Checkmate needs teamwork: the queen or rook builds a box or cuts off the king; y
 
 ### Next lesson
 Chapter 7: stalemate, the trap that turns a won game into a draw, and how to use it when you are losing.
+
+---
+
+## Chapter 7 — Stalemate and the Other Draws
+
+### Learning objectives
+- Recognise **stalemate**: no legal move, but not in check. It is a draw.
+- Avoid stalemating the opponent when you are winning.
+- Use stalemate as a rescue when you are losing.
+- Know the other ways a Crown game is drawn.
+
+### Prerequisites
+Chapters 5–6.
+
+### Explanation
+If the player to move has **no legal move** and is **not in check**, the game ends at once in a draw by **stalemate**. The side that was "winning" gets only half a point. This is the commonest way Apprentices throw away won endings.
+
+Crown & Calculation (adjudication policy `crown-adj-1`) also draws a game:
+- **automatically**, when only the two kings remain (bare kings), after the same position occurs for the fifth time, or after 150 halfmoves (75 moves each) with no capture and no pawn move;
+- **on a claim** by the player to move, after the third occurrence of the same position or after 100 halfmoves without a capture or pawn move;
+- **by agreement**, but only after each side has made at least ten moves.
+
+Note one Crown difference: only *bare kings* is an automatic "dead position". King and knight against king, for example, is **not** drawn automatically; play continues until a repetition or move-count draw (or agreement). And checkmate on the final move always beats every draw rule.
+
+### Illustrated example
+
+```crown
+fen: 6/1Q4/6/2K3/6/k5 w - - 0 1
+line: Qb3
+claim: stalemate
+caption: The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw.
+```
+
+```crown
+fen: 6/1Q4/6/2K3/6/k5 w - - 0 1
+line: Qb2#
+claim: only-mate-in-1
+caption: The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3.
+```
+
+### Step-by-step reasoning
+Before every move in a winning ending, ask: **"After my move, does my opponent have a legal move?"**
+1. List the defending king's squares: in the diagram a2, b1 and b2.
+2. After `Qb3`: a2 is covered by the queen (diagonal), b1 and b2 by the queen (b-file) and b2 also by White's king. Zero squares.
+3. Is the king in check after `Qb3`? No: b3 does not attack a1. Zero moves and no check means **stalemate**.
+4. After `Qb2#`: the same three squares are covered, *and* the king is in check. That is mate.
+
+### Common beginner mistakes
+- Grabbing the last enemy pawn or piece and leaving the king with no moves.
+- Making a "quiet" queen move a knight's distance away when the enemy king is already in the corner. In the corner, a knight's-move box means stalemate.
+- Thinking a big material lead makes the result safe. Stalemate ignores material.
+
+### Advanced insight
+When **you** are losing, look for stalemate. If your king has no legal moves, every one of your other pieces becomes a "desperado": you would be glad to lose it. A rook that checks again and again, and is stalemate if captured, can save a hopeless game.
+
+```crown
+fen: 6/1r4/1P4/1K2Q1/6/5k b - - 0 1
+line: Rxb4+
+claim: best Rxb4+
+caption: Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook.
+```
+
+```crown
+fen: 6/1r4/1P4/1K2Q1/6/5k b - - 0 1
+line: Rxb4+ Kxb4
+claim: stalemate
+show: after
+caption: If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking.
+```
+
+### Worked example
+Why is this position a draw, with Black to move?
+
+```crown
+fen: 2k3/2P3/2K3/6/6/6 b - - 0 1
+claim: stalemate
+caption: Black to move has no legal move. Stalemate.
+```
+
+*Solution.* The Black king on c6 could go to b6 or d6, but both are attacked by the White pawn on c5 (a White pawn attacks diagonally *forwards*, here b6 and d6). b5 and d5 are next to White's king on c4. c5 itself is occupied by the pawn, which is defended by the king. Black is not in check. Stalemate. **Guidance:** in king-and-pawn endings, a defending king that blocks the square in front of the pawn very often reaches a stalemate like this one.
+
+### Guided exercise
+
+```crown
+fen: 5Q/6/6/6/k5/2K3 w - - 0 1
+claim: only-mate-in-1
+caption: Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?
+```
+
+*Hint:* The Black king on a2 has a1, a3, b1, b2 and b3 to think about.
+
+### Independent exercises
+
+```crown
+fen: 3Q2/6/4K1/6/5k/6 w - - 0 1
+claim: only-mate-in-3
+caption: Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it.
+```
+
+```crown
+fen: 2K2k/1r4/4QP/6/6/6 b - - 0 1
+claim: best Rc5+
+caption: Exercise 2. Black is lost on material. Find the engine's saving idea.
+```
+
+3. A game reaches White king on d4 and Black king on c6, with nothing else on the board. What happens?
+4. After 100 halfmoves with no capture and no pawn move, is the game drawn automatically?
+
+### Answers with explanations
+- **Guided:** `Qb2#` mates (the queen is protected by the king on c1 and covers a1, a3, b1 and b3). The trap is `Qc3`, which covers a1, a3, b2 and b3 while the king covers b1: stalemate.
+- **1.** The stalemate trap is `Qd1`: the Black king on f2 would have no square (e1, f1 and e2 are covered by the queen; e3 and f3 by White's king). The solution is `Kd3!`, the only move that mates in 3. Black has three replies: `Kf3` (met by `Qf6#`), `Ke1` and `Kf1`; after either of the last two, White's king or queen closes the last door and the queen mates on the next move. The checker proves every line.
+- **2.** `Rc5+`. Black's king on f6 has no legal move (e5, e6 and f5 are covered by the queen and the f4-pawn), so the rook is a desperado. If `Kxc5`, Black is stalemated. This is the engine's judgement of the best try; it rates the alternatives as lost.
+- **3.** Bare kings: the game is drawn **automatically** at once.
+- **4.** No. At 100 halfmoves the player to move may *claim* a draw. The draw is automatic only at 150 halfmoves.
+
+### Summary
+Stalemate (no legal move, no check) is a draw. When winning, always check that the opponent will have a legal move. When losing, look for stalemate tricks. Bare kings, fivefold repetition and 150 halfmoves draw automatically; threefold repetition and 100 halfmoves may be claimed.
+
+### Next lesson
+Chapter 8 collects the simplest winning patterns: the back-rank mate, the rook ladder, the protected queen mate, and grabbing what hangs.
+
+---
+
+## Chapter 8 — Simple Winning Patterns
+
+### Learning objectives
+- Recognise four patterns that win games: **free material**, the **back-rank mate**, the **two-rook ladder**, and the **protected queen mate**.
+- Look for them in every position.
+
+### Prerequisites
+Chapters 4–7.
+
+### Explanation
+Most games between beginners are decided by a few simple patterns. Learn their shapes.
+1. **Free material.** A hanging piece (Chapter 4) is simply taken.
+2. **Back-rank mate.** A king on its first or last rank, walled in by its own pawns, is mated by a rook or queen along that rank. On a 6 × 6 board this is frequent, because the pawns start right in front of the king, and the king cannot castle away.
+3. **The ladder.** Two rooks (or rook and queen) take turns checking on neighbouring ranks or files, pushing the king to the edge. No help from the king is needed.
+4. **The protected queen.** A queen placed right next to the enemy king, protected by another piece (often its own king), gives mate whenever the king's other squares are covered.
+
+### Illustrated example
+
+```crown
+fen: 4k1/3ppp/6/6/6/R2K2 w - - 0 1
+line: Ra6#
+claim: only-mate-in-1
+caption: Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank.
+```
+
+### Step-by-step reasoning: the ladder
+
+```crown
+fen: K5/6/6/5k/1R4/R5 w - - 0 1
+line: Ra3+ Ke4 Rb4+ Ke5 Ra5+ Ke6 Rb6#
+claim: checkmate
+caption: The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated.
+```
+
+1. The rook on b2 guards the 2nd rank. `Ra3+` checks on the 3rd rank: the king must climb to the 4th.
+2. Now the a3-rook guards the 3rd rank, and `Rb4+` checks on the 4th: the king climbs again.
+3. `Ra5+` and `Rb6#` repeat the step. On the 6th rank there is nowhere further to climb.
+4. Keep the rooks **far from the enemy king**: here they work on the a- and b-files while the king is on the e- and f-files, so it can never attack them.
+
+### Common beginner mistakes
+- Opening the back rank for the enemy by moving the wrong pieces, or forgetting that your own king can be back-rank mated as well.
+- Running the ladder with a rook next to the enemy king, where it can be captured.
+- Placing the queen next to the enemy king without protection.
+- Looking only for mates and missing a free piece (or the other way round).
+
+### Advanced insight
+On this board the back rank is exactly **one pawn-step** away from the pawn line, and there is no castling to tuck the king into a corner. **Guidance:** in the opening and middlegame, check every enemy rook and queen move for a back-rank threat, and when your king has no flight square, consider making one with a pawn move.
+
+### Worked example
+
+```crown
+fen: 2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26
+claim: puzzle pz-21w88z
+caption: Academy puzzle pz-21w88z. Black to move. Free material and a mate.
+```
+
+*Solution.* The White queen on c3 stands right in front of Black's rook on c4 and nothing defends it: the king on d1 does not touch c3, and the c2-pawn only defends b3 and d3. `Rxc3` takes the queen. It is more than material: Black now threatens `Qxc2` with mate. The checker proves that Black mates in 3 from the start:
+
+```crown
+fen: 2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26
+line: Rxc3 Ke1 Qxc2 e4 Qe2#
+claim: mate-in-3
+caption: Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown).
+```
+
+For example `1...Rxc3 2. Ke1 Qxc2` (threatening both `Qe2#` and `Qc1#`) `3. e4 Qe2#`. If `2. Kc1` or `2. Re1`, then `2...Qxc2#` at once.
+
+### Guided exercise
+
+```crown
+fen: k5/p3q1/P5/1PR2P/5K/6 w - - 0 32
+claim: puzzle pz-1olai4r
+caption: Academy puzzle pz-1olai4r. White to move and mate in 1.
+```
+
+*Hint:* The Black king on a6 is boxed in by its own a5-pawn and by White's a4-pawn, which attacks b5.
+
+### Independent exercises
+
+```crown
+fen: r2k2/1R1p2/p1nN1r/5P/5K/4R1 w - - 0 20
+claim: puzzle pz-ewndyc
+caption: Exercise 1 (pz-ewndyc). White to move and mate in 1.
+```
+
+```crown
+fen: r2kn1/pR1p2/2PN1r/5P/5K/6 w - - 0 21
+claim: puzzle pz-1lq92r
+caption: Exercise 2 (pz-1lq92r). White to move and mate in 1.
+```
+
+```crown
+fen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61
+claim: puzzle pz-1muyn8j
+caption: Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something.
+```
+
+### Answers with explanations
+- **Guided (pz-1olai4r):** `Rc6#`. The rook runs up the open c-file and checks along the 6th rank. b6 is on the rook's rank, a5 holds Black's own pawn and b5 is attacked by White's a4-pawn. The Black queen on e5 cannot capture on c6 or block on b6.
+- **1 (pz-ewndyc):** `Re6#`. The rook flies from e1 to e6 and checks the king on d6. The rook is protected by the knight on d4, so the king cannot take it; c5 is covered by the rook on b5, e5 by the rook on e6 (file), c6 by the knight on d4 and by the e6-rook through the king. The protected rook acts like the protected queen of pattern 4.
+- **2 (pz-1lq92r):** `Rxd5#`. The rook takes the d5-pawn with check on the d-file. It is protected by the c4-pawn, so the king cannot recapture. c5 and e5 are on the rook's rank, c6 is covered by the d4-knight, and e6 is Black's own knight.
+- **3 (pz-1muyn8j):** `Qxe4+`. Free material with check, and then a protected-queen mate:
+
+```crown
+fen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61
+line: Qxe4+ Kd6 Qd5#
+claim: mate-in-3
+caption: Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#.
+```
+
+  If `1...Kd6 2. Qd5#`: the queen stands next to the king, protected by White's king on c4. If `1...Kb6`, then `2. Kb4` (or `2. Qd5`) forces `2...Ka6`, and the queen mates on the next move (`3. Qc6#` or `3. Qe6#` after `2. Kb4`; `3. Qb5#` after `2. Qd5`).
+
+### Summary
+Take free material. Watch the back rank. Ladder with two rooks kept far from the king. Mate with a protected queen. These four patterns win most beginner games, and they remain the raw material of every combination in Book II.
+
+### Next lesson
+Chapter 9, the last of Book I: the pawn's road to the crown.
+
+---
+
+## Chapter 9 — The Pawn's Road: Four Steps to the Crown
+
+### Learning objectives
+- Count how many moves a pawn needs to promote.
+- Win (or stop) a pawn race with the **rule of the square**.
+- Choose the right promotion piece: queen, rook or knight.
+
+### Prerequisites
+Chapters 3, 6 and 7.
+
+### Explanation
+A White pawn starts on rank 2 and promotes on rank 6. Because pawns move only one square at a time, it needs exactly **four moves**: to rank 3, 4, 5 and then 6. Its **first step** already brings it into the middle of the board; after that it is only **three steps** from the crown. The same is true for Black, from rank 5 down to rank 1.
+
+Three steps is very close. On the eight-by-eight board a pawn that has moved once is usually five or six steps from promotion. Here, **promotion is a real threat from the opening onwards.** Pawns meet almost at once (after one move each, pawns on the same file block each other) and every pawn capture moves a pawn one file sideways *and* one step nearer to promotion.
+
+```crown
+fen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1
+line: c3 f4 d3 c4 d4 exd4 Nf3 d3 b3 dxe2+ Kxe2
+show: after
+caption: A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it.
+```
+
+### Illustrated example: the rule of the square
+
+```crown
+fen: 6/6/5k/1P4/6/5K w - - 0 1
+line: b4 Ke5 b5 Kd6 b6=Q+
+claim: best b4
+caption: White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's "square", so the pawn promotes.
+```
+
+The **square** of a pawn: draw a square with one side running from the pawn to its promotion square, extending towards the defending king. For the b3-pawn (three moves to b6) the square has corners b3, e3, e6 and b6. **If the defending king can step inside the square on its move, it catches the pawn; otherwise the pawn promotes** (when no other pieces interfere).
+1. White to move plays `b4`; the square shrinks to b4–d4–d6–b6.
+2. Black's king on f4 can only reach e-file squares: still outside. After `b5` and `b6=Q+` the queen arrives with check.
+3. With **Black to move**, the king steps into the square at once (`Ke3`, a corner of the square) and catches the pawn:
+
+```crown
+fen: 6/6/5k/1P4/6/5K b - - 0 1
+line: Ke3 b4 Kd4 b5 Kc5 b6=Q+ Kxb6
+show: after
+caption: Black to move: the king enters the square with Ke3 and wins the pawn.
+```
+
+**Guidance:** the rule of the square is a quick count, not a proof. On a small board the attacking king is often close enough to help. Here, for example, if Black chooses `Ke4` instead of `Ke3`, the engine shows that White's king can walk over in support with `Ke2`, and White keeps winning chances.
+
+### Step-by-step reasoning: choosing the promotion piece
+1. **Queen** by default: it is the strongest piece.
+2. **Knight** when the knight's jump gives a check or fork the queen cannot (Chapter 3, `d6=N+`).
+3. **Rook** when a queen would stalemate the opponent:
+
+```crown
+fen: 6/1P4/k5/6/K5/6 w - - 0 1
+line: b6=Q
+claim: stalemate
+caption: The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate.
+```
+
+```crown
+fen: 6/1P4/k5/6/K5/6 w - - 0 1
+line: b6=R
+claim: best b6=R
+caption: The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6).
+```
+
+### Common beginner mistakes
+- Pushing a pawn without counting whether the enemy king can catch it.
+- Promoting to a queen automatically and stalemating the opponent.
+- Forgetting that promotion is compulsory: a pawn on the 5th rank (for Black, the 2nd) *must* become a piece if it moves.
+- Leaving a promotion square undefended when the new piece will be captured at once.
+
+### Advanced insight
+A White pawn on rank 4 (a Black pawn on rank 3) is only **two moves** from promotion, which is as close as a queen check. **Guidance:** in the middlegame, treat an advanced pawn as a piece that threatens to become a queen; often the right defence is not to win material but to blockade the pawn with a piece on the square in front of it.
+
+### Worked example
+
+```crown
+fen: 5R/6/6/2p3/1k4/3K2 b - - 0 46
+claim: puzzle pz-c0qvzm
+caption: Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1.
+```
+
+*Solution.* `1...c2+` (the pawn steps forward with check: a Black pawn on c2 attacks b1 and d1). White's king cannot take it, because Black's king on b2 defends c2. After `2. Ke2` (the Academy's line), `2...c1=Q` promotes, and the new queen on c1 is protected by the king on b2. Black wins: queen against rook.
+
+### Guided exercise
+
+```crown
+fen: 6/p3Pr/k5/4K1/6/6 w - - 0 33
+claim: puzzle pz-12j3cmu
+caption: Academy puzzle pz-12j3cmu. White to move and win.
+```
+
+*Hint:* The pawn on e5 is attacked by the rook on f5 and is not defended. What can it do before it is captured?
+
+### Independent exercises
+
+```crown
+fen: 5k/6/1Pp1P1/2K3/p5/6 b - - 0 36
+claim: puzzle pz-1cphbbp
+caption: Exercise 1 (pz-1cphbbp). Black to move and win.
+```
+
+```crown
+fen: 6/rP2k1/3p1p/6/2N1P1/4K1 w - - 0 25
+claim: puzzle pz-13ahfji
+caption: Exercise 2 (pz-13ahfji). White to move and win.
+```
+
+```crown
+fen: 3K2/2P3/3k2/6/2n3/6 w - - 0 52
+claim: puzzle pz-1ftvz6i
+caption: Exercise 3 (pz-1ftvz6i). White to move and win.
+```
+
+### Answers with explanations
+- **Guided (pz-12j3cmu):** `e6=Q`. The pawn steps to the last rank and becomes a queen. The rook on f5 cannot touch e6 (it moves only in straight lines), while the new queen attacks the rook along the diagonal e6–f5. White wins: queen against rook.
+- **1 (pz-1cphbbp):** `a1=Q+`. The a2-pawn promotes with check along the diagonal a1–b2–c3. Nothing can stop or capture the new queen.
+- **2 (pz-13ahfji):** `b6=Q`. The rook on a5 attacks the b5-pawn along the rank but cannot stop it moving forward, and it cannot attack b6. The new queen even attacks the rook on a5.
+- **3 (pz-1ftvz6i):** `c6=Q`. The promotion square c6 is next to White's king on d6, so the new queen is protected; the Black king on d4 and knight on c2 are too far away to win it.
+
+### Summary
+A pawn needs four moves from its starting square, so after its first step it is three steps from the crown. Count races with the rule of the square, but remember that kings can help on this small board. Promote to a queen unless a knight's fork or a rook's safety (no stalemate) is better.
+
+### Next lesson
+You have finished Book I. **Book II: The Duelist** begins with the fork, the most important tactic on the 6 × 6 board.
