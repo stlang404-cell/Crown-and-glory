@@ -148,3 +148,22 @@ no competitor record is rewritten; only its future turnover entrants into divisi
 distribution. Game records against the new beginner opponents carry the exact engine profile (`engine.profile`, with an
 `error` model), calibration id `cal-2026-11-04-beginners-crown-error-1`, and per-move `selected` values
 `error-random` / `error-sample`; older builds ignore them. Tests: `tests/ratingSpectrum.test.ts`.
+
+## v0.10: Played Like records and report field (no schema change, IndexedDB v4)
+Two additive, optional fields (docs/PLAYED_LIKE.md):
+
+| Where | Field | Meaning |
+|---|---|---|
+| analysis report | `playedLike` | `{ modelId, white, black }` — the Played Like Performance Elo of both sides, computed when the report completed (`src/analysis/playedLike.ts`). Absent on older reports; the app computes the same value from the report's stored plies. Reports stay immutable. |
+| finalized game | `playedLike[]` | permanent records of the player's own estimate, one per model id (`crown-pl-record-1`, `src/analysis/playedLikeRecords.ts`): `gameId`, `at` (game end), `recordedAt`, `pov`, `opponent {id, name}`, `result` (1 / ½ / 0 for the player), `pool`, `career {before, after, rd}` from the game's rating event (null if unrated), `estimate` (value, 80 % / 95 % range, scale, informative moves, or the reason there is no number), `confidence` (`adequate` / `low` / `insufficient` / `unavailable`), `modelId`, `reportId`. |
+
+* The game checksum covers only rules-relevant content (`canonicalGame`), so adding records never changes it; moves,
+  result and rating events are never touched (`CrownDB.setPlayedLikeRecord` writes only this field).
+* Records are carried by `crown-backup-1` because games are; older backups import unchanged (no records) and get them
+  through the backfill below.
+* **Migration from v0.9 and earlier:** on boot (`AppServices.backfillPlayedLike`, off the boot path) every finalized game
+  that has a complete Standard analysis but no record for the current model gets one; games without analysis get theirs
+  when their analysis completes (the analysis queue writes it). A model update adds a record under the new model id and
+  keeps the old one; statistics never mix model ids.
+* Tests: `tests/playedLikeRecords.test.ts` (record contents, reload, backup round trip, v0.9 backfill, version separation,
+  low-confidence exclusion).

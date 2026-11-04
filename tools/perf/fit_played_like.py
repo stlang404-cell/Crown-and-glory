@@ -6,7 +6,7 @@ canonical analysis), never the result and never the opponent's rating (in the ca
 adjacent levels, so the opponent's rating would leak the answer through the pairing).
 
 Split: by colour-swapped opening pair — every third pair is held out, so no opening is in both sets.
-Writes src/analysis/played-like-model.json and prints held-out metrics.
+Writes tools/perf/played-like-model-v1.json (historical v0.8 model; superseded by tools/playedlike/fit.py) and prints held-out metrics.
    python3 tools/perf/fit_played_like.py [features=tools/perf/calibration-features.jsonl]
 """
 import json, math, sys
@@ -77,5 +77,5 @@ out = {
                    'heldOutByLevel': levels, 'monotoneByLevel': mono,
                    'excludedInsufficient': len(rows) - len(usable), 'samples': len(rows)},
 }
-json.dump(out, open('src/analysis/played-like-model.json', 'w'), indent=1)
+json.dump(out, open('tools/perf/played-like-model-v1.json', 'w'), indent=1)
 print(json.dumps(out['validation'], indent=1)); print('beta', out['beta'], 'sd(n=20)', round(sd(20)), 'sd(n=40)', round(sd(40)))
