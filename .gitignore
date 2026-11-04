@@ -11,3 +11,4 @@ tools/bench/out/*.tmp
 .claude/worktrees/
 tools/bench/tune/positions.json
 tools/bench/tune/labels.jsonl
+e2e/artifacts/analysis-journey/
