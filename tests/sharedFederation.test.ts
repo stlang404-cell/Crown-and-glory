@@ -162,7 +162,7 @@ describe('shared Federation service: never auto-play, deadline and forfeit rule'
   it('a pending player game blocks advance; postponement moves it out, keeps it playable, and round 15 is the deadline', async () => {
     const { svc } = await make();
     await svc.create(2, 4242);
-    expect(svc.state!.world.rules).toBe(2);
+    expect(svc.state!.world.rules).toBe(3); // v1.0: new federations use crown-competition-3
     const f1 = svc.roundFixtures()[0];
     await expect(svc.advanceRound()).rejects.toThrow(/postpone or forfeit/);
     // the live scheduler never takes a player game
@@ -206,7 +206,7 @@ describe('shared Federation service: never auto-play, deadline and forfeit rule'
   }, 60_000);
 
   it('a full crown-competition-2 season through the service: cup prizes from escrow, ledger conserved, career selectors from saved state', async () => {
-    const { svc } = await make();
+    const { svc } = await make(undefined, 2); // a v0.11 federation (crown-competition-3: tests/crownPath.test.ts)
     await svc.create(5, 31);
     const opp = opportunities(svc.state!, []);
     expect(opp.find(o => o.id === 'challenger')).toMatchObject({ status: 'open', action: { event: 'challenger', free: false } });
@@ -236,7 +236,7 @@ describe('shared Federation service: never auto-play, deadline and forfeit rule'
     await old.svc.create(3, 555);
     for (let i = 0; i < 8; i++) { await playAll(old.svc); await old.svc.advanceRound(); }
     expect(old.svc.state!.world.rules).toBeUndefined();
-    const { svc } = await make(f); // the v0.11 app (rules 2) opens the same save
+    const { svc } = await make(f, 2); // the v0.11 app (rules 2) opens the same save
     await svc.load();
     expect(svc.state!.world.round).toBe(9);
     for (let i = 8; i < ROUNDS_PER_SEASON; i++) { await playAll(svc); await svc.advanceRound(); expect(total(svc)).toBe(0); }

@@ -21,7 +21,7 @@ import { prices } from '../exchange/lmsr';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
 import { CHALLENGER_FEE, RECOVERY_THRESHOLD, CUP_POOL, ZONAL_POOL } from '../economy/economy';
 import { Bracket, DeadlineRule, Opportunities, UpcomingMatches } from './CareerPanels';
-import { CUP_ROUNDS, RULES_V2, ZONAL_ROUNDS, koTitle, rulesOf, zoneOf } from '../federation/competitions';
+import { CHALLENGER_INVITES, CUP_ROUNDS, PATH_MIN_POINTS, PATH_PLACES, RULES_V2, RULES_V3, ZONAL_DEPTH, ZONAL_ROUNDS, koTitle, openInvitesPerZone, rulesOf, zoneOf } from '../federation/competitions';
 import { swissEventsOpenTo } from '../federation/world';
 
 /** League division insignia (crown-heraldry-1 emblem family: one shield shape per division). */
@@ -92,6 +92,7 @@ export function WorldScreen() {
   const invited = w.player.invite?.season === w.season;
   const mySwiss = st.plan.swiss.find(s => s.event === (myEvent ?? 'challenger'))!;
   const v2 = rulesOf(st.plan) >= RULES_V2;
+  const v3 = rulesOf(st.plan) >= RULES_V3;
   const registered = st.plan.swiss.some(s => s.entrants.includes(PLAYER_ID));
   const cash = fed.balance('player:cash');
 
@@ -196,7 +197,7 @@ export function WorldScreen() {
             <Opportunities games={games} />
           </div>
           <div className="panel" style={{ background: 'transparent' }}>
-            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? `Divisions 2–4${v2 ? ' and invited Regional Cup winners' : ''}, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship` : 'Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes'}.
+            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? (v3 ? `Divisions 2–4 and invited players (Regional Cup winners, Challenger Open winner), 32 players, five Swiss rounds, $1,500 in prizes. The top ${8 - PATH_PLACES} qualify for the Crown Championship, and ${PATH_PLACES} Crown Path places go to the best invited entrants with at least ${PATH_MIN_POINTS} of 5` : `Divisions 2–4${v2 ? ' and invited Regional Cup winners' : ''}, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship`) : `Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes${v3 ? `. The ${CHALLENGER_INVITES === 1 ? 'winner is' : `top ${CHALLENGER_INVITES} are`} invited to next season's Federation Open` : ''}`}.
             <div className="small muted">{invited && myEvent === 'open' ? `Invited (${w.player.invite!.reason}): free entry` : `Entry ${fmtCrowns(CHALLENGER_FEE, 0)}`}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>
             {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && myEvent ? (
               <div className="row" style={{ marginTop: 6 }}>
@@ -277,6 +278,7 @@ export function TournamentsScreen() {
   if (!st) return <NeedsFederation />;
   const games = gamesOf(fed.seasonRounds());
   const champ = st.plan.champ;
+  const t3 = rulesOf(st.plan) >= RULES_V3;
   const previewRivalry = (a: string, b: string) => { const d = collect(st, new Set([a])); return computeRivalry(a, b, d.meetings, d.kos, d.finishes, st.world.season, x => fed.name(x)); };
   return (
     <div>
@@ -290,7 +292,7 @@ export function TournamentsScreen() {
           return (
             <div key={sw.event} className="panel" data-testid={`swiss-${sw.event}`}>
               <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 Rounds</span></div>
-              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · Top 8 qualify for the Crown Championship · $1,500 in prizes' : 'Divisions 5–8, plus you if registered · $600 in prizes'}</div>
+              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? (t3 ? `Divisions 2–4 and invited players · Top ${8 - PATH_PLACES} qualify for the Crown Championship, plus ${PATH_PLACES} Crown Path places for the best invited entrants with at least ${PATH_MIN_POINTS} points · $1,500 in prizes` : 'Divisions 2–4 · Top 8 qualify for the Crown Championship · $1,500 in prizes') : `Divisions 5–8, plus you if registered · $600 in prizes${t3 ? ` · The ${CHALLENGER_INVITES === 1 ? 'winner is' : `top ${CHALLENGER_INVITES} are`} invited to next season's Federation Open` : ''}`}</div>
               <details className="small" style={{ marginBottom: 6 }}><summary>Details</summary>Swiss pairing with no rematches; a bye goes to the lowest-placed player who hasn't had one. BH-1: Buchholz Cut-1. Tiebreak order: points, Buchholz Cut-1, Buchholz, Sonneborn–Berger, seed.</details>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th><th>Elo</th></tr></thead>
@@ -303,7 +305,7 @@ export function TournamentsScreen() {
       </div>
       <div className="panel" style={{ marginTop: 14 }} data-testid="championship">
         <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">$8,000 Prize Fund</span></div>
-        {!champ ? <div className="small muted"><p>The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: the 8 best regional Crown Division winners and the top 8 of the Federation Open.</p><details><summary>Details</summary>Matches are two games. If level, a rapid pair is played, then a blitz pair, then the higher seed advances. A level final produces joint champions.</details></div> : (
+        {!champ ? <div className="small muted"><p>The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: {rulesOf(st.plan) >= RULES_V2 ? 'last season\'s zonal champions and the best regional Crown Division winners (8 places)' : 'the 8 best regional Crown Division winners'} and {t3 ? `the top ${8 - PATH_PLACES} of the Federation Open, plus ${PATH_PLACES} Crown Path places for its best invited entrants with at least ${PATH_MIN_POINTS} of 5` : 'the top 8 of the Federation Open'}.</p><details><summary>Details</summary>Matches are two games. If level, a rapid pair is played, then a blitz pair, then the higher seed advances. A level final produces joint champions.</details></div> : (
           <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }}>
             {champ.stages.map(sg => (
               <div key={sg.label} style={{ minWidth: 200 }}>
@@ -317,6 +319,7 @@ export function TournamentsScreen() {
                 ))}
               </div>
             ))}
+            {(champ.pathPlaces?.length ?? 0) > 0 && <div className="small muted" data-testid="crown-path-places" style={{ minWidth: 160 }}>Crown Path places: {champ.pathPlaces!.map(id => fed.name(id)).join(', ')}</div>}
             {champ.champions.length > 0 && <div className="panel" style={{ minWidth: 180, borderColor: 'var(--accent)' }}><Trophy kind="grand" size="lg" title="Crown Championship trophy" /><strong>{champ.champions.map(id => fed.name(id)).join(' & ')}</strong><div className="small muted">{champ.champions.length > 1 ? 'Joint Crown Champions' : 'Crown Champion'} · Season {st.world.season}</div></div>}
           </div>
         )}
@@ -343,6 +346,8 @@ function CupsPanel() {
   const mine = cups.find(k => k.qualifiers.includes(PLAYER_ID)) ?? cups.find(k => k.kind === 'zonal' && k.zone === zoneOf(st.world.player.region, regions)) ?? cups.find(k => k.kind === 'cup' && k.region === st.world.player.region) ?? cups[0];
   const [sel, setSel] = useState<string | null>(null);
   if (rulesOf(st.plan) < RULES_V2) return null;
+  const v3 = rulesOf(st.plan) >= RULES_V3;
+  const widened = v3 && Math.max(1, Math.floor(16 / Math.ceil(regions / 8))) < ZONAL_DEPTH;
   const ko = cups.find(k => k.name === sel) ?? mine;
   return (
     <div className="panel" style={{ marginTop: 14 }} data-testid="cups">
@@ -350,8 +355,8 @@ function CupsPanel() {
         <select aria-label="Choose an event" value={ko?.name ?? ''} onChange={e => setSel(e.target.value)} style={{ maxWidth: '100%' }}>
           {cups.map(k => <option key={k.name} value={k.name}>{koTitle(k)}{k.qualifiers.includes(PLAYER_ID) ? ' (you)' : ''}</option>)}
         </select>)}</div>
-      {!ko ? <div className="small muted"><p>Drawn after league round {LEAGUE_ROUNDS}. <strong>Zonal Championships</strong> (rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]}, 16 players): Crown Division finishers of each zone's regions, by finishing rank, except Crown Championship qualifiers; the zonal champion qualifies for next season's Crown Championship. <strong>Regional Cups</strong> (rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}, 8 players): the champions of divisions 2–8 and the Grand Division runner-up; the 8 highest-rated cup winners are invited to next season's Federation Open.</p></div>
-        : <><div className="small muted" style={{ marginBottom: 6 }}>{ko.kind === 'zonal' ? `The winner qualifies for next season's Crown Championship · ${fmtCrowns(ZONAL_POOL, 0)} in prizes` : `The 8 highest-rated cup winners are invited to next season's Federation Open · ${fmtCrowns(CUP_POOL, 0)} in prizes`} · two-game matches, then rapid and blitz pairs; still level: the higher seed advances.</div>
+      {!ko ? <div className="small muted"><p>Drawn after league round {LEAGUE_ROUNDS}. <strong>Zonal Championships</strong> (rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]}, 16 players): Crown Division finishers of each zone's regions, by finishing rank, except Crown Championship qualifiers; the zonal champion qualifies for next season's Crown Championship. {widened ? <>With {Math.ceil(regions / 8)} regions per zone every regional winner plays, and the other places go to the highest-rated runners-up and third places. </> : null}<strong>Regional Cups</strong> (rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}, 8 players): {v3 ? <>the champions and runners-up of divisions 3–4 and the champions of divisions 5–8; {openInvitesPerZone(regions) === 1 ? 'the highest-rated cup winner of each zone is' : `the ${openInvitesPerZone(regions)} highest-rated cup winners of each zone are`} invited to next season's Federation Open (the Crown Path).</> : <>the champions of divisions 2–8 and the Grand Division runner-up; the 8 highest-rated cup winners are invited to next season's Federation Open.</>}</p></div>
+        : <><div className="small muted" style={{ marginBottom: 6 }}>{ko.kind === 'zonal' ? `The winner qualifies for next season's Crown Championship · ${fmtCrowns(ZONAL_POOL, 0)} in prizes` : `${v3 ? (openInvitesPerZone(regions) === 1 ? "The highest-rated cup winner of each zone is invited to next season's Federation Open" : `The ${openInvitesPerZone(regions)} highest-rated cup winners of each zone are invited to next season's Federation Open`) : "The 8 highest-rated cup winners are invited to next season's Federation Open"} · ${fmtCrowns(CUP_POOL, 0)} in prizes`} · two-game matches, then rapid and blitz pairs; still level: the higher seed advances.</div>
           <Bracket ko={ko} testId="bracket-cup" /></>}
     </div>
   );

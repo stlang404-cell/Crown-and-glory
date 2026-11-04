@@ -13,7 +13,7 @@ import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
 import { sampleResult } from './resultModel';
 import { assignEntrantPersonas, reservedNames } from './rosterPersonas';
 import { LATENT_MAX, LATENT_MIN, POPULATION_V1, PopulationModel, entrantModel, populationModelOf } from './population';
-import { RULES_V2, cupFields, cupKo, crownLeaguePlaces, koTitle, zoneShort, openField, openInvitations, rulesOf, zonalFields, zonalKo } from './competitions';
+import { RULES_V2, RULES_V3, cupFields, cupKo, crownLeaguePlaces, koTitle, zoneShort, openChampionshipPlaces, openField, openInvitations, openInvitationsV3, rulesOf, zonalFields, zonalKo } from './competitions';
 
 export const WORLD_ID = 'crown-world-1';
 
@@ -21,7 +21,9 @@ export interface Circuit { region: number; division: number; members: string[] }
 export interface SwissState { event: 'open' | 'challenger'; name: string; entrants: string[]; seeds: Record<string, number>; byes: Record<string, number>; rounds: { round: number; pairs: [string, string][]; bye: string | null; repeats: number }[] }
 export interface KoState { name: string; qualifiers: string[]; seeds: Record<string, number>; stages: { round: number; label: string; matches: KoMatch[] }[]; champions: string[];
   /** crown-competition-2 knockouts (src/federation/competitions.ts): display title, kind and the zone / region. */
-  title?: string; kind?: 'zonal' | 'cup'; zone?: number; region?: number }
+  title?: string; kind?: 'zonal' | 'cup'; zone?: number; region?: number;
+  /** crown-competition-3 Crown Championship: qualifiers who took a Crown Path place (invited Open entrants, ≥ 3 / 5). */
+  pathPlaces?: string[] }
 
 export interface SeasonPlan {
   id: string; // `season:${n}`
@@ -36,7 +38,7 @@ export interface SeasonPlan {
   rules?: number;
   /** crown-competition-2: Zonal Championships and Regional Cups (built after league round 15). */
   cups?: KoState[];
-  /** crown-competition-2: competitors invited to this season's Federation Open (last season's Regional Cup winners). */
+  /** crown-competition-2/-3: competitors invited to this season's Federation Open (last season's Regional Cup winners; -3 also the Challenger Open winner). */
   invited?: string[];
 }
 
@@ -71,7 +73,7 @@ export interface WorldState {
   rules?: number;
   /** crown-competition-2: zone places in a season's Crown Championship (the previous season's zonal champions). */
   crownQualified?: { season: number; ids: string[] };
-  /** crown-competition-2: AI competitors invited to a season's Federation Open (Regional Cup winners). */
+  /** crown-competition-2/-3: AI competitors invited to a season's Federation Open (Regional Cup winners; -3 also the Challenger Open winner). */
   openInvites?: { season: number; ids: string[] };
   createdAt: string;
 }
@@ -175,7 +177,7 @@ export function swissEventsOpenTo(world: WorldState): ('open' | 'challenger')[] 
 export function registerChallenger(ctx: Ctx, event?: 'open' | 'challenger'): { replaced: string } {
   const ev = event ?? swissEventFor(ctx.world.player.division);
   if (!ev) throw new Error('Crown Division players qualify for the Championship through their league');
-  if (!swissEventsOpenTo(ctx.world).includes(ev)) throw new Error(ev === 'open' ? 'The Federation Open is for divisions 2–4 and invited Regional Cup winners.' : 'The Challenger Open is for divisions 5–8.');
+  if (!swissEventsOpenTo(ctx.world).includes(ev)) throw new Error(ev === 'open' ? 'The Federation Open is for divisions 2–4 and invited players (Regional Cup and Challenger Open winners).' : 'The Challenger Open is for divisions 5–8.');
   if (ctx.plan.swiss.some(x => x.entrants.includes(PLAYER_ID))) throw new Error('Already registered');
   const sw = ctx.plan.swiss.find(x => x.event === ev)!;
   if (!ctx.world.player.joined) throw new Error('Join the federation first');
@@ -183,8 +185,11 @@ export function registerChallenger(ctx: Ctx, event?: 'open' | 'challenger'): { r
   if (ctx.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration is closed');
   if (sw.rounds.length) throw new Error('Registration is closed');
   if (sw.entrants.includes(PLAYER_ID)) throw new Error('Already registered');
-  const replaced = sw.entrants[sw.entrants.length - 1];
-  sw.entrants = [...sw.entrants.slice(0, -1), PLAYER_ID];
+  // crown-competition-3: the player takes the place of the lowest-rated entrant who was NOT invited (an invitation is
+  // earned by results and is never displaced by a registration); earlier rules: the lowest seed
+  const inv = rulesOf(ctx.plan) >= RULES_V3 && ev === 'open' ? new Set(ctx.plan.invited ?? []) : new Set<string>();
+  const replaced = [...sw.entrants].reverse().find(id => !inv.has(id)) ?? sw.entrants[sw.entrants.length - 1];
+  sw.entrants = [...sw.entrants.filter(id => id !== replaced), PLAYER_ID];
   // seed the player by rating
   const order = [...sw.entrants].sort((a, b) => ratingOf(ctx, b) - ratingOf(ctx, a) || a.localeCompare(b));
   sw.seeds = Object.fromEntries(order.map((id, i) => [id, i + 1]));
@@ -380,7 +385,10 @@ export function buildChampionship(ctx: Ctx, games: { event: string; white: strin
   const winners = rulesOf(ctx.plan) >= RULES_V2
     ? crownLeaguePlaces(zonePlaces, byRule.map(r => r.id), id => id === PLAYER_ID ? ctx.world.player.joined : ctx.competitors.get(id)?.status === 'active')
     : byRule.slice(0, 8).map(r => r.id);
-  const swiss = swissTable(ctx.plan.swiss.find(x => x.event === 'open')!, games).map(r => r.id).filter(id => !winners.includes(id)).slice(0, 8);
+  const openOrder = swissTable(ctx.plan.swiss.find(x => x.event === 'open')!, games);
+  // crown-competition-3: the last 2 of the 8 Open places are Crown Path places for invited entrants (≥ 3 / 5)
+  const v3 = rulesOf(ctx.plan) >= RULES_V3 ? openChampionshipPlaces(openOrder, openInvitees(ctx), winners) : null;
+  const swiss = v3 ? v3.ids : openOrder.map(r => r.id).filter(id => !winners.includes(id)).slice(0, 8);
   const qualifiers = [...winners, ...swiss];
   const seeds = Object.fromEntries([...qualifiers].sort((a, b) => ratingOf(ctx, b) - ratingOf(ctx, a) || a.localeCompare(b)).map((id, i) => [id, i + 1]));
   const bySeed = [...qualifiers].sort((a, b) => seeds[a] - seeds[b]);
@@ -391,7 +399,17 @@ export function buildChampionship(ctx: Ctx, games: { event: string; white: strin
     first.push({ a, b, seedA: seeds[a], seedB: seeds[b], games: [], winner: null, joint: false, decidedBy: null });
   }
   const labels = ['Round of 16', 'Quarterfinal', 'Semifinal', 'Final'];
-  return { name: 'champ', qualifiers, seeds, stages: CHAMPIONSHIP_ROUNDS.map((round, i) => ({ round, label: labels[i], matches: i === 0 ? first : [] })), champions: [] };
+  const ko: KoState = { name: 'champ', qualifiers, seeds, stages: CHAMPIONSHIP_ROUNDS.map((round, i) => ({ round, label: labels[i], matches: i === 0 ? first : [] })), champions: [] };
+  if (v3) ko.pathPlaces = v3.path;
+  return ko;
+}
+
+/** Invited entrants of this season's Federation Open: AI invitees (plan.invited) and the player when invited. */
+export function openInvitees(ctx: Ctx): Set<string> {
+  const out = new Set(ctx.plan.invited ?? []);
+  const open = ctx.plan.swiss.find(x => x.event === 'open');
+  if (ctx.world.player.invite?.season === ctx.plan.season && open?.entrants.includes(PLAYER_ID)) out.add(PLAYER_ID);
+  return out;
 }
 
 /** crown-competition-2 (after league round 15, with the Championship built): Zonal Championships and Regional Cups. */
@@ -403,9 +421,10 @@ export function buildCups(ctx: Ctx, games: { event: string; white: string; black
   const regions = topologyOf(ctx.world).regions;
   const rating = (id: string) => ratingOf(ctx, id);
   const excluded = new Set(ctx.plan.champ?.qualifiers ?? []);
-  const zonals = zonalFields(regions, tables, excluded, rating).map(z => zonalKo(z.zone, regions, z.ids, rating));
+  const rules = rulesOf(ctx.plan);
+  const zonals = zonalFields(regions, tables, excluded, rating, rules).map(z => zonalKo(z.zone, regions, z.ids, rating));
   for (const z of zonals) for (const id of z.qualifiers) excluded.add(id);
-  const cups = cupFields(regions, tables, excluded).map(c => cupKo(c.region, c.ids, rating));
+  const cups = cupFields(regions, tables, excluded, rules).map(c => cupKo(c.region, c.ids, rating));
   return [...zonals, ...cups];
 }
 
@@ -518,9 +537,18 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     const zonal = plan.cups.filter(k => k.kind === 'zonal').flatMap(k => k.champions);
     world.crownQualified = { season: season + 1, ids: zonal };
     const winners = plan.cups.filter(k => k.kind === 'cup').flatMap(k => k.champions);
-    const inv = openInvitations(winners, id => (isPlayer(id) ? world.player.division : competitors.get(id)!.division), id => ratingOf(ctx, id));
+    const divNext = (id: string) => (isPlayer(id) ? world.player.division : competitors.get(id)!.division);
+    // crown-competition-3: the best cup winner of each zone + the Challenger Open winner (src/federation/competitions.ts)
+    const challengerOrder = rulesOf(plan) >= RULES_V3 ? swissTable(plan.swiss.find(x => x.event === 'challenger')!, games).map(r => r.id) : [];
+    const inv = rulesOf(plan) >= RULES_V3
+      ? openInvitationsV3(plan.cups.filter(k => k.kind === 'cup').flatMap(k => k.champions.map(id => ({ id, region: k.region ?? 0 }))), challengerOrder, topologyOf(world).regions, divNext, id => ratingOf(ctx, id))
+      : openInvitations(winners, divNext, id => ratingOf(ctx, id));
     world.openInvites = { season: season + 1, ids: inv.filter(id => !isPlayer(id)) };
-    if (inv.includes(PLAYER_ID)) world.player.invite = { season: season + 1, event: 'open', reason: `${koTitle(plan.cups.find(k => k.champions.includes(PLAYER_ID))!)} winner S${season}` };
+    if (inv.includes(PLAYER_ID)) {
+      const cup = plan.cups.find(k => k.kind === 'cup' && k.champions.includes(PLAYER_ID));
+      const place = challengerOrder.indexOf(PLAYER_ID);
+      world.player.invite = { season: season + 1, event: 'open', reason: cup ? `${koTitle(cup)} winner S${season}` : `Challenger Open ${place === 0 ? 'winner' : 'runner-up'} S${season}` };
+    }
   }
   // reputation drift and careers
   const r = rng01(hashSeed(world.seed, 'careers', season));

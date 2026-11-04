@@ -34,8 +34,8 @@ await page.getByRole('button', { name: 'Found the federation' }).click();
 await page.waitForSelector('[data-testid="advance-round"]', { timeout: 60000 });
 const s1 = await page.evaluate(() => ({ rules: window.__crown.fed.state.world.rules, rule: document.querySelector('[data-testid="deadline-rule"]')?.textContent ?? '', upcoming: document.querySelectorAll('[data-testid="career-match"]').length, opp: [...document.querySelectorAll('[data-testid="career-opportunity"]')].map(e => `${e.getAttribute('data-id')}:${e.getAttribute('data-status')}`), cal: document.querySelector('[data-testid="season-calendar"]')?.textContent ?? '' }));
 step('founded: ' + JSON.stringify({ ...s1, rule: s1.rule.slice(0, 80), cal: s1.cal.slice(0, 60) }));
-check(1, s1.rules === 2 && /Nothing is ever played for you/.test(s1.rule) && s1.upcoming >= 3 && s1.opp.includes('challenger:open') && s1.opp.some(o => o.startsWith('promotion:')) && /Zonal Championships/.test(s1.cal),
-  'Federation screen: crown-competition-2, deadline rule shown before it applies, upcoming matches, qualification opportunities, calendar lists Zonal Championships and Regional Cups');
+check(1, s1.rules === 3 && /Nothing is ever played for you/.test(s1.rule) && s1.upcoming >= 3 && s1.opp.includes('challenger:open') && s1.opp.some(o => o.startsWith('promotion:')) && /Zonal Championships/.test(s1.cal),
+  'Federation screen: crown-competition-3, deadline rule shown before it applies, upcoming matches, qualification opportunities, calendar lists Zonal Championships and Regional Cups');
 await page.screenshot({ path: SHOTS + 'career-world-desktop.png', fullPage: true });
 
 // 2. enter the Challenger Open from the opportunities panel
