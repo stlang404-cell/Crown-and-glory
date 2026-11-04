@@ -24,10 +24,10 @@ const C = (dollars: number) => Math.round(dollars * MICRO);
 export type FacilityId = 'lounge' | 'gallery' | 'library';
 export interface Facility { id: FacilityId; name: string; cost: number; deposit: number; upkeep: number; appeal: number; prestige: number; effect: string }
 export const FACILITIES: Facility[] = [
-  { id: 'lounge', name: "Members' Lounge", cost: C(350), deposit: C(150), upkeep: C(30), appeal: 0.05, prestige: 15,
-    effect: 'Club appeal +5%: more of your region\'s competitors join your club and pay its dues (5% of what they hold at season end). Worth it only if your region\'s players are earning.' },
-  { id: 'gallery', name: 'Spectator Gallery', cost: C(300), deposit: C(100), upkeep: C(20), appeal: 0.02, prestige: 10,
-    effect: 'Club Weekend guests pay $12 instead of $5 to attend, and the completed-event sponsor pays $20 more (from the season sponsor budget). Club appeal +2%. Pays only if you host the Club Weekend.' },
+  { id: 'lounge', name: "Members' Lounge", cost: C(350), deposit: C(150), upkeep: C(30), appeal: 0.04, prestige: 15,
+    effect: 'Club appeal +4%: more of your region\'s competitors join your club and pay its dues (5% of what they hold at season end). Worth it only if your region\'s players are earning.' },
+  { id: 'gallery', name: 'Spectator Gallery', cost: C(300), deposit: C(100), upkeep: C(20), appeal: 0.01, prestige: 10,
+    effect: 'Club Weekend guests pay $12 instead of $5 to attend, and the completed-event sponsor pays $20 more (from the season sponsor budget). Club appeal +1%. Pays only if you host the Club Weekend.' },
   { id: 'library', name: 'Heritage Library', cost: C(250), deposit: C(100), upkeep: C(15), appeal: 0.02, prestige: 40,
     effect: 'A reading room with your club\'s records. Financial prestige +40 and club appeal +2%. Mostly prestige.' },
 ];

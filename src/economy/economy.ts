@@ -14,7 +14,7 @@ export const GENESIS_TREASURY = C(25_000); // standing float for market subsidie
 export const STARTING_GRANT = C(1_000);
 export const SPONSOR_BUDGET = C(1_200);
 /** v0.8: part of the season sponsor budget that local sponsors give a player club, scaled by its appeal share. */
-export const CLUB_SPONSOR_POOL = C(600);
+export const CLUB_SPONSOR_POOL = C(400); // v0.11: was $600 (club owners led chess-only careers by ~55% in the 24-season sweep; docs/ECONOMY_V11.md)
 /** The treasury funds market subsidies and NPC wallets. At each season start it is replenished toward the
  *  target by an explicit, capped mint entry — the only issuance besides prize pools, sponsors and grants. */
 export const TREASURY_TARGET = C(25_000);

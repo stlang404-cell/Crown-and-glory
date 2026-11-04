@@ -1194,7 +1194,7 @@ export class FederationService {
         for (const sp of wealthOf(st.extra).sponsorships.filter(x => x.season === season && x.status === 'active')) this.settleSponsorship(st, season, sp.event, [], posted);
         if (res.seasonEnd.promotions.some(p => p.id === PLAYER_ID)) this.sponsor(st, 'promotion', posted, season);
         // v0.8 club sponsorship (crown-club-appeal-1): local sponsors back a well-run player club from the season's
-        // existing sponsor budget, in proportion to the club's appeal share (max 45% of $600). No new money: it is
+        // existing sponsor budget, in proportion to the club's appeal share (max 45% of $400 since v0.11). No new money: it is
         // paid from a pool that otherwise returns to the treasury.
         {
           const { share } = playerClubAppeal(st, season);
