@@ -13,13 +13,14 @@ import { leagueTable, swissTable } from '../federation/world';
 import { LEAGUE_EVENT, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, divisionLabel, REGION_NAMES } from '../federation/model';
 import { hashSeed } from '../federation/generator';
 import { Journal, validateJournal } from '../exchange/ledger';
-import { Market, Position, openGenericMarket, closeMarket, resolveMarket, acct, unitPayout, MarketKind } from '../exchange/market';
+import { Market, Position, openGenericMarket, closeMarket, resolveMarket, acct, unitPayout, MarketKind, uniformPayout } from '../exchange/market';
 import { npcTrade } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
 import {
   FAMILY_B, RULES, bracketStates, bracketClaims, bracketModel, bracketPayout, bracketChampionModel, leagueModel,
-  qualificationModel, swissWinnerModel, normaliseModel,
+  qualificationModel, swissWinnerModel, normaliseModel, advancementStates, advancementClaims, advancementModel, advancementState,
 } from '../exchange/families';
+import { lengthLine, pOver, lengthOutcome, LENGTH_MODEL_ID } from '../exchange/length';
 
 type G = { event: string; white: string; black: string; result: number | null };
 export interface MarketOps {
@@ -61,13 +62,87 @@ function openFamily(ops: MarketOps, spec: { id: string; kind: MarketKind; title:
   if (st.world.round > spec.closeRound) return null;
   const b = FAMILY_B[spec.kind];
   if ((st.balances.get('treasury') ?? 0) < subsidyMicro(b, spec.outcomes.length) + 5_000_000_000) return null; // keep a $5,000 floor for match markets
-  const { market, journal } = openGenericMarket({
+  const { market: m0, journal } = openGenericMarket({
     id: spec.id, kind: spec.kind, sandbox: false, title: spec.title, outcomes: spec.outcomes, claims: spec.claims, model: normaliseModel(spec.model, 0.001),
     rules: RULES[spec.kind], season: st.world.season, round: st.world.round, b, at: ops.now(), ref: { ...spec.ref, closeRound: spec.closeRound },
+  });
+  // v0.10 (bug #27): the published model is computed BEFORE the opening NPC liquidity trades; previously the opening
+  // traders read the uniform placeholder and the real model was attached only afterwards
+  const market = { ...m0, model: models(st, m0) };
+  ops.post([journal]);
+  setMarket(ops, market);
+  return npcBatch(ops, market, 'pre', market.model!);
+}
+
+// ---------------------------------------------------------------- v0.10 information suspension
+/** Events whose recorded results bear on a family market (for the results-pending suspension). */
+export function marketEvents(m: Market): (event: string) => boolean {
+  const r = m.ref ?? {};
+  switch (m.kind) {
+    case 'winner': return e => e === (r.event === 'open' ? 'open' : 'champ');
+    case 'bracket': case 'advancement': return e => e === 'champ';
+    case 'promotion': return e => e === LEAGUE_EVENT(Number(r.region), Number(r.division));
+    case 'season': return e => e === LEAGUE_EVENT(Number(r.region), 1);
+    case 'qualification': return e => /^league:\d+:1$/.test(e); // every Crown Division (the 8 best winners qualify)
+    default: return () => false;
+  }
+}
+export interface Suspension { code: 'results-pending'; text: string }
+/**
+ * A family market is SUSPENDED (status stays open; no trade executes) while the current round already has recorded
+ * results in an event it depends on: the round's tier-3 results are drawn when its first game is recorded and are
+ * shown on competitor and news pages, but the published model and the NPC traders see them only when the round is
+ * processed. Trading reopens after the round is processed, the model refreshed and the NPCs have re-traded.
+ * (Bug #28: before v0.10 a player could trade season markets on those results against stale prices.)
+ */
+export function suspensionOf(st: FedState, m: Market): Suspension | null {
+  if (m.status !== 'open' || !m.kind || m.kind === 'match' || m.kind === 'sandbox' || m.kind === 'length') return null;
+  const rec = st.rounds.get(`${st.world.season}:${st.world.round}`);
+  if (!rec || rec.status !== 'open') return null;
+  const hit = marketEvents(m);
+  const n = rec.abstract.filter(a => a[3] !== null && hit(a[0])).length + rec.fixtures.filter(f => f.result !== null && hit(f.event)).length;
+  if (!n) return null;
+  return { code: 'results-pending', text: `Suspended: ${n.toLocaleString('en')} result${n === 1 ? '' : 's'} of this round in the events this market depends on ${n === 1 ? 'is' : 'are'} already recorded. Trading reopens when the round is processed and the forecast is updated.` };
+}
+
+// ---------------------------------------------------------------- v0.10 match length (over/under plies)
+export const lengthMarketId = (fixtureId: string) => `mk:len:${fixtureId}`;
+/** List the over/under market of a featured match beside its result market (public ratings only). */
+export function openLengthMarket(ops: MarketOps, f: { id: string; white: string; black: string }, title: string): Market | null {
+  const st = ops.st, id = lengthMarketId(f.id);
+  if (st.markets.has(id)) return null;
+  const b = FAMILY_B.length;
+  if ((st.balances.get('treasury') ?? 0) < subsidyMicro(b, 2) + 5_000_000_000) return null;
+  const w = st.competitors.get(f.white)!, bl = st.competitors.get(f.black)!;
+  const line = lengthLine(w, bl);
+  const p = pOver(w, bl, line);
+  const { market, journal } = openGenericMarket({
+    id, kind: 'length', sandbox: false, title: `${title}: over/under ${line}.5 plies`, outcomes: [`Over ${line}.5 plies`, `Under ${line}.5 plies`], model: normaliseModel([p, 1 - p], 0.002),
+    rules: RULES.length, fixtureId: f.id, white: f.white, black: f.black, season: st.world.season, round: st.world.round, b, at: ops.now(), ref: { fixture: f.id, line, model: LENGTH_MODEL_ID },
   });
   ops.post([journal]);
   setMarket(ops, market);
   return npcBatch(ops, market, 'pre', market.model!);
+}
+/** Close the length market when its match starts (idempotent). */
+export function closeLengthMarket(ops: MarketOps, fixtureId: string): void {
+  const m = ops.st.markets.get(lengthMarketId(fixtureId));
+  if (m && m.status === 'open') setMarket(ops, closeMarket(m, ops.now()));
+}
+/** Settle on the official record's ply count (or VOID when there is none). Idempotent. */
+export function resolveLengthMarket(ops: MarketOps, fixtureId: string, plies: number | null, gameId: string | null): void {
+  const st = ops.st, m0 = st.markets.get(lengthMarketId(fixtureId));
+  if (!m0 || m0.status === 'settled' || m0.status === 'cancelled') return;
+  const m = m0.status === 'open' ? closeMarket(m0, ops.now()) : m0;
+  const line = Number(m.ref!.line);
+  const r = plies === null
+    ? resolveMarket(m, positionsOf(st, m.id), uniformPayout(2), 'cancel', ops.now(), st.balances.get(acct(m, 'collateral')) ?? 0, null, `VOID ${m.title}: no official game record`)
+    : resolveMarket(m, positionsOf(st, m.id), unitPayout(2, lengthOutcome(plies, line)), 'settle', ops.now(), st.balances.get(acct(m, 'collateral')) ?? 0, gameId, `Settle ${m.title}: ${plies} plies (${plies > line ? 'Over' : 'Under'})`);
+  ops.post([r.journal]);
+  setMarket(ops, r.market);
+  for (const p of r.positions) setPos(ops, p);
+  const fc = st.extra.forecasts.find(x => x.marketId === m.id);
+  if (fc) fc.outcome = plies === null ? null : lengthOutcome(plies, line);
 }
 
 function settle(ops: MarketOps, m: Market, payout: number[], memo: string): void {
@@ -135,15 +210,15 @@ export function openSeasonMarkets(ops: MarketOps): void {
   const sub = subjects(st);
   const open = st.plan.swiss.find(x => x.event === 'open')!;
   const winner = openFamily(ops, { id: `mk:open-winner:${S}`, kind: 'winner', title: `Federation Open S${S} — champion`, outcomes: open.entrants.map(nm), model: open.entrants.map(() => 1 / open.entrants.length), closeRound: SWISS_ROUNDS[0], ref: { event: 'open', season: S, ids: open.entrants.join(',') } });
-  if (winner) { const mdl = models(st, winner); setMarket(ops, { ...winner, model: mdl }); }
+  void winner;
   const pc = sub.promo.circuit;
   const promo = openFamily(ops, { id: `mk:promo:${S}`, kind: 'promotion', title: `Will ${nm(sub.promo.id)} be promoted from the ${divisionLabel(pc.division)} (${REGION_NAMES[pc.region]})?`, outcomes: ['Yes', 'No'], model: [0.5, 0.5], closeRound: LEAGUE_ROUNDS, ref: { season: S, subject: sub.promo.id, region: pc.region, division: pc.division } });
-  if (promo) refreshModel(ops, promo);
+  void promo;
   const qual = openFamily(ops, { id: `mk:qual:${S}`, kind: 'qualification', title: `Will ${nm(sub.qual.id)} (${REGION_NAMES[sub.qual.circuit.region]}) qualify for the Crown Championship?`, outcomes: ['Yes', 'No'], model: [0.5, 0.5], closeRound: LEAGUE_ROUNDS, ref: { season: S, subject: sub.qual.id, region: sub.qual.circuit.region } });
-  if (qual) refreshModel(ops, qual);
+  void qual;
   const sc = sub.season.circuit;
   const season = openFamily(ops, { id: `mk:season:${S}`, kind: 'season', title: `${REGION_NAMES[sc.region]} Crown Division title S${S}`, outcomes: sc.members.map(nm), model: sc.members.map(() => 1 / 16), closeRound: LEAGUE_ROUNDS, ref: { season: S, region: sc.region, division: 1, ids: sc.members.join(',') } });
-  if (season) refreshModel(ops, season);
+  void season;
 }
 
 function refreshModel(ops: MarketOps, m: Market): Market {
@@ -178,6 +253,15 @@ export function afterRound(ops: MarketOps, season: number, round: number, rec: R
     const s = get(`mk:season:${season}`);
     if (s) { const c = oldPlan.circuits.find(x => x.region === Number(s.ref!.region) && x.division === 1)!; const w = leagueTable(c, games)[0].id; settle(ops, s, unitPayout(16, String(s.ref!.ids).split(',').indexOf(w)), `Settle ${s.title}: ${nm(w)}`); }
   }
+  if (round === CHAMPIONSHIP_ROUNDS[1] && oldPlan.champ) {
+    const a = get(`mk:adv:${season}`);
+    const qfs = oldPlan.champ.stages[1].matches;
+    if (a && qfs.length === 4 && qfs.every(x => x.winner)) {
+      const qf = String(a.ref!.ids).split(',').reduce<[string, string][]>((acc, id, i) => { if (i % 2 === 0) acc.push([id, '']); else acc[acc.length - 1][1] = id; return acc; }, []);
+      const s = advancementState(qf, qfs.map(x => x.winner!));
+      settle(ops, a, unitPayout(16, s), `Settle ${a.title}: ${qfs.map(x => nm(x.winner!)).join(', ')} reach the semifinals`);
+    }
+  }
   if (seasonEnd) {
     const p = get(`mk:promo:${season}`);
     if (p) { const yes = seasonEnd.promotions.some(x => x.id === String(p.ref!.subject)); settle(ops, p, unitPayout(2, yes ? 0 : 1), `Settle ${p.title}: ${yes ? 'Yes' : 'No'}`); }
@@ -197,7 +281,14 @@ export function afterRound(ops: MarketOps, season: number, round: number, rec: R
   if (round === LEAGUE_ROUNDS && ko && !playerIn(ko.qualifiers)) {
     const ids = ko.qualifiers;
     const m = openFamily(ops, { id: `mk:champ:${season}`, kind: 'winner', title: `Crown Championship S${season} — champion`, outcomes: ids.map(nm), model: ids.map(() => 1 / 16), closeRound: CHAMPIONSHIP_ROUNDS[0], ref: { event: 'champ', season, ids: ids.join(',') } });
-    if (m) refreshModel(ops, m);
+    void m;
+  }
+  if (round === CHAMPIONSHIP_ROUNDS[0] && ko && !playerIn(ko.qualifiers)) {
+    const qfs = ko.stages[1].matches;
+    if (qfs.length === 4) {
+      const qf = qfs.map(x => [x.a, x.b] as [string, string]);
+      openFamily(ops, { id: `mk:adv:${season}`, kind: 'advancement', title: `Crown Championship S${season} — who reaches the semifinals`, outcomes: advancementStates(qf, nm).map(x => x.label), claims: advancementClaims(qf, nm), model: advancementModel(qf, rating(st), id => ko.seeds[id]), closeRound: CHAMPIONSHIP_ROUNDS[1], ref: { event: 'champ-quarterfinals', season, ids: qf.flat().join(',') } });
+    }
   }
   if (round === CHAMPIONSHIP_ROUNDS[1] && ko && !playerIn(ko.qualifiers)) {
     const semis = ko.stages[2].matches;
@@ -211,8 +302,8 @@ export function afterRound(ops: MarketOps, season: number, round: number, rec: R
   // ---- model refresh + NPC re-trading on open family markets (public results only)
   if (!seasonEnd) {
     for (const m of [...st.markets.values()]) {
-      if (m.status !== 'open' || !m.kind || m.kind === 'match' || m.kind === 'sandbox' || m.ref?.season !== season) continue;
-      if (m.kind === 'bracket') continue; // listed this round; models do not change before the semifinals
+      if (m.status !== 'open' || !m.kind || m.kind === 'match' || m.kind === 'sandbox' || m.kind === 'length' || m.ref?.season !== season) continue;
+      if (m.kind === 'bracket' || m.kind === 'advancement') continue; // exact knockout models: nothing changes before their closing round
       const next = refreshModel(ops, m);
       const prev = next.history.length > 1 ? next.history[Math.max(0, next.history.length - 2)].prices : undefined;
       npcBatch(ops, next, 'round', next.model!, prev);

@@ -16,11 +16,11 @@ import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } fr
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
-import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf } from '../exchange/market';
-import { normaliseModel } from '../exchange/families';
+import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf, MATCH_CLAIMS, claimsOf } from '../exchange/market';
+import { normaliseModel, RULES } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
-import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
+import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch, openLengthMarket, closeLengthMarket, resolveLengthMarket, suspensionOf, lengthMarketId } from './markets';
 import { cosmetic, cosmeticJournal, earned, emptyCosmetics, AVATAR_SEEDS, type CosmeticKind, type CosmeticState } from '../economy/cosmetics';
 import { FED_TITLES } from '../heraldry/catalog';
 import { playerClubAppeal } from './heraldry';
@@ -62,6 +62,8 @@ export interface LiveGame {
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
+  /** v0.10: markets the player follows on the Exchange (ids; persisted). */
+  marketWatch?: string[];
   forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[];
   /** v0.5: ceremonies to present (titles, promotions, championships); `seen` once dismissed. */
   ceremonies?: Ceremony[]; favorites?: string[];
@@ -365,7 +367,7 @@ export class FederationService {
       if ((st.balances.get('treasury') ?? 0) < subsidyMicro(MARKET_B, 3)) continue;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
       const p = pregameWdl({ rating: w.rating, rd: w.rd }, { rating: b.rating, rd: b.rd });
-      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now() });
+      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now(), claims: MATCH_CLAIMS, rules: RULES.match });
       this.post(st, [journal], posted);
       // NPC trading on public information; all-or-nothing per market so the market and ledger never diverge
       const res = npcRound(market, new Map(), a => st.balances.get(a) ?? 0, st.world.seed, this.now(), 1);
@@ -379,6 +381,10 @@ export class FederationService {
         for (const p2 of res.positions.values()) { st.positions.set(p2.id, p2); positions.push(p2); }
       }
       st.markets.set(m.id, m); markets.push(m);
+      // v0.10: the match-length (over/under plies) market of the same fixture, public ratings only
+      const ops = this.opsOf(st, posted);
+      openLengthMarket(ops, f, m.title);
+      markets.push(...ops.markets.values()); positions.push(...ops.positions.values());
     }
     return { rec, markets, positions };
   }
@@ -607,12 +613,15 @@ export class FederationService {
     // 1) close the market (commit) before any move exists — and any family market whose closing round started
     await this.closeDueMarkets();
     const mk = this.marketFor(fixtureId);
-    if (mk && mk.status === 'open') {
+    const lk = this.state.markets.get(lengthMarketId(fixtureId));
+    if ((mk && mk.status === 'open') || (lk && lk.status === 'open')) {
       await this.run(async () => {
         const st = this.clone();
-        const m = closeMarket(st.markets.get(mk.id)!, this.now());
-        st.markets.set(m.id, m);
-        await this.commit(st, [], { markets: [m] }, { season: st.world.season, round: st.world.round });
+        const ops = this.opsOf(st, []);
+        const m0 = st.markets.get(`mk:${fixtureId}`);
+        if (m0 && m0.status === 'open') { const m = closeMarket(m0, this.now()); st.markets.set(m.id, m); ops.markets.set(m.id, m); }
+        closeLengthMarket(ops, fixtureId);
+        await this.commit(st, [], { markets: [...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       });
     }
     // 2) generate the game
@@ -667,6 +676,8 @@ export class FederationService {
       const fc = st.extra.forecasts.find(x => x.marketId === m.id);
       if (fc) fc.outcome = termination === 'playing-limit' ? null : outcome;
     }
+    // v0.10: the over/under market settles on the official record's ply count (a playing-limit game has 400 plies)
+    { const ops = this.opsOf(st, posted); resolveLengthMarket(ops, fixtureId, moves.length, game.id); markets.push(...ops.markets.values()); positions.push(...ops.positions.values()); }
     settleRound(this.ctxOf(st, await this.playerRating()), rec);
     return { rec, game, markets, positions };
   }
@@ -815,7 +826,10 @@ export class FederationService {
       };
       st.liveGames.set(fixtureId, lg);
       if (m) { const lm = { ...m, live: { plies: 0, lastEval: null } }; st.markets.set(m.id, lm); }
-      await this.commit(st, [], { liveGames: [lg], markets: m ? [st.markets.get(m.id)!] : [] }, { season: st.world.season, round: st.world.round });
+      // the over/under market is not traded in play: it closes when the match starts
+      const ops = this.opsOf(st, []);
+      closeLengthMarket(ops, fixtureId);
+      await this.commit(st, [], { liveGames: [lg], markets: [...(m ? [st.markets.get(m.id)!] : []), ...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       return lg;
     });
   }
@@ -937,6 +951,10 @@ export class FederationService {
       const rec = structuredClone(rec0);
       const out: LiveGame[] = [];
       const at = this.now();
+      // v0.10 (bug #29): a scheduled game is a game of this round starting — family markets whose closing round this is
+      // close in the same commit, before any of its moves exists
+      const ops = this.opsOf(st, []);
+      closeDue(ops, st.world.round);
       for (const [event, white, black] of cands) {
         const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black);
         if (idx < 0) continue;
@@ -948,7 +966,7 @@ export class FederationService {
         out.push(lg);
       }
       st.rounds.set(rec.id, rec);
-      await this.commit(st, [], { rounds: [rec], liveGames: out }, { season: st.world.season, round: st.world.round });
+      await this.commit(st, [], { rounds: [rec], liveGames: out, markets: [...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       return out;
     }, 'scheduler');
   }
@@ -1344,27 +1362,85 @@ export class FederationService {
   // ------------------------------------------------------------------ exchange
   /** Execute a player trade. `opts.expectVersion` (the market history length the quote was computed on) rejects
    *  stale quotes; `opts.maxTotal` caps what a buy may cost (slippage guard). */
-  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string; maxTotal?: number } = {}): Promise<void> {
+  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string; maxTotal?: number; minTotal?: number } = {}): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      const m = st.markets.get(marketId);
-      if (!m || m.sandbox) throw new Error('That market could not be found.');
-      if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games.');
-      const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
-      if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who plays in this market. You can still sell shares you already hold.`);
-      const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
-      if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since you opened this ticket. Check the new price and try again.');
-      if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved (a new move or trade). Check the new price and try again.`);
-      if (m.status !== 'open') throw new Error('Trading is closed for this market.');
+      const m = this.tradableMarket(st, marketId, side, opts);
       const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
-      const t = trade(m, pos, 'player:cash', outcome, shares, side, this.now(), seq);
+      const t = trade(m, st.positions.get(`${m.id}|player:cash`) ?? null, 'player:cash', outcome, shares, side, this.now(), seq);
       if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('The cost is now above your limit. Check the new price and try again.');
+      if (opts.minTotal !== undefined && side === 'sell' && t.quote.total < opts.minTotal) throw new Error('The sale would now return less than your limit. Check the new price and try again.');
       const posted: Journal[] = [];
       this.post(st, [t.journal], posted);
       st.markets.set(m.id, t.market);
       st.positions.set(t.position.id, t.position);
       this.snapshotFinance(st);
       await this.commit(st, posted, { markets: [t.market], positions: [t.position] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Every pre-trade check of a player trade, against the working state of the command (throws a player-facing reason). */
+  private tradableMarket(st: FedState, marketId: string, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string }): Market {
+    const m = st.markets.get(marketId);
+    if (!m || m.sandbox) throw new Error('That market could not be found.');
+    if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games.');
+    const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
+    if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who plays in this market. You can still sell shares you already hold.`);
+    if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since you opened this ticket. Check the new price and try again.');
+    if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved (a new move or trade). Check the new price and try again.`);
+    if (m.status !== 'open') throw new Error('Trading is closed for this market.');
+    const sus = suspensionOf(st, m);
+    if (sus) throw new Error(sus.text);
+    return m;
+  }
+
+  /** Why trading is suspended on an open market right now (null = tradable or not open). */
+  suspension(marketId: string): string | null {
+    const st = this.state, m = st?.markets.get(marketId);
+    return st && m ? suspensionOf(st, m)?.text ?? null : null;
+  }
+
+  /**
+   * Close a position: sell every share the player holds in `marketId` (or only claim `claim`) in ONE command and one
+   * commit — either every sale executes at the quoted revision or none does. `minTotal` bounds the combined net
+   * proceeds (slippage guard). Returns the net proceeds, µ.
+   */
+  async closePosition(marketId: string, opts: { claim?: number; expectRevision?: string; minTotal?: number } = {}): Promise<number> {
+    return this.run(async () => {
+      const st = this.clone();
+      let m = this.tradableMarket(st, marketId, 'sell', opts);
+      let pos = st.positions.get(`${m.id}|player:cash`) ?? null;
+      if (!pos || !pos.shares.some(x => x > 0)) throw new Error('You hold no shares in this market.');
+      const claims = claimsOf(m);
+      const which = opts.claim === undefined ? claims.map((_, i) => i) : [opts.claim];
+      const posted: Journal[] = [];
+      let net = 0;
+      for (const c of which) {
+        const k = pos!.shares[c] ?? 0;
+        if (k <= 0) continue;
+        const t = trade(m, pos, 'player:cash', c, k, 'sell', this.now(), m.history.length);
+        this.post(st, [t.journal], posted);
+        m = t.market; pos = t.position; net += t.quote.total;
+      }
+      if (!posted.length) throw new Error('You hold no shares of that outcome.');
+      if (opts.minTotal !== undefined && net < opts.minTotal) throw new Error('Closing would now return less than your limit. Check the new price and try again.');
+      st.markets.set(m.id, m);
+      st.positions.set(pos!.id, pos!);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, { markets: [m], positions: [pos!] }, { season: st.world.season, round: st.world.round });
+      return net;
+    });
+  }
+
+  /** v0.10 market watchlist (persisted with the player record; independent of the competitor watchlist). */
+  marketWatchlist(): string[] { return this.state?.extra.marketWatch ?? []; }
+  async setMarketWatch(marketId: string, on: boolean): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      if (!st.markets.has(marketId)) throw new Error('That market could not be found.');
+      const cur = st.extra.marketWatch ?? [];
+      st.extra.marketWatch = on ? [...new Set([...cur, marketId])].slice(-200) : cur.filter(x => x !== marketId);
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }
 

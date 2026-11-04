@@ -60,7 +60,7 @@ export interface Market {
   ref?: Record<string, string | number>;
 }
 
-export type MarketKind = 'match' | 'winner' | 'promotion' | 'qualification' | 'season' | 'bracket' | 'sandbox';
+export type MarketKind = 'match' | 'winner' | 'promotion' | 'qualification' | 'season' | 'bracket' | 'sandbox' | 'length' | 'advancement';
 
 export const statesOf = (m: Market): string[] => m.outcomes ?? [...OUTCOMES];
 export const claimsOf = (m: Market): { id: string; label: string; states: number[] }[] =>
@@ -78,6 +78,19 @@ export interface Position {
   spent: number; // µ total paid incl. fees (cost basis)
   received: number; // µ total received from sales and settlement
   fees: number;
+  /** v0.10: average-cost basis per claim of the shares still held, µ incl. buy fees. Absent on positions opened before
+   *  v0.10 while they still hold shares (the per-claim split was never recorded and is not reconstructed). */
+  basis?: number[];
+  /** v0.10: realised P&L, µ: net sale proceeds and settlement payouts minus the basis of the shares they closed. */
+  realised?: number;
+}
+
+/** Recorded per-claim basis, or null when it was never recorded (legacy holdings). A position with no shares has an
+ *  exact basis of zero and realised P&L received − spent, whatever its age. */
+export function basisOf(p: Position, nClaims: number): { basis: number[]; realised: number } | null {
+  if (p.basis && p.realised !== undefined) { const b = [...p.basis]; while (b.length < nClaims) b.push(0); return { basis: b, realised: p.realised }; }
+  if (p.shares.every(x => x === 0)) return { basis: new Array(nClaims).fill(0), realised: p.received - p.spent };
+  return null;
 }
 
 export const acct = (m: Market, part: 'collateral' | 'subsidy') => `${m.sandbox ? 'sandbox:' : ''}market:${m.id}:${part}`;
@@ -86,9 +99,18 @@ export const treasuryAccount = (m: Market) => (m.sandbox ? 'sandbox:treasury' : 
 
 export class MarketError extends Error {}
 
-export function openMarket(p: { id: string; sandbox: boolean; fixtureId: string; title: string; white: string; black: string; season: number; round: number; b: number; forecast: Market['forecast']; at: string }): { market: Market; journal: Journal } {
+/** v0.10 match claims: the three results plus "Decisive (either side wins)" = {White, Black} on the SAME inventory, so
+ *  P(decisive) = 1 − P(draw) holds by construction and no cross-market arbitrage exists. The singleton claims come first
+ *  in state order, so claim prices begin with the state prices (charts and live points rely on this prefix). */
+export const MATCH_CLAIMS: { id: string; label: string; states: number[] }[] = [
+  { id: 's0', label: 'White wins', states: [0] }, { id: 's1', label: 'Draw', states: [1] }, { id: 's2', label: 'Black wins', states: [2] },
+  { id: 'decisive', label: 'Decisive (either side wins)', states: [0, 2] },
+];
+
+export function openMarket(p: { id: string; sandbox: boolean; fixtureId: string; title: string; white: string; black: string; season: number; round: number; b: number; forecast: Market['forecast']; at: string; claims?: Market['claims']; rules?: string }): { market: Market; journal: Journal } {
+  const { claims, rules, ...rest } = p;
   const market: Market = {
-    ...p, q: [0, 0, 0], status: 'open', subsidy: subsidyMicro(p.b, 3), result: null,
+    ...rest, q: [0, 0, 0], status: 'open', subsidy: subsidyMicro(p.b, 3), result: null, ...(claims ? { claims, kind: 'match' as const } : {}), ...(rules ? { rules } : {}),
     history: [{ at: p.at, seq: 0, prices: [1 / 3, 1 / 3, 1 / 3], by: 'open' }], openedAt: p.at, closedAt: null, settledAt: null, gameId: null,
   };
   const journal: Journal = {
@@ -156,9 +178,17 @@ export function trade(m: Market, pos: Position | null, holder: string, outcome: 
   const market = structuredClone(m);
   for (const st of claims[outcome].states) market.q[st] += side === 'buy' ? shares : -shares;
   market.history.push({ at, seq, prices: prices(market.q, market.b), by: holder });
-  position.shares[outcome] += side === 'buy' ? shares : -shares;
+  const rec = basisOf(position, claims.length);
   position.fees += qt.fee;
   if (side === 'buy') position.spent += qt.total; else position.received += qt.total;
+  if (rec) {
+    // average cost: a sale closes held/shares of the claim's basis (rounded to the nearest µ; a full close takes all of it)
+    const held = position.shares[outcome];
+    if (side === 'buy') rec.basis[outcome] += qt.total;
+    else { const out = shares === held ? rec.basis[outcome] : Math.round((rec.basis[outcome] * shares) / held); rec.basis[outcome] -= out; rec.realised += qt.total - out; }
+    position.basis = rec.basis; position.realised = rec.realised;
+  }
+  position.shares[outcome] += side === 'buy' ? shares : -shares;
   const journal: Journal = side === 'buy'
     ? { id: `trade:${m.id}:${seq}`, at, kind: 'trade-buy', memo: `Buy ${shares} × ${claims[outcome].label} — ${m.title}`, season: m.season, round: m.round,
       lines: [{ account: holder, amount: -qt.total }, { account: acct(m, 'collateral'), amount: qt.amount }, { account: feeAccount(m), amount: qt.fee }] }
@@ -203,7 +233,9 @@ export function resolveMarket(m: Market, positions: Position[], payout: number[]
   const win = payout.findIndex(x => x === 1);
   return {
     market: { ...m, status: kind === 'settle' ? 'settled' : 'cancelled', result: kind === 'settle' && win >= 0 ? win : kind === 'settle' ? -1 : null, payout, settledAt: at, closedAt: m.closedAt ?? at, gameId },
-    positions: payouts.map(x => ({ ...x.p, received: x.p.received + x.amount })),
+    // resolution closes every holding (shares stay recorded for history): nothing remains at risk and realised P&L is
+    // exactly received − spent, legacy positions included
+    positions: payouts.map(x => ({ ...x.p, received: x.p.received + x.amount, basis: new Array(claims.length).fill(0), realised: x.p.received + x.amount - x.p.spent })),
     journal: { id: `settle:${m.id}`, at, kind: kind === 'settle' ? 'market-settle' : 'market-cancel', memo, lines: lines.filter(l => l.amount !== 0), season: m.season, round: m.round },
   };
 }

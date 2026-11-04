@@ -22,11 +22,20 @@ export function prices(q: number[], b: number): number[] {
 /** Funded worst-case subsidy b·ln n in microcrowns (rounded up). */
 export const subsidyMicro = (b: number, n: number) => Math.ceil(b * Math.log(n) * MICRO);
 
-/** Exact (float) crown cost of adding `shares` to every state in S (negative = sell). A categorical outcome is S = [i]. */
+/**
+ * Exact (float) crown cost of adding `shares` to every state in S (negative = sell). A categorical outcome is S = [i].
+ * v0.10 (bug #26): computed in the cancellation-free closed form
+ *   C(q + k·1_S) − C(q) = b · ln(1 + P_S · (e^{k/b} − 1)) = b · log1p(P_S · expm1(k/b)),   P_S = Σ_{s∈S} p_s(q)
+ * instead of the difference of two large costs. The old difference lost ~1e-5 µ at inventories of 10^4 shares, more
+ * than the 1e-6 µ rounding guard, so a buy could round DOWN by 1 µ (and a sale up) — against the published direction.
+ */
 export function claimCost(q: number[], b: number, S: readonly number[], shares: number): number {
-  const q2 = [...q];
-  for (const s of S) q2[s] += shares;
-  return cost(q2, b) - cost(q, b);
+  if (!S.length || shares === 0) return 0;
+  const p = prices(q, b);
+  let P = 0;
+  for (const s of S) P += p[s];
+  if (P >= 1 - 1e-15 && S.length === q.length) return shares; // complete set: exactly its payout
+  return b * Math.log1p(Math.min(1, P) * Math.expm1(shares / b));
 }
 export const tradeCost = (q: number[], b: number, i: number, shares: number): number => claimCost(q, b, [i], shares);
 /** Integer microcrown cost to buy claim S (rounded up, with a guard against float error). */

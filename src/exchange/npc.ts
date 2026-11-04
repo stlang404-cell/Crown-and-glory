@@ -28,9 +28,9 @@ export const NPC_TRADERS: NpcTrader[] = [
   { id: 'npc:contrarian', name: 'Lantern Contrarians', noise: 0.08, margin: 0.04, budgetShare: 0.03, bias: 'underdog', strategy: 'value', roles: ['pre', 'round'], description: 'Back the underdog.' },
   { id: 'npc:novice', name: 'First-Time Forecasters', noise: 0.14, margin: 0.02, budgetShare: 0.03, bias: 'none', strategy: 'value', roles: ['pre', 'live'], description: 'Noisy novices.' },
   { id: 'npc:momentum', name: 'Tidewater Momentum', noise: 0, margin: 0.03, budgetShare: 0.02, bias: 'none', strategy: 'momentum', roles: ['live', 'round'], description: 'Buys whatever has risen since the last window (price history only).' },
-  { id: 'npc:specialist', name: 'Summit Tournament Partners', noise: 0.03, margin: 0.02, budgetShare: 0.06, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['winner', 'bracket', 'season', 'promotion', 'qualification'], description: 'Tournament specialist: season and tournament markets only.' },
+  { id: 'npc:specialist', name: 'Summit Tournament Partners', noise: 0.03, margin: 0.02, budgetShare: 0.06, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['winner', 'bracket', 'season', 'promotion', 'qualification', 'advancement'], description: 'Tournament specialist: season and tournament markets only.' },
   { id: 'npc:tactician', name: 'Kestrel Tactical Desk', noise: 0.03, margin: 0.03, budgetShare: 0.04, bias: 'none', strategy: 'tactical', roles: ['live'], description: 'Trades in-play on the public engine evaluation of the current position.' },
-  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0.03, margin: 0.02, budgetShare: 0.12, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['match', 'winner', 'season', 'promotion', 'qualification', 'bracket'], description: 'Calibrated fundamental trader on the public rating model.' },
+  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0.03, margin: 0.02, budgetShare: 0.12, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['match', 'winner', 'season', 'promotion', 'qualification', 'bracket', 'length', 'advancement'], description: 'Calibrated fundamental trader on the public rating model.' },
 ];
 export const NPC_WALLET_CAP = 4_000 * 1_000_000; // µ; topped up each season from the treasury up to this cap
 /** Portfolio exposure cap: open cost basis may not exceed this share of the wallet. */
@@ -90,7 +90,8 @@ export function npcTrade(market: Market, positions: Map<string, Position>, balan
       pick = i; target = Math.min(0.97, pr[i] + rise[i] / 2);
     } else {
       // only claims that partition the states are traded by value traders (avoid double counting)
-      const tradable = claims.map((_, i) => i).filter(i => claims.length === ctx.belief.length || claims[i].id.startsWith('champ:') || claims[i].id.startsWith('s'));
+      // (default singleton claims s0…; listed singletons s0…; champion claims; "reaches the semifinals" claims semi:…)
+      const tradable = claims.map((_, i) => i).filter(i => !m.claims || claims[i].id.startsWith('champ:') || claims[i].id.startsWith('s'));
       let best = 0;
       for (const i of tradable) { const e = beliefClaims[i] - pr[i] - t.margin; if (e > best) { best = e; pick = i; } }
       if (pick < 0) continue;
