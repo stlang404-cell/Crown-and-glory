@@ -607,8 +607,8 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         {e ? (
           <div>
             <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{ratingChange(e.before.rating, e.after.rating).deltaText}</div>
-            <div className="small muted">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo{e.provisionalAfter ? ' · provisional' : ''} · ±{Math.round(e.after.rd)}</div>
-            <RatingChangeLine before={e.before.rating} after={e.after.rating} />
+            <div className="small muted">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo · ±{Math.round(e.after.rd)}</div>
+            <RatingChangeLine before={e.before.rating} after={e.after.rating} provisional={e.provisionalAfter} />
             {e.after.rating < 0 && <p className="small muted">Career Elo is shown from 0 upward; the underlying rating is {e.after.rating.toFixed(0)} and wins bring it back up.</p>}
             <p className="small muted">{explainEvent(e)}</p>
           </div>

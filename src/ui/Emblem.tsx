@@ -21,7 +21,7 @@ export function Emblem({ spec, size = 'md', title, className }: { spec: EmblemSp
   const shape = SHAPES[spec.shape];
   const metal = spec.prestige >= 4 ? TINCTURES.or : 'var(--her-line, #f2ede3)';
   return (
-    <svg className={`emblem ${className ?? ''}`} width={(px * (right - left)) / 68} height={h} viewBox={vb} role="img" aria-label={title} data-emblem={spec.shape}>
+    <svg className={`emblem ${className ?? ''}`} width={(px * (right - left)) / 68} height={h} viewBox={vb} role="img" aria-label={title || 'Heraldic emblem'} data-emblem={spec.shape}>
       <title>{title}</title>
       <defs><clipPath id={`c${uid}`}><path d={shape} /></clipPath></defs>
       {spec.prestige >= 4 && !small && <path d={shape} fill="none" stroke={TINCTURES.or} strokeOpacity={0.35} strokeWidth={stroke * 4} />}
@@ -61,7 +61,7 @@ const TROPHY: Record<string, string> = {
 export function Trophy({ kind, size = 'md', title, metal = 'or' }: { kind: keyof typeof TROPHY | string; size?: EmblemSize; title: string; metal?: 'or' | 'argent' | 'bronze' }) {
   const px = EMBLEM_PX[size];
   return (
-    <svg className="trophy" width={px} height={px} viewBox="0 0 64 64" role="img" aria-label={title}>
+    <svg className="trophy" width={px} height={px} viewBox="0 0 64 64" role="img" aria-label={title || 'Trophy'}>
       <title>{title}</title>
       <path d={TROPHY[kind] ?? TROPHY.cup} fill={TINCTURES[metal]} stroke="var(--her-outline, #111318)" strokeWidth={size === 'sm' ? 2 : 1.4} strokeLinejoin="round" />
       {size !== 'sm' && <rect x={30} y={13} width={4} height={4} fill="var(--her-shine, #fff8e6)" opacity={0.8} />}

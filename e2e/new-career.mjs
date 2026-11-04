@@ -58,7 +58,7 @@ const fresh = await page.evaluate(async () => {
 });
 check(1, fresh.origin === 'new' && fresh.rating === 0 && fresh.rd === 350 && fresh.games === 0, `Fresh profile is a new career: stored r ${fresh.rating}, RD ${fresh.rd}, ${fresh.games} games`);
 check(2, fresh.shown === '0' && /Provisional/.test(fresh.status), `Career Passport shows "${fresh.shown}" with "${fresh.status}"`);
-check(3, fresh.banner === null || (fresh.banner.startsWith('0 ') && /provisional/.test(fresh.bannerTitle ?? '')), `Identity banner: "${fresh.banner}" / "${fresh.bannerTitle}"`);
+check(3, fresh.banner === null || (fresh.banner.replace(/^Career Elo /, '').startsWith('0 ') && /provisional/.test(fresh.banner + (fresh.bannerTitle ?? ''))), `Identity banner: "${fresh.banner}" / "${fresh.bannerTitle}"`);
 await page.screenshot({ path: ART + '01-fresh-passport.png' });
 
 // ---- Play: suggestions and a rated game vs a calibrated beginner
@@ -98,7 +98,7 @@ const ev = await page.evaluate(async () => { const e = (await window.__crown.db.
 const want = updateRating(ev.e.before, [{ rating: ev.e.opponent.rating, rd: ev.e.opponent.rd, score: ev.e.score }]).after;
 check(6, ev.e.before.rating === 0 && ev.e.before.rd === 350 && Math.abs(ev.e.after.rating - want.rating) < 1e-9 && Math.abs(ev.s.rating - want.rating) < 1e-9,
   `${result} vs ${ev.e.opponent.name} (${ev.e.opponent.rating} ±${ev.e.opponent.rd}), score ${ev.e.score}: Glicko-2 0 ±350 → ${want.rating.toFixed(2)} ±${want.rd.toFixed(2)} (stored ${ev.s.rating.toFixed(2)})`);
-check(7, ev.e.score === 1 && ev.s.rating > 0 && change.includes(`0 → ${Math.max(0, Math.round(ev.s.rating))}`) && /provisional/.test(change), `Result overlay: "${change}"`);
+check(7, ev.e.score === 1 && ev.s.rating > 0 && change.replace(/\s+/g, ' ').includes(`0 → New ${Math.max(0, Math.round(ev.s.rating)).toLocaleString('en-US')}`) && /provisional/.test(change), `Result overlay: "${change}"`);
 await page.screenshot({ path: ART + '02-result.png' });
 
 // ---- reload persists
