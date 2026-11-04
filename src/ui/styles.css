@@ -485,8 +485,27 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 }
 
 /* v0.11 Circuit Grades (src/ui/RankScreen.tsx, RankBadge.tsx; docs/FEUDAL_RANKS.md) */
-.rank-badge { display: inline-flex; align-items: center; gap: 6px; min-width: 0; vertical-align: middle; }
 .rank-badge-label { overflow-wrap: anywhere; }
+/* Competitive Rank vs Federation Title vs rating title (src/ui/RankBadge.tsx): different frame, shape, colour token and
+   a text tag, so "Knight II" (rank) and "Knight" (title) never read as the same thing. */
+:root { --rank-tone: var(--info); --title-tone: var(--warn); --rating-tone: var(--muted); }
+.honour-badge { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; vertical-align: middle; }
+.honour-badge.compact { gap: 3px; }
+.honour-label { min-width: 0; overflow-wrap: anywhere; }
+.honour-kind { font-family: var(--font); font-size: .8em; font-weight: 600; color: var(--muted); }
+.honour-frame { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 2px; line-height: 0; }
+.honour-frame-rank { border: 1.5px solid color-mix(in srgb, var(--rank-tone) 70%, transparent); border-radius: 3px; background: color-mix(in srgb, var(--rank-tone) 10%, transparent); }
+.honour-frame-rank::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 5px; transform: translateX(-50%); background: var(--rank-tone); clip-path: polygon(0 0, 50% 60%, 100% 0, 100% 40%, 50% 100%, 0 40%); }
+.honour-frame-title { border: 2px double var(--title-tone); border-radius: 999px; padding: 3px 5px; background: color-mix(in srgb, var(--title-tone) 12%, transparent); }
+.honour-frame-title::after { content: "★"; position: absolute; top: -7px; right: -5px; font-size: 9px; line-height: 1; color: var(--title-tone); }
+.honour-frame-rating { border: 1px dashed color-mix(in srgb, var(--rating-tone) 70%, transparent); border-radius: 6px; }
+.honour-tag { display: inline-flex; align-items: center; flex: none; min-height: 16px; padding: 0 5px; border-radius: 3px; font-family: var(--font); font-size: .64rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; line-height: 1.4; white-space: nowrap; border: 1px solid currentColor; }
+.honour-tag-rank { color: var(--rank-tone); background: color-mix(in srgb, var(--rank-tone) 10%, transparent); }
+.honour-tag-title { color: var(--title-tone); background: color-mix(in srgb, var(--title-tone) 12%, transparent); border-radius: 999px; }
+.honour-tag-rating { color: var(--rating-tone); border-style: dashed; }
+.honour-areas { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; min-width: 0; }
+.honour-area { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.honour-area-k { font-size: var(--fs-xs); color: var(--muted); font-weight: 600; }
 .rank-screen .rank-bar { margin-top: 4px; height: 8px; }
 .rank-ladder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .rank-division { border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }

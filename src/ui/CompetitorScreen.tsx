@@ -14,14 +14,14 @@ import { fmtCrowns } from '../exchange/ledger';
 import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
 import { Emblem } from './Emblem';
-import { personalEmblem, divisionEmblem, titleEmblem, regionEmblem, FED_TITLES, FED_TITLE_ABBR } from '../heraldry/catalog';
+import { personalEmblem, divisionEmblem, titleEmblem, regionEmblem, FED_TITLES } from '../heraldry/catalog';
 import { clubOf, clubEmblem, clubsOf } from '../heraldry/clubs';
 import { ambitionOf } from '../heraldry/rivals';
 import { nextTitleProgress } from '../heraldry/titles';
 import { rivalriesOf, collect } from '../app/rivalries';
 import { computeRivalry } from '../heraldry/rivalry';
 import { IntensityBar, usePlayerGames } from './RivalsScreen';
-import { RankBadge } from './RankBadge';
+import { RankBadge, TitleBadge, HonourFrame, HonourTag, RANK_TOOLTIP, FED_TITLE_TOOLTIP } from './RankBadge';
 import { competitorRank, competitorHighestRank } from '../federation/ranks';
 import { leagueTable, swissTable } from '../federation/world';
 import { gamesOf } from '../federation/driver';
@@ -111,12 +111,12 @@ export function CompetitorsScreen() {
       <p className="small muted" data-testid="persona-note" style={{ margin: '0 0 10px' }}>{PERSONA_NOTE}{showNames && <> {CONTEMPORARY_NOTE} <strong data-testid="persona-disclosure">{CONTEMPORARY_DISCLOSURE}</strong></>}</p>
       <div className="panel" style={{ overflowX: 'auto' }}>
         <table>
-          <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th>Div</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
+          <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th title="Division and Competitive Rank (Circuit Grade)">Div · Rank</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
             {pg.rows.map((c, i) => { const sp = shownPersona(c, showNames); return (
               <tr key={c.id} className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
                 <td>{pg.from + i + 1}</td>
-                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}{c.fedTitle && <span className="chip gold">{FED_TITLE_ABBR[c.fedTitle]}</span>}{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
+                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}<TitleBadge title={c.fedTitle} abbr plain testId="competitor-row-title" />{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
                 <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
                 <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
                 <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
@@ -220,7 +220,8 @@ export function CompetitorScreen({ id }: { id: string }) {
             <div className="stat"><span className="v mono" data-testid="competitor-elo">{fmtCareerElo(c.rating)}</span><span className="k">Career Elo ±{Math.round(c.rd)}</span></div>
             <div className="stat"><span className="v mono">{c.form || '—'}</span><span className="k">Form (last 5)</span></div>
             <div className="stat"><span className="v">{c.stats.w}–{c.stats.d}–{c.stats.l}</span><span className="k">Career W–D–L</span></div>
-            <div className="stat" data-testid="competitor-rank"><span className="v" style={{ fontSize: '1.15rem' }}><RankBadge rank={competitorRank(c)} size="sm" /></span><span className="k">Circuit Grade{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` · highest ${competitorHighestRank(c)!.label} (S${competitorHighestRank(c)!.season})` : ' · their highest so far'} · <a href="#/ranks">guide</a></span></div>
+            <div className="stat" data-testid="competitor-rank" title={RANK_TOOLTIP}><span className="v" style={{ fontSize: '1.15rem' }}><RankBadge rank={competitorRank(c)} size="sm" /></span><span className="k">Competitive Rank (Circuit Grade){competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` · highest ${competitorHighestRank(c)!.label} (S${competitorHighestRank(c)!.season})` : ' · their highest so far'} · <a href="#/ranks">guide</a></span></div>
+            <div className="stat" data-testid="competitor-fedtitle" title={FED_TITLE_TOOLTIP}><span className="v" style={{ fontSize: '1.15rem' }}>{c.fedTitle ? <TitleBadge title={c.fedTitle} size="sm" /> : <>None <HonourTag kind="title" /></>}</span><span className="k">Federation Title · permanent, earned by norms</span></div>
             <div className="stat"><span className="v">{c.reputation}</span><span className="k">Reputation</span></div>
             <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career Earnings</span></div>
           </div>
@@ -233,8 +234,8 @@ export function CompetitorScreen({ id }: { id: string }) {
         </div>
         <div className="emblem-row" data-testid="insignia-row">
           <div className="emblem-cell"><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s personal insignia`} /><span className="small muted">Insignia</span></div>
-          {c.fedTitle && <div className="emblem-cell"><Emblem spec={titleEmblem(c.fedTitle)} size="md" title={`Federation title ${c.fedTitle}`} /><span className="small">{c.fedTitle}</span></div>}
-          {competitorRank(c) && <div className="emblem-cell"><Emblem spec={competitorRank(c)!.insignia} size="md" title={competitorRank(c)!.ariaLabel} /><span className="small muted">{competitorRank(c)!.label}</span></div>}
+          {competitorRank(c) && <div className="emblem-cell" title={RANK_TOOLTIP} data-testid="insignia-rank"><HonourFrame kind="rank" spec={competitorRank(c)!.insignia} size="md" title={competitorRank(c)!.ariaLabel} /><span className="small muted">{competitorRank(c)!.label}</span><HonourTag kind="rank" /></div>}
+          {c.fedTitle && <div className="emblem-cell" title={FED_TITLE_TOOLTIP} data-testid="insignia-fedtitle"><HonourFrame kind="title" spec={titleEmblem(c.fedTitle)} size="md" title={`Federation Title ${c.fedTitle} emblem`} /><span className="small">{c.fedTitle}</span><HonourTag kind="title" /></div>}
           <div className="emblem-cell"><Emblem spec={divisionEmblem(c.division)} size="md" title={divisionLabel(c.division)} /><span className="small muted">Division {c.division}</span></div>
           <div className="emblem-cell"><Emblem spec={clubEmblem(clubOf(c.id, c.region).identity)} size="md" title={clubOf(c.id, c.region).identity.name} /><span className="small muted">{clubOf(c.id, c.region).identity.name}</span></div>
           <div className="emblem-cell"><Emblem spec={regionEmblem(c.region)} size="md" title={`Arms of ${REGION_NAMES[c.region]}`} /><span className="small muted">{REGION_NAMES[c.region]}</span></div>
@@ -252,14 +253,15 @@ export function CompetitorScreen({ id }: { id: string }) {
         <div className="panel stack" data-testid="following-panel">
           <h3>This Season</h3>
           {current.map((x, i) => <div key={i} className="small">{x}</div>)}
-          <div className="small"><strong>Federation Title:</strong> {c.fedTitle ?? 'None'}{progress.next ? <> · Next: <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
+          <div className="small" title={FED_TITLE_TOOLTIP}><strong>Federation Title:</strong> {c.fedTitle ?? 'None'} <HonourTag kind="title" />{progress.next ? <> · Next: <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
           <div className="small muted">Norms: {(c.norms ?? []).length ? (c.norms ?? []).slice(-4).map(n => `${n.event} ${n.tpr}`).join(' · ') : 'None'}</div>
         </div>
       </div>
       {scouting && nextOpp && (
         <div className="panel" style={{ marginTop: 14, borderColor: 'var(--accent)' }} data-testid="dossier">
           <h3>Scouting Dossier · Your Next Opponent</h3>
-          {competitorRank(c) && <div className="small" data-testid="dossier-rank">Circuit Grade: <strong>{competitorRank(c)!.label}</strong>{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` (highest ${competitorHighestRank(c)!.label})` : ''}. Standing score at the last checkpoint: {c.rank && c.rank[4] >= 0 ? (c.rank[4] / 10).toFixed(1) : '—'}.</div>}
+          {competitorRank(c) && <div className="small" data-testid="dossier-rank" title={RANK_TOOLTIP}>Competitive Rank (Circuit Grade): <strong>{competitorRank(c)!.label}</strong> <HonourTag kind="rank" />{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` (highest ${competitorHighestRank(c)!.label})` : ''}. Standing score at the last checkpoint: {c.rank && c.rank[4] >= 0 ? (c.rank[4] / 10).toFixed(1) : '—'}.</div>}
+          <div className="small" data-testid="dossier-fedtitle" title={FED_TITLE_TOOLTIP}>Federation Title: <strong>{c.fedTitle ?? 'none'}</strong> <HonourTag kind="title" /> <span className="muted">(permanent, earned by norms; separate from the rank)</span></div>
           <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${fmtCareerElo(h.rating)}`).join(' → ') || 'First season'} → now {fmtCareerElo(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
           <div className="small muted">You can replay the recorded games below. Summary results have no moves to replay.</div>
         </div>

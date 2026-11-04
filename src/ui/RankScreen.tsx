@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { HonourTag } from './RankBadge';
 import { useApp, useServices } from './App';
 import { Emblem } from './Emblem';
 import { DIVISIONS, divisionLabel } from '../federation/model';
@@ -38,10 +39,11 @@ export function RankScreen() {
   return (
     <div className="stack rank-screen" data-testid="rank-guide">
       <div className="panel">
-        <h1 style={{ margin: 0 }}>Circuit Grades</h1>
+        <h1 style={{ margin: 0 }}>Circuit Grades · Competitive Ranks</h1>
         <p className="small muted" style={{ margin: '6px 0 0' }}>
           Sixteen feudal ranks, each with three sublevels (III, then II, then I): 48 steps from Commoner III to High Sovereign I.
-          Two grades belong to each Federation division. A Circuit Grade is a rank: it is not your Career Elo and not your Played Like Performance Elo.
+          Two grades belong to each Federation division. A Circuit Grade is your <strong>Competitive Rank</strong> <HonourTag kind="rank" />: your current competitive standing from league and tournament results, which can go up and down by season.
+          It is not your Career Elo, not your Played Like Performance Elo, and not a <strong>Federation Title</strong> <HonourTag kind="title" /> (Squire, Knight, Paladin, Sovereign: permanent honours earned by norms and never lost), even where the words are the same: rank “Knight II” and title “Knight” are earned separately and never affect each other.
           {CIRCUIT_GRADE_LIST_STATUS === 'proposed' && <> The names are a proposed list and may be renamed; ranks are stored by stable ids (cg-01 … cg-16), so a rename never changes your progress.</>}
         </p>
       </div>

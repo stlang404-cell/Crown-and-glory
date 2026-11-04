@@ -48,8 +48,17 @@
 .rank-heading-name { font-family: var(--display); font-size: var(--fs-xl); }
 .rank-heading-meta { font-size: var(--fs-sm); overflow-wrap: anywhere; }
 .rank-heading-elo .elo { font-weight: 600; }
+.rank-heading-k { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); font-weight: 600; color: var(--muted); }
+.rank-heading-title { margin-top: 3px; font-size: var(--fs-sm); display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.legacy-header .id-honours { display: inline-flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; min-width: 0; }
+.legacy-header .id-honour { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 5px; min-width: 0; }
+.legacy-header .id-honour-k { font-size: var(--fs-xs); color: var(--muted); font-weight: 600; white-space: nowrap; }
+.legacy-header .id-honour .id-rank, .legacy-header .id-honour .id-fedtitle { white-space: nowrap; }
 .career-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: var(--sp-3); }
 @media (max-width: 700px) {
+  /* compact phone header: the kind is carried by the tag (shown first), the tooltip and the accessible label */
+  .legacy-header .id-honour .id-honour-k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .legacy-header .id-honour .honour-tag { order: -1; }
   .legacy-header .id-compact { display: block; }
   .legacy-header .id-who { min-width: 0; }
   .rank-heading-name { font-size: var(--fs-lg); }

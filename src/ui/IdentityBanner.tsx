@@ -14,6 +14,8 @@ import { ACCENTS } from '../legacy/customise';
 import { vaultDef } from '../vault/catalog';
 import type { LegacyService } from '../legacy/service';
 import { currentRankOf } from '../legacy/ranks';
+import { ceremonyHeadline } from './Ceremony';
+import { FED_TITLE_TOOLTIP, HonourFrame, HonourTag, RANK_TOOLTIP, RATING_TITLE_TOOLTIP, TitleBadge } from './RankBadge';
 import './legacy.css';
 
 interface Data { pool: PoolState | null; last: RatingEvent | null; brilliants: number; games: number }
@@ -85,7 +87,7 @@ export function IdentityBanner() {
   const featured = shown ? shown.featured.map(k => earned!.trophies.find(x => x.key === k)).filter(x => !!x) : [];
   const showcase = shown ? shown.showcase.map(id => vaultDef(id)).filter(x => !!x) : [];
   const honour = shown?.honour ? vaultDef(shown.honour) ?? null : null;
-  const featuredTitle = honour?.name ?? st?.world.player.fedTitle ?? null;
+  const fedTitle = st?.world.player.fedTitle ?? null;
   const accent = ACCENTS.find(a => a.id === (shown?.accent ?? 'crimson'))!;
   const name = shown?.name || 'You';
   const trophyCount = earned?.trophies.length ?? 0;
@@ -95,13 +97,16 @@ export function IdentityBanner() {
       style={{ ...(shown && shown.accent !== 'crimson' ? { ['--legacy-accent' as string]: accent.color } : {}), ...(banner ? { ['--legacy-banner-a' as string]: banner.colors[0], ['--legacy-banner-b' as string]: banner.colors[1] } : {}) }}>
       {banner && <div className="legacy-banner-strip" aria-hidden data-testid="header-banner" title={banner.name} />}
       <button className="id-main" onClick={() => go({ name: 'profile' })} title="Open your Career Passport">
-        {insigniaArt ? <Emblem spec={insigniaArt} size="md" title={`${rank ? rank.label : insignia!.name} insignia`} /> : <span className="id-blank" aria-hidden />}
+        {insigniaArt ? <HonourFrame kind={rank ? 'rank' : 'rating'} spec={insigniaArt} size="md" title={`${rank ? `Competitive Rank ${rank.label}` : `Rating title ${insignia!.name}`} insignia`} /> : <span className="id-blank" aria-hidden />}
         <span className="id-who">
           <span className="id-name" data-testid="header-name">{name}</span>
-          {rank && <span className="id-rank" data-testid="header-rank">{rank.label}</span>}
-          <span className={rank ? 'id-title id-title-sub' : 'id-title'} data-testid="banner-title">{t ? t.name : 'Unrated'}{t && prov ? <span className="id-prov"> · provisional</span> : null}</span>
+          {(rank || fedTitle) && <span className="id-honours" data-testid="header-honours">
+            {rank && <span className="id-honour id-rank-area" title={`Competitive Rank ${rank.label}. ${RANK_TOOLTIP}`} aria-label={`Competitive Rank: ${rank.label}`} data-testid="header-rank-area"><span className="id-honour-k">Competitive Rank</span> <span className="id-rank" data-testid="header-rank">{rank.label}</span> <HonourTag kind="rank" /></span>}
+            {fedTitle && <span className="id-honour id-fedtitle-area" title={`Federation Title ${fedTitle}. ${FED_TITLE_TOOLTIP}`} aria-label={`Federation Title: ${fedTitle}`} data-testid="header-fedtitle-area"><span className="id-honour-k">Federation Title</span> <span className="id-fedtitle" data-testid="header-fedtitle-name">{fedTitle}</span> <HonourTag kind="title" /></span>}
+          </span>}
+          <span className={rank ? 'id-title id-title-sub' : 'id-title'} data-testid="banner-title" title={RATING_TITLE_TOOLTIP}><HonourTag kind="rating" /> <span className="sr-only">Rating title: </span>{t ? t.name : 'Unrated'}{t && prov ? <span className="id-prov"> · provisional</span> : null}</span>
           <span className="id-rating" data-testid="banner-rating">{rating !== null ? <><span className="id-elo-k">Career Elo </span><Elo rating={rating} rd={d.pool!.rd} provisional={prov} /></> : 'No rated games yet'}</span>
-          <span className="id-compact" data-testid="header-compact">{division}{featuredTitle ? ` · ${featuredTitle}` : ''}{netWorth !== null ? ` · ${fmtCrowns(netWorth, 0)}` : ''}</span>
+          <span className="id-compact" data-testid="header-compact">{division}{honour ? ` · ${honour.name}` : ''}{netWorth !== null ? ` · ${fmtCrowns(netWorth, 0)}` : ''}</span>
         </span>
       </button>
       {prog && (
@@ -116,9 +121,9 @@ export function IdentityBanner() {
         <span className="id-stat sec"><span className="k">Net Worth</span><span className="v mono" data-testid="header-networth">{netWorth !== null ? fmtCrowns(netWorth, 0) : '—'}</span></span>
         <span className="id-stat sec"><span className="k">Last Rated</span><span className="v mono" data-testid="banner-last">{last && lastChange ? `${last.score === 1 ? 'Win' : last.score === 0 ? 'Loss' : 'Draw'} ${lastChange.deltaText}` : '—'}</span></span>
         <span className="id-stat sec"><span className="k">Brilliant Moves</span><span className="v mono" data-testid="banner-brilliants">{d.brilliants}</span></span>
-        {st?.world.player.fedTitle && <span className="id-stat sec"><span className="k">Federation Title</span><span className="v" data-testid="header-fedtitle">{st.world.player.fedTitle}</span></span>}
+        {fedTitle && <span className="id-stat sec" title={FED_TITLE_TOOLTIP}><span className="k">Federation Title</span><span className="v" data-testid="header-fedtitle"><TitleBadge title={fedTitle} /></span></span>}
         {honour && <span className="id-stat sec"><span className="k">Exchange Honour</span><span className="v" data-testid="header-honour">{honour.name}</span></span>}
-        {ceremony && <span className="id-stat sec"><span className="k">Latest</span><span className="v">{ceremony.title.replace('Federation title: ', '')}</span></span>}
+        {ceremony && <span className="id-stat sec"><span className="k">Latest</span><span className="v">{ceremonyHeadline(ceremony)}</span></span>}
         <span className="id-stat sec legacy-trophies">
           <span className="k">Trophies</span>
           <button className="legacy-trophy-row" onClick={() => go({ name: 'hall' })} title="Open the Trophy Hall" data-testid="header-trophies">

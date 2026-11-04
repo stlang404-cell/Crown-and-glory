@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { HonourTag, RATING_TITLE_TOOLTIP } from './RankBadge';
 import { RankHeading } from './RankHeading';
 import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
@@ -81,7 +82,7 @@ function Player({ s }: { s: DashSide }) {
       <Emblem spec={insigniaSpec(t)} size="sm" title={`${t.name} insignia`} />
       <span className="dash-player-text">
         <strong className="dash-name">{s.name}</strong>
-        <span className="small muted"><span className="mono">{fmtCareerElo(s.rating)}</span> · {t.name}</span>
+        <span className="small muted"><span className="mono">{fmtCareerElo(s.rating)}</span> · <span title={RATING_TITLE_TOOLTIP} aria-label={`Rating title: ${t.name}`}>{t.name}</span> <HonourTag kind="rating" /></span>
       </span>
     </span>
   );

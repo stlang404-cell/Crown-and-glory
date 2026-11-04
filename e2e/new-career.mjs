@@ -33,17 +33,37 @@ let page = ctx.pages()[0] ?? await ctx.newPage();
 const watch = p => p.on('pageerror', e => { errors.push(String(e)); step('pageerror ' + e); });
 watch(page);
 
-/** No horizontal overflow, and scrolling to the end really reaches the bottom of the document. */
+/**
+ * No horizontal overflow, and scrolling to the end really reaches the bottom of the document (gap ≤ 2 px, unchanged).
+ * The pages render in stages: saved data, the legacy panels and, on the Career Passport, the Played Like Records, which
+ * grow from a one-line placeholder to ~1,000 px at 390 px when the finished game's background analysis completes —
+ * on a loaded machine that can land at any moment, including inside the check's 300 ms window, and because that panel
+ * is the last element, scroll anchoring cannot compensate (measured: gap 981 px, then 0 px 300 ms later; see
+ * docs/evidence/v0.11/bottom-gap.md). So a measurement only counts on a settled layout: network idle, fonts loaded,
+ * the same document height in five samples 200 ms apart, and the same height at the scroll and at the measurement;
+ * otherwise it is taken again (up to 8 times, then it fails as "never settled").
+ */
 async function layout(label) {
+  await page.waitForLoadState('networkidle').catch(() => {});
   const r = await page.evaluate(async () => {
     const el = document.scrollingElement;
-    el.scrollTo(0, el.scrollHeight);
-    await new Promise(r => setTimeout(r, 300));
-    const res = { overflow: el.scrollWidth - window.innerWidth, gap: el.scrollHeight - (el.scrollTop + window.innerHeight), scrolled: el.scrollTop, height: el.scrollHeight };
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    await document.fonts?.ready;
+    let res = null;
+    for (let attempt = 1; attempt <= 8; attempt++) {
+      // wait for a stable document height (5 identical samples, 200 ms apart; at most 12 s)
+      let last = -1, same = 0;
+      for (let i = 0; i < 60 && same < 4; i++) { const h = el.scrollHeight; same = h === last ? same + 1 : 0; last = h; await sleep(200); }
+      el.scrollTo(0, el.scrollHeight);
+      const atScroll = el.scrollHeight;
+      await sleep(300);
+      res = { overflow: el.scrollWidth - window.innerWidth, gap: el.scrollHeight - (el.scrollTop + window.innerHeight), scrolled: el.scrollTop, height: el.scrollHeight, attempt, settled: same >= 4 && atScroll === el.scrollHeight };
+      if (res.settled) break;
+    }
     el.scrollTo(0, 0);
     return res;
   });
-  check(`layout ${label}`, r.overflow <= 1 && r.gap <= 2, `${label}: horizontal overflow ${r.overflow}px, bottom gap ${r.gap}px after scrolling ${r.scrolled}px of ${r.height}px`);
+  check(`layout ${label}`, r.settled && r.overflow <= 1 && r.gap <= 2, `${label}: horizontal overflow ${r.overflow}px, bottom gap ${r.gap}px after scrolling ${r.scrolled}px of ${r.height}px${r.settled ? '' : ' — layout never settled'}${r.attempt > 1 ? ` (settled on attempt ${r.attempt})` : ''}`);
 }
 
 await page.goto(url); await page.waitForFunction(() => window.__crown);

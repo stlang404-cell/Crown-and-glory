@@ -13,7 +13,7 @@ import type { Attempt, TrainingRun } from '../academy/academy';
 import { resultText } from './PlayScreen';
 import { PrestigeLadders } from './FinanceScreen';
 import { Emblem } from './Emblem';
-import { titleEmblem } from '../heraldry/catalog';
+import { TitleBadge, HonourTag, HonourFrame, FED_TITLE_TOOLTIP, RATING_TITLE_TOOLTIP } from './RankBadge';
 import { divisionLabel, REGION_NAMES } from '../federation/model';
 import { CareerStanding } from './CareerStanding';
 import { PlayerAvatar, PassportBanner } from './Cosmetics';
@@ -94,7 +94,7 @@ export function ProfileScreen() {
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
         <div className="panel stat" title={CAREER_ELO_NOTE}><span className="k">Career Elo ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v mono" data-testid="current-rating">{fmtInt(displayCareerElo(s.rating))}</span><span className="small muted" data-testid="current-rating-status">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span>{ev.length > 0 && <RatingChangeLine before={ev[ev.length - 1].before.rating} after={ev[ev.length - 1].after.rating} className="small" />}</div>
-        <div className="panel stat" data-testid="passport-rating-title"><span className="k">Rating Title</span><span className="v row" style={{ fontSize: '1.15rem', gap: 8 }}><Emblem spec={insigniaSpec(titleFor(s.rating))} size="md" title={`${titleFor(s.rating).name} insignia`} />{titleFor(s.rating).name}</span><span className="small muted">{prov ? 'Provisional rating · ' : ''}Changes with your rating; one title every 100 points. Federation titles are earned separately and kept for good.</span></div>
+        <div className="panel stat" data-testid="passport-rating-title" title={RATING_TITLE_TOOLTIP}><span className="k">Rating Title <HonourTag kind="rating" /></span><span className="v row" style={{ fontSize: '1.15rem', gap: 8 }}><HonourFrame kind="rating" spec={insigniaSpec(titleFor(s.rating))} size="md" title={`${titleFor(s.rating).name}: rating title insignia`} />{titleFor(s.rating).name}</span><span className="small muted">{prov ? 'Provisional rating · ' : ''}Changes with your rating; one title every 100 points. Not your Competitive Rank; Federation Titles are earned separately by norms and kept for good.</span></div>
         <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
         <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v mono" style={{ fontSize: '1.3rem' }} data-testid="career-peak">{s.peak === null ? 'Not yet' : `${fmtInt(displayCareerElo(s.peak))} / ${fmtInt(displayCareerElo(s.lowest ?? s.peak))}`}</span><span className="small muted">{s.peak === null ? `Counts once your rating is established (20 rated games, ±100); ${gamesToEstablish(s.games)} games to go` : 'Established ratings only'}{highest !== null && <span data-testid="highest-so-far"> · highest so far {fmtInt(displayCareerElo(highest))}{prov ? ' (provisional)' : ''}</span>}</span></div>
       </div>
@@ -260,7 +260,7 @@ function FederationCareer({ peak }: { peak: number | null }) {
   return (
     <div style={{ marginTop: 14 }} className="stack" data-testid="federation-career">
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Federation Career</h3>{w.player.fedTitle ? <span className="row" style={{ gap: 6 }}><Emblem spec={titleEmblem(w.player.fedTitle)} size="md" title={`Federation title ${w.player.fedTitle}`} /><strong>{w.player.fedTitle}</strong></span> : <span className="small muted">No Federation Title yet</span>}</div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Federation Career</h3>{w.player.fedTitle ? <TitleBadge title={w.player.fedTitle} size="md" labelled testId="profile-fedtitle" /> : <span className="small muted" title={FED_TITLE_TOOLTIP}>No Federation Title yet <HonourTag kind="title" /></span>}</div>
         <div className="small">Season {w.season} · {divisionLabel(w.player.division)}, {REGION_NAMES[w.player.region]}</div>
         {w.player.history.length > 0 && <table className="small"><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Points</th></tr></thead><tbody>{w.player.history.map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division}</td><td>{h.rank}</td><td>{h.points}</td></tr>)}</tbody></table>}
         <h3>{cabinet ? 'Walnut Trophy Cabinet' : 'Titles'}</h3>

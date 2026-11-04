@@ -8,6 +8,9 @@
  * career Elo comparison, the sandbox and lesson links. Exhibitions are archived apart from every official record
  * and never change ratings, standings, records, money, markets, achievements, titles, rivalries or the schedule.
  */
+import { RankBadge, TitleBadge } from './RankBadge';
+import { competitorRank } from '../federation/ranks';
+import type { FedTitle } from '../heraldry/catalog';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { NeedsFederation } from './NeedsFederation';
@@ -136,7 +139,9 @@ function CompetitorPicker({ side, selected, other, onSelect }: { side: Pov; sele
                 style={{ width: '100%', textAlign: 'left', display: 'flex', flexWrap: 'wrap', gap: '2px 8px', alignItems: 'baseline', whiteSpace: 'normal' }}>
                 <strong style={{ overflowWrap: 'anywhere' }}>{c.name}</strong>
                 <span className="mono">{elo(c.rating)}</span>
-                <span className="small muted">{f.division}{c.fedTitle ? ` · ${c.fedTitle}` : ''} · {f.styleLabel}</span>
+                <span className="small muted">{f.division} · {f.styleLabel}</span>
+                <RankBadge rank={competitorRank(c)} compact />
+                <TitleBadge title={c.fedTitle} abbr plain />
                 {sp && <span className="chip small" title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE}>Persona</span>}
                 {taken && <span className="chip small">Other side</span>}
               </button>
@@ -167,7 +172,8 @@ function SelectedCard({ c, side }: { c: Competitor; side: Pov }) {
         <strong style={{ overflowWrap: 'anywhere' }}>{c.name}</strong>
         <span className="mono" title="Career Elo (Glicko-2 rating)">{elo(c.rating)} ±{Math.round(c.rd)}</span>
       </div>
-      <div className="small">{f.division}{c.fedTitle ? ` · Federation Title ${c.fedTitle}` : ''} · {f.styleLabel}</div>
+      <div className="small">{f.division} · {f.styleLabel}</div>
+      <div className="honour-areas small" data-testid={`exh-honours-${side}`}><RankBadge rank={competitorRank(c)} labelled /><TitleBadge title={c.fedTitle} labelled /></div>
       {f.scouting && <div className="small muted">{f.scouting}</div>}
       {f.note.text && <div className="small muted" data-testid={`exh-note-${side}`}>{f.note.text}</div>}
       {sp && <div className="small muted">Persona{sp.kind === 'contemporary' ? `: ${CONTEMPORARY_DISCLOSURE}` : ' (historical figure, fictional chess persona)'}</div>}
@@ -282,7 +288,9 @@ function ExhibitionMatch({ id }: { id: string }) {
         name={<button className="btn ghost small arena-player-name" onClick={() => go({ name: 'competitor', id: s.id })}><strong>{c?.name ?? s.name}</strong></button>}
         meta={<>
           <span className="mono" title="Career Elo at the start of the exhibition">{elo(s.rating)} ±{Math.round(s.rd)}</span>
-          <span>{divisionLabel(s.division)}{s.fedTitle ? ` · ${s.fedTitle}` : ''}</span>
+          <span>{divisionLabel(s.division)}</span>
+          {c && <RankBadge rank={competitorRank(c)} compact />}
+          <TitleBadge title={s.fedTitle as FedTitle | null} compact />
           <span title={f.scouting ?? undefined}>{STYLE_LABEL[s.playedStyle]}</span>
           {sp && <span className="chip" data-testid={`exh-persona-${color}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE}>Persona</span>}
         </>}>
