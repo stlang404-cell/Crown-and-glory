@@ -124,9 +124,9 @@ export function CompetitorsScreen() {
         {list.length > PAGE_SIZE && (
           <div className="row small" data-testid="discovery-pages" style={{ marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
             <button className="btn small" disabled={pg.page === 0} onClick={() => setPage(0)} aria-label="First Page">«</button>
-            <button className="btn small" disabled={pg.page === 0} onClick={() => setPage(pg.page - 1)}>‹ Previous</button>
+            <button className="btn small" disabled={pg.page === 0} onClick={() => setPage(pg.page - 1)}>← Previous</button>
             <span className="muted">{(pg.from + 1).toLocaleString('en')}–{(pg.from + pg.rows.length).toLocaleString('en')} of {list.length.toLocaleString('en')} by rating · page {pg.page + 1} of {pg.pages.toLocaleString('en')}</span>
-            <button className="btn small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.page + 1)}>Next ›</button>
+            <button className="btn small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.page + 1)}>Next →</button>
             <button className="btn small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.pages - 1)} aria-label="Last Page">»</button>
           </div>
         )}
