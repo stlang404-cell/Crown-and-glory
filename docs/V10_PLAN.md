@@ -38,21 +38,22 @@ every v0.10 work package must follow. Later milestones (v0.11, v1.0.0) get their
   lower divisions must actually contain beginners. Existing saves migrate additively (e.g. new entrants and an
   expanded lower tier), never by rescaling existing competitors.
 
-## Decision 2 — real-world names (owner request, with a documented limit)
-* The roster uses **historical figures who died more than 100 years before 2026 (death year ≤ 1925)**, as clearly
-  fictional chess personas. This avoids post-mortem publicity rights (up to 100 years in some jurisdictions) and any
-  implication that a living person plays, endorses or is depicted by the game.
-* **Not used:** living people (e.g. Taylor Swift, Beyoncé, Serena Williams, any current politician) and people who
-  died after 1925 (e.g. Albert Einstein, d. 1955, whose name is commercially licensed by his estate; Marie Curie,
-  d. 1934). Also excluded: figures known primarily for atrocities, and religious founders or figures of worship.
-  The exclusions and reasons are listed in docs/ROSTER.md (with original alternatives where useful).
-* No photographs, likenesses or logos: original heraldic portraits/insignias only. Ratings, styles and careers are
-  fictional and assigned independently of the person (seeded, not by fame, nationality, politics or any trait).
-* A provenance record per identity (name as commonly written, lifespan, category, region, one-line descriptor,
-  reference title) lives in the repository; an in-game note says these are fictional personas.
-* Existing federations keep their competitors' names (persistent identity). Roster figures enter new federations
-  and existing ones only through normal new-entrant flows. The remainder of the population stays original fictional
-  names.
+## Decision 2 — real-world names (owner request; revised after the owner's explicit instruction)
+* **Historical set (merged, package F):** 407 historical figures who died in 1925 or earlier (docs/ROSTER.md).
+* **Contemporary set (owner explicitly requested living and recent figures, e.g. Taylor Swift, Beyoncé, Drake,
+  Barack Obama, Donald Trump, Albert Einstein, Marie Curie, LeBron James, Serena Williams):** included as clearly
+  fictional chess personas in the owner's own free, non-commercial game, with these safeguards:
+  * adult, widely known public figures only; no minors, no private individuals; still excluded: people known
+    primarily for atrocities or violent crime, and religious figures of worship;
+  * names only: no photographs, likenesses, logos or official branding (original heraldic insignias only); no
+    invented claims about anyone's life, views or private matters; the descriptor is a neutral profession line;
+  * rating, style, region, division and career are assigned by the world seed, independently of the person (a
+    famous politician can be rated 300 or 3,500 by chance), and the game says so;
+  * the disclosure "fictional chess persona — not the real person, no endorsement" on every persona surface;
+  * a Settings switch (default on, as the owner asked) to hide contemporary personas, which reverts their display to
+    their stable original fictional name without changing ids or history;
+  * stated residual risk: the GitHub Pages site is public; if any person or representative objects, the entry is
+    removed from the data file (its competitor keeps its id and history under an original name).
 
 ## Decision 3 — evaluation bar and match surfaces
 * One `EvalBar` (vertical, White at the bottom when the board is White-up, flips with the board, numeric value, mate
@@ -71,3 +72,22 @@ every v0.10 work package must follow. Later milestones (v0.11, v1.0.0) get their
 
 Each package works on its own branch/worktree, commits there, and reports: what changed, measurements with method,
 tests run, what was not done. The integrator merges, runs every gate on a clean checkout, and fixes conflicts.
+
+## Owner's consolidated requirements (binding additions, v1.0 acceptance)
+* Population: 10,000+ persistent competitors with a calibrated pyramid (illustrative target per 10,000: 0–399 500,
+  400–799 1,500, 800–1199 2,500, 1200–1599 2,600, 1600–1999 1,700, 2000–2399 800, 2400–2799 280, 2800–3199 90,
+  3200+ 30), refined for balance; no rewriting earned ratings to keep quotas; deterministic catch-up; a Federation
+  population analytics screen (counts per band, distribution chart, mean/median, player percentile, top competitors,
+  strongest per division, rating movement) from saved data.
+* Numerical career Elo (the Glicko-2 rating, documented) everywhere a competitor appears, with the change after each
+  rated match (previous → new, ±), career graph, peak and history.
+* **Played Like Performance Elo (mandatory):** a numerical, calibrated per-game performance rating for both sides
+  after every analysed completed game (player games, AI-vs-AI archives, replays, summaries), from move-by-move
+  analysis features, calibrated on games of engines with measured strengths across the whole spectrum, validated on
+  held-out games, with uncertainty and "insufficient information" for short/uninformative games; persisted;
+  deferred analysis on mobile. Never derived from career rating or result.
+* One shared Federation: the player enters the same leagues, cups, Swiss events, round robins, invitationals,
+  championships and finals as the AI, with schedules, standings, brackets, qualification, promotion/relegation,
+  prizes, titles, trophies, banners, rivalries and records; the player's own games are never auto-played.
+* "Circuit Grade" is named by the owner again; it does not exist in the codebase. Not invented under that name
+  unless a later plan defines it as an explicit, documented mapping (e.g. to the existing division/circuit).
