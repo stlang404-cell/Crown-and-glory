@@ -82,7 +82,12 @@ for (const [w, h] of [[1366, 900], [390, 844]]) {
   check(`4-${w}`, g.steps === 48 && g.svgs === 48 && g.current === 'Commoner III' && g.you === 'rank-step-0' && g.progress && /Next attainable rank: Commoner II/.test(g.req) && /Squire III/.test(g.req) && /Highest ever: Commoner III/.test(g.highest), `Rank guide at ${w} px: 48 steps with labelled insignia, current ${g.current}, progress bar, next rank and promotion route shown`);
   check(`5-${w}`, l.overflow <= 0 && l.bottom && !l.boundary, `Rank guide at ${w} px: overflow ${l.overflow}, scrolled to the bottom (y ${l.y})`);
 
+  await page.goto(url + '#/dashboard'); await page.waitForSelector('[data-testid="rank-heading"]');
+  const dh = await page.evaluate(() => ({ src: document.querySelector('[data-testid="rank-heading"]').getAttribute('data-source'), label: document.querySelector('[data-testid="rank-label"]')?.textContent, link: document.querySelector('[data-testid="rank-heading-link"]')?.getAttribute('href'), text: document.querySelector('[data-testid="rank-heading"]').textContent, marks: document.querySelector('[data-testid="rank-heading"] svg [data-marks]')?.getAttribute('data-marks') }));
+  check(`H-${w}`, dh.src === 'feudal-rank' && dh.label === 'Commoner III' && dh.link === '#/ranks' && /Career Elo/.test(dh.text) && /Open Division/.test(dh.text) && dh.marks === '1', `Dashboard heading at ${w} px: ${dh.label} with insignia (sublevel marks ${dh.marks}), Career Elo and division, linked to ${dh.link}`);
   await page.goto(url + '#/profile'); await page.waitForSelector('[data-testid="career-rank"]');
+  const ph = await page.evaluate(() => ({ label: document.querySelector('[data-testid="rank-label"]')?.textContent, hi: document.querySelector('[data-testid="highest-rank"]')?.textContent, elo: document.querySelector('[data-testid="highest-elo"]')?.textContent }));
+  check(`P-${w}`, ph.label === 'Commoner III' && /Commoner III/.test(ph.hi ?? '') && /Starting rank, season 1/.test(ph.hi ?? '') && !!ph.elo, `Profile heading ${ph.label}; Career Statistics highest rank "${(ph.hi ?? '').replace(/\s+/g, ' ')}" shown apart from Highest Career Elo`);
   const p = await page.locator('[data-testid="career-rank"]').innerText();
   const lp = await layout();
   check(`6-${w}`, /Commoner III/.test(p) && /Highest ever: Commoner III/.test(p) && lp.overflow <= 0 && lp.bottom, `Career Passport at ${w} px shows the rank and highest rank ("${p.replace(/\s+/g, ' ').slice(0, 80)}…"); overflow ${lp.overflow}`);
