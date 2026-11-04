@@ -33,7 +33,7 @@ export function RankHeading() {
     <div className="rank-heading" data-testid="rank-heading" data-source={rank ? 'feudal-rank' : 'rating-title'}>
       {spec ? <Emblem spec={spec} size="md" title={`${rank ? rank.label : t!.name} insignia`} /> : <span className="id-blank" aria-hidden />}
       <div className="rank-heading-text">
-        <span className="rank-heading-name" data-testid="rank-label">{rank ? rank.label : t ? t.name : 'Unrated'}</span>
+        <span className="rank-heading-name" data-testid="rank-label">{rank ? <a href="#/ranks" title="Circuit Grade: open the rank guide (not your Career Elo)" data-testid="rank-heading-link">{rank.label}</a> : t ? t.name : 'Unrated'}</span>
         <span className="rank-heading-meta">
           <span className="rank-heading-elo">Career Elo {me ? <Elo rating={me.rating} rd={me.rd} provisional={me.provisional} /> : <span className="muted">— no rated games yet</span>}</span>
           <span className="muted"> · {division}</span>
@@ -67,10 +67,10 @@ export function CareerStatistics({ events }: { events: RatingEvent[] }) {
       <div className="career-stats">
         <div className="stat" data-testid="highest-rank"><span className="k">Highest Rank Ever</span>
           {hi ? <><span className="v row" style={{ gap: 8, fontSize: '1.15rem' }}>{hi.insignia && <Emblem spec={hi.insignia} size="sm" title={`${hi.label} insignia`} />}{hi.label}</span>
-            <span className="small muted">First achieved {[hi.season ? `in season ${hi.season}` : null, date(hi.at)].filter(Boolean).join(' · ') || '(date not recorded)'}</span></>
+            <span className="small muted">{(hi as { via?: string }).via === 'start' ? `Starting rank, season ${hi.season ?? 1}` : `First achieved ${[hi.season ? `in season ${hi.season}${(hi as { round?: number }).round ? `, round ${(hi as { round?: number }).round}` : ''}` : null, date(hi.at)].filter(Boolean).join(' · ') || '(date not recorded)'}`} · <a href="#/ranks">rank guide</a></span></>
             : <><span className="v" style={{ fontSize: '1.15rem' }}>{peakTitle ? peakTitle.name : '—'}</span><span className="small muted">{peakTitle ? 'Highest rating title (established)' : 'Appears once your career Elo is established'}</span></>}
         </div>
-        <div className="stat" data-testid="current-rank"><span className="k">Current Rank</span><span className="v" style={{ fontSize: '1.15rem' }}>{cur ? cur.label : me ? titleFor(me.rating).name : '—'}</span><span className="small muted">{cur ? 'Feudal rank' : 'Rating title'}</span></div>
+        <div className="stat" data-testid="current-rank"><span className="k">Current Rank</span><span className="v" style={{ fontSize: '1.15rem' }}>{cur ? cur.label : me ? titleFor(me.rating).name : '—'}</span><span className="small muted">{cur ? 'Circuit Grade (feudal rank)' : 'Rating title'}</span></div>
         <div className="stat" data-testid="current-elo"><span className="k">Current Career Elo</span><span className="v mono">{me ? fmtCareerElo(me.rating, { rd: me.rd }) : '—'}</span><span className="small muted">{me?.provisional ? 'Provisional' : me ? 'Established' : 'No rated games yet'}</span></div>
         <div className="stat" data-testid="highest-elo"><span className="k">Highest Career Elo</span><span className="v mono">{top ? fmtCareerElo(top.after.rating) : '—'}</span>
           <span className="small muted">{top ? `${date(top.at)} · established peak ${estTop ? fmtCareerElo(estTop.after.rating) : 'not yet'}` : 'After your first rated game'}</span></div>

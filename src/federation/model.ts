@@ -88,6 +88,9 @@ export interface Competitor {
    *  competitor and kept at assignment. Shown instead of the famous name when "Show contemporary famous names" is
    *  off, or if the identity is ever removed from the data file. Never changes. */
   altName?: string;
+  /** v0.11 Circuit Grade (src/federation/ranks.ts, docs/FEUDAL_RANKS.md): [step 0–47, demotion protection,
+   *  highest step ever, season it was first reached, last standing score × 10]. Absent in older saves (derived at load). */
+  rank?: import('./ranks').CompRank;
 }
 
 /** A pairing in a world round. result: 1 white win, 0.5 draw, 0 black win, null pending. */

@@ -148,3 +148,10 @@ Crown Division the route is the zonal title only (Crown Division players cannot 
 field is the 10 regional winners + 6 best runners-up, and the Crown Division is where the 3,000+ apex players live,
 so a 2,800 player finishing 2nd–13th rarely enters a zonal (1 entry in 12 Crown Division seasons) — the main
 remaining imbalance (see "not done" in the v0.11 report).
+
+## Circuit Grades (v0.11)
+
+A rank tied to the division (two grades per division, sublevels III → II → I, 48 steps), moved at checkpoints after
+round 8 and at season end by a standing score from league position, sanctioned results and rating within the
+division, with hysteresis and protection. It never changes divisions, prizes or titles. Rules, thresholds and their
+simulation: docs/FEUDAL_RANKS.md.

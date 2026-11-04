@@ -50,6 +50,8 @@ export interface WorldState {
   player: { joined: boolean; region: number; division: number; swissRegistered: boolean; titles: { season: number; title: string }[]; history: { season: number; division: number; rank: number; points: number }[]; displaced: string | null;
     /** v0.5: federation-title record (src/heraldry/titles.ts). */
     norms?: import('../heraldry/titles').Norm[]; fedTitle?: import('../heraldry/catalog').FedTitle | null; peakRating?: number; establishedPeak?: number;
+    /** v0.11: Circuit Grade record (src/federation/ranks.ts). Absent in older saves (derived at load). */
+    rank?: import('./ranks').PlayerRank;
     /** v0.11: invitation to a season's Federation Open (Regional Cup winner); taken up by registering, free. */
     invite?: { season: number; event: 'open'; reason: string } | null;
     /** v0.11: league fixtures the player postponed (played later in the season; due by the end of league round 15). */

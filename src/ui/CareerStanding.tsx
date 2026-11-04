@@ -13,11 +13,13 @@ import { usePlayerGames } from './RivalsScreen';
 import { titleKind } from './HallScreen';
 import { fmtCrowns } from '../exchange/ledger';
 import { playerPrestige } from './FinanceScreen';
+import { RankBadge } from './RankBadge';
+import { currentRank, highestRank } from '../federation/ranks';
 import { isEstablished } from '../ratings/career';
 
 /**
- * The Passport's career standing (crown-passport-2): six separate identities that are never mixed —
- * chess rating (skill), competitive division, earned federation title, career experience, financial prestige
+ * The Passport's career standing (crown-passport-2): separate identities that are never mixed —
+ * chess rating (skill), competitive division, Circuit Grade (v0.11 rank), earned federation title, career experience, financial prestige
  * and achievements — plus eligibility, requirements, rivalries, club and finances. Every number is read from
  * recorded state; nothing here is estimated or invented.
  */
@@ -42,10 +44,11 @@ export function CareerStanding({ rating, rd, games, peak }: { rating: number; rd
   const seasons = p.history.length;
   return (
     <section className="panel stack" style={{ marginTop: 14 }} data-testid="career-standing" aria-labelledby="career-standing-h">
-      <div className="panel-title"><h2 id="career-standing-h" style={{ margin: 0 }}>Career Standing</h2><span className="small muted">Six separate records. Money can't buy your rating, division or title.</span></div>
+      <div className="panel-title"><h2 id="career-standing-h" style={{ margin: 0 }}>Career Standing</h2><span className="small muted">Seven separate records. Money can't buy your rating, division, Circuit Grade or title.</span></div>
       <div className="grid-3">
         <div className="panel stat"><span className="k">Career Elo</span><span className="v mono">{fmtCareerElo(rating)}</span><span className="small muted">±{Math.round(rd)} · {games} rated games{isEstablished(games, rd) ? '' : ' · provisional'}. Changes only with rated games.</span></div>
         <div className="panel stat"><span className="k">Division</span><span className="v row" style={{ gap: 6 }}><Emblem spec={divisionEmblem(p.division)} size="sm" title={divisionLabel(p.division)} />{divisionLabel(p.division)}</span><span className="small muted">Division {p.division} of 8 · {REGION_NAMES[p.region]}. Each season the top two are promoted and the bottom two relegated.</span></div>
+        <div className="panel stat" data-testid="career-rank"><span className="k">Circuit Grade</span><span className="v row" style={{ gap: 6 }}><RankBadge rank={currentRank(st)} /></span><span className="small muted">Highest ever: {highestRank(st)?.label ?? '—'}{highestRank(st) && highestRank(st)!.via !== 'start' ? ` (season ${highestRank(st)!.season})` : ''}. Set by division and checkpoint standing; not your Career Elo. <a href="#/ranks" onClick={e => { e.preventDefault(); go({ name: 'ranks' }); }}>Rank guide</a></span></div>
         <div className="panel stat"><span className="k">Federation Title</span><span className="v row" style={{ gap: 6 }}>{p.fedTitle ? <><Emblem spec={titleEmblem(p.fedTitle)} size="sm" title={p.fedTitle} />{p.fedTitle}</> : 'None yet'}</span><span className="small muted">{progress.next ? `Next: ${progress.next} · ${progress.lines.join(' · ')}` : progress.lines[0]}. Earned by norms; not a FIDE title.</span></div>
         <div className="panel stat"><span className="k">Experience</span><span className="v">{seasons} season{seasons === 1 ? '' : 's'}</span><span className="small muted">{fedGames} federation games played · Season {st.world.season}, Round {st.world.round}.</span></div>
         <div className="panel stat"><span className="k">Financial Prestige</span><span className="v row" style={{ gap: 6 }}>{pr && <Emblem spec={financialEmblem(pr.financialTier)} size="sm" title={pr.financialTier} />}{pr?.financialTier ?? '—'}</span><span className="small muted">Cash {fmtCrowns(fin.cash, 0)} · net worth {fmtCrowns(fin.netWorth, 0)} · open positions {fmtCrowns(fin.positions, 0)}. Fictional money.</span></div>

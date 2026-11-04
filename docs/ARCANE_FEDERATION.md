@@ -17,6 +17,7 @@
 | Rating title + insignia | computed from the rating | crossing a 100-point line (follows the rating up and down) | Arcane Strategist |
 | Peak title / insignia collection | computed from established rating history | first time an established rating reaches a band | collected 12/31 |
 | Division / regional league | Federation season standings | promotion / relegation at season end | Open Division · Ashmere |
+| Circuit Grade (v0.11, docs/FEUDAL_RANKS.md) | division + standing score at two checkpoints a season | checkpoints (round 8, season end) and promotion/relegation; highest ever kept | Knight II |
 | Federation title | performance norms | earned once, kept forever | Knight |
 | Event titles, trophies | tournament results | won once, kept forever | Ashmere Swiss champion |
 | Achievements | recorded facts | earned once, kept forever | Giant Slayer |

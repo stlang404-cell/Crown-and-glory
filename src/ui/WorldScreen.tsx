@@ -14,6 +14,8 @@ import { LiveNow } from './LiveNow';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
 import { leagueTable, swissTable, swissEventFor } from '../federation/world';
 import { gamesOf } from '../federation/driver';
+import { RankBadge } from './RankBadge';
+import { currentRank, competitorRank } from '../federation/ranks';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
@@ -56,7 +58,7 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
+          <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money), at the Circuit Grade of <strong>Commoner III</strong>: climb the 48 steps to High Sovereign I through your results (<a href="#/ranks">rank guide</a>).</p>
           <details className="small"><summary>Details</summary>
             <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout), Zonal Championships and Regional Cups (knockouts in rounds 16–19) and, for club owners, a Club Weekend. You enter the same competitions as every AI competitor.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
@@ -184,7 +186,7 @@ export function WorldScreen() {
         </div>
         <div className="panel stack">
           <h3>Season Calendar</h3>
-          <div className="small" data-testid="season-calendar">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]}{v2 ? <> · Zonal Championships (Crown Division, {fmtCrowns(ZONAL_POOL, 0)} each): rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]} · Regional Cups (division champions, {fmtCrowns(CUP_POOL, 0)} each): rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}</> : null} · At season end, the top two are promoted and the bottom two relegated.</div>
+          <div className="small" data-testid="season-calendar">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]}{v2 ? <> · Zonal Championships (Crown Division, {fmtCrowns(ZONAL_POOL, 0)} each): rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]} · Regional Cups (division champions, {fmtCrowns(CUP_POOL, 0)} each): rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}</> : null} · At season end, the top two are promoted and the bottom two relegated. Circuit Grade checkpoints: after round 8 and at season end (<a href="#/ranks">rank guide</a>).</div>
           <div className="panel" style={{ background: 'transparent' }}>
             <strong>Your Next Matches</strong>
             <UpcomingMatches limit={5} />
@@ -224,7 +226,7 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
             const c = fed.state!.competitors.get(r.id);
             return (
               <tr key={r.id} className={r.id === PLAYER_ID ? '' : 'clickable'} onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined, boxShadow: promo ? 'inset 3px 0 0 var(--positive)' : releg ? 'inset 3px 0 0 var(--negative)' : undefined }}>
-                <td>{i + 1}</td><td>{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td><CompetitorElo id={r.id} /></td>
+                <td>{i + 1}</td><td><span className="row" style={{ gap: 6, flexWrap: 'nowrap' }}><RankBadge rank={r.id === PLAYER_ID ? currentRank(fed.state) : competitorRank(c)} compact />{r.id === PLAYER_ID ? <strong>You</strong> : c?.name}</span></td><td>{r.points}</td><td className="hide-sm">{r.played}</td><td className="hide-sm">{r.w}–{r.d}–{r.l}</td><td className="hide-sm">{r.sb.toFixed(1)}</td><td><CompetitorElo id={r.id} /></td>
               </tr>
             );
           })}

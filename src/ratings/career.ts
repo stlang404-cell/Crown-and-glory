@@ -32,7 +32,12 @@ export interface CareerRecord {
   createdAt: string;
   /** Start New Career: the archived backup of the previous career (crown-calculation-archive), if one was kept. */
   previousArchiveId?: string | null;
+  /** v0.11 Circuit Grade a new career starts at (docs/FEUDAL_RANKS.md): Commoner III. The Federation founded for this
+   *  career applies it (src/federation/ranks.ts `initialPlayerRank`); absent on legacy careers (ranks migrate). */
+  rankStart?: { gradeId: string; sublevel: 'III' | 'II' | 'I' };
 }
+/** The Circuit Grade of every new career: cg-01 (Commoner) III = step 0 of src/federation/ranks.ts (tested). */
+export const CAREER_RANK_START = { gradeId: 'cg-01', sublevel: 'III' } as const;
 
 /**
  * THE initial state of every new career — the only place it is defined. Used by a brand-new database
@@ -43,6 +48,7 @@ export interface CareerRecord {
  */
 export const newCareerRecord = (nowIso: string, previousArchiveId: string | null = null): CareerRecord => ({
   model: CAREER_MODEL, id: `career:${nowIso}:${Math.random().toString(36).slice(2, 8)}`, ratingStart: CAREER_START, origin: 'new', createdAt: nowIso, previousArchiveId,
+  rankStart: { ...CAREER_RANK_START },
 });
 export const legacyCareerRecord = (nowIso: string): CareerRecord => ({
   model: CAREER_MODEL, id: 'career:legacy', ratingStart: LEGACY_START, origin: 'legacy', createdAt: nowIso,

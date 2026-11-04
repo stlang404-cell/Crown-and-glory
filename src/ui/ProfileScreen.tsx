@@ -144,7 +144,7 @@ export function ProfileScreen() {
         )}
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Rank History</h3>
+        <h3>Rating Band History</h3>
         {rankChanges.length === 0 ? <p className="muted small">No rank changes yet. Ranks: Provisional → {RANKS.map(r => `${r.name} (${r.min}+)`).join(' → ')}.</p>
           : <ul>{rankChanges.map(e => <li key={e.id}>{new Date(e.at).toLocaleDateString()}: {e.rankBefore} → <strong>{e.rankAfter}</strong> (rating {displayElo(e.after.rating)})</li>)}</ul>}
       </div>

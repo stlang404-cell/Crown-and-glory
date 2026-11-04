@@ -41,6 +41,8 @@ import { accountWrites, competitorWrites, decodeAccounts, decodeCompetitors, dec
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
+import { ensureRanks, migrateRanks } from '../federation/ranks';
+import { rankCeremonies } from './ranks';
 import { RULES_V2, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
 import { regionName } from '../federation/model';
 
@@ -76,7 +78,7 @@ export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid:
   ceremonies?: Ceremony[]; favorites?: string[];
   /** v0.5: owned and equipped cosmetics (crown-cosmetics-1). */
   cosmetics?: CosmeticState }
-export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
+export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship' | 'rank'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 /** Node cap of featured, scheduled and exhibition games (profileForStrength above the measured range plays this budget). */
@@ -150,6 +152,9 @@ export class FederationService {
       liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
     applyNameMode(this.state.competitors.values(), this.showNames, { texts: true });
+    // v0.11 Circuit Grades: records of older saves get their rank from stored data (deterministic; docs/FEUDAL_RANKS.md §7)
+    const missing = !world.player.rank && world.player.joined || dc.competitors.some(c => !c.rank);
+    if (missing) migrateRanks(this.state, gamesOf([...this.state.rounds.values()].filter(r => r.season === world.season)), (await this.playerRating()).rating);
   }
 
   /** Settings → "Show contemporary famous names" (display only; docs/ROSTER.md). */
@@ -389,6 +394,7 @@ export class FederationService {
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       joinPlayer(ctx, region);
+      ensureRanks(st, player.rating, { newCareer: true }); // v0.11: every competitor's Circuit Grade; the player starts at Commoner III
       ensureFeatured(st);
       const posted: Journal[] = [];
       this.post(st, genesisJournals(this.now(), NPC_TRADERS.map(t => t.id), NPC_FUND), posted);
@@ -1187,6 +1193,7 @@ export class FederationService {
       const plansChanged: SeasonPlan[] = [];
       const oldPlan = ctx.plan;
       const titlesBefore = st.world.player.titles.length, divisionBefore = st.world.player.division;
+      const rankBefore = st.world.player.rank ? copyData(st.world.player.rank) : undefined;
       const res = processRound(ctx, rec, seasonRounds, this.now());
       const expensesPaid = new Map<string, number>();
       st.rounds.set(rec.id, rec);
@@ -1323,6 +1330,7 @@ export class FederationService {
           awardNorms(st, season, round, `Crown Championship S${season}`, eventGames(games, 'champ'), player.rating, ceremonies, fin ? [fin.a, fin.b] : []);
         }
         if (res.seasonEnd) seasonCeremonies(st, season, round, oldPlan.champ, titlesBefore, divisionBefore, ceremonies);
+        rankCeremonies(rankBefore, ctx.world.player.rank, season, round, ceremonies);
         if (ceremonies.length) st.extra.ceremonies = [...(st.extra.ceremonies ?? []).filter(c => !ceremonies.some(n => n.id === c.id)), ...ceremonies].slice(-60);
       }
       // sponsorship contracts: share of prizes paid this round; next season's stipends at season end

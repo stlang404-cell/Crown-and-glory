@@ -24,6 +24,7 @@ import { ForecastScreen } from './ForecastScreen';
 import { NewsScreen } from './NewsScreen';
 import { RivalsScreen } from './RivalsScreen';
 import { HallScreen } from './HallScreen';
+import { RankScreen } from './RankScreen';
 import { HeraldryScreen } from './HeraldryScreen';
 import { CeremonyOverlay } from './Ceremony';
 import { APP_VERSION } from '../app/services';
@@ -62,6 +63,7 @@ export type View =
   | { name: 'hall' }
   | { name: 'heraldry' }
   | { name: 'vault' }
+  | { name: 'ranks' }
   | { name: 'settings' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
@@ -87,7 +89,7 @@ function parseHash(): View {
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
+  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks'].includes(name)) return { name } as View;
   return { name: 'dashboard' };
 }
 function toHash(v: View): string {
@@ -185,6 +187,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'hall' && <HallScreen />}
             {view.name === 'heraldry' && <HeraldryScreen />}
             {view.name === 'vault' && <VaultScreen />}
+            {view.name === 'ranks' && <RankScreen />}
           </ScreenBoundary>
           <CeremonyOverlay />
           <ScreenBoundary key="vault-toast" screen="vault-toast" onHome={() => go({ name: 'play' })}><VaultToast hidden={['match', 'watch', 'vault'].includes(view.name)} /></ScreenBoundary>
