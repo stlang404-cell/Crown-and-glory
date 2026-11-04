@@ -1,106 +1,810 @@
 {
- "id": "crown-played-like-1-experimental",
- "status": "experimental: fitted on engine-vs-engine games only (L1\u2013L8, 800\u20132926 Crown scale); no human games",
+ "id": "crown-played-like-2",
+ "status": "calibrated on engine-vs-engine games only (spectrum corpus, calibrated ratings 71-3,038 on the Crown scale); no human games; not FIDE",
  "analysis": {
   "engine": "crown-search-2+crown-eval-4",
   "settings": "std-d7",
   "grading": "crown-grade-v3-experimental"
  },
  "features": [
-  "intercept",
-  "ln(mean expected-score loss + 0.005)",
-  "share of moves losing >= 0.10",
-  "share of moves losing <= 0.005"
+  "lnMean",
+  "lnTrim",
+  "blunder",
+  "mistake",
+  "precise",
+  "lnHard",
+  "lnEasy",
+  "onlyFound",
+  "lnLegal",
+  "swing",
+  "endShare"
+ ],
+ "mu": [
+  -3.045237,
+  -3.412077,
+  0.100579,
+  0.162921,
+  0.693065,
+  -2.869572,
+  -3.243284,
+  0.614922,
+  2.684157,
+  0.078833,
+  0.21458
+ ],
+ "sd": [
+  1.078408,
+  1.107,
+  0.144344,
+  0.197295,
+  0.251769,
+  1.193345,
+  1.020973,
+  0.233471,
+  0.251442,
+  0.067279,
+  0.27597
  ],
  "beta": [
-  926.166,
-  -424.427,
-  -1180.029,
-  -764.148
+  1561.5167,
+  0.0,
+  0.0,
+  -25.8602,
+  0.0,
+  0.0,
+  -309.0385,
+  -309.8258,
+  349.0868,
+  -115.1681,
+  95.8535,
+  -6.7
  ],
- "eps": 0.005,
- "bookPlies": 4,
+ "calibration": {
+  "knots": [
+   -520.714,
+   348.73,
+   619.516,
+   890.832,
+   1265.375,
+   2030.17,
+   3266.122
+  ],
+  "values": [
+   121.23,
+   424.31,
+   575.91,
+   827.45,
+   994.62,
+   2076.23,
+   3344.13
+  ]
+ },
  "minMoves": 8,
- "sd": {
-  "s0sq": 54257.2,
-  "s1sq": 1867654.8
+ "uncertainty": {
+  "a": 8.977942,
+  "b": -0.182387,
+  "c": 4.22448,
+  "d": -1.242411,
+  "z80": 2.1647,
+  "z95": 3.1328,
+  "form": "scale = exp((a + b ln n + c q + d q^2) / 2), n = informative moves, q = predicted rating / 1000; 80 % interval = rating +/- z80 * scale, 95 % = +/- z95 * scale"
  },
  "calibratedRange": [
-  800,
-  2641
+  71,
+  3038
  ],
  "validation": {
   "heldOut": {
-   "n": 120,
-   "mae": 293,
-   "rmse": 371,
-   "r": 0.678,
-   "bias": 11,
-   "cover90": 0.892
-  },
-  "train": {
-   "n": 279,
-   "mae": 294,
-   "rmse": 378,
-   "r": 0.658,
-   "bias": 28,
-   "cover90": 0.91
-  },
-  "naiveAccuracyLine": {
-   "n": 120,
-   "mae": 284,
-   "rmse": 361,
-   "r": 0.687,
-   "bias": -26,
-   "cover90": null
-  },
-  "nullMean": {
-   "n": 120,
-   "mae": 388,
-   "rmse": 494,
-   "r": 0.0,
-   "bias": 5,
-   "cover90": null
-  },
-  "heldOutByLevel": {
-   "crown-L1": {
-    "true": 800,
-    "meanPredicted": 1120,
-    "n": 12
-   },
-   "crown-L2": {
-    "true": 1122,
-    "meanPredicted": 1380,
-    "n": 20
-   },
-   "crown-L3": {
-    "true": 1582,
-    "meanPredicted": 1678,
-    "n": 20
-   },
-   "crown-L4": {
-    "true": 1710,
-    "meanPredicted": 1759,
-    "n": 24
-   },
-   "crown-L5": {
-    "true": 1976,
-    "meanPredicted": 1814,
-    "n": 24
-   },
-   "crown-L6": {
-    "true": 2375,
-    "meanPredicted": 2017,
-    "n": 16
-   },
-   "crown-L7": {
-    "true": 2641,
-    "meanPredicted": 2344,
-    "n": 4
+   "n": 835,
+   "mae": 355.9,
+   "rmse": 471.3,
+   "spearman": 0.749,
+   "pearson": 0.843,
+   "bias": 79.9,
+   "cover80": 0.775,
+   "cover95": 0.941,
+   "bands": {
+    "weak 0-799": {
+     "n": 424,
+     "meanTrue": 430,
+     "meanPred": 681,
+     "bias": 251.3,
+     "mae": 322.5,
+     "sePred": 16.7,
+     "cover80": 0.778,
+     "cover95": 0.972,
+     "predBand": {
+      "weak 0-799": 292,
+      "intermediate 800-1599": 120,
+      "advanced 1600-2399": 12,
+      "elite 2400+": 0
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 196,
+     "meanTrue": 1060,
+     "meanPred": 1112,
+     "bias": 52.2,
+     "mae": 375.9,
+     "sePred": 37.8,
+     "cover80": 0.796,
+     "cover95": 0.908,
+     "predBand": {
+      "weak 0-799": 59,
+      "intermediate 800-1599": 97,
+      "advanced 1600-2399": 40,
+      "elite 2400+": 0
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 123,
+     "meanTrue": 2004,
+     "meanPred": 1811,
+     "bias": -192.9,
+     "mae": 430.0,
+     "sePred": 52.2,
+     "cover80": 0.74,
+     "cover95": 0.87,
+     "predBand": {
+      "weak 0-799": 1,
+      "intermediate 800-1599": 42,
+      "advanced 1600-2399": 58,
+      "elite 2400+": 22
+     }
+    },
+    "elite 2400+": {
+     "n": 92,
+     "meanTrue": 2839,
+     "meanPred": 2552,
+     "bias": -286.4,
+     "mae": 368.7,
+     "sePred": 34.2,
+     "cover80": 0.761,
+     "cover95": 0.967,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 2,
+      "advanced 1600-2399": 18,
+      "elite 2400+": 72
+     }
+    }
    }
   },
-  "monotoneByLevel": true,
-  "excludedInsufficient": 31,
-  "samples": 430
- }
+  "train": {
+   "n": 2400,
+   "mae": 335.2,
+   "rmse": 450.4,
+   "spearman": 0.698,
+   "pearson": 0.85,
+   "bias": 118.4,
+   "cover80": 0.807,
+   "cover95": 0.95,
+   "bands": {
+    "weak 0-799": {
+     "n": 1381,
+     "meanTrue": 424,
+     "meanPred": 672,
+     "bias": 247.1,
+     "mae": 317.6,
+     "sePred": 9.5,
+     "cover80": 0.816,
+     "cover95": 0.965,
+     "predBand": {
+      "weak 0-799": 950,
+      "intermediate 800-1599": 387,
+      "advanced 1600-2399": 41,
+      "elite 2400+": 3
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 530,
+     "meanTrue": 1028,
+     "meanPred": 1054,
+     "bias": 25.8,
+     "mae": 364.1,
+     "sePred": 24.2,
+     "cover80": 0.747,
+     "cover95": 0.917,
+     "predBand": {
+      "weak 0-799": 198,
+      "intermediate 800-1599": 240,
+      "advanced 1600-2399": 82,
+      "elite 2400+": 10
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 274,
+     "meanTrue": 2024,
+     "meanPred": 1957,
+     "bias": -66.9,
+     "mae": 368.4,
+     "sePred": 34.1,
+     "cover80": 0.832,
+     "cover95": 0.912,
+     "predBand": {
+      "weak 0-799": 6,
+      "intermediate 800-1599": 66,
+      "advanced 1600-2399": 131,
+      "elite 2400+": 71
+     }
+    },
+    "elite 2400+": {
+     "n": 215,
+     "meanTrue": 2838,
+     "meanPred": 2594,
+     "bias": -243.9,
+     "mae": 334.1,
+     "sePred": 18.3,
+     "cover80": 0.87,
+     "cover95": 0.981,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 2,
+      "advanced 1600-2399": 33,
+      "elite 2400+": 180
+     }
+    }
+   }
+  },
+  "trainOutOfFold": {
+   "n": 2400,
+   "mae": 337.5,
+   "rmse": 454.1,
+   "spearman": 0.695,
+   "pearson": 0.847,
+   "bias": 118.9,
+   "cover80": 0.8,
+   "cover95": 0.95,
+   "bands": {
+    "weak 0-799": {
+     "n": 1381,
+     "meanTrue": 424,
+     "meanPred": 673,
+     "bias": 248.7,
+     "mae": 319.7,
+     "sePred": 9.6,
+     "cover80": 0.812,
+     "cover95": 0.964,
+     "predBand": {
+      "weak 0-799": 956,
+      "intermediate 800-1599": 380,
+      "advanced 1600-2399": 42,
+      "elite 2400+": 3
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 530,
+     "meanTrue": 1028,
+     "meanPred": 1055,
+     "bias": 27.5,
+     "mae": 367.1,
+     "sePred": 24.3,
+     "cover80": 0.74,
+     "cover95": 0.917,
+     "predBand": {
+      "weak 0-799": 197,
+      "intermediate 800-1599": 240,
+      "advanced 1600-2399": 81,
+      "elite 2400+": 12
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 274,
+     "meanTrue": 2024,
+     "meanPred": 1954,
+     "bias": -69.7,
+     "mae": 365.9,
+     "sePred": 34.0,
+     "cover80": 0.814,
+     "cover95": 0.92,
+     "predBand": {
+      "weak 0-799": 6,
+      "intermediate 800-1599": 64,
+      "advanced 1600-2399": 132,
+      "elite 2400+": 72
+     }
+    },
+    "elite 2400+": {
+     "n": 215,
+     "meanTrue": 2838,
+     "meanPred": 2588,
+     "bias": -249.5,
+     "mae": 342.2,
+     "sePred": 18.9,
+     "cover80": 0.851,
+     "cover95": 0.981,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 2,
+      "advanced 1600-2399": 36,
+      "elite 2400+": 177
+     }
+    }
+   }
+  },
+  "baselineMean": {
+   "n": 835,
+   "mae": 693.9,
+   "rmse": 868.1,
+   "spearman": null,
+   "pearson": 0.0,
+   "bias": -118.4,
+   "bands": {
+    "weak 0-799": {
+     "n": 424,
+     "meanTrue": 430,
+     "meanPred": 956,
+     "bias": 526.9,
+     "mae": 526.9,
+     "sePred": 0.0,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 424,
+      "advanced 1600-2399": 0,
+      "elite 2400+": 0
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 196,
+     "meanTrue": 1060,
+     "meanPred": 956,
+     "bias": -103.1,
+     "mae": 275.5,
+     "sePred": 0.0,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 196,
+      "advanced 1600-2399": 0,
+      "elite 2400+": 0
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 123,
+     "meanTrue": 2004,
+     "meanPred": 956,
+     "bias": -1047.6,
+     "mae": 1047.6,
+     "sePred": 0.0,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 123,
+      "advanced 1600-2399": 0,
+      "elite 2400+": 0
+     }
+    },
+    "elite 2400+": {
+     "n": 92,
+     "meanTrue": 2839,
+     "meanPred": 956,
+     "bias": -1882.4,
+     "mae": 1882.4,
+     "sePred": 0.0,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 92,
+      "advanced 1600-2399": 0,
+      "elite 2400+": 0
+     }
+    }
+   }
+  },
+  "baselineAccuracyLine": {
+   "n": 835,
+   "mae": 477.0,
+   "rmse": 593.5,
+   "spearman": 0.742,
+   "pearson": 0.734,
+   "bias": -23.7,
+   "bands": {
+    "weak 0-799": {
+     "n": 424,
+     "meanTrue": 430,
+     "meanPred": 732,
+     "bias": 302.3,
+     "mae": 411.0,
+     "sePred": 20.6,
+     "predBand": {
+      "weak 0-799": 243,
+      "intermediate 800-1599": 176,
+      "advanced 1600-2399": 4,
+      "elite 2400+": 1
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 196,
+     "meanTrue": 1060,
+     "meanPred": 1109,
+     "bias": 49.1,
+     "mae": 338.8,
+     "sePred": 31.5,
+     "predBand": {
+      "weak 0-799": 45,
+      "intermediate 800-1599": 126,
+      "advanced 1600-2399": 25,
+      "elite 2400+": 0
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 123,
+     "meanTrue": 2004,
+     "meanPred": 1548,
+     "bias": -456.5,
+     "mae": 456.8,
+     "sePred": 15.1,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 71,
+      "advanced 1600-2399": 52,
+      "elite 2400+": 0
+     }
+    },
+    "elite 2400+": {
+     "n": 92,
+     "meanTrue": 2839,
+     "meanPred": 1736,
+     "bias": -1102.9,
+     "mae": 1102.9,
+     "sePred": 6.6,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 4,
+      "advanced 1600-2399": 88,
+      "elite 2400+": 0
+     }
+    }
+   },
+   "coef": [
+    -1324.709,
+    31.951
+   ]
+  },
+  "baselineLossLine": {
+   "n": 835,
+   "mae": 428.2,
+   "rmse": 550.4,
+   "spearman": 0.743,
+   "pearson": 0.772,
+   "bias": -43.9,
+   "bands": {
+    "weak 0-799": {
+     "n": 424,
+     "meanTrue": 430,
+     "meanPred": 652,
+     "bias": 222.4,
+     "mae": 333.5,
+     "sePred": 20.0,
+     "predBand": {
+      "weak 0-799": 305,
+      "intermediate 800-1599": 106,
+      "advanced 1600-2399": 13,
+      "elite 2400+": 0
+     }
+    },
+    "intermediate 800-1599": {
+     "n": 196,
+     "meanTrue": 1060,
+     "meanPred": 1092,
+     "bias": 32.7,
+     "mae": 377.3,
+     "sePred": 36.0,
+     "predBand": {
+      "weak 0-799": 59,
+      "intermediate 800-1599": 104,
+      "advanced 1600-2399": 33,
+      "elite 2400+": 0
+     }
+    },
+    "advanced 1600-2399": {
+     "n": 123,
+     "meanTrue": 2004,
+     "meanPred": 1545,
+     "bias": -459.2,
+     "mae": 498.1,
+     "sePred": 32.7,
+     "predBand": {
+      "weak 0-799": 3,
+      "intermediate 800-1599": 63,
+      "advanced 1600-2399": 57,
+      "elite 2400+": 0
+     }
+    },
+    "elite 2400+": {
+     "n": 92,
+     "meanTrue": 2839,
+     "meanPred": 1959,
+     "bias": -879.8,
+     "mae": 879.8,
+     "sePred": 21.2,
+     "predBand": {
+      "weak 0-799": 0,
+      "intermediate 800-1599": 6,
+      "advanced 1600-2399": 86,
+      "elite 2400+": 0
+     }
+    }
+   },
+   "coef": [
+    -567.541,
+    -615.242
+   ]
+  },
+  "heldOutByEngine": {
+   "L0d": {
+    "true": 71,
+    "n": 54,
+    "meanPred": 530,
+    "sdPred": 245
+   },
+   "L0c": {
+    "true": 302,
+    "n": 112,
+    "meanPred": 634,
+    "sdPred": 290
+   },
+   "L0b": {
+    "true": 446,
+    "n": 123,
+    "meanPred": 678,
+    "sdPred": 321
+   },
+   "L0a": {
+    "true": 664,
+    "n": 135,
+    "meanPred": 783,
+    "sdPred": 402
+   },
+   "L1": {
+    "true": 800,
+    "n": 108,
+    "meanPred": 922,
+    "sdPred": 447
+   },
+   "L2": {
+    "true": 1122,
+    "n": 39,
+    "meanPred": 1140,
+    "sdPred": 529
+   },
+   "L3": {
+    "true": 1582,
+    "n": 49,
+    "meanPred": 1508,
+    "sdPred": 471
+   },
+   "L4": {
+    "true": 1710,
+    "n": 44,
+    "meanPred": 1559,
+    "sdPred": 495
+   },
+   "L5": {
+    "true": 1976,
+    "n": 41,
+    "meanPred": 1739,
+    "sdPred": 558
+   },
+   "L6": {
+    "true": 2375,
+    "n": 38,
+    "meanPred": 2181,
+    "sdPred": 501
+   },
+   "L7": {
+    "true": 2641,
+    "n": 36,
+    "meanPred": 2685,
+    "sdPred": 288
+   },
+   "L8": {
+    "true": 2926,
+    "n": 36,
+    "meanPred": 2467,
+    "sdPred": 331
+   },
+   "L9": {
+    "true": 3038,
+    "n": 20,
+    "meanPred": 2468,
+    "sdPred": 312
+   }
+  },
+  "heldOutByMoves": {
+   "8-11": {
+    "n": 188,
+    "rmse": 493.8,
+    "sdModel": 257,
+    "cover80": 0.771,
+    "cover95": 0.926
+   },
+   "12-19": {
+    "n": 278,
+    "rmse": 480.7,
+    "sdModel": 260,
+    "cover80": 0.802,
+    "cover95": 0.942
+   },
+   "20-29": {
+    "n": 196,
+    "rmse": 445.2,
+    "sdModel": 259,
+    "cover80": 0.796,
+    "cover95": 0.944
+   },
+   "30-999": {
+    "n": 173,
+    "rmse": 459.6,
+    "sdModel": 236,
+    "cover80": 0.711,
+    "cover95": 0.954
+   }
+  },
+  "gate": {
+   "beatsBaselines": true,
+   "bandsDistinguishable": true,
+   "coverageOk": true,
+   "passed": true,
+   "rule": "held-out MAE and RMSE below both the mean and the accuracy-line baselines, Spearman above the accuracy line; held-out mean prediction strictly increasing across the four bands with gaps > 1.96 combined SE; held-out 80 % coverage in [0.75, 0.88] and 95 % in [0.91, 0.98]"
+  },
+  "split": {
+   "rule": "held out iff hash(opening plies) % 4 == 0 (FNV-1a + murmur3 finaliser) (all games of an opening on one side)",
+   "trainRows": 2400,
+   "testRows": 835,
+   "trainGames": 1485,
+   "testGames": 512,
+   "trainOpenings": 136,
+   "testOpenings": 46,
+   "excludedInsufficient": 1133,
+   "totalRows": 4368
+  },
+  "ridge": {
+   "lambda": 10,
+   "cvRmse": {
+    "0.1": 454.4,
+    "1": 454.4,
+    "3": 454.3,
+    "10": 454.1,
+    "30": 454.6,
+    "100": 456.0,
+    "300": 460.9
+   }
+  }
+ },
+ "fixtures": [
+  {
+   "features": {
+    "lnMean": -2.770381635838309,
+    "lnTrim": -3.9057270769713313,
+    "blunder": 0.09523809523809523,
+    "mistake": 0.09523809523809523,
+    "precise": 0.8095238095238095,
+    "lnHard": -1.6714544463884895,
+    "lnEasy": -3.975457374461307,
+    "onlyFound": 0.3333333333333333,
+    "lnLegal": 2.9107462677279963,
+    "swing": 0.05048999999999999,
+    "endShare": 0
+   },
+   "n": 21,
+   "pred": 837.965
+  },
+  {
+   "features": {
+    "lnMean": -2.743159378215778,
+    "lnTrim": -2.743159378215778,
+    "blunder": 0,
+    "mistake": 0.1111111111111111,
+    "precise": 0.3333333333333333,
+    "lnHard": -2.448767603172127,
+    "lnEasy": -3.0991502327524794,
+    "onlyFound": 0.3333333333333333,
+    "lnLegal": 2.8065806568725264,
+    "swing": 0.06433749999999999,
+    "endShare": 0
+   },
+   "n": 9,
+   "pred": 846.836
+  },
+  {
+   "features": {
+    "lnMean": -2.2557696664517977,
+    "lnTrim": -2.454750565163461,
+    "blunder": 0.21428571428571427,
+    "mistake": 0.2857142857142857,
+    "precise": 0.42857142857142855,
+    "lnHard": -1.9078599925310762,
+    "lnEasy": -2.671965644306619,
+    "onlyFound": 0.2,
+    "lnLegal": 2.9204625136222337,
+    "swing": 0.08237692307692307,
+    "endShare": 0
+   },
+   "n": 14,
+   "pred": 453.211
+  },
+  {
+   "features": {
+    "lnMean": -2.8370981528913934,
+    "lnTrim": -3.6971132590410396,
+    "blunder": 0.045454545454545456,
+    "mistake": 0.09090909090909091,
+    "precise": 0.7272727272727273,
+    "lnHard": -1.9767167692707148,
+    "lnEasy": -3.6259302634750656,
+    "onlyFound": 0.5,
+    "lnLegal": 2.7298701002329393,
+    "swing": 0.08704761904761904,
+    "endShare": 0.3181818181818182
+   },
+   "n": 22,
+   "pred": 1004.99
+  },
+  {
+   "features": {
+    "lnMean": -2.3723273741381417,
+    "lnTrim": -3.3741081705662,
+    "blunder": 0.0975609756097561,
+    "mistake": 0.17073170731707318,
+    "precise": 0.7317073170731707,
+    "lnHard": -1.2294462772639656,
+    "lnEasy": -3.0772333612200233,
+    "onlyFound": 0.2857142857142857,
+    "lnLegal": 2.836138786460584,
+    "swing": 0.071845,
+    "endShare": 0
+   },
+   "n": 41,
+   "pred": 520.383
+  },
+  {
+   "features": {
+    "lnMean": -1.5016490974829193,
+    "lnTrim": -1.5016490974829193,
+    "blunder": 0.375,
+    "mistake": 0.5,
+    "precise": 0.25,
+    "lnHard": -1.5590493240446333,
+    "lnEasy": -1.429906703375285,
+    "onlyFound": 0.5,
+    "lnLegal": 2.5470176854297257,
+    "swing": 0.1948142857142857,
+    "endShare": 0
+   },
+   "n": 8,
+   "pred": 635.795
+  },
+  {
+   "features": {
+    "lnMean": -1.8481182028974392,
+    "lnTrim": -2.020849235719807,
+    "blunder": 0.2,
+    "mistake": 0.4666666666666667,
+    "precise": 0.3333333333333333,
+    "lnHard": -1.733650225518849,
+    "lnEasy": -2.0676117899262585,
+    "onlyFound": 0.4,
+    "lnLegal": 2.9133421634060928,
+    "swing": 0.19993571428571427,
+    "endShare": 0
+   },
+   "n": 15,
+   "pred": 598.781
+  },
+  {
+   "features": {
+    "lnMean": -1.7173943872727482,
+    "lnTrim": -2.159350924908138,
+    "blunder": 0.16666666666666666,
+    "mistake": 0.3333333333333333,
+    "precise": 0.5,
+    "lnHard": -2.0806058555939315,
+    "lnEasy": -1.3263018718302384,
+    "onlyFound": 0.75,
+    "lnLegal": 2.839099907588785,
+    "swing": 0.3617090909090909,
+    "endShare": 0
+   },
+   "n": 12,
+   "pred": 1047.632
+  }
+ ]
 }
