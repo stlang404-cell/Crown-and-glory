@@ -223,7 +223,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     return (
       <PlayerBar color={color} active={!variation && ply < n && sideToMove === color}
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={meta?.portraitSeed ?? 1} size={40} crown={(meta?.level ?? 0) >= 8} />}
-        name={p.name} meta={p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+        name={p.name} meta={p.rating !== null ? `${isHuman ? Math.max(0, Math.round(p.rating)) : Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
         aside={ms !== null && Number.isFinite(ms) ? <Clock text={fmtClock(ms)} label={`${p.name} clock after this move`} /> : undefined}>
         <Captured fen={fen} color={color} name={p.name} />
       </PlayerBar>
