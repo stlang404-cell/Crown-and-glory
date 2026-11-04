@@ -1,2 +1,7 @@
 fb-match-fullbudgetT200-vs-v7maxT200-v8c: 640 games +228 =227 -185 score 0.534 elo 23 [6, 41] depth {fullbudgetT200: 10.9, v7maxT200: 10.4} illegal 0
 fairy-v8shipT100-vs-fairy-100ms: 128 games +5 =16 -107 score 0.102 elo -379 [-482, -309] depth {v8shipT100: 8.9, fairy-100ms: 38.8} illegal 0
+fairy-v8shipT300-vs-fairy-300ms: 96 games +3 =19 -74 score 0.130 elo -330 [-405, -267] depth {v8shipT300: 10.7, fairy-300ms: 44.8} illegal 0
+fairy-v8shipT1000-vs-fairy-1000ms: 64 games +3 =15 -46 score 0.164 elo -283 [-379, -213] depth {v8shipT1000: 12.9, fairy-1000ms: 52.5} illegal 0
+scale-shipT100-vs-shipT50: 128 games +61 =43 -24 score 0.645 elo 103 [55, 153] depth {shipT100: 9.6, shipT50: 8.6} illegal 0
+scale-shipT200-vs-shipT100: 128 games +58 =41 -29 score 0.613 elo 80 [38, 128] depth {shipT200: 10.7, shipT100: 9.6} illegal 0
+scale-shipT400-vs-shipT200: 128 games +59 =48 -21 score 0.648 elo 106 [63, 150] depth {shipT400: 12.0, shipT200: 10.8} illegal 0
