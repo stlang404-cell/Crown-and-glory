@@ -52,6 +52,26 @@
 .mc-mv-san { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-mv .grade-icon { width: 20px; height: 20px; font-size: 10px; }
 
+/* evaluation bar (EvalBar): vertical, beside the board, White's share fills from White's side */
+.mc-evalboard { display: flex; gap: 8px; align-items: stretch; min-width: 0; }
+.mc-evalboard-board { flex: 1 1 auto; min-width: 0; }
+.mc-evalbar { position: relative; flex: none; width: 26px; border-radius: 6px; overflow: hidden; background: var(--eval-black); border: 1px solid var(--line-strong); box-shadow: var(--shadow-sm); }
+.mc-evalbar-fill { position: absolute; inset: 0; background: var(--eval-white); transition: transform .45s cubic-bezier(.2, .7, .2, 1); will-change: transform; }
+.mc-evalbar.white-bottom .mc-evalbar-fill { transform-origin: 50% 100%; }
+.mc-evalbar.white-top .mc-evalbar-fill { transform-origin: 50% 0; }
+.mc-evalbar-mid { position: absolute; left: 0; right: 0; top: 50%; height: 0; border-top: 1px dashed color-mix(in srgb, var(--accent) 70%, transparent); pointer-events: none; }
+.mc-evalbar-value { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--mono); font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; white-space: nowrap; padding: 0 1px; }
+.mc-evalbar-value.at-bottom { bottom: 5px; }
+.mc-evalbar-value.at-top { top: 5px; }
+.mc-evalbar-value.on-white { color: var(--eval-black); }
+.mc-evalbar-value.on-black { color: var(--eval-white); }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .mc-evalbar-fill { transition: none; } }
+:root[data-motion="reduce"] .mc-evalbar-fill { transition: none; }
+
+/* match context strip (Live Match Center): names, score, clocks, prices; kept above the phone tabs */
+.mc-context-wrap { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mc-context-wrap > .mc-tabs { display: none; }
+
 /* layout: board left, side panels right; one column under 980 px; tabs under the board at phone width */
 .mc-layout { display: grid; gap: var(--sp-5); grid-template-columns: minmax(300px, 560px) minmax(300px, 1fr); align-items: start; }
 .mc-board { grid-column: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -75,6 +95,15 @@
   .mc-layout > .mc-tabs { display: flex; flex-wrap: nowrap; position: sticky; top: 0; z-index: 3; width: 100%; }
   .mc-layout > .mc-tabs button { flex: 1 1 auto; min-width: 0; padding: 6px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mc-panel.is-off { display: none; }
+  /* Board · Analysis · Trade: the board is a tab of its own; the context strip stays above the tabs */
+  .mc-context-wrap > .mc-tabs { display: flex; flex-wrap: nowrap; width: 100%; }
+  .mc-context-wrap > .mc-tabs button { flex: 1 1 0; min-width: 0; padding: 6px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc-board-tabbed .mc-panel-board.is-off { display: none; }
+  /* with the board in its own tab the move list needs no inner scroll box: the page scrolls */
+  .mc-board-tabbed .mc-moves { max-height: none; overflow: visible; }
+  .mc-evalbar { width: 22px; }
+  .mc-evalbar-value { font-size: 9px; }
+  .mc-evalboard { gap: 6px; }
   .mc-nav-row { gap: 4px; }
   .mc-nav-row > .btn { min-width: 44px; padding: 6px 8px; }
   .mc-moves { max-height: 200px; }
@@ -84,4 +113,40 @@
   .mc-sb-side { padding: 8px 10px; gap: 6px; }
   .mc-sb-name { font-size: .92rem; }
   .mc-sb-mid { padding: 0 8px; }
+}
+
+/* replay tools (src/ui/ReplayTools.tsx): match events, turning points, lessons, sandbox */
+.mc-events { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mc-event-btn { display: grid; grid-template-columns: 1.4em 3.2em minmax(0, 1fr); gap: 6px; align-items: baseline; width: 100%; padding: 4px 6px; border: 0; border-radius: var(--radius-xs); background: transparent; color: var(--text); font: inherit; font-size: .86rem; text-align: left; cursor: pointer; }
+.mc-event-btn:hover { background: var(--hover); }
+.mc-event.on .mc-event-btn { background: var(--accent-soft); }
+.mc-event.future .mc-event-btn { opacity: .6; }
+.mc-event-icon { color: var(--accent); text-align: center; }
+.mc-event-ply { color: var(--muted); font-size: .78rem; }
+.mc-event-text { overflow-wrap: anywhere; }
+.mc-event.kind-trade .mc-event-icon, .mc-event.kind-price .mc-event-icon { color: var(--positive); }
+.mc-event.kind-swing .mc-event-icon { color: var(--warn); }
+.cand.mc-turn.on { box-shadow: inset 2px 0 0 var(--accent); }
+.mc-lesson { text-align: left; white-space: normal; }
+.mc-sandbox { border-left-color: var(--accent); }
+
+/* replay library (src/ui/ReplayLibrary.tsx) */
+.replay-filters { max-width: 100%; }
+.replay-filters button { min-height: 36px; padding: 4px 10px; }
+.replay-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.replay-row { display: flex; align-items: stretch; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-3); min-width: 0; }
+.replay-open { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; border-radius: var(--radius-sm); }
+.replay-open:hover { background: var(--hover); }
+.replay-players { overflow-wrap: anywhere; }
+.replay-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.replay-fav { flex: none; font-size: 1.1rem; min-width: 44px; }
+
+/* Phones: the context strip and the tabs stay at the top while the page scrolls. The page itself scrolls (no inner
+   scroll box); `.main` normally hides horizontal overflow with overflow-x: hidden, which would stop sticky
+   positioning, so pages with this layout use overflow-x: clip instead (same clipping, no scroll container). */
+@media (max-width: 700px) {
+  @supports (overflow: clip) {
+    .main:has(.mc-board-tabbed) { overflow-x: clip; }
+    .mc-board-tabbed > .mc-context-wrap { position: sticky; top: 0; z-index: 5; padding: 6px 0; margin-top: -6px; background: var(--bg); box-shadow: 0 6px 10px -8px rgba(0, 0, 0, .45); }
+  }
 }
