@@ -8,6 +8,8 @@
  * validation; docs/V3_STYLES.md.)
  * A style is shown and used only if tools/styles/validate.ts measured a behavioural difference in the claimed
  * direction AND strength parity (src/engine/styles-validation.json); otherwise it plays as Universal.
+ * crown-styles-5 (v0.9, below STYLE_EVAL) adds a full-game styled evaluation + draw contempt, measured by
+ * tools/styles/measure.ts (docs/STYLES_REPORT.md); styles listed in styles-validation.json → fullGame use it.
  */
 import { Position } from '../rules/position';
 import { KING, KNIGHT, Move, PAWN, QUEEN, moveFrom, moveTo, movePromo, pieceColor, pieceType, fileOf, rankOf } from '../rules/types';
@@ -107,7 +109,7 @@ type TermKey = Term | `${Term}.${number}`;
 export interface StyleEval { own?: Partial<Record<TermKey, Adj>>; opp?: Partial<Record<TermKey, Adj>>; contempt: number; simplify?: number }
 export const STYLES_EVAL_ID = 'crown-styles-5';
 export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
-  // more value on attacking enemy pieces (threats, hanging pieces) and on checks-leading king pressure
+  // more value on attacking enemy pieces (threats, hanging pieces) and on king-zone attackers
   tactical: { own: { HANGING: [25, 10], THREAT_PAWN: [20, 5], THREAT_MINOR: [20, 5], THREAT_ROOK: [20, 5], KING_ATTACKERS: [8, 0] }, contempt: 15 },
   // structure and piece placement over immediate threats
   positional: { own: { THREAT_PAWN: 0.85, THREAT_MINOR: 0.85, THREAT_ROOK: 0.85, HANGING: 0.85, SUPPORTED: [8, 4], PHALANX: [8, 4], OUTPOST: [20, 10], MOB: 1.1 }, contempt: 0 },

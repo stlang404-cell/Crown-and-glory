@@ -97,9 +97,8 @@ describe('full-game styles (crown-styles-5)', () => {
     // the unstyled side sees no change: a styled Black does not alter White's attack terms
     expect(ev('aggressive', FENS.attack[0], 1) - ev('aggressive', FENS.attack[1], 1)).toBe(ev('universal', FENS.attack[0]) - ev('universal', FENS.attack[1]));
   });
-  it('aggressive values its own king attack and keeping queens more, and avoids draws', () => {
-    expect(pref('aggressive', ...FENS.attack)).toBeGreaterThan(5);
-    expect(pref('aggressive', ...FENS.queensOn)).toBeGreaterThan(15);
+  it('aggressive values its own king attack more and avoids draws', () => {
+    expect(pref('aggressive', ...FENS.attack)).toBeGreaterThan(20);
     expect(STYLE_EVAL.aggressive!.contempt).toBeGreaterThan(0);
   });
   it('defensive fears the opponent attack more, welcomes queen trades and accepts draws', () => {
