@@ -2,7 +2,7 @@
  * Deep copy of plain JSON-like data (objects, arrays, strings, numbers, booleans, null, undefined), the shape of
  * every federation record (competitors, round records, season plans, world state). It gives the same result as
  * `structuredClone` for such data — same keys in the same order, `undefined` members kept — and is several times
- * faster in V8 for many small records (docs/FEDERATION_SCALE.md §1.5). Not for Maps, Sets, Dates or typed arrays:
+ * faster in V8 for many small records (docs/FEDERATION_SCALE.md §0.2). Not for Maps, Sets, Dates or typed arrays:
  * those are rejected so a misuse fails loudly instead of copying wrongly.
  */
 export function copyData<T>(v: T): T {

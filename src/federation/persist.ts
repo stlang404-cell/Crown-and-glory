@@ -1,5 +1,5 @@
 /**
- * Compact persistence for a large federation (crown-persist-1, docs/FEDERATION_SCALE.md §1.6, docs/SAVE_FORMAT.md).
+ * Compact persistence for a large federation (crown-persist-1, docs/FEDERATION_SCALE.md §0.2, docs/SAVE_FORMAT.md).
  * The in-memory records are unchanged; only what is written to IndexedDB is packed. Every codec is lossless and reads
  * the records of older saves as they are, so a save written before v0.10 loads without a schema migration.
  *

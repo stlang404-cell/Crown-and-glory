@@ -1,5 +1,5 @@
 /**
- * v0.10 population analytics and competitor discovery at 10,240 competitors (docs/FEDERATION_SCALE.md §1.9):
+ * v0.10 population analytics and competitor discovery at 10,240 competitors (docs/FEDERATION_SCALE.md §0.5):
  * correct counts, bands, mean/median, percentile, top and per-division leaders, season movement, filters and pages,
  * and both well inside the desktop budget (< 100 ms; measured here in Node).
  */

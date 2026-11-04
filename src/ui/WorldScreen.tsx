@@ -32,7 +32,7 @@ export function WorldScreen() {
   const { go } = useApp();
   const fed = services.fed;
   const [region, setRegion] = useState(0);
-  // v0.10: the size of a new federation; the default depends on the device (docs/FEDERATION_SCALE.md §1.8)
+  // v0.10: the size of a new federation; the default depends on the device (docs/FEDERATION_SCALE.md §0)
   const [device] = useState(() => detectDevice());
   const [sizeId, setSizeId] = useState(() => newFederationTopology(device).id);
   const size = (FEDERATION_SIZES.find(s => s.topology.id === sizeId) ?? FEDERATION_SIZES[0]).topology;

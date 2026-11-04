@@ -109,7 +109,7 @@ const draw = (ra: number, rb: number, u: number) => { const p = wdl(ra, rb, NU);
  * The remaining fixtures of one circuit, prepared once for a Monte Carlo run: member indices and the cumulative
  * W / W+D thresholds of each pairing. wdl depends only on the two public ratings, so computing it once per pairing
  * instead of once per simulated game gives exactly the same draws (`u < w ? 1 : u < w + d ? ½ : 0`) as before —
- * the per-game work is then one PRNG call and two comparisons (docs/FEDERATION_SCALE.md §1.5).
+ * the per-game work is then one PRNG call and two comparisons (docs/FEDERATION_SCALE.md §0.2).
  */
 interface PreparedCircuit { members: string[]; played: G[]; base: Float64Array; wi: Int32Array; bi: Int32Array; pw: Float64Array; pwd: Float64Array; pairs: [string, string][]; res: Float64Array; pts: Float64Array }
 function prepareCircuit(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number): PreparedCircuit {
@@ -168,7 +168,7 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
 /** Probability that `target` (a Crown Division member) qualifies: wins its division AND is among the 8 best of the
  *  division-1 winners by points (then rating, then id). All division-1 leagues are simulated jointly.
  *
- *  Exact shortcuts (same value as sorting all winners, docs/FEDERATION_SCALE.md §1.5): the winners' order is a strict
+ *  Exact shortcuts (same value as sorting all winners, docs/FEDERATION_SCALE.md §0.2): the winners' order is a strict
  *  total order (points, rating, id), so "target is in the top 8" is "target won its league and fewer than 8 other
  *  winners rank above it". Another league's winner only needs its tiebreaks resolved when its points equal the
  *  target's (otherwise its points alone decide), so the full league order is computed only in that case or when the

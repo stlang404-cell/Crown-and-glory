@@ -29,6 +29,17 @@ IndexedDB version **4** since v0.4.0) on the device. Nothing is sent anywhere.
 
 Markets gained optional fields in v0.4.0 (`kind`, `outcomes`, `claims`, `model`, `payout`, `rules`, `live`, `q0`, `cancelVector`, `ref`); v0.3.0 match markets without them are read as W/D/B categorical markets, so no record is rewritten. Display preferences (theme, board) live in localStorage, not IndexedDB.
 
+**v0.10 compact persistence (crown-persist-1, `src/federation/persist.ts`; no IndexedDB version change).**
+`competitors` holds chunk records `{ id: "~c:<nnnn>", kind: "competitors", v: 1, records: Competitor[] }` (up to 512
+competitors each, by competitor index); `accounts` holds `{ account: "~a:<nnnn>", kind: "accounts", v: 1, accounts,
+balances }` for the competitors' `comp:<id>` accounts (all other accounts stay individual records); a `rounds`
+record stores its tier-3 results as `packed: { v: 1, n, events, ev, w, b, r }` with `abstract: []` (events joined by
+newlines, event indices and ids by commas, one result character each: `1`, `0`, `=` for a draw, `.` for none). The
+app expands these on load. Records of older saves are read as they are, and each individual competitor or
+competitor-account record is deleted in the transaction that first writes its chunk. Backups contain the stored
+records unchanged; the import's ledger check reads account chunks. A pre-v0.10 build cannot read a v0.10 federation.
+The world records its size in `world.topology` (crown-topology-1 2,048 when absent, -2 4,096, -3 10,240).
+
 Every federation/economy command writes all changed records in **one** transaction guarded by the
 committed (season, round) cursor (docs/V3_FEDERATION.md §4).
 

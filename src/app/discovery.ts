@@ -1,7 +1,7 @@
 /**
  * Competitor discovery (Discover Competitors screen): filtering, ordering and paging of the whole federation.
  * Pure and allocation-light so a 10,240-competitor world filters well inside one frame budget on desktop
- * (measured in tests/discovery.test.ts and docs/FEDERATION_SCALE.md §1.9). Rendering is paged: a screen never
+ * (measured in tests/population.test.ts and docs/FEDERATION_SCALE.md §0.5). Rendering is paged: a screen never
  * builds more than one page of rows, however many competitors match.
  */
 import type { Competitor } from '../federation/model';

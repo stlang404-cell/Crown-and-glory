@@ -1,5 +1,5 @@
 /**
- * v0.10 federation at scale (docs/FEDERATION_SCALE.md §1.5–1.6): compact persistence (competitor and account chunks,
+ * v0.10 federation at scale (docs/FEDERATION_SCALE.md §0.2): compact persistence (competitor and account chunks,
  * packed round results) is lossless, reads v0.9 saves unchanged and replaces their records on the next write; the
  * exact fast paths of the season-market models and the record copy give the same values as the reference code.
  */

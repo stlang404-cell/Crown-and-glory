@@ -1,5 +1,5 @@
 /**
- * Federation population analytics (v0.10, docs/FEDERATION_SCALE.md §1.9): computed from saved data only — each
+ * Federation population analytics (v0.10, docs/FEDERATION_SCALE.md §0.5): computed from saved data only — each
  * competitor's current public rating (Glicko-2) and the season history stored on its record. Never the hidden
  * strength. One pass over the competitors plus one sort, so a 10,240-competitor world is analysed in a few
  * milliseconds (tests/population.test.ts measures it); the screen memoises the result per committed state.
