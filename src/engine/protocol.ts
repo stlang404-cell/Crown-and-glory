@@ -65,7 +65,7 @@ export interface IterationMsg { depth: number; score: EngineScore; pv: string[];
 
 export type WorkerReply =
   | { type: 'progress'; requestId: string; generation: number; info: IterationMsg }
-  | { type: 'move-result'; requestId: string; generation: number; move: string; score: EngineScore; depth: number; nodes: number; timeMs: number; pv: string[]; selected: 'best' | 'bounded-sample' | 'repertoire'; stopReason: string; provenance: EngineProvenance }
+  | { type: 'move-result'; requestId: string; generation: number; move: string; score: EngineScore; depth: number; nodes: number; timeMs: number; pv: string[]; selected: 'best' | 'bounded-sample' | 'repertoire' | 'error-random' | 'error-sample'; stopReason: string; provenance: EngineProvenance }
   | { type: 'ply'; requestId: string; generation: number; index: number; total: number; ply: PlyAnalysis }
   | { type: 'analysis-result'; requestId: string; generation: number; report: AnalysisReport }
   | { type: 'selfplay-move'; requestId: string; generation: number; ply: number; ccn: string; san: string; fen: string; score: EngineScore; depth: number; nodes: number; ms: number }

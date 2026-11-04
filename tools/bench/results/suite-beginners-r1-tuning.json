@@ -1,0 +1,291 @@
+{
+ "env": {
+  "node": "v22.23.4",
+  "platform": "linux 6.18.44-fc-v233",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz",
+  "cores": 4,
+  "searchId": "crown-search-2",
+  "evalId": "crown-eval-4",
+  "date": "2026-11-04T15:14:52.734Z"
+ },
+ "pairsPerMatch": 60,
+ "openings": "tools/bench/openings-4ply.json",
+ "summaries": [
+  {
+   "a": "crown-L1",
+   "b": "crown-L0a",
+   "pairs": 60,
+   "games": 120,
+   "wins": 80,
+   "draws": 7,
+   "losses": 32,
+   "capped": 1,
+   "illegal": 0,
+   "score": 0.7076271186440678,
+   "scoreCI": [
+    0.6271186440677966,
+    0.7838983050847458
+   ],
+   "eloDiff": 154,
+   "eloCI": [
+    90,
+    224
+   ],
+   "avgDepth": {
+    "crown-L1": 1,
+    "crown-L0a": 1
+   },
+   "avgNodes": {
+    "crown-L1": 48,
+    "crown-L0a": 125
+   },
+   "avgMs": {
+    "crown-L1": 0,
+    "crown-L0a": 1
+   },
+   "reasons": {
+    "checkmate": 112,
+    "stalemate": 5,
+    "threefold-claim": 1,
+    "fifty-move-claim": 1,
+    "cap": 1
+   }
+  },
+  {
+   "a": "crown-L0a",
+   "b": "crown-L0b",
+   "pairs": 60,
+   "games": 120,
+   "wins": 79,
+   "draws": 12,
+   "losses": 29,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.7083333333333334,
+   "scoreCI": [
+    0.625,
+    0.7875
+   ],
+   "eloDiff": 154,
+   "eloCI": [
+    89,
+    228
+   ],
+   "avgDepth": {
+    "crown-L0a": 1,
+    "crown-L0b": 1
+   },
+   "avgNodes": {
+    "crown-L0a": 141,
+    "crown-L0b": 103
+   },
+   "avgMs": {
+    "crown-L0a": 1,
+    "crown-L0b": 1
+   },
+   "reasons": {
+    "checkmate": 108,
+    "bare-kings": 5,
+    "stalemate": 3,
+    "threefold-claim": 2,
+    "fifty-move-claim": 2
+   }
+  },
+  {
+   "a": "crown-L0b",
+   "b": "crown-L0c",
+   "pairs": 60,
+   "games": 120,
+   "wins": 76,
+   "draws": 13,
+   "losses": 31,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.6875,
+   "scoreCI": [
+    0.6041666666666666,
+    0.7708333333333334
+   ],
+   "eloDiff": 137,
+   "eloCI": [
+    73,
+    211
+   ],
+   "avgDepth": {
+    "crown-L0b": 1,
+    "crown-L0c": 1
+   },
+   "avgNodes": {
+    "crown-L0b": 122,
+    "crown-L0c": 84
+   },
+   "avgMs": {
+    "crown-L0b": 1,
+    "crown-L0c": 1
+   },
+   "reasons": {
+    "checkmate": 107,
+    "fifty-move-claim": 4,
+    "threefold-claim": 3,
+    "stalemate": 5,
+    "bare-kings": 1
+   }
+  },
+  {
+   "a": "crown-L0c",
+   "b": "crown-L0d",
+   "pairs": 60,
+   "games": 120,
+   "wins": 83,
+   "draws": 11,
+   "losses": 26,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.7375,
+   "scoreCI": [
+    0.6625,
+    0.8083333333333333
+   ],
+   "eloDiff": 179,
+   "eloCI": [
+    117,
+    250
+   ],
+   "avgDepth": {
+    "crown-L0c": 1,
+    "crown-L0d": 1
+   },
+   "avgNodes": {
+    "crown-L0c": 105,
+    "crown-L0d": 52
+   },
+   "avgMs": {
+    "crown-L0c": 1,
+    "crown-L0d": 0
+   },
+   "reasons": {
+    "checkmate": 109,
+    "fifty-move-claim": 2,
+    "bare-kings": 5,
+    "stalemate": 4
+   }
+  },
+  {
+   "a": "crown-L1",
+   "b": "crown-L0b",
+   "pairs": 30,
+   "games": 60,
+   "wins": 47,
+   "draws": 4,
+   "losses": 9,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.8166666666666667,
+   "scoreCI": [
+    0.725,
+    0.9
+   ],
+   "eloDiff": 260,
+   "eloCI": [
+    168,
+    382
+   ],
+   "avgDepth": {
+    "crown-L1": 1,
+    "crown-L0b": 1
+   },
+   "avgNodes": {
+    "crown-L1": 48,
+    "crown-L0b": 115
+   },
+   "avgMs": {
+    "crown-L1": 0,
+    "crown-L0b": 1
+   },
+   "reasons": {
+    "checkmate": 56,
+    "stalemate": 2,
+    "fifty-move-claim": 1,
+    "threefold-claim": 1
+   }
+  },
+  {
+   "a": "crown-L0a",
+   "b": "crown-L0c",
+   "pairs": 30,
+   "games": 60,
+   "wins": 51,
+   "draws": 1,
+   "losses": 8,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.8583333333333333,
+   "scoreCI": [
+    0.7833333333333333,
+    0.9333333333333333
+   ],
+   "eloDiff": 313,
+   "eloCI": [
+    223,
+    458
+   ],
+   "avgDepth": {
+    "crown-L0a": 1,
+    "crown-L0c": 1
+   },
+   "avgNodes": {
+    "crown-L0a": 177,
+    "crown-L0c": 91
+   },
+   "avgMs": {
+    "crown-L0a": 1,
+    "crown-L0c": 1
+   },
+   "reasons": {
+    "checkmate": 59,
+    "stalemate": 1
+   }
+  },
+  {
+   "a": "crown-L0b",
+   "b": "crown-L0d",
+   "pairs": 30,
+   "games": 60,
+   "wins": 52,
+   "draws": 6,
+   "losses": 2,
+   "capped": 0,
+   "illegal": 0,
+   "score": 0.9166666666666666,
+   "scoreCI": [
+    0.8583333333333333,
+    0.9666666666666667
+   ],
+   "eloDiff": 417,
+   "eloCI": [
+    313,
+    585
+   ],
+   "avgDepth": {
+    "crown-L0b": 1,
+    "crown-L0d": 1
+   },
+   "avgNodes": {
+    "crown-L0b": 144,
+    "crown-L0d": 61
+   },
+   "avgMs": {
+    "crown-L0b": 1,
+    "crown-L0d": 0
+   },
+   "reasons": {
+    "checkmate": 54,
+    "bare-kings": 1,
+    "stalemate": 4,
+    "fifty-move-claim": 1
+   }
+  }
+ ],
+ "offset": 0,
+ "note": "TUNING ROUND, not used for the published ratings. L0b\u2013L0d had earlier parameters here: L0b {pRandom 0, pBlind 0.2, T 220, margin 500}, L0c {0.04, 0.35, 235, 650}, L0d {0.15, 0.6, 280, 900}; L0a as final. openings/offset fields corrected after the run."
+}

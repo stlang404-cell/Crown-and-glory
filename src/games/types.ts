@@ -55,7 +55,7 @@ export interface MoveRecord {
   clockAfterMs: number | null;
   elapsedMs: number;
   /** Engine move metadata (engine moves only). */
-  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample' | 'repertoire'; seed: number;
+  engine?: { depth: number; nodes: number; timeMs: number; selected: 'best' | 'bounded-sample' | 'repertoire' | 'error-random' | 'error-sample'; seed: number;
     /** v0.5 provenance: score (side to move's view), stop reason and build of the search that chose the move. */
     score?: { kind: 'cp' | 'mate'; value: number }; stopReason?: string; build?: string };
 }

@@ -2,7 +2,7 @@
 import { Position } from '../../src/rules/position';
 import { moveToCcn, parseLegalCcn } from '../../src/rules/notation';
 import { Searcher, SearchFeatures, PLAY_FEATURES } from '../../src/engine/search';
-import { chooseMove, getLevel } from '../../src/engine/levels';
+import { chooseMove, getLevel, StrengthProfile } from '../../src/engine/levels';
 import { PLAY_WEIGHTS, EvalWeights } from '../../src/engine/evaluate';
 import { UciEngine } from './uci';
 import { Searcher as BaseSearcher } from './baseline/search1';
@@ -42,10 +42,15 @@ export function crownConfig(id: string, nodes: number, features: Partial<SearchF
 
 export function crownLevel(level: number, timeCapMs?: number): Player {
   const profile = { ...getLevel(level) };
-  const s = new Searcher(profile.ttBits ?? 18);
   if (timeCapMs) profile.maxTimeMs = timeCapMs;
+  return crownProfile(`crown-${profile.id}`, profile);
+}
+
+/** Any strength profile played through chooseMove (levels, v0.10 beginner levels, error-model pilots). */
+export function crownProfile(id: string, profile: StrengthProfile): Player {
+  const s = new Searcher(profile.ttBits ?? 18);
   return {
-    id: `crown-${profile.id}`,
+    id,
     async newGame() { s.newGame(); },
     async move(startFen, moves, seed) {
       const p = Position.fromFen(startFen);

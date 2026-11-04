@@ -76,6 +76,8 @@ export function resolveSpec(name: string): Spec {
   throw new Error(`unknown spec ${name}`);
 }
 for (let l = 1; l <= 8; l++) REGISTRY[`L${l}`] = { kind: 'level', level: l, timeCapMs: l === 8 ? 2000 : undefined };
+// v0.10 beginner levels (crown-error-1), calibrated by a chain of matches down from L1 (docs/RATING_SPECTRUM.md)
+for (const id of ['L0a', 'L0b', 'L0c', 'L0d']) REGISTRY[id] = { kind: 'beginner', id };
 
 function pool(n: number) {
   const workers: Worker[] = [];
@@ -246,6 +248,8 @@ async function main() {
         : name === 'pilot' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5']]
         : name === 'pilot3' ? [['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
         : name === 'pilot2' ? [['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6']]
+        // v0.10 beginner chain (run with OPENINGS=4ply: disjoint from the 2-ply openings used while choosing parameters)
+        : name === 'beginners' ? [['L1', 'L0a'], ['L0a', 'L0b'], ['L0b', 'L0c'], ['L0c', 'L0d'], ['L1', 'L0b', Math.ceil(pairs / 2)], ['L0a', 'L0c', Math.ceil(pairs / 2)], ['L0b', 'L0d', Math.ceil(pairs / 2)]]
         : name === 'calibrate' ? [['L2', 'L1'], ['L3', 'L2'], ['L4', 'L3'], ['L5', 'L4'], ['L6', 'L5'], ['L7', 'L6'], ['L8', 'L7'], ['L3', 'L1'], ['L4', 'L2'], ['L5', 'L3'], ['L6', 'L4'], ['L7', 'L5'], ['L8', 'L6', 10]]
         : [];
       if (!plan.length) throw new Error('unknown suite');
@@ -255,9 +259,9 @@ async function main() {
         const r = await match(p, REGISTRY[A], REGISTRY[B], openings, np ?? pairs);
         summaries.push(r.summary);
         allGames[`${A}-vs-${B}`] = r.games;
-        writeFileSync(new URL(`suite-${name}.json`, RESULTS), JSON.stringify({ env: env(), pairsPerMatch: pairs, openings: 'tools/bench/openings.json', summaries }, null, 1));
+        writeFileSync(new URL(`suite-${name}${TAG}.json`, RESULTS), JSON.stringify({ env: env(), pairsPerMatch: pairs, openings: process.env.OPENINGS === '4ply' ? 'tools/bench/openings-4ply.json' : 'tools/bench/openings.json', offset: +(process.env.OPENING_OFFSET ?? 0), summaries }, null, 1));
       }
-      writeFileSync(new URL(`suite-${name}-games.json`, RESULTS), JSON.stringify(allGames));
+      writeFileSync(new URL(`suite-${name}${TAG}-games.json`, RESULTS), JSON.stringify(allGames));
     } else throw new Error('usage: run.ts speed|tactics|match A B [pairs]|suite name [pairs]');
   } finally { p.close(); }
 }

@@ -51,7 +51,23 @@ export interface StrengthProfile {
   description: string;
   /** Transposition-table size (log2 entries; default 18 ≈ 2.9 MB, 20 ≈ 11.5 MB). */
   ttBits?: number;
+  /** v0.10 beginner levels below L1 (crown-error-1): a calibrated error model replaces search + bounded selection.
+   *  Absent on L1–L9, whose behaviour is unchanged. */
+  error?: ErrorModel;
 }
+
+/**
+ * crown-error-1: the error model of the beginner levels (below L1 = 800). Each move:
+ *  1. with probability `pRandom` the move is a uniformly random legal move (a real beginner's "no idea" move);
+ *  2. otherwise every legal move is judged at a one-ply horizon. With probability `pBlind` the judgement is *blind*:
+ *     the static evaluation right after the move, with no quiescence, so recaptures, hanging pieces and the
+ *     opponent's threats are not seen (missed threats). Otherwise captures are followed to quiescence, as at L1;
+ *  3. a move is sampled by softmax (`temperatureCp`) among moves within `marginCp` of the best judged move.
+ * All draws come from mulberry32(seed): deterministic for a seed, always legal, and cheap (≤ a few thousand nodes).
+ * The parameters are interpolated continuously by src/federation/profiles.ts between calibrated points.
+ */
+export interface ErrorModel { pRandom: number; pBlind: number; temperatureCp: number; marginCp: number }
+export const ERROR_MODEL_ID = 'crown-error-1';
 
 export const LEVELS: StrengthProfile[] = [
   { level: 1, id: 'L1', name: 'Novice', depth: 1, nodes: 2_000, maxTimeMs: 400, selection: { marginCp: 320, temperatureCp: 200 }, description: '1-ply search; picks among moves within 3.2 pawns of its best, often loosely.' },
@@ -64,6 +80,18 @@ export const LEVELS: StrengthProfile[] = [
   { level: 8, id: 'L8', name: 'Crown', depth: 64, nodes: Infinity, maxTimeMs: 6_000, selection: null, description: 'Full search limited only by the clock (up to 6 s per move).' },
   { level: 9, id: 'L9', name: 'Sovereign Unbound', depth: 64, nodes: Infinity, maxTimeMs: MAX_RATED_BUDGET_S * 1000, selection: null, ttBits: 20, description: 'Strongest configuration: the canonical engine with no handicap, an 11.5 MB transposition table and your chosen thinking budget (rated games: 10 s per move).' },
 ];
+
+/**
+ * v0.10 beginner levels below L1 (crown-error-1; ratings in src/engine/calibration-beginners.json, chained down from
+ * L1 = 800 by engine-vs-engine matches). Listed strongest first. L1–L9 above are untouched.
+ */
+export const BEGINNER_LEVELS: StrengthProfile[] = [
+  { level: 0, id: 'L0a', name: 'Starter', depth: 1, nodes: 4_000, maxTimeMs: 400, selection: null, error: { pRandom: 0, pBlind: 0.05, temperatureCp: 220, marginCp: 400 }, description: 'Looks one move ahead; now and then misses a recapture.' },
+  { level: 0, id: 'L0b', name: 'Beginner', depth: 1, nodes: 4_000, maxTimeMs: 400, selection: null, error: { pRandom: 0, pBlind: 0.3, temperatureCp: 220, marginCp: 550 }, description: 'Looks one move ahead; often misses that a piece can be taken back.' },
+  { level: 0, id: 'L0c', name: 'Newcomer', depth: 1, nodes: 4_000, maxTimeMs: 400, selection: null, error: { pRandom: 0.06, pBlind: 0.45, temperatureCp: 245, marginCp: 700 }, description: 'Grabs material and often leaves pieces hanging; sometimes plays a random move.' },
+  { level: 0, id: 'L0d', name: 'First Moves', depth: 1, nodes: 4_000, maxTimeMs: 400, selection: null, error: { pRandom: 0.2, pBlind: 0.7, temperatureCp: 300, marginCp: 1000 }, description: 'Just learning: rarely sees threats, and about one move in seven is random.' },
+];
+export const getBeginnerLevel = (id: string): StrengthProfile | undefined => BEGINNER_LEVELS.find(l => l.id === id);
 
 /** Sovereign Max with a chosen thinking budget (casual games may pick any offered budget). */
 export function maxProfile(budgetS: number = MAX_RATED_BUDGET_S): StrengthProfile {
@@ -93,14 +121,17 @@ export interface ChooseResult {
   search: SearchResult;
   /** Exact scores of candidate moves when bounded selection was used. */
   candidates?: { move: Move; score: number }[];
-  selected: 'best' | 'bounded-sample' | 'repertoire';
+  selected: MoveSelection;
 }
+export type MoveSelection = 'best' | 'bounded-sample' | 'repertoire' | 'error-random' | 'error-sample';
 
 /**
  * Choose a move for a strength profile. `seed` makes the bounded sampling reproducible
  * (the game stores the seed and ply so the choice can be audited).
  */
 export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, clock?: ClockContext, evalWeights: EvalWeights = PLAY_WEIGHTS, style: StyleId = 'universal', styleEvalOverride?: boolean): ChooseResult {
+  // beginner levels (crown-error-1) only; every profile without `error` takes the unchanged path below
+  if (profile.error) return chooseErrorMove(searcher, pos, profile, seed, evalWeights);
   const timeMs = allocateTime(profile, clock);
   // full-game style (validated styles only): asymmetric evaluation + contempt
   // (styleEvalOverride is for the validation harness only: it measures a style before it is validated)
@@ -145,4 +176,42 @@ export function chooseMove(searcher: Searcher, pos: Position, profile: StrengthP
     if (r <= 0) { chosen = pool[i].move; break; }
   }
   return { move: chosen, search, candidates: scored, selected: 'bounded-sample' };
+}
+
+/** Blind horizon: static evaluation after the move (no quiescence); check extension still finds mate in one. */
+const BLIND_FEATURES = { ...PLAY_FEATURES, quiescence: false };
+
+/** crown-error-1 move choice (see ErrorModel). Styles and repertoire are not used by beginner levels. */
+export function chooseErrorMove(searcher: Searcher, pos: Position, profile: StrengthProfile, seed: number, evalWeights: EvalWeights = PLAY_WEIGHTS): ChooseResult {
+  const e = profile.error!;
+  const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const legal = pos.legalMoves();
+  const rng = mulberry32(seed >>> 0);
+  const u = () => rng() / 4294967296;
+  // the three draws are always taken in this order so the choice is a pure function of (position, profile, seed)
+  const uRandom = u(), uBlind = u(), uPick = u();
+  const blind = uBlind < e.pBlind;
+  const per = Math.max(50, Math.floor(profile.nodes / Math.max(1, legal.length)));
+  // every move is judged (also before a random move, so the recorded score is the engine's own view of it)
+  const scored = searcher.scoreRootMoves(pos, legal, 1, { nodeLimitPerMove: per, weights: evalWeights, features: blind ? BLIND_FEATURES : PLAY_FEATURES }).filter(s => Number.isFinite(s.score));
+  const nodes = scored.reduce((a, s) => a + s.nodes, 0);
+  const result = (move: Move, score: number, selected: MoveSelection): ChooseResult => {
+    const timeMs = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+    const search: SearchResult = { bestMove: move, score, depth: 1, seldepth: 1, nodes, qnodes: 0, timeMs, pv: [move], iterations: [], stopReason: 'depth', ttHits: 0 };
+    return { move, search, candidates: scored, selected };
+  };
+  const scoreOf = (m: Move) => scored.find(s => s.move === m)?.score ?? 0;
+  if (legal.length === 1) return result(legal[0], scoreOf(legal[0]), 'best');
+  if (uRandom < e.pRandom || !scored.length) {
+    const m = legal[Math.min(legal.length - 1, Math.floor(uPick * legal.length))];
+    return result(m, scoreOf(m), 'error-random');
+  }
+  const best = Math.max(...scored.map(s => s.score));
+  const pool = scored.filter(s => s.score >= best - e.marginCp);
+  const weights = pool.map(s => Math.exp(Math.max(-60, (s.score - best) / e.temperatureCp)));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = uPick * total;
+  let chosen = pool[pool.length - 1];
+  for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) { chosen = pool[i]; break; } }
+  return result(chosen.move, chosen.score, chosen.score === best ? 'best' : 'error-sample');
 }
