@@ -18,6 +18,8 @@ import { FederationService } from './federation';
 import { VaultService } from '../vault/service';
 import { LiveScheduler, detectDevice, loadLiveSettings, poolSizeFor, saveLiveSettings, type LiveSettings } from './scheduler';
 import { START_FEN } from './schedulerEngine';
+import { prepareNewCareer, startNewCareer, type PreparedCareerChange } from './career';
+import type { CareerRecord } from '../ratings/career';
 import { ExhibitionRunner, isExhibitionId, loadExhibition, saveExhibitionReport } from './exhibition';
 
 /** The release version, from the build identity (package.json); '0.0.0-dev' only outside a Vite build. */
@@ -69,6 +71,8 @@ export class AppServices {
   matchActive = false;
   writerLease: 'held' | 'unavailable' | 'unsupported' = 'unsupported';
   private processing = false;
+  /** Set while a new career replaces this one: no more background writes. */
+  private closing = false;
   revision = 0;
 
   constructor(readonly db: CrownDB) { this.exhibitions = this.makeExhibitions(); }
@@ -285,7 +289,7 @@ export class AppServices {
   }
 
   async processQueue(): Promise<void> {
-    if (this.processing || this.readOnly) return;
+    if (this.processing || this.readOnly || this.closing) return;
     this.processing = true;
     try {
       for (;;) {
@@ -340,6 +344,28 @@ export class AppServices {
   }
 
   async reportsFor(gameId: string): Promise<AnalysisReport[]> { return this.db.reportsForGame(gameId); }
+
+  /** Start New Career, step 1: full backup (returned for download) plus an archived copy if storage allows. */
+  async prepareNewCareer(): Promise<PreparedCareerChange> {
+    if (this.readOnly) throw new Error('This tab is read-only. Close the other tab first.');
+    return prepareNewCareer(this.db, APP_VERSION);
+  }
+  /** Start New Career, step 2 (after confirmation): stop background work, then clear the career as the Federation's
+   *  last command. The caller reloads the app afterwards. */
+  async startNewCareer(prepared: PreparedCareerChange): Promise<CareerRecord> {
+    if (this.readOnly) throw new Error('This tab is read-only. Close the other tab first.');
+    this.closing = true;
+    this.live?.stop();
+    this.exhibitions?.pause(); // an exhibition in progress stops (its in-flight reply is discarded)
+    // the Vault stops listening; an evaluation in flight finishes (into the OLD career) before the wipe
+    if (this.vault) { this.vault.stop(); await this.vault.evaluate().catch(() => {}); }
+    this.analysis.cancel();
+    this.progress = null;
+    const wipe = () => startNewCareer(this.db, prepared);
+    const rec = this.fed ? await this.fed.closeForNewCareer(wipe) : await wipe();
+    this.notify();
+    return rec;
+  }
 
   /** Store (or refresh) the permanent Played Like record of one of the player's finalized games (src/storage/playedLikeStore.ts). */
   async recordPlayedLike(gameId: string): Promise<boolean> {

@@ -195,6 +195,14 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
     const v1 = JSON.parse(readFileSync(new URL('./fixtures/vault-v1-catalog.json', import.meta.url), 'utf8')) as { id: string }[];
     expect(v1).toHaveLength(VAULT_V1_COUNT);
     const now = VAULT.slice(0, v1.length).map(d => ({ id: d.id, name: d.name, collection: d.collection, rarity: d.rarity, kind: d.kind, description: d.description, rule: d.rule, secret: !!d.secret, grading: !!d.requiresValidatedGrading }));
+    // v0.11 (docs/CAREER_RATING.md): five rating-gap rules gained one clause — they count only while your rating is
+    // established, so a provisional 0-start career cannot farm "upsets". Everything else stays byte for byte.
+    const CLARIFIED = new Set(['upset-higher', 'giant-slayer', 'titan-slayer', 'qm-giant', 'qm-titan']);
+    const CLAUSE = ' Counts only while your rating is established (±100 or less).';
+    for (const [i, d] of now.entries()) if (CLARIFIED.has(d.id)) {
+      expect(d.rule).toBe(`${(v1[i] as { rule: string }).rule}${CLAUSE}`);
+      now[i] = { ...d, rule: (v1[i] as { rule: string }).rule };
+    }
     expect(now).toEqual(v1);
     expect(VAULT.slice(0, v1.length).every(d => d.since === 'crown-vault-1')).toBe(true);
     expect(VAULT.slice(v1.length).every(d => d.since === 'crown-vault-2')).toBe(true);

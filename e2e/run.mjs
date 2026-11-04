@@ -101,7 +101,8 @@ const dup = await page.evaluate(async (id) => {
 }, gameId);
 step('Duplicate finalization: ' + JSON.stringify({ events: dup.events, rapidGames: dup.rapidGames, blitzGames: dup.blitz.games, blitzRating: dup.blitz.rating }));
 if (dup.events !== 1 || dup.rapidGames !== 1) fail('Duplicate finalization changed the rating ledger');
-if (dup.blitz.games !== 0 || dup.blitz.rating !== 1500) fail('Blitz pool was affected by a rapid game');
+// v0.11: a fresh profile is a new career, so every pool starts at 0 (docs/CAREER_RATING.md)
+if (dup.blitz.games !== 0 || dup.blitz.rating !== 0) fail('Blitz pool was affected by a rapid game');
 
 await page.getByRole('button', { name: 'View analysis' }).click();
 await page.waitForSelector('[data-testid="analysis-status"]');

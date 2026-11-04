@@ -185,3 +185,13 @@ Unofficial exhibitions (any two Federation competitors, `src/app/exhibition.ts`,
   both restore and merge mode. Older backups have none; older builds reject a backup that carries the field.
 * Deleting an exhibition removes its two records, its analysis jobs and its bookmarks.
 * Tests: `tests/exhibition.test.ts` (archive reload, backup round trip and tamper rejection, deletion, isolation).
+
+## v0.11: career rating origin (crown-career-1, no schema change)
+The `meta` store gains a record `career` = `{ model: "crown-career-1", id, ratingStart, origin: "new" | "legacy",
+createdAt, previousArchiveId? }` (docs/CAREER_RATING.md). A database created by v0.11+ starts its pools at 0; a
+database from an older build is marked `legacy` (start 1500) on first open if it holds any game, rating event, rating
+state or Federation, and is otherwise treated as a new career. No existing record is rewritten. The backup payload
+gains an optional `career` (covered by `payloadSha256`); a backup without it replays from 1500, and a restore into an
+empty career adopts the backup's origin. Start New Career clears every store of `crown-calculation` in one transaction
+after a full backup was exported; a copy of that backup is kept in a separate database `crown-calculation-archive`
+(store `backups`, key `archive:<exportedAt>`, the exact file text) when storage allows. Older builds ignore the record.

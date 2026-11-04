@@ -27,8 +27,12 @@ await page.waitForSelector('[data-testid="quick-match"]');
 const defaults = await page.evaluate(() => ({
   pool: [...document.querySelectorAll('[aria-label="Opponent pool"] button')].find(b => b.getAttribute('aria-pressed') === 'true')?.textContent,
   mode: document.querySelector('[data-testid="qm-mode"]')?.textContent,
+  suggested: !!document.querySelector('[data-testid="qm-suggested"]'),
 }));
-check(1, defaults.pool === 'Anyone' && defaults.mode === 'Rated', `Defaults: pool "${defaults.pool}", type "${defaults.mode}"`);
+// v0.11: a fresh profile is a new career at 0 · provisional, so the default pool is the beginner bands (0–799), labelled
+check(1, defaults.pool === 'Beginner Bands' && defaults.suggested && defaults.mode === 'Rated', `Defaults: pool "${defaults.pool}" (suggested label ${defaults.suggested}), type "${defaults.mode}"`);
+const beginnersOnly = await page.evaluate(() => [...window.__crown.fed.state.competitors.values()].filter(c => c.status === 'active' && c.rating < 800).length);
+step(`Beginner-band pool: ${beginnersOnly} active competitors rated under 800`);
 const games0 = await page.evaluate(async () => (await window.__crown.db.allGames()).length);
 await page.locator('[data-testid="qm-draw"]').click();
 await page.waitForSelector('[data-testid="qm-card"]');
@@ -36,7 +40,7 @@ const n1 = await page.locator('[data-testid="qm-name"]').textContent();
 const r1 = await page.locator('[data-testid="qm-rating"]').textContent();
 await page.screenshot({ path: SHOTS + 'quick-match-reveal.png' });
 const truth = await page.evaluate(name => { const c = [...window.__crown.fed.state.competitors.values()].find(x => x.name === name); return c && { id: c.id, rating: Math.round(c.rating), rd: Math.round(c.rd), status: c.status }; }, n1);
-check(2, !!truth && r1.startsWith(String(truth.rating)) && truth.status === 'active', `Card shows a real active competitor: ${n1} ${r1} (roster: ${JSON.stringify(truth)})`);
+check(2, !!truth && r1.startsWith(String(truth.rating)) && truth.status === 'active' && truth.rating < 800, `Card shows a real active beginner-band competitor: ${n1} ${r1} (roster: ${JSON.stringify(truth)})`);
 const names = new Set([n1]);
 for (let i = 0; i < 5; i++) { await page.locator('[data-testid="qm-reroll"]').click(); names.add(await page.locator('[data-testid="qm-name"]').textContent()); }
 await page.locator('[data-testid="qm-cancel"]').click();

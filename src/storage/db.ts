@@ -10,6 +10,7 @@ import type { GameRecord } from '../games/types';
 import { PoolState, RatingEvent, computeRatingEvent, newPoolState } from '../ratings/ledger';
 import type { PoolId } from '../games/types';
 import type { AnalysisReport } from '../analysis/types';
+import { CareerRecord, KNOWN_STARTS, legacyCareerRecord, newCareerRecord } from '../ratings/career';
 
 export const DB_NAME = 'crown-calculation';
 export const DB_VERSION = 4;
@@ -97,7 +98,11 @@ const done = (tx: IDBTransaction): Promise<void> => new Promise((res, rej) => {
 export class StorageError extends Error {}
 
 export class CrownDB {
+  /** This career's rating origin (meta record `career`, docs/CAREER_RATING.md). Set by open(). */
+  career: CareerRecord = legacyCareerRecord('');
   private constructor(readonly db: IDBDatabase, readonly factory: IDBFactory) {}
+  /** Initial rating of every pool of this career: 0 for careers created from v0.11, 1500 for older careers. */
+  get ratingStart(): number { return this.career.ratingStart; }
 
   static async open(factory: IDBFactory = indexedDB, name = DB_NAME, version = DB_VERSION): Promise<CrownDB> {
     const r = factory.open(name, version);
@@ -107,6 +112,8 @@ export class CrownDB {
       for (const m of MIGRATIONS) if (m.to > ev.oldVersion && m.to <= version) m.upgrade(db, tx);
       const meta = tx.objectStore('meta');
       meta.put({ key: 'schema', appSchema: APP_SCHEMA, dbVersion: version, migratedFrom: ev.oldVersion, at: new Date().toISOString() });
+      // a brand-new database is a brand-new career: it starts at 0 (crown-career-1). Upgrades never get this record here.
+      if (ev.oldVersion === 0) meta.put({ key: 'career', value: newCareerRecord(new Date().toISOString()) });
     };
     const db = await new Promise<IDBDatabase>((res, rej) => {
       r.onsuccess = () => res(r.result);
@@ -114,7 +121,51 @@ export class CrownDB {
       r.onblocked = () => rej(new StorageError('Database upgrade blocked by another open tab'));
     });
     db.onversionchange = () => db.close();
-    return new CrownDB(db, factory);
+    const c = new CrownDB(db, factory);
+    await c.loadCareer();
+    return c;
+  }
+
+  /**
+   * Read (or, once, decide) this career's rating origin. A database without a `career` record was created before
+   * v0.11: if it holds any game, rating event, rating state or Federation it is a legacy career and keeps its 1500
+   * start forever; a database with none of these has no career yet and starts at 0. The decision is written once.
+   */
+  private async loadCareer(): Promise<void> {
+    const have = (await req(this.store('meta').get('career')))?.value as CareerRecord | undefined;
+    if (have && Number.isFinite(have.ratingStart)) { this.career = have; return; }
+    const tx = this.db.transaction(this.db.objectStoreNames.contains('world') ? ['games', 'ratingEvents', 'ratingState', 'world'] : ['games', 'ratingEvents', 'ratingState'], 'readonly');
+    const counts = await Promise.all(['games', 'ratingEvents', 'ratingState', ...(this.db.objectStoreNames.contains('world') ? ['world'] : [])].map(n => req(tx.objectStore(n).count())));
+    const now = new Date().toISOString();
+    const record = counts.some(n => n > 0) ? legacyCareerRecord(now) : newCareerRecord(now);
+    try { await this.setMeta('career', record); } catch { /* read-only quota trouble: decided again next time, same answer */ }
+    this.career = record;
+  }
+
+  /**
+   * Start New Career (docs/CAREER_RATING.md): in ONE transaction, clear every store of this database — games, rating
+   * ledger, analysis, Academy, Vault/Grimoire progress, the Federation world and the economy — and write the new
+   * career record (rating start 0). The caller must have exported and archived a full backup first; the archive lives
+   * in a separate database (src/storage/archive.ts) and is not touched.
+   */
+  async startNewCareer(record: CareerRecord): Promise<void> {
+    if (!KNOWN_STARTS.includes(record.ratingStart)) throw new StorageError('Unknown career rating origin');
+    const names = [...this.db.objectStoreNames];
+    const tx = this.db.transaction(names, 'readwrite');
+    const meta = tx.objectStore('meta');
+    const schema = await req(meta.get('schema'));
+    for (const n of names) tx.objectStore(n).clear();
+    if (schema) meta.put(schema);
+    meta.put({ key: 'career', value: record });
+    await done(tx);
+    this.career = record;
+  }
+
+  /** Restore of a backup into an empty career adopts the backup's career origin (used by importBundle only). */
+  async adoptCareer(record: CareerRecord): Promise<void> {
+    if (!KNOWN_STARTS.includes(record.ratingStart)) throw new StorageError('Unknown career rating origin');
+    await this.setMeta('career', record);
+    this.career = record;
   }
 
   close(): void { this.db.close(); }
@@ -246,7 +297,7 @@ export class CrownDB {
       const eventId = `rating:${g.id}:${final.pool}`;
       const dup = await req(events.get(eventId));
       if (dup) throw new StorageError('Rating event exists for an unfinalized game (corrupt state)');
-      const state = ((await req(states.get(final.pool))) as PoolState | undefined) ?? newPoolState(final.pool as PoolId);
+      const state = ((await req(states.get(final.pool))) as PoolState | undefined) ?? newPoolState(final.pool as PoolId, this.ratingStart);
       const opp = final.humanColor === 'white' ? final.black : final.white;
       if (opp.rating === null || opp.rd === null) throw new StorageError('Opponent rating snapshot missing');
       const { event: e, next } = computeRatingEvent(state, g.id, opts.nowIso, {
@@ -269,7 +320,7 @@ export class CrownDB {
   }
 
   async ratingState(pool: PoolId): Promise<PoolState> {
-    return ((await req(this.store('ratingState').get(pool))) as PoolState | undefined) ?? newPoolState(pool);
+    return ((await req(this.store('ratingState').get(pool))) as PoolState | undefined) ?? newPoolState(pool, this.ratingStart);
   }
   async allRatingStates(): Promise<PoolState[]> {
     return (await req(this.store('ratingState').getAll())) as PoolState[];

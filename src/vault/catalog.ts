@@ -76,7 +76,7 @@ const count = (have: number, need: number, evidence?: string, when?: string): Ev
 const hit = (ok: boolean, evidence?: string | null | false, when?: string, ref?: string): EvalResult => (ok ? { earned: true, evidence: evidence || undefined, when, ref } : { earned: false });
 const day = (iso: string) => iso.slice(0, 10);
 const vs = (g: OwnGame, extra = '') => `${g.score === 1 ? 'Won' : g.score === 0.5 ? 'Drew' : 'Lost'} vs ${g.oppName}${extra} on ${day(g.at)}`;
-const gap = (g: OwnGame) => (g.myRating !== null && g.oppRating !== null ? g.oppRating - g.myRating : null);
+const gap = (g: OwnGame) => (g.myRating !== null && g.oppRating !== null && g.myEstablished !== false ? g.oppRating - g.myRating : null);
 const firstWin = (f: Facts, p: (g: OwnGame) => boolean, label = (g: OwnGame) => vs(g)): EvalResult => {
   const g = f.games.find(x => x.score === 1 && p(x));
   return g ? { earned: true, evidence: label(g), when: g.at, ref: g.id } : { earned: false };
@@ -117,9 +117,9 @@ const SPECS: Spec[] = [
     ev: f => firstWin(f, g => g.plies >= 20 && !g.lostMaterial, g => vs(g, `, ${g.plies} moves, nothing lost`)) },
   { id: 'comeback', name: 'Turned Tide', c: 'Chess Mastery', r: 'rare', charge: 'hourglass', field: 'azure', d: 'Win from a big material deficit.', rule: 'Win a game after being at least 3 pawns down in material at any point.',
     ev: f => firstWin(f, g => g.worstDiff <= -3, g => vs(g, ` after being ${-g.worstDiff} pawns down`)) },
-  { id: 'upset-higher', name: 'Upward Duel', c: 'Chess Mastery', r: 'uncommon', charge: 'tower', field: 'vert', d: 'Beat a higher-rated opponent.', rule: 'Win a game against an opponent rated above you (both ratings recorded in the game).', ev: winsWithGap(1) },
-  { id: 'giant-slayer', name: 'Giant Slayer', c: 'Chess Mastery', r: 'rare', charge: 'griffin', field: 'sanguine', d: 'Beat an opponent rated 200+ above you.', rule: 'Win a game against an opponent whose recorded rating is at least 200 above yours.', ev: winsWithGap(200) },
-  { id: 'titan-slayer', name: 'Titan Slayer', c: 'Chess Mastery', r: 'epic', charge: 'griffin', field: 'purpure', d: 'Beat an opponent rated 500+ above you.', rule: 'Win a game against an opponent whose recorded rating is at least 500 above yours.', ev: winsWithGap(500) },
+  { id: 'upset-higher', name: 'Upward Duel', c: 'Chess Mastery', r: 'uncommon', charge: 'tower', field: 'vert', d: 'Beat a higher-rated opponent.', rule: 'Win a game against an opponent rated above you (both ratings recorded in the game). Counts only while your rating is established (±100 or less).', ev: winsWithGap(1) },
+  { id: 'giant-slayer', name: 'Giant Slayer', c: 'Chess Mastery', r: 'rare', charge: 'griffin', field: 'sanguine', d: 'Beat an opponent rated 200+ above you.', rule: 'Win a game against an opponent whose recorded rating is at least 200 above yours. Counts only while your rating is established (±100 or less).', ev: winsWithGap(200) },
+  { id: 'titan-slayer', name: 'Titan Slayer', c: 'Chess Mastery', r: 'epic', charge: 'griffin', field: 'purpure', d: 'Beat an opponent rated 500+ above you.', rule: 'Win a game against an opponent whose recorded rating is at least 500 above yours. Counts only while your rating is established (±100 or less).', ev: winsWithGap(500) },
   { id: 'sovereign-unbound', name: 'Unbound Victory', c: 'Chess Mastery', r: 'legendary', charge: 'crown', field: 'sable', d: 'Defeat Sovereign Unbound.', rule: 'Win a game against Sovereign Unbound at the rated thinking budget (10 s per move) or more.',
     ev: f => firstWin(f, g => g.level === 9 && (g.budgetMs ?? 0) >= 10_000, g => vs(g, ` at ${Math.round(g.budgetMs! / 1000)} s per move`)) },
   { id: 'sovereign-deep', name: 'Beyond Time', c: 'Chess Mastery', r: 'mythic', charge: 'sun', field: 'sable', d: 'Defeat Sovereign Unbound at its deepest.', rule: 'Win a game against Sovereign Unbound at a thinking budget of 30 s per move or more.',
@@ -193,8 +193,8 @@ const SPECS: Spec[] = [
   { id: 'upset-feud', name: 'Underdog’s Feud', c: 'Rivals', r: 'epic', charge: 'tower', field: 'purpure', d: 'Topple a stronger rival twice.', rule: 'Beat the same featured rival twice when they were rated at least 200 above you.',
     ev: f => { const m = new Map<string, OwnGame[]>(); for (const g of f.games) if (g.score === 1 && f.fed?.featured.has(g.oppId) && (gap(g) ?? -1) >= 200) m.set(g.oppId, [...(m.get(g.oppId) ?? []), g]); const x = [...m.values()].find(gs => gs.length >= 2); return hit(!!x, x && `${x[1].oppName}: ${day(x[0].at)} and ${day(x[1].at)}`, x?.[1].at); } },
   { id: 'qm-first', name: 'Open Challenge', c: 'Rivals', r: 'common', charge: 'knight', field: 'azure', d: 'Win a Quick Match.', rule: 'Win a Random Federation Quick Match (rated or casual).', ev: f => firstWin(f, g => g.quickMatch) },
-  { id: 'qm-giant', name: 'Fortune Favours', c: 'Rivals', r: 'rare', charge: 'griffin', field: 'tenne', d: 'Win a Quick Match against a much stronger opponent.', rule: 'Win a rated Quick Match against an opponent rated at least 200 above you.', ev: winsWithGap(200, true) },
-  { id: 'qm-titan', name: 'Lightning Strikes', c: 'Rivals', r: 'epic', charge: 'flame', field: 'sanguine', d: 'Win a Quick Match against a titan.', rule: 'Win a rated Quick Match against an opponent rated at least 500 above you.', ev: winsWithGap(500, true) },
+  { id: 'qm-giant', name: 'Fortune Favours', c: 'Rivals', r: 'rare', charge: 'griffin', field: 'tenne', d: 'Win a Quick Match against a much stronger opponent.', rule: 'Win a rated Quick Match against an opponent rated at least 200 above you. Counts only while your rating is established (±100 or less).', ev: winsWithGap(200, true) },
+  { id: 'qm-titan', name: 'Lightning Strikes', c: 'Rivals', r: 'epic', charge: 'flame', field: 'sanguine', d: 'Win a Quick Match against a titan.', rule: 'Win a rated Quick Match against an opponent rated at least 500 above you. Counts only while your rating is established (±100 or less).', ev: winsWithGap(500, true) },
   { id: 'qm-regions-8', name: 'Federation Tour', c: 'Rivals', r: 'uncommon', charge: 'anchor', field: 'celeste', d: 'Win Quick Matches across the Federation.', rule: 'Win Quick Matches against competitors from 8 different regions.',
     ev: f => { const n = regionsBeaten(f.games.filter(g => g.quickMatch)).size; return count(n, 8, `${n} regions beaten in Quick Matches`); } },
 

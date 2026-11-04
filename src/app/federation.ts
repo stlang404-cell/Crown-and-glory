@@ -296,12 +296,21 @@ export class FederationService {
    * behind anything (docs/FEDERATION_SCALE.md).
    */
   private busyKind: 'user' | 'scheduler' = 'user';
+  /** Start New Career (docs/CAREER_RATING.md): set by closeForNewCareer; every later command is refused until reload. */
+  private closed = false;
+  /** Run `fn` (the career wipe) as this service's LAST command, after any running command or scheduled commit, so no
+   *  Federation write can land in the new career's database. */
+  async closeForNewCareer<T>(fn: () => Promise<T>): Promise<T> {
+    while (this.busy) await this.idle;
+    return this.run(async () => { this.closed = true; return fn(); });
+  }
   private idle: Promise<void> = Promise.resolve();
   private async run<T>(fn: () => Promise<T>, kind: 'user' | 'scheduler' = 'user'): Promise<T> {
     while (this.busy) {
       if (kind === 'user' && this.busyKind === 'user') throw new Error('Another federation action is still running. Wait a moment and try again.');
       await this.idle;
     }
+    if (this.closed) throw new Error('A new career is starting. Reload the app.');
     this.busy = true;
     this.busyKind = kind;
     let release!: () => void;

@@ -12,6 +12,7 @@ import type { AnalysisReport } from '../analysis/types';
 import { CrownDB, APP_SCHEMA } from './db';
 import { canonicalGame, gameChecksum, sha256Hex } from './checksum';
 import { decodeAccounts } from '../federation/persist';
+import { CAREER_MODEL, KNOWN_STARTS, LEGACY_START, legacyCareerRecord, type CareerRecord } from '../ratings/career';
 import { EXHIBITION_PREFIXES, EXH_PREFIX, validateExhibition, type ExhibitionGame } from '../app/exhibition';
 
 export const BACKUP_FORMAT = 'crown-backup-1';
@@ -27,9 +28,15 @@ export interface BackupBundle {
   payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[]; federation?: Record<string, unknown[]>;
     /** v0.9: Vault unlocks/notices (ach:, achtoast:, vault:) and Grimoire progress (grim:) from the meta store. Optional: older backups have none. */
     progress?: { key: string; value: unknown }[];
+    /** v0.11: the career's rating origin (crown-career-1). Optional: a backup without it is from a career created
+     *  before v0.11, whose pools started at 1500. */
+    career?: CareerRecord
     /** v0.11: Exhibition Arena archive (meta `exh:` games and `exhrep:` reports; unofficial, src/app/exhibition.ts). Optional. */
     exhibitions?: { key: string; value: unknown }[] };
 }
+
+/** The rating origin a backup's ledger replays from. */
+export const bundleCareer = (b: BackupBundle): CareerRecord => b.payload.career ?? legacyCareerRecord(b.exportedAt);
 
 /** Meta-store prefixes carried in backups. */
 export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:'] as const;
@@ -42,7 +49,7 @@ export async function exportBundle(db: CrownDB, appVersion: string): Promise<Bac
   const exhibitions: { key: string; value: unknown }[] = [];
   for (const p of EXHIBITION_PREFIXES) exhibitions.push(...(await db.metaWithPrefix(p)));
   const payload = { games: d.games, ratingEvents: d.ratingEvents, ratingState: d.ratingState, reports: d.reports, attempts: d.attempts as { id: string }[], trainingRuns: d.trainingRuns as { id: string }[], bookmarks: d.bookmarks as { id: string }[], federation: d.federation, progress,
-    ...(exhibitions.length ? { exhibitions } : {}) };
+    ...(exhibitions.length ? { exhibitions } : {}), career: db.career };
   return {
     format: BACKUP_FORMAT, appSchema: APP_SCHEMA, variantId: VARIANT_ID, exportedAt: new Date().toISOString(), appVersion,
     counts: { games: d.games.length, ratingEvents: d.ratingEvents.length, reports: d.reports.length },
@@ -87,9 +94,13 @@ export async function validateBundle(raw: unknown): Promise<BackupBundle> {
     }
     if (g.status === 'finalized' && g.checksum && g.checksum !== (await gameChecksum(g))) throw new ImportError(`Game ${g.id}: checksum mismatch.`);
   }
-  // The rating ledger must replay to the stored pool states.
+  // The rating ledger must replay to the stored pool states, from the career's own rating origin.
+  const c = p.career;
+  if (c !== undefined && (!c || c.model !== CAREER_MODEL || !KNOWN_STARTS.includes(c.ratingStart))) throw new ImportError('Backup career record is malformed.');
+  const start = c?.ratingStart ?? LEGACY_START;
+  for (const e of p.ratingEvents) if (e.sequence === 1 && e.before.rating !== start) throw new ImportError(`Rating pool ${e.pool} does not start at this career's initial rating.`);
   for (const s of p.ratingState) {
-    const r = replayLedger(s.pool, p.ratingEvents.filter(e => e.pool === s.pool));
+    const r = replayLedger(s.pool, p.ratingEvents.filter(e => e.pool === s.pool), start);
     if (Math.abs(r.rating - s.rating) > 1e-6 || Math.abs(r.rd - s.rd) > 1e-6 || r.games !== s.games) throw new ImportError(`Rating pool ${s.pool} does not match its event ledger.`);
   }
   return b;
@@ -105,6 +116,8 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
   const existing = await db.allGames();
   const empty = existing.length === 0 && (await db.ratingEvents()).length === 0;
   if (empty) {
+    // the restored career keeps its own rating origin (a pre-v0.11 career restored into a new profile stays at 1500)
+    await db.adoptCareer(bundleCareer(b));
     const r = await db.importRecords(b.payload, true);
     // federation & economy state is restored only into an empty career (it is one consistent world)
     const fed = b.payload.federation;
