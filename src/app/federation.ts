@@ -9,6 +9,7 @@
  */
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
+import { applyFoundingPersonas } from '../federation/rosterPersonas';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
@@ -330,6 +331,7 @@ export class FederationService {
     return this.run(async () => {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
       const comps = generateFederation(seed, topology);
+      applyFoundingPersonas(seed, comps); // v0.10 historical roster: names only, for newly founded federations
       const { world, plan } = createWorld(seed, comps, this.now(), topology);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),

@@ -11,6 +11,7 @@ import {
 import { KoMatch, koNext, leagueOrder, roundRobin, standings, swissOrder, swissPairing, StandingRow } from './formats';
 import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
 import { sampleResult } from './resultModel';
+import { assignEntrantPersonas } from './rosterPersonas';
 
 export const WORLD_ID = 'crown-world-1';
 
@@ -422,6 +423,8 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     competitors.set(e.id, e);
     res.entrants.push(e);
   }
+  // v0.10 historical roster: some entrants carry a persona name (seeded; strength, style and placement unchanged)
+  assignEntrantPersonas(world.seed, season, res.entrants, competitors.values());
   plan.status = 'complete';
   return res;
 }
