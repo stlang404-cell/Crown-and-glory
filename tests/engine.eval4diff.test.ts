@@ -30,7 +30,7 @@ const WEIGHTS: Eval4Weights[] = [
   { version: 4, p: P, simplify: 100, styleColor: 0 },
   { version: 4, p: OWN },
 ];
-for (const s of ['tactical', 'positional', 'aggressive', 'defensive', 'endgame'] as const) {
+for (const s of ['tactical', 'positional', 'aggressive', 'defensive', 'endgame', 'gambiteer', 'materialist', 'complicator'] as const) {
   const sw = styledWeights(s, EVAL4_WEIGHTS);
   if (sw && sw.weights.version === 4) for (const c of [0, 1] as const) WEIGHTS.push({ ...sw.weights, styleColor: c });
 }

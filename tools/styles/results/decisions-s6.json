@@ -1,0 +1,66 @@
+{
+ "tactical": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.127,
+  "signature": "contact",
+  "styleRate": 0.73,
+  "universalRate": 0.743
+ },
+ "positional": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.143,
+  "signature": "quiet",
+  "styleRate": 0.24,
+  "universalRate": 0.257
+ },
+ "aggressive": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.207,
+  "signature": "kingPressure",
+  "styleRate": 0.333,
+  "universalRate": 0.347
+ },
+ "defensive": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.21,
+  "signature": "safety",
+  "styleRate": 0.257,
+  "universalRate": 0.253
+ },
+ "endgame": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.107,
+  "signature": "simplify",
+  "styleRate": 0.06,
+  "universalRate": 0.047
+ },
+ "gambiteer": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.173,
+  "signature": "quiet",
+  "styleRate": 0.247,
+  "universalRate": 0.257
+ },
+ "materialist": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.133,
+  "signature": "capture",
+  "styleRate": 0.093,
+  "universalRate": 0.097
+ },
+ "complicator": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.17,
+  "signature": "contact",
+  "styleRate": 0.707,
+  "universalRate": 0.743
+ }
+}

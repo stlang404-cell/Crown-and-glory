@@ -10,6 +10,8 @@
  * direction AND strength parity (src/engine/styles-validation.json); otherwise it plays as Universal.
  * crown-styles-5 (v0.9, below STYLE_EVAL) adds a full-game styled evaluation + draw contempt, measured by
  * tools/styles/measure.ts (docs/STYLES_REPORT.md); styles listed in styles-validation.json → fullGame use it.
+ * crown-styles-6 (v0.10) redesigns Aggressive, adds Gambiteer, Materialist and Complication seeker (the last one
+ * failed and is not played) and a measured scouting summary per played style (styleTendency).
  */
 import { Position } from '../rules/position';
 import { KING, KNIGHT, Move, PAWN, QUEEN, moveFrom, moveTo, movePromo, pieceColor, pieceType, fileOf, rankOf } from '../rules/types';
@@ -27,6 +29,7 @@ export const REPERTOIRE_ID = (repertoire as { id: string }).id;
 
 export const STYLE_LABEL: Record<StyleId, string> = {
   universal: 'Universal', tactical: 'Tactical attacker', positional: 'Positional strategist', defensive: 'Defensive specialist', endgame: 'Endgame technician', aggressive: 'Risk-taking aggressor',
+  gambiteer: 'Gambiteer', materialist: 'Materialist', complicator: 'Complication seeker',
 };
 
 function attacksFromSq(pos: Position, sq: number): number[] {
@@ -107,21 +110,31 @@ type Term = keyof typeof OFF;
 type Adj = number | [number, number] | { x: [number, number] };
 type TermKey = Term | `${Term}.${number}`;
 export interface StyleEval { own?: Partial<Record<TermKey, Adj>>; opp?: Partial<Record<TermKey, Adj>>; contempt: number; simplify?: number }
-export const STYLES_EVAL_ID = 'crown-styles-5';
+export const STYLES_EVAL_ID = 'crown-styles-6';
 export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
   // more value on attacking enemy pieces (threats, hanging pieces) and on king-zone attackers
   tactical: { own: { HANGING: [25, 10], THREAT_PAWN: [20, 5], THREAT_MINOR: [20, 5], THREAT_ROOK: [20, 5], KING_ATTACKERS: [8, 0] }, contempt: 15 },
   // structure and piece placement over immediate threats
   positional: { own: { THREAT_PAWN: 0.85, THREAT_MINOR: 0.85, THREAT_ROOK: 0.85, HANGING: 0.85, SUPPORTED: [8, 4], PHALANX: [8, 4], OUTPOST: [20, 10], MOB: 1.1 }, contempt: 0 },
-  // king hunt: king-zone attackers ×4, attack weight ×2, tropism +8 cp per step closer for N/R/Q (middlegame
-  // only); strong draw avoidance
-  aggressive: { own: { KING_ATTACKERS: [25, 0], KING_ATTACK: [2, 0], TROPISM: [8, 0] }, contempt: 35 },
+  // crown-styles-6 king hunt with a sound king: more weight on king-zone attackers, attack weight and tropism
+  // (middlegame only), its own shelter and open king files weigh more and the opponent's attack looks bigger, so
+  // it attacks without leaving its own king exposed; draw avoidance. (crown-styles-5 version, which failed:
+  // own KING_ATTACKERS +25, KING_ATTACK +2, TROPISM +8, contempt 35.)
+  aggressive: { own: { KING_ATTACKERS: [15, 0], KING_ATTACK: [1, 0], TROPISM: [6, 0], KING_SHIELD: [10, 0], KING_OPEN: [-10, 0] }, opp: { KING_ATTACKERS: [8, 0], KING_ATTACK: [1, 0] }, contempt: 25 },
   // safety first: own shelter and open king files weigh more, the opponent's attack and threats look bigger,
   // the opponent's queen is feared (queens off is welcome), and a draw is acceptable when not better
   defensive: { own: { KING_SHIELD: [10, 0], KING_OPEN: [-10, 0] }, opp: { KING_ATTACKERS: [10, 0], KING_ATTACK: [1, 0], TROPISM: [3, 0], HANGING: [15, 5], 'MAT.4': [20, 0] }, contempt: -20 },
   // conversion: trades when ahead (simplify), passed pawns and an active king weigh more in the endgame,
   // queens off is welcome
   endgame: { own: { PASSED: { x: [1, 1.5] }, PASSED_FREE: { x: [1, 1.5] }, PASSED_OWNK: { x: [1, 1.5] }, UNSTOPPABLE: [0, 60], 'PST.5': { x: [1, 1.5] } }, opp: { 'MAT.4': [25, 0] }, contempt: 15, simplify: 100 },
+  // crown-styles-6 gambiteer: its own pawns are worth 15 cp less in the middlegame (gives pawns for play), more
+  // value on mobility and king-zone attackers, draw avoidance
+  gambiteer: { own: { 'MAT.1': [-15, 0], MOB: 1.15, KING_ATTACKERS: [10, 0] }, contempt: 25 },
+  // crown-styles-6 materialist: all material (own and the opponent's) counts 15 % more against positional terms
+  materialist: { own: { MAT: 1.15 }, opp: { MAT: 1.15 }, contempt: 0 },
+  // crown-styles-6 complication seeker: its own knights, rooks and queen are worth 30 cp more in the middlegame,
+  // so even trades look bad and pieces stay on; draw avoidance
+  complicator: { own: { 'MAT.2': [30, 0], 'MAT.3': [30, 0], 'MAT.4': [30, 0] }, contempt: 30 },
 };
 const TERM_SIZE: Partial<Record<Term, number>> = { MAT: 6, PST: 216, MOB: 6, PASSED: 6, PASSED_FREE: 6, MOBT: 96, TROPISM: 6 };
 /** Size of one entry of a table term addressed as `TERM.i` (PST and MOBT entries are whole per-type tables). */
@@ -166,3 +179,31 @@ export const usesRepertoire = (s: StyleId) => s !== 'universal' && (V.repertoire
 export const usesStyleEval = (s: StyleId) => s !== 'universal' && (V.fullGame ?? []).includes(s);
 /** The style actually used in play: unvalidated styles fall back to Universal. */
 export const playStyle = (s: StyleId): StyleId => (isValidatedStyle(s) ? s : 'universal');
+
+// ---------------------------------------------------------------------------------------------------------
+// Scouting (crown-styles-6): a short tendency summary per style, built from the measured game statistics in
+// styles-validation.json (fullGameResults, 200 games vs Universal at 8 000 nodes; docs/STYLES_REPORT.md).
+// Only styles that are actually played (usesStyleEval) get one; every number comes from the measurement.
+type SideStats = { capturesPerGame: number; checksPerGame: number; kingZoneAttacksPerMove: number; attacksSufferedPerMove: number; behindRate?: number; aheadRate?: number };
+type GameStats = { games: number; avgPlies: number; drawRate: number; medianQueensOffPly: number | null; piecesAt40?: number; styledPawnsAt30?: number; universalPawnsAt30?: number };
+type StyleResult = { games: GameStats; styledSide: SideStats; universalSide: SideStats };
+const pct = (x: number) => `${Math.round(x * 100)} %`;
+const rel = (a: number, b: number) => `${Math.round(Math.abs(a / b - 1) * 100)} %`;
+const TENDENCY: Partial<Record<StyleId, (r: StyleResult, u: { games: GameStats; side: SideStats }) => string>> = {
+  tactical: (r, u) => `Seeks tactics: draws ${pct(r.games.drawRate)} of games (standard engine ${pct(u.games.drawRate)}) and makes slightly more captures and checks than its opponents.`,
+  positional: r => `Quiet, structural play: slightly fewer checks than its opponents (${r.styledSide.checksPerGame} vs ${r.universalSide.checksPerGame} per game).`,
+  defensive: (r, u) => `Safety first: its king zone is attacked ${rel(r.styledSide.attacksSufferedPerMove, r.universalSide.attacksSufferedPerMove)} less often than its opponents'; draws ${pct(r.games.drawRate)} (standard engine ${pct(u.games.drawRate)}) and trades queens early.`,
+  endgame: (r, u) => `Heads for the ending: queens are off by ply ${r.games.medianQueensOffPly} at the median (standard engine ${u.games.medianQueensOffPly}), and its games run long (${r.games.avgPlies} plies; standard engine ${u.games.avgPlies}).`,
+  aggressive: (r, u) => `Hunts the king: ${rel(r.styledSide.kingZoneAttacksPerMove, r.universalSide.kingZoneAttacksPerMove)} more attacks on the enemy king zone than its opponents, ${r.styledSide.checksPerGame} checks per game (standard engine ${+u.side.checksPerGame.toFixed(2)}); draws ${pct(r.games.drawRate)} (standard engine ${pct(u.games.drawRate)}).`,
+  gambiteer: r => `Gives material for activity: behind on material after ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}), with slightly more pressure on the enemy king.`,
+  materialist: r => `Counts the material: behind on material after only ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}) and ahead after ${pct(r.styledSide.aheadRate ?? 0)} (its opponents ${pct(r.universalSide.aheadRate ?? 0)}).`,
+  complicator: (r, u) => `Keeps the pieces on: ${r.games.piecesAt40} knights, rooks and queens left at ply 40 (standard engine ${u.games.piecesAt40 ?? '—'}), queens off later and fewer draws.`,
+};
+/** Measured tendency summary for the scouting profile, or null for Universal and styles that are not played. */
+export function styleTendency(s: StyleId): string | null {
+  if (!usesStyleEval(s)) return null;
+  const R = (V as unknown as { fullGameResults?: Record<string, unknown> }).fullGameResults;
+  const r = R?.[s] as StyleResult | undefined, u = R?.universal as { games: GameStats; side: SideStats } | undefined;
+  const f = TENDENCY[s];
+  return r && u && f ? `${f(r, u)} (Measured over ${r.games.games} games against the standard engine.)` : null;
+}

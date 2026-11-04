@@ -15,6 +15,10 @@
  *   npx tsx tools/styles/measure.ts decisions            # (a), writes tools/styles/results/decisions.json
  *   npx tsx tools/styles/measure.ts games [style ...]    # (b)+(c), writes tools/styles/results/games-<style>.json
  *   npx tsx tools/styles/measure.ts summary [--write]    # tables; --write updates src/engine/styles-validation.json
+ * crown-styles-6 (v0.10): new styles (gambiteer, materialist, complicator), new per-side statistics (behind / ahead on
+ *   material after own moves, pieces at ply 40, pawns at ply 30), and `summary --write` needs TAG2K (the tag of the
+ *   2 000-node summary) because the strength rule must hold at both budgets. EXTRA=name,… summarises pilot-only
+ *   variants defined through DEFS. crown-styles-6 run: TAG=s6 (decisions, 8k games) and TAG=s6-n2k (NODES=2000).
  * Env: NODES (8000), PAIRS (100), DECISIONS (300), THREADS (2), DEFS (JSON STYLE_EVAL overrides, pilot only),
  *      TAG (suffix for result files, pilot only), OFFSET (first opening line; pilots used 200+ so the measured
  *      openings 0–99 were never used for choosing magnitudes).
@@ -22,7 +26,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 
-const STYLES = ['tactical', 'positional', 'aggressive', 'defensive', 'endgame'] as const;
+/** crown-styles-5 styles plus the crown-styles-6 candidates (docs/STYLES_REPORT.md §8). */
+const STYLES = ['tactical', 'positional', 'aggressive', 'defensive', 'endgame', 'gambiteer', 'materialist', 'complicator'] as const;
 const NODES = +(process.env.NODES ?? 8000), PAIRS = +(process.env.PAIRS ?? 100), DECISIONS = +(process.env.DECISIONS ?? 300);
 const THREADS = +(process.env.THREADS ?? 2);
 /** First opening line used (pilot runs use lines 200+, the measurement uses lines 0 … PAIRS−1). */
@@ -97,13 +102,14 @@ async function tools() {
         safety: enemyOnMeAfter < enemyOnMeBefore || defAfter > defBefore,
         simplify: (capture && victim !== 1 && victim !== 0) || passedPush,
         queenTrade: victim === 4,
+        capture,
       },
     };
   };
   return { feat, hasQueen, zoneAttacks };
 }
 
-const SIG: Record<string, 'contact' | 'quiet' | 'kingPressure' | 'safety' | 'simplify'> = { tactical: 'contact', positional: 'quiet', aggressive: 'kingPressure', defensive: 'safety', endgame: 'simplify' };
+const SIG: Record<string, 'contact' | 'quiet' | 'kingPressure' | 'safety' | 'simplify' | 'capture'> = { tactical: 'contact', positional: 'quiet', aggressive: 'kingPressure', defensive: 'safety', endgame: 'simplify', gambiteer: 'quiet', materialist: 'capture', complicator: 'contact' };
 const profile = () => ({ level: 0, id: 'measure', name: 'measure', depth: 64, nodes: NODES, maxTimeMs: 600_000, selection: null, description: '' });
 
 function boot(task: 'decisions' | 'games', jobs: unknown[]): Promise<unknown[]> {
@@ -137,21 +143,25 @@ async function decisionPositions(): Promise<{ fen: string; game: string }[]> {
 
 function eloOf(p: number) { return -400 * Math.log10(1 / Math.min(Math.max(p, 0.001), 0.999) - 1); }
 
-type Side = { moves: number; captures: number; checks: number; promos: number; zone: number; enemyZone: number };
-type Game = { style: string; white: boolean; i: number; result: string; plies: number; queensOffPly: number | null; styledQueenLostPly: number | null; styled: Side; uni: Side };
+/** Per side. behind/ahead (crown-styles-6): own moves after which the side's material (P 1, N 3, R 5, Q 9) is at
+ * least one pawn below / above the opponent's. */
+type Side = { moves: number; captures: number; checks: number; promos: number; zone: number; enemyZone: number; behind?: number; ahead?: number };
+/** piecesAt40 (crown-styles-6): knights, rooks and queens of both sides on the board after ply 40 (or at the end);
+ * pawnsAt30: [styled, Universal] pawns after ply 30 (or at the end). */
+type Game = { style: string; white: boolean; i: number; result: string; plies: number; queensOffPly: number | null; styledQueenLostPly: number | null; styled: Side; uni: Side; piecesAt40?: number; pawnsAt30?: [number, number] };
 
 async function summarise(write: boolean) {
   const rd = (f: string) => existsSync(new URL(f, OUT)) ? JSON.parse(readFileSync(new URL(f, OUT), 'utf8')) : null;
   const dec = rd(`decisions${TAG}.json`) as Record<string, { positions: number; disagreement: number; signature: string; styleRate: number; universalRate: number }> | null;
   const ref = (rd(`games-universal${TAG}.json`) ?? []) as Game[];
   const agg = (gs: Game[], k: 'styled' | 'uni') => {
-    const s = gs.reduce((a, g) => ({ moves: a.moves + g[k].moves, captures: a.captures + g[k].captures, checks: a.checks + g[k].checks, promos: a.promos + g[k].promos, zone: a.zone + g[k].zone, enemyZone: a.enemyZone + g[k].enemyZone }), { moves: 0, captures: 0, checks: 0, promos: 0, zone: 0, enemyZone: 0 });
+    const s = gs.reduce((a, g) => ({ moves: a.moves + g[k].moves, captures: a.captures + g[k].captures, checks: a.checks + g[k].checks, promos: a.promos + g[k].promos, zone: a.zone + g[k].zone, enemyZone: a.enemyZone + g[k].enemyZone, behind: a.behind + (g[k].behind ?? 0), ahead: a.ahead + (g[k].ahead ?? 0) }), { moves: 0, captures: 0, checks: 0, promos: 0, zone: 0, enemyZone: 0, behind: 0, ahead: 0 });
     const n = gs.length || 1;
-    return { capturesPerGame: +(s.captures / n).toFixed(2), checksPerGame: +(s.checks / n).toFixed(2), promosPerGame: +(s.promos / n).toFixed(2), kingZoneAttacksPerMove: +(s.zone / (s.moves || 1)).toFixed(3), attacksSufferedPerMove: +(s.enemyZone / (s.moves || 1)).toFixed(3) };
+    return { capturesPerGame: +(s.captures / n).toFixed(2), checksPerGame: +(s.checks / n).toFixed(2), promosPerGame: +(s.promos / n).toFixed(2), kingZoneAttacksPerMove: +(s.zone / (s.moves || 1)).toFixed(3), attacksSufferedPerMove: +(s.enemyZone / (s.moves || 1)).toFixed(3), behindRate: +(s.behind / (s.moves || 1)).toFixed(3), aheadRate: +(s.ahead / (s.moves || 1)).toFixed(3) };
   };
   const gameStats = (gs: Game[]) => {
     const q = gs.map(g => g.queensOffPly ?? g.plies);
-    return { games: gs.length, avgPlies: +(gs.reduce((a, g) => a + g.plies, 0) / (gs.length || 1)).toFixed(1), drawRate: +(gs.filter(g => g.result === '1/2-1/2' || g.result === '*').length / (gs.length || 1)).toFixed(3), queensOffRate: +(gs.filter(g => g.queensOffPly !== null).length / (gs.length || 1)).toFixed(3), medianQueensOffPly: q.sort((a, b) => a - b)[Math.floor(q.length / 2)] ?? null };
+    return { games: gs.length, avgPlies: +(gs.reduce((a, g) => a + g.plies, 0) / (gs.length || 1)).toFixed(1), piecesAt40: +(gs.reduce((a, g) => a + (g.piecesAt40 ?? 0), 0) / (gs.length || 1)).toFixed(2), styledPawnsAt30: +(gs.reduce((a, g) => a + (g.pawnsAt30?.[0] ?? 0), 0) / (gs.length || 1)).toFixed(2), universalPawnsAt30: +(gs.reduce((a, g) => a + (g.pawnsAt30?.[1] ?? 0), 0) / (gs.length || 1)).toFixed(2), drawRate: +(gs.filter(g => g.result === '1/2-1/2' || g.result === '*').length / (gs.length || 1)).toFixed(3), queensOffRate: +(gs.filter(g => g.queensOffPly !== null).length / (gs.length || 1)).toFixed(3), medianQueensOffPly: q.sort((a, b) => a - b)[Math.floor(q.length / 2)] ?? null };
   };
   const out: Record<string, unknown> = {};
   // reference: Universal vs Universal (each game counts for both colours: 'styled' = White there)
@@ -160,7 +170,8 @@ async function summarise(write: boolean) {
   const refAvg = Object.fromEntries(Object.entries(refSides).map(([k, v]) => [k, +((v + (refUni as Record<string, number>)[k]) / 2).toFixed(3)]));
   out.universal = { games: gameStats(ref), side: refAvg };
   const fullGame: string[] = [];
-  for (const st of STYLES) {
+  // EXTRA: pilot-only variant names defined through DEFS (never written to the validation file)
+  for (const st of [...STYLES, ...(process.env.EXTRA ? process.env.EXTRA.split(',') : [])] as string[]) {
     const gs = rd(`games-${st}${TAG}.json`) as Game[] | null;
     if (!gs) continue;
     const sc = (g?: Game) => (!g || g.result === '1/2-1/2' || g.result === '*' ? 0.5 : (g.result === '1-0') === g.white ? 1 : 0);
@@ -179,16 +190,22 @@ async function summarise(write: boolean) {
     const direction: Record<string, [string, boolean][]> = {
       tactical: [['captures+checks above the Universal side', me.capturesPerGame + me.checksPerGame > them.capturesPerGame + them.checksPerGame]],
       positional: [['fewer checks than the Universal side', me.checksPerGame < them.checksPerGame]],
-      aggressive: [['more checks than the Universal side', me.checksPerGame > them.checksPerGame], ['more king-zone attacks than the Universal side', me.kingZoneAttacksPerMove > them.kingZoneAttacksPerMove], ['fewer draws than Universal self-play', g.drawRate < rg.drawRate]],
+      // crown-styles-6 (refined before measuring, docs/STYLES_REPORT.md §8.2): checks are compared with a side in
+      // Universal self-play, not with the opponent's checks
+      aggressive: [['more king-zone attacks than the Universal side', me.kingZoneAttacksPerMove > them.kingZoneAttacksPerMove], ['fewer draws than Universal self-play', g.drawRate < rg.drawRate], ['more checks than a side in Universal self-play', me.checksPerGame > (out.universal as { side: { checksPerGame: number } }).side.checksPerGame]],
+      gambiteer: [['behind on material after more of its moves than the Universal side', me.behindRate > them.behindRate], ['more king-zone attacks than the Universal side', me.kingZoneAttacksPerMove > them.kingZoneAttacksPerMove]],
+      materialist: [['behind on material after fewer of its moves than the Universal side', me.behindRate < them.behindRate], ['ahead on material after more of its moves than the Universal side', me.aheadRate > them.aheadRate]],
+      complicator: [['more knights/rooks/queens at ply 40 than in Universal self-play', g.piecesAt40 > rg.piecesAt40], ['queens off later than in Universal self-play (median ply)', (g.medianQueensOffPly ?? 999) > (rg.medianQueensOffPly ?? 999)], ['fewer draws than Universal self-play', g.drawRate < rg.drawRate]],
       defensive: [['fewer attacks suffered than the Universal side', me.attacksSufferedPerMove < them.attacksSufferedPerMove], ['more draws than Universal self-play', g.drawRate > rg.drawRate]],
       endgame: [['queens off earlier than in Universal self-play (median ply)', (g.medianQueensOffPly ?? 999) < (rg.medianQueensOffPly ?? 999)]],
     };
-    const checks = Object.fromEntries(direction[st].map(([k, v]) => [k, v]));
-    const directionPass = direction[st].every(([, v]) => v);
+    const dirs = direction[st] ?? [];
+    const checks = Object.fromEntries(dirs.map(([k, v]) => [k, v]));
+    const directionPass = dirs.length > 0 && dirs.every(([, v]) => v);
     const decisionPass = (dec?.[st]?.disagreement ?? 0) >= 0.1;
     out[st] = { decisions: dec?.[st] ?? null, games: g, styledSide: me, universalSide: them, strength, direction: checks, decisionPass, directionPass, strengthPass, pass: decisionPass && directionPass && strengthPass };
     console.log(st, JSON.stringify(out[st]));
-    if (decisionPass && directionPass && strengthPass) fullGame.push(st);
+    if (decisionPass && directionPass && strengthPass && (STYLES as readonly string[]).includes(st)) fullGame.push(st);
   }
   console.log('universal', JSON.stringify(out.universal));
   writeFileSync(new URL(`summary${TAG}.json`, OUT), JSON.stringify(out, null, 1));
@@ -197,11 +214,15 @@ async function summarise(write: boolean) {
     const prev = JSON.parse(readFileSync(vf, 'utf8'));
     const repertoireStyles: string[] = prev.repertoireStyles ?? prev.validated;
     const { STYLE_EVAL, STYLES_EVAL_ID } = await import('../../src/engine/styles');
+    // crown-styles-6: the strength rule also holds at the 2 000-node budget (TAG2K = tag of that run's summary)
+    const s2 = process.env.TAG2K ? rd(`summary-${process.env.TAG2K}.json`) as Record<string, { strengthPass: boolean }> | null : null;
+    if (!s2) throw new Error('summary --write needs TAG2K (the 2 000-node summary) for the strength rule at both budgets');
+    for (let k = fullGame.length - 1; k >= 0; k--) if (!s2[fullGame[k]]?.strengthPass) fullGame.splice(k, 1);
     writeFileSync(vf, JSON.stringify({
-      ...prev, id: `styles-5-${new Date().toISOString().slice(0, 10)}`, validated: [...new Set([...repertoireStyles, ...fullGame])], repertoireStyles, fullGame,
+      ...prev, id: `styles-6-${new Date().toISOString().slice(0, 10)}`, validated: [...new Set([...repertoireStyles, ...fullGame])], repertoireStyles, fullGame,
       fullGamePolicy: `${STYLES_EVAL_ID} (asymmetric evaluation + contempt; src/engine/styles.ts STYLE_EVAL)`, fullGameMethod: 'tools/styles/measure.ts header; docs/STYLES_REPORT.md',
-      fullGameRule: 'decision disagreement >= 10% on middlegame positions AND every intended game-characteristic direction holds AND Elo vs Universal within +-50 (point) with the 95% interval overlapping [-50, 50]',
-      fullGameDefs: STYLE_EVAL, fullGameResults: out,
+      fullGameRule: 'decision disagreement >= 10% on middlegame positions AND every pre-registered game-characteristic direction holds (8 000 nodes) AND Elo vs Universal within +-50 (point) with the 95% interval overlapping [-50, 50] at 8 000 and at 2 000 nodes',
+      fullGameDefs: STYLE_EVAL, fullGameResults: out, fullGameResults2k: s2,
     }, null, 1));
     console.log('wrote', vf.pathname, 'fullGame =', fullGame);
   }
@@ -273,7 +294,12 @@ if (isMainThread) {
       for (const m of j.opening) p.makeMove(parseLegalCcn(p, m));
       let result = '*', plies = j.opening.length, queensOffPly: number | null = null, styledQueenLostPly: number | null = null;
       const styledColor = j.white ? 0 : 1;
-      const side = (): Side => ({ moves: 0, captures: 0, checks: 0, promos: 0, zone: 0, enemyZone: 0 });
+      const side = (): Side => ({ moves: 0, captures: 0, checks: 0, promos: 0, zone: 0, enemyZone: 0, behind: 0, ahead: 0 });
+      const VAL = [0, 1, 3, 5, 9, 0];
+      const mat = (c: number) => { let t = 0; for (let s = 0; s < 36; s++) { const x = p.board[s]; if (x && (x >> 3) === c) t += VAL[x & 7]; } return t; };
+      const pieces = () => { let t = 0; for (let s = 0; s < 36; s++) { const x = p.board[s] & 7; if (x >= 2 && x <= 4) t++; } return t; };
+      let piecesAt40: number | null = null, pawnsAt30: [number, number] | null = null;
+      const pawns = (c: number) => { let t = 0; for (let s = 0; s < 36; s++) if (p.board[s] === (1 | (c << 3))) t++; return t; };
       const styled = side(), uni = side();
       for (let ply = j.opening.length; ply < 400; ply++) {
         const o = automaticOutcome(p); if (o) { result = o.result; break; }
@@ -287,10 +313,14 @@ if (isMainThread) {
         t.moves++; if (f.capture) t.captures++; if (f.check) t.checks++; if (f.promo) t.promos++; t.zone += f.zoneAfter; t.enemyZone += f.enemyZoneAfter;
         p.makeMove(r.move);
         plies = ply + 1;
+        const bal = mat(p.side ^ 1) - mat(p.side);
+        if (bal <= -1) t.behind!++; else if (bal >= 1) t.ahead!++;
+        if (plies === 40) piecesAt40 = pieces();
+        if (plies === 30) pawnsAt30 = [pawns(styledColor), pawns(styledColor ^ 1)];
         if (queensOffPly === null && !hasQueen(p, 0) && !hasQueen(p, 1)) queensOffPly = plies;
         if (styledQueenLostPly === null && !hasQueen(p, styledColor)) styledQueenLostPly = plies;
       }
-      out.push({ style: j.style, white: j.white, i: j.i, result, plies, queensOffPly, styledQueenLostPly, styled, uni } satisfies Game);
+      out.push({ style: j.style, white: j.white, i: j.i, result, plies, queensOffPly, styledQueenLostPly, styled, uni, piecesAt40: piecesAt40 ?? pieces(), pawnsAt30: pawnsAt30 ?? [pawns(styledColor), pawns(styledColor ^ 1)] } satisfies Game);
     }
   }
   parentPort!.postMessage(out);

@@ -8,7 +8,7 @@ import type { Competitor } from '../federation/model';
 import { ageOf } from '../federation/generator';
 import { strengthNote } from '../federation/profiles';
 import { eventName, WorldGame } from '../app/federation';
-import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
+import { STYLE_LABEL, isValidatedStyle, styleTendency } from '../engine/styles';
 import { fmtCrowns } from '../exchange/ledger';
 import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
@@ -83,7 +83,7 @@ export function CompetitorsScreen() {
   const pg = pageOf(list, page);
   if (!st) return <NeedsFederation />;
   const active = [...st.competitors.values()].filter(c => c.status === 'active').length;
-  const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const).filter(x => isValidatedStyle(x))];
+  const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive', 'gambiteer', 'materialist', 'complicator'] as const).filter(x => isValidatedStyle(x))];
   return (
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
@@ -221,6 +221,7 @@ export function CompetitorScreen({ id }: { id: string }) {
             <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career Earnings</span></div>
           </div>
           <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but they play the standard engine style)</span>}</div>
+          {styleTendency(c.style) && <div className="small muted" data-testid="style-tendency">Scouting: {styleTendency(c.style)}</div>}
           <div className="small muted">This is their public rating. Their true strength stays hidden, from forecasts and traders too.</div>
           {/* v0.10: said from the public rating only, so nothing hidden leaks (docs/RATING_SPECTRUM.md) */}
           {(() => { const n = strengthNote(c.rating); return n.text && (n.kind === 'beyond-measured' || n.kind === 'beginner' || n.kind === 'below-measured') ? <div className="small muted" data-testid="strength-note">{n.text}</div> : null; })()}
