@@ -133,6 +133,7 @@ p { text-wrap: pretty; }
 .chip.pos { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 40%, transparent); background: color-mix(in srgb, var(--positive) 8%, transparent); }
 .chip.neg { color: var(--negative); border-color: color-mix(in srgb, var(--negative) 40%, transparent); background: color-mix(in srgb, var(--negative) 8%, transparent); }
 .chip.info { color: var(--info); border-color: color-mix(in srgb, var(--info) 38%, transparent); background: color-mix(in srgb, var(--info) 8%, transparent); }
+.chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; flex-wrap: wrap; background: var(--panel-3); padding: 2px; gap: 2px; }
 .seg button { min-height: 40px; padding: 6px 14px; border: 0; border-radius: calc(var(--radius-sm) - 3px); background: transparent; color: var(--muted); cursor: pointer; font-weight: 600; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
 .seg button:hover { color: var(--text); background: var(--hover); }

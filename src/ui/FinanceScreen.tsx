@@ -10,6 +10,8 @@ import type { Journal } from '../exchange/ledger';
 import { ASSETS, assetValue, prestige, RECOVERY_THRESHOLD, ECONOMY_ID, CLUB_LEVELS, clubLevel, CONTRACT_SHARE } from '../economy/economy';
 import type { FederationService } from '../app/federation';
 import { statusLabel } from './ExchangeScreen';
+import { exchangeApi } from '../exchange/api';
+import { fmtMoneyDelta } from '../exchange/ledger';
 
 const KIND_LABEL: Record<string, string> = {
   prize: 'Prize money', sponsor: 'Sponsorships', 'trade-buy': 'Exchange purchases', 'trade-sell': 'Exchange sales', 'market-settle': 'Exchange settlements', 'market-cancel': 'Exchange cancellations',
@@ -62,7 +64,6 @@ export function PrestigeLadders({ bestRating }: { bestRating: number | null }) {
 
 export function FinanceScreen() {
   const services = useServices();
-  const { go } = useApp();
   const fed = services.fed;
   const [journal, setJournal] = useState<Journal[]>([]);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
@@ -106,12 +107,7 @@ export function FinanceScreen() {
           <div className="small" style={{ marginTop: 8 }}>Exchange: realised {fmtCrowns(fin.realized)} · unrealised {fmtCrowns(fin.unrealized)} · fees paid {fmtCrowns(fin.fees)}</div>
           {fin.cash < RECOVERY_THRESHOLD && <div className="notice" style={{ marginTop: 8 }}>Low on cash? You can't go into debt. Below {fmtCrowns(RECOVERY_THRESHOLD, 0)} you get one free recovery voucher per season for the Challenger Open entry. You can also sell assets, and prizes and sponsorships keep coming from your results.</div>}
         </div>
-        <div className="panel">
-          <h3>Open Positions</h3>
-          {fin.myPositions.filter(p => { const m = st.markets.get(p.marketId)!; return (m.status === 'open' || m.status === 'closed') && p.shares.some(x => x); }).length === 0 ? <p className="small muted">No open positions. <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>Go to Exchange</button></p> : (
-            <ul className="small">{fin.myPositions.map(p => { const m = st.markets.get(p.marketId)!; if (!(m.status === 'open' || m.status === 'closed') || !p.shares.some(x => x)) return null; return <li key={p.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'exchange', id: m.id })}>{m.title}</button> · W/D/B {p.shares.join('/')} · {statusLabel(m.status)}</li>; })}</ul>
-          )}
-        </div>
+        <PortfolioPanel />
       </div>
       <Institutions />
       <CosmeticsShop />
@@ -149,6 +145,38 @@ export function FinanceScreen() {
         </div>
         <details className="small muted"><summary>Details</summary>Each entry is a balanced double-entry journal in whole micro-dollars ({MICRO.toLocaleString('en')} µ = $1); entries are idempotent and never edited.</details>
       </div>
+    </div>
+  );
+}
+
+/** Open positions with cost basis, exit value, unrealised P&L and the amount at risk (src/exchange/portfolio.ts). */
+function PortfolioPanel() {
+  const services = useServices();
+  const { go } = useApp();
+  const api = exchangeApi(services.fed, services.readOnly);
+  const rows = api.positions().filter(x => (x.market.status === 'open' || x.market.status === 'closed') && x.view.holdings.length);
+  const sum = api.pnl();
+  const sign = (x: number) => <span className={`mono ${x > 0 ? 'pos' : x < 0 ? 'neg' : ''}`}>{fmtMoneyDelta(x)}</span>;
+  return (
+    <div className="panel" data-testid="portfolio">
+      <h3>Open Positions</h3>
+      {rows.length === 0 ? <p className="small muted">No open positions. <button className="btn ghost small" onClick={() => go({ name: 'exchange' })}>Go to Exchange</button></p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="small"><thead><tr><th>Market</th><th>Holding</th><th>Cost Basis</th><th>Sell Now</th><th>Unrealised</th><th>At Risk</th></tr></thead>
+            <tbody>{rows.map(({ market: m, view: v }) => (
+              <tr key={m.id} className="clickable" onClick={() => go({ name: 'exchange', id: m.id })}>
+                <td>{m.title}<div className="muted">{statusLabel(m.status)}{services.fed.suspension(m.id) ? ' · suspended' : ''}</div></td>
+                <td>{v.holdings.map(h => `${h.shares} × ${h.label}`).join(', ')}</td>
+                <td className="mono">{v.openBasis === null ? '—' : fmtCrowns(v.openBasis)}</td>
+                <td className="mono">{m.status === 'open' ? fmtCrowns(v.exitValue) : 'awaiting result'}</td>
+                <td>{m.status === 'open' && v.unrealised !== null ? sign(v.unrealised) : '—'}</td>
+                <td className="mono">{fmtCrowns(v.atRisk)}</td>
+              </tr>
+            ))}</tbody></table>
+        </div>
+      )}
+      <div className="small" style={{ marginTop: 6 }}>Realised {sign(sum.realised)} · unrealised {sign(sum.unrealised)} · awaiting settlement {fmtCrowns(sum.pending)} · at risk {fmtCrowns(sum.atRisk)}{sum.legacy ? ` · ${sum.legacy} older position${sum.legacy === 1 ? '' : 's'} without per-outcome cost basis (net ${fmtMoneyDelta(sum.legacyNet)})` : ''}</div>
+      <details className="small muted"><summary>Details</summary>Cost basis is the average cost of the shares you still hold, including buy fees. Unrealised = what selling now would return after fees − cost basis. At risk = the most the position can still lose from here. Realised + unrealised = sell-now value + received − paid, exactly.</details>
     </div>
   );
 }

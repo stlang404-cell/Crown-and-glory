@@ -29,6 +29,9 @@ import { hashSeed, normal, rng01 } from '../../src/federation/generator';
 interface Side { rating: number; rd: number; latent: number }
 interface Game { id: string; white: Side; black: Side; result: string; termination: string; plies: number; evals: number[]; material: number[][] }
 const SEEDS = Number(process.argv[2] ?? 5), OUT = process.argv[3] ?? 'docs/sim/market-sim-crown-market-sim-1.json';
+// --legacy-analyst: re-run with the v0.9 analyst (noisy one-claim value trader, no in-play role) for the bug #33 comparison
+const LEGACY = process.argv.includes('--legacy-analyst');
+if (LEGACY) Object.assign(NPC_TRADERS.find(t => t.id === 'npc:analyst')!, { noise: 0.03, margin: 0.02, strategy: 'value', roles: ['pre', 'round'] });
 const DIR = 'tools/odds/data';
 const fnv = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
 const games: Game[] = readdirSync(DIR).filter(f => f.endsWith('.json')).sort().flatMap(f => JSON.parse(readFileSync(join(DIR, f), 'utf8')) as Game[])
@@ -139,6 +142,18 @@ function runPopulation(pop: 'agents' | 'roster') {
           m = res.market; for (const p of res.positions.values()) pos.set(p.holder, p);
         }
         const close = claimPrices(m).slice(0, sp.singletons.length);
+        // calibration of the pre-game closing price of every state
+        close.forEach((p, s) => { const b = calib[sp.kind][Math.min(9, Math.floor(p * 10))]; b.n++; b.sp += p; b.sy += s === sp.y ? 1 : 0; });
+        const bs = (v: number[]) => v.reduce((a, p, s) => a + (p - (s === sp.y ? 1 : 0)) ** 2, 0);
+        const B = brier[sp.kind] as { close: number; open: number; model: number; truth?: number; n: number };
+        B.close += bs(close); B.open += bs(close.map(() => 1 / close.length)); B.model += bs(sp.pub); if (B.truth !== undefined) B.truth += bs(sp.truth); B.n++;
+        // player strategies on copies of this market (each settled on the real outcome)
+        for (const s of STRATS) {
+          const outp = s.run({ m, pub: sp.pub, truth: sp.truth, budget: 50 * MICRO, singletons: sp.singletons, kind: sp.kind });
+          if (!outp.pos) { add(strat[sp.kind][s.id], 0, 0, false); continue; }
+          const res = settleMarket(closeMarket(outp.m, 'T'), [outp.pos], sp.y, 'T', 1e15, null);
+          add(strat[sp.kind][s.id], res.positions[0].received - res.positions[0].spent, outp.fees, true);
+        }
         // in play (shipped roster, match markets): windows after plies 10, 20, 40 and 60 with the published evaluation
         if (pop === 'roster' && sp.kind === 'match') {
           let prev = claimPrices(m);
@@ -158,18 +173,6 @@ function runPopulation(pop: 'agents' | 'roster') {
               add(inplay[s.id], st2.positions[0].received - st2.positions[0].spent, outp.fees, true);
             }
           }
-        }
-        // calibration of the pre-game closing price of every state
-        close.forEach((p, s) => { const b = calib[sp.kind][Math.min(9, Math.floor(p * 10))]; b.n++; b.sp += p; b.sy += s === sp.y ? 1 : 0; });
-        const bs = (v: number[]) => v.reduce((a, p, s) => a + (p - (s === sp.y ? 1 : 0)) ** 2, 0);
-        const B = brier[sp.kind] as { close: number; open: number; model: number; truth?: number; n: number };
-        B.close += bs(close); B.open += bs(close.map(() => 1 / close.length)); B.model += bs(sp.pub); if (B.truth !== undefined) B.truth += bs(sp.truth); B.n++;
-        // player strategies on copies of this market (each settled on the real outcome)
-        for (const s of STRATS) {
-          const outp = s.run({ m, pub: sp.pub, truth: sp.truth, budget: 50 * MICRO, singletons: sp.singletons, kind: sp.kind });
-          if (!outp.pos) { add(strat[sp.kind][s.id], 0, 0, false); continue; }
-          const res = settleMarket(closeMarket(outp.m, 'T'), [outp.pos], sp.y, 'T', 1e15, null);
-          add(strat[sp.kind][s.id], res.positions[0].received - res.positions[0].spent, outp.fees, true);
         }
         // settle the real market (agents only; the player strategies never touched it)
         const coll = books.balance(acct(m, 'collateral'));
@@ -202,6 +205,7 @@ function runPopulation(pop: 'agents' | 'roster') {
 const t0 = Date.now();
 const report = {
   id: 'crown-market-sim-1',
+  analyst: LEGACY ? 'v0.9 analyst (--legacy-analyst)' : 'v0.10 anchoring analyst',
   events: `${games.length} held-out engine games (tools/odds/data, FNV-1a mod 4 = 0), real results and real ply counts; ${SEEDS} seeds`,
   note: 'All traders are simulated. Public information only, except the Oracle benchmark (hidden strength; impossible in game). Player strategies trade on private copies of each market after the population has traded, and are settled on the real outcome.',
   agents: runPopulation('agents'),

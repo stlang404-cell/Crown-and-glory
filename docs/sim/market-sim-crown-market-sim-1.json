@@ -1,5 +1,6 @@
 {
  "id": "crown-market-sim-1",
+ "analyst": "v0.10 anchoring analyst",
  "events": "800 held-out engine games (tools/odds/data, FNV-1a mod 4 = 0), real results and real ply counts; 5 seeds",
  "note": "All traders are simulated. Public information only, except the Oracle benchmark (hidden strength; impossible in game). Player strategies trade on private copies of each market after the population has traded, and are settled on the real outcome.",
  "agents": {
@@ -620,12 +621,12 @@
      "legitimate": true,
      "markets": 4000,
      "traded": 4000,
-     "meanPnl": -0.7392,
+     "meanPnl": -3.7001,
      "ci95": [
-      -1.1736,
-      -0.3048
+      -4.6014,
+      -2.7989
      ],
-     "meanFees": 0.3245
+     "meanFees": 0.3624
     },
     {
      "id": "longshot",
@@ -633,12 +634,12 @@
      "legitimate": true,
      "markets": 4000,
      "traded": 4000,
-     "meanPnl": -32.0864,
+     "meanPnl": -16.4194,
      "ci95": [
-      -32.6322,
-      -31.5405
+      -17.8258,
+      -15.013
      ],
-     "meanFees": 0.3293
+     "meanFees": 0.3394
     },
     {
      "id": "complete-set",
@@ -659,12 +660,12 @@
      "legitimate": true,
      "markets": 4000,
      "traded": 4000,
-     "meanPnl": -0.9946,
+     "meanPnl": -1.0596,
      "ci95": [
-      -1.0029,
-      -0.9862
+      -1.063,
+      -1.0562
      ],
-     "meanFees": 0.9946
+     "meanFees": 1.0596
     },
     {
      "id": "decisive-arb",
@@ -684,26 +685,26 @@
      "label": "Public-model edge (buy where the public forecast exceeds the price by > 3 points, budget $50)",
      "legitimate": true,
      "markets": 4000,
-     "traded": 3985,
-     "meanPnl": -18.8594,
+     "traded": 0,
+     "meanPnl": 0,
      "ci95": [
-      -19.503,
-      -18.2159
+      0,
+      0
      ],
-     "meanFees": 0.2131
+     "meanFees": 0
     },
     {
      "id": "oracle",
      "label": "Oracle (benchmark, impossible in game: reads hidden strength; budget $50)",
      "legitimate": false,
      "markets": 4000,
-     "traded": 3925,
-     "meanPnl": -17.4389,
+     "traded": 3294,
+     "meanPnl": 5.4829,
      "ci95": [
-      -18.1094,
-      -16.7684
+      4.7645,
+      6.2012
      ],
-     "meanFees": 0.204
+     "meanFees": 0.1754
     }
    ],
    "length": [

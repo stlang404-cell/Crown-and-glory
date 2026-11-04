@@ -1,6 +1,10 @@
 # The Grand Exchange (v0.4.0) — market mathematics, solvency, information integrity, forecasting, sandbox
 
 All money is fictional crowns (₵): no purchase, no withdrawal, no real-world value.
+
+> v0.10: the integrity audit, the Decisive claim, the over/under and quarterfinal-advancement markets, the
+> results-pending suspension, the anchoring analyst NPC and the trading API are documented in
+> docs/MARKET_INTEGRITY.md (defects #26–#33 in docs/BUG_REGISTER.md). Where they differ, that document wins.
 Code: `src/exchange/lmsr.ts`, `market.ts` (crown-exchange-2), `families.ts` (crown-markets-2), `npc.ts`
 (crown-npc-traders-2), `src/app/markets.ts`, `src/app/federation.ts`, `src/app/forecasting.ts` (crown-forecast-1).
 Tests: `tests/exchange.test.ts`, `tests/exchange2.test.ts`, `tests/markets.test.ts`, `tests/federationService.test.ts`;
