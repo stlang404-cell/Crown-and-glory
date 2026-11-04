@@ -39,11 +39,16 @@ class UpdateController {
   private listeners = new Set<() => void>();
   private reloading = false;
   private requested = false;
+  private askedWorker: ServiceWorker | null = null;
   private reloadOnSwitch = true;
 
   subscribe = (l: () => void) => { this.listeners.add(l); return () => { this.listeners.delete(l); }; };
   getState = () => this.state;
-  private set(p: Partial<UpdateState>) { this.state = { ...this.state, ...p }; this.listeners.forEach(l => l()); }
+  private set(p: Partial<UpdateState>) {
+    // Notify only on a real change: listeners re-render UpdateNotice, whose effect may call apply() again.
+    if ((Object.keys(p) as (keyof UpdateState)[]).every(k => Object.is(this.state[k], p[k]))) return;
+    this.state = { ...this.state, ...p }; this.listeners.forEach(l => l());
+  }
 
   start() {
     // confirmation after an update-triggered reload (once)
@@ -112,6 +117,9 @@ class UpdateController {
     if (this.state.activatedElsewhere) { this.reloadOnce(); return; }
     const w = this.reg?.waiting;
     if (!w) return;
+    // Ask each waiting worker once (re-asking re-rendered UpdateNotice in a loop: React error #185).
+    if (this.askedWorker === w) return;
+    this.askedWorker = w;
     this.requested = true;
     this.reloadOnSwitch = !this.runningMatchesWaiting();
     this.set({ applying: this.reloadOnSwitch });

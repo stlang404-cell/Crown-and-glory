@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useApp } from './App';
 import { updates } from '../app/updates';
-import { updateSafety, BLOCKER_TEXT, type UpdateSafety } from '../app/updatePolicy';
+import { updateSafety, blockingLiveGames, BLOCKER_TEXT, type UpdateSafety } from '../app/updatePolicy';
 import type { GameStatus } from '../games/types';
 import type { AppServices } from '../app/services';
 
@@ -15,8 +15,8 @@ function currentRoute(): { name: string; id: string | null } {
 
 /** Federation internals the decision needs (read-only; not part of the service's public API). */
 function arena(services: AppServices) {
-  const fed = services.fed as unknown as { state?: { liveGames?: Map<string, { status: string }> }; inflight?: Map<string, unknown>; busy?: boolean } | undefined;
-  const live = fed?.state?.liveGames ? [...fed.state.liveGames.values()].filter(g => g.status === 'live').length : 0;
+  const fed = services.fed as unknown as { state?: { liveGames?: Map<string, { status: string; marketId?: string | null }> }; inflight?: Map<string, unknown>; busy?: boolean } | undefined;
+  const live = fed?.state?.liveGames ? blockingLiveGames(fed.state.liveGames.values()) : 0;
   return { live, inFlight: (fed?.inflight?.size ?? 0) > 0, busy: !!fed?.busy };
 }
 

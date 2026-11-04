@@ -48,3 +48,11 @@ export const BLOCKER_TEXT: Record<UpdateBlocker, string> = {
   'federation-busy': 'It will install in a moment.',
   'other-tab': 'Close other Crown tabs to install it.',
 };
+
+/** Live arena games that block an update: in-play games with a market. Scheduled background games (no market)
+ *  commit every move and resume after the reload; the scheduler keeps some running at all times. */
+export function blockingLiveGames(games: Iterable<{ status: string; marketId?: string | null }>): number {
+  let n = 0;
+  for (const g of games) if (g.status === 'live' && !!g.marketId) n++;
+  return n;
+}

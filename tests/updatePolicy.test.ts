@@ -1,6 +1,6 @@
 /** "Is it safe to switch to a downloaded update now?" — the pure decision used by <UpdateNotice />. */
 import { describe, expect, it } from 'vitest';
-import { updateSafety, type UpdateSafetyInput } from '../src/app/updatePolicy';
+import { updateSafety, blockingLiveGames, type UpdateSafetyInput } from '../src/app/updatePolicy';
 
 const idle: UpdateSafetyInput = { route: 'play', matchGameStatus: null, liveArenaGames: 0, featuredInFlight: false, federationBusy: false, readOnly: false };
 
@@ -35,5 +35,33 @@ describe('updateSafety', () => {
     const left = updateSafety({ ...idle, route: 'play', matchGameStatus: null });
     expect(inGame.safe).toBe(false);
     expect(left.safe).toBe(true);
+  });
+});
+
+describe('blockingLiveGames (v0.9 scheduler)', () => {
+  it('counts only live in-play games with a market; scheduled background games never block an update', () => {
+    const games = [
+      { status: 'live', marketId: null }, { status: 'live', marketId: undefined }, { status: 'live' },
+      { status: 'done', marketId: 'mk:1' }, { status: 'live', marketId: 'mk:2' },
+    ];
+    expect(blockingLiveGames(games)).toBe(1);
+    expect(blockingLiveGames(games.slice(0, 3))).toBe(0);
+  });
+});
+
+describe('UpdateController.apply (React #185 regression)', () => {
+  it('asks a waiting worker once and does not notify listeners again when the state is unchanged', async () => {
+    const { updates, CURRENT_BUILD } = await import('../src/app/updates');
+    const posted: unknown[] = [];
+    const waiting = { postMessage: (m: unknown) => posted.push(m) } as unknown as ServiceWorker;
+    updates.reg = { waiting } as unknown as ServiceWorkerRegistration;
+    updates.state = { ...updates.state, waiting: true, available: CURRENT_BUILD, applying: false };
+    let notified = 0;
+    const off = updates.subscribe(() => { notified++; });
+    // The page already runs the waiting build, so apply() switches without a reload (applying stays false).
+    for (let i = 0; i < 50; i++) updates.apply();
+    off();
+    expect(posted).toEqual([{ type: 'SKIP_WAITING' }]);
+    expect(notified).toBe(0);
   });
 });
