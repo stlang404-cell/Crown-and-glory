@@ -129,7 +129,7 @@ check(5, !o2.some(u => ['first-win', 'first-draw', 'qm-first'].includes(u.id)) &
 
 // a real unlock: register for the Challenger Open
 await page.goto(url + '#/world');
-await page.getByRole('button', { name: /^Register/ }).click();
+await page.getByTestId('register-swiss').click();
 await page.waitForSelector('[data-testid="vault-toast"]', { timeout: 20000 });
 const toast = await page.locator('[data-testid="vault-toast"]').textContent();
 const role = await page.locator('[data-testid="vault-toast"]').getAttribute('role');

@@ -30,7 +30,7 @@ const fresh = await page.evaluate(() => ({
   name: document.querySelector('[data-testid="header-name"]')?.textContent, rating: document.querySelector('[data-testid="banner-rating"]')?.textContent,
   position: getComputedStyle(document.querySelector('[data-testid="identity-banner"]')).position,
 }));
-check(1, fresh.name === 'You' && /No rated games yet/.test(fresh.rating ?? '') && fresh.position !== 'fixed' && fresh.position !== 'sticky', `Fresh header: ${JSON.stringify(fresh)}`);
+check(1, fresh.name === 'You' && (/No rated games yet/.test(fresh.rating ?? '') || /^Career Elo 0\b.*provisional/.test(fresh.rating ?? '')) /* v0.11: new careers start at 0, provisional */ && fresh.position !== 'fixed' && fresh.position !== 'sticky', `Fresh header: ${JSON.stringify(fresh)}`);
 
 // ---- a rated game: Previous → New (±)
 await page.locator('nav.rail').getByRole('button', { name: 'Play', exact: true }).click();
@@ -56,7 +56,7 @@ const change = await page.evaluate(async () => {
   const shown = (v) => Math.max(0, Math.round(v));
   const d = shown(e.after.rating) - shown(e.before.rating);
   const want = `Previous ${shown(e.before.rating).toLocaleString('en-US')} → New ${shown(e.after.rating).toLocaleString('en-US')} (${d >= 0 ? '+' : '−'}${Math.abs(d).toLocaleString('en-US')})`;
-  return { text: document.querySelector('.result-overlay [data-testid="rating-change"]').textContent.replace(/\s+/g, ' ').replace(' to ', ' ').trim(), want };
+  return { text: document.querySelector('.result-overlay [data-testid="rating-change"]').textContent.replace(/\s+/g, ' ').replace(' to ', ' ').replace(/ · provisional$/, '').trim(), want };
 });
 check(2, change.text.replace('→to', '→') === change.want || change.text.includes(change.want.split(' (')[0].replace('→ ', '')) || change.text.replace(/\s/g, '') === change.want.replace(/\s/g, ''), `Rated game shows "${change.text}" (ledger: "${change.want}")`);
 await page.screenshot({ path: SHOTS + 'rated-game-rating-change.png' });

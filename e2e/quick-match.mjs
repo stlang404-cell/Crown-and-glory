@@ -77,7 +77,7 @@ await page.goto(url + '#/play');
 await page.getByRole('group', { name: 'Opponent pool' }).getByRole('button', { name: 'Elite and Sovereign' }).click();
 await page.locator('[data-testid="qm-draw"]').click();
 const elite = await page.locator('[data-testid="qm-rating"]').textContent().catch(() => '');
-check(7, +elite.split(' ')[0] >= 2400, `Elite filter drew a ${elite} competitor`);
+check(7, +elite.split(' ')[0].replace(/,/g, '') >= 2400, `Elite filter drew a ${elite} competitor`);
 await ctx.close();
 ctx = await chromium.launchPersistentContext(ART + 'profile', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 page = ctx.pages()[0] ?? await ctx.newPage(); watch(page);

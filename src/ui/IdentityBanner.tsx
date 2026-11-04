@@ -100,7 +100,7 @@ export function IdentityBanner() {
           <span className="id-name" data-testid="header-name">{name}</span>
           {rank && <span className="id-rank" data-testid="header-rank">{rank.label}</span>}
           <span className={rank ? 'id-title id-title-sub' : 'id-title'} data-testid="banner-title">{t ? t.name : 'Unrated'}{t && prov ? <span className="id-prov"> · provisional</span> : null}</span>
-          <span className="id-rating" data-testid="banner-rating">{rating !== null ? <><span className="id-elo-k">Career Elo </span><Elo rating={rating} rd={d.pool!.rd} /></> : 'No rated games yet'}</span>
+          <span className="id-rating" data-testid="banner-rating">{rating !== null ? <><span className="id-elo-k">Career Elo </span><Elo rating={rating} rd={d.pool!.rd} provisional={prov} /></> : 'No rated games yet'}</span>
           <span className="id-compact" data-testid="header-compact">{division}{featuredTitle ? ` · ${featuredTitle}` : ''}{netWorth !== null ? ` · ${fmtCrowns(netWorth, 0)}` : ''}</span>
         </span>
       </button>

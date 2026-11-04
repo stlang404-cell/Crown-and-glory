@@ -246,7 +246,7 @@ check(21, cs.c.owned.includes('frame-gold') && cs.c.equipped.frame === 'frame-go
 await page.goto(URL_ + '#/profile');
 await page.waitForSelector('[data-testid="career-standing"]');
 const pass = await page.evaluate(async () => { const t = document.querySelector('[data-testid="career-standing"]').textContent; const s = await window.__crown.db.ratingState('rapid'); const w = window.__crown.fed.state.world; return { t, rating: Math.round(s.rating), div: w.player.division, title: w.player.fedTitle ?? null, avatar: getComputedStyle(document.querySelector('[data-testid="player-avatar"]')).borderTopColor }; });
-check(11, (pass.t.includes(String(pass.rating)) || pass.t.includes(pass.rating.toLocaleString('en'))) && pass.t.includes(`Division ${pass.div} of 8`) && pass.t.includes(pass.title ?? 'None yet'), `Passport shows rating ${pass.rating}, division ${pass.div} and federation title ${pass.title ?? 'none'} as six separate records`);
+check(11, (pass.t.includes(String(pass.rating)) || pass.t.includes(pass.rating.toLocaleString('en-US'))) && pass.t.includes(`Division ${pass.div} of 8`) && pass.t.includes(pass.title ?? 'None yet'), `Passport shows rating ${pass.rating}, division ${pass.div} and federation title ${pass.title ?? 'none'} as six separate records`);
 check(22, /Cash .*net worth/.test(pass.t) && /Eligibility this season/.test(pass.t) && pass.avatar !== 'rgba(0, 0, 0, 0)', `Career Passport accurate: finances, eligibility, trophies, rivalries, forecasting and achievements from recorded state; equipped frame visible (${pass.avatar})`);
 await page.screenshot({ path: OUT + '09-passport.png', fullPage: true });
 

@@ -12,13 +12,14 @@ export function Elo({ rating, rd, provisional, compact, className }: { rating: n
 }
 
 /** "Previous 1,427 → New 1,445 (+18)" after a rated game (displayed values; never negative). */
-export function RatingChangeLine({ before, after, className }: { before: number; after: number; className?: string }) {
+export function RatingChangeLine({ before, after, className, provisional }: { before: number; after: number; className?: string; provisional?: boolean }) {
   const c = ratingChange(before, after);
   return (
     <div className={`rating-change ${className ?? ''}`} data-testid="rating-change" title={CAREER_ELO_NOTE}>
-      <span className="muted">Previous</span> <span className="mono">{c.previous.toLocaleString('en-US')}</span> <span aria-hidden>→</span><span className="sr-only">to</span>{' '}
+      <span className="muted">Previous</span> <span className="mono">{c.previous.toLocaleString('en-US')}</span> <span role="img" aria-label="to">→</span>{' '}
       <span className="muted">New</span> <strong className="mono">{c.next.toLocaleString('en-US')}</strong>{' '}
       <span className={`mono ${c.delta > 0 ? 'pos' : c.delta < 0 ? 'neg' : 'muted'}`}>({c.deltaText})</span>
+      {provisional && <span className="muted"> · provisional</span>}
     </div>
   );
 }

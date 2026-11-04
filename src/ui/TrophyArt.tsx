@@ -35,7 +35,7 @@ const METAL: Record<Tier, string> = { 1: TINCTURES.bronze, 2: TINCTURES.argent, 
 export function TrophyArt({ kind, tier, size = 56, title }: { kind: TrophyKind; tier: Tier; size?: number; title: string }) {
   const small = size < 32;
   return (
-    <svg className={`trophy-art tier-${tier}`} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title} data-kind={kind} data-tier={tier}>
+    <svg className={`trophy-art tier-${tier}`} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title || `${kind.replace(/-/g, ' ')} trophy`} data-kind={kind} data-tier={tier}>
       <title>{title}</title>
       {tier >= 5 && !small && <path d="M6 44C2 32 4 18 12 10L14 12C8 20 7 32 10 42ZM58 44C62 32 60 18 52 10L50 12C56 20 57 32 54 42Z" fill={TINCTURES.vert} opacity={0.9} />}
       <path d={TROPHY_ART[kind]} fill={METAL[tier]} fillRule="evenodd" stroke="var(--her-outline, #111318)" strokeWidth={small ? 2.2 : 1.4} strokeLinejoin="round" />
