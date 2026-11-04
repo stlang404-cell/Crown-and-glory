@@ -25,9 +25,11 @@ export function eligibleLosses(plies: PlyAnalysis[], pov: Pov): number[] {
   return plies.filter(p => p.color === pov && !p.forced && p.loss !== null && p.ply > MODEL.bookPlies).map(p => p.loss as number);
 }
 
-/** The model is shown only if its held-out validation passed: estimates rise with measured strength level by level
- *  and correlate usefully (r ≥ 0.6) with it on games not used for fitting. */
-export const PLAYED_LIKE_VALIDATED = MODEL.validation.monotoneByLevel === true && (MODEL.validation.heldOut.r ?? 0) >= 0.6;
+/** The model is shown only if its held-out validation passed: estimates rise with measured strength level by level,
+ *  correlate usefully (r ≥ 0.6) on games not used for fitting, AND beat the naive "rating = a + b × accuracy" line on
+ *  held-out error (otherwise it adds nothing over accuracy and must not be presented as a performance rating). */
+export const PLAYED_LIKE_VALIDATED = MODEL.validation.monotoneByLevel === true && (MODEL.validation.heldOut.r ?? 0) >= 0.6
+  && MODEL.validation.heldOut.mae < MODEL.validation.naiveAccuracyLine.mae;
 
 /** The model's raw value for a list of losses (no gates, no rounding); exported for tests and calibration tools. */
 export function rawPlayedLike(losses: number[]): number {

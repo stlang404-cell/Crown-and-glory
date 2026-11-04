@@ -19,7 +19,7 @@ function Side({ name, rating, summary, pl, testId }: { name: string; rating: str
       <strong>{name}</strong>
       <div className="stat"><span className="k">Actual Rating</span><span className="v mono">{rating}</span></div>
       <div className="stat"><span className="k">Played Like</span><span className="v mono" data-testid={`${testId}-value`}>{fmtPlayedLike(pl)}</span>
-        <span className="small muted">{pl.status === 'ok' ? `likely ${pl.low}–${pl.high} · ${pl.moves} moves` : pl.status === 'insufficient' ? `${pl.moves} informative moves; needs ${pl.needed}` : pl.status === 'below-range' || pl.status === 'above-range' ? `outside the calibrated range · ${pl.moves} moves` : pl.status === 'uncalibrated' ? 'model not yet validated' : ''}</span></div>
+        <span className="small muted">{pl.status === 'ok' ? `likely ${pl.low}–${pl.high} · ${pl.moves} moves` : pl.status === 'insufficient' ? `${pl.moves} informative moves; needs ${pl.needed}` : pl.status === 'below-range' || pl.status === 'above-range' ? `outside the calibrated range · ${pl.moves} moves` : pl.status === 'uncalibrated' ? 'not shown until the model beats accuracy alone on held-out games' : ''}</span></div>
       <div className="small">Accuracy {summary.accuracy === null ? '—' : summary.accuracy.toFixed(1)} · Blunders {summary.counts.blunder} · Mistakes {summary.counts.mistake} · Best {summary.counts.best}</div>
     </div>
   );

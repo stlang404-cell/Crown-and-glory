@@ -13,79 +13,94 @@
   "share of moves losing <= 0.005"
  ],
  "beta": [
-  1405.401,
-  -208.2,
-  -1078.236,
-  -831.405
+  926.166,
+  -424.427,
+  -1180.029,
+  -764.148
  ],
  "eps": 0.005,
  "bookPlies": 4,
  "minMoves": 8,
  "sd": {
-  "s0sq": 51471.7,
-  "s1sq": 712189.7
+  "s0sq": 54257.2,
+  "s1sq": 1867654.8
  },
  "calibratedRange": [
   800,
-  1710
+  2641
  ],
  "validation": {
   "heldOut": {
-   "n": 52,
-   "mae": 240,
-   "rmse": 295,
-   "r": 0.493,
-   "bias": 35,
-   "cover90": 0.904
+   "n": 120,
+   "mae": 293,
+   "rmse": 371,
+   "r": 0.678,
+   "bias": 11,
+   "cover90": 0.892
   },
   "train": {
-   "n": 131,
-   "mae": 243,
-   "rmse": 297,
-   "r": 0.426,
-   "bias": 20,
-   "cover90": 0.931
+   "n": 279,
+   "mae": 294,
+   "rmse": 378,
+   "r": 0.658,
+   "bias": 28,
+   "cover90": 0.91
   },
   "naiveAccuracyLine": {
-   "n": 52,
-   "mae": 236,
-   "rmse": 272,
-   "r": 0.556,
-   "bias": 3,
+   "n": 120,
+   "mae": 284,
+   "rmse": 361,
+   "r": 0.687,
+   "bias": -26,
    "cover90": null
   },
   "nullMean": {
-   "n": 52,
-   "mae": 302,
-   "rmse": 329,
-   "r": null,
-   "bias": 37,
+   "n": 120,
+   "mae": 388,
+   "rmse": 494,
+   "r": 0.0,
+   "bias": 5,
    "cover90": null
   },
   "heldOutByLevel": {
    "crown-L1": {
     "true": 800,
-    "meanPredicted": 1093,
+    "meanPredicted": 1120,
     "n": 12
    },
    "crown-L2": {
     "true": 1122,
-    "meanPredicted": 1257,
+    "meanPredicted": 1380,
     "n": 20
    },
    "crown-L3": {
     "true": 1582,
-    "meanPredicted": 1411,
-    "n": 14
+    "meanPredicted": 1678,
+    "n": 20
    },
    "crown-L4": {
     "true": 1710,
-    "meanPredicted": 1377,
-    "n": 6
+    "meanPredicted": 1759,
+    "n": 24
+   },
+   "crown-L5": {
+    "true": 1976,
+    "meanPredicted": 1814,
+    "n": 24
+   },
+   "crown-L6": {
+    "true": 2375,
+    "meanPredicted": 2017,
+    "n": 16
+   },
+   "crown-L7": {
+    "true": 2641,
+    "meanPredicted": 2344,
+    "n": 4
    }
   },
-  "monotoneByLevel": false,
-  "excludedInsufficient": 21,
-  "samples": 204
+  "monotoneByLevel": true,
+  "excludedInsufficient": 31,
+  "samples": 430
  }
 }

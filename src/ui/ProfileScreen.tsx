@@ -240,7 +240,7 @@ function PlayedLikeHistory({ games, reports }: { games: GameRecord[]; reports: A
   return (
     <div className="panel" style={{ marginTop: 14 }} data-testid="passport-played-like">
       <div className="panel-title"><h3 style={{ margin: 0 }}>Played Like</h3><span className="chip gold">Estimate · Experimental</span></div>
-      {!PLAYED_LIKE_VALIDATED ? <p className="small muted">The Played Like model is still being calibrated; estimates appear here once it passes validation.</p>
+      {!PLAYED_LIKE_VALIDATED ? <p className="small muted">The Played Like model is still being calibrated: on held-out games it does not yet predict strength better than accuracy alone, so no estimates are shown. They appear here once it passes validation.</p>
         : !rows.length ? <p className="small muted">Estimates appear after your finished games are analysed.</p> : (<>
         <div className="grid-3">
           <div className="stat"><span className="k">Average (last {recent.length})</span><span className="v mono">{avg ?? '—'}</span><span className="small muted">{avg === null ? 'Needs 5 estimated games' : 'Not your rating; your rating comes from results'}</span></div>
