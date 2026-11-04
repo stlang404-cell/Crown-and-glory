@@ -34,37 +34,10 @@ import { Icon } from './Icons';
 import { SettingsScreen } from './SettingsScreen';
 import { UpdateNotice } from './UpdateNotice';
 import { VaultScreen, VaultToast } from './VaultScreen';
+import { mark } from '../app/startup';
+import { parseHash, subscribeHash, toHash, type View } from './route';
 
-export type View =
-  | { name: 'dashboard' }
-  | { name: 'play' }
-  | { name: 'match'; gameId: string }
-  | { name: 'analysis'; gameId: string; ply?: number }
-  | { name: 'analyses' }
-  | { name: 'library' }
-  | { name: 'replays' }
-  | { name: 'profile' }
-  | { name: 'lab' }
-  | { name: 'academy' }
-  | { name: 'grimoire'; path?: string }
-  | { name: 'world' }
-  | { name: 'standings' }
-  | { name: 'tournaments' }
-  | { name: 'competitors' }
-  | { name: 'population' }
-  | { name: 'competitor'; id: string }
-  | { name: 'watch'; id: string }
-  | { name: 'exhibition'; id?: string }
-  | { name: 'exchange'; id?: string }
-  | { name: 'finance' }
-  | { name: 'forecasts' }
-  | { name: 'news' }
-  | { name: 'rivals' }
-  | { name: 'hall' }
-  | { name: 'heraldry' }
-  | { name: 'vault' }
-  | { name: 'ranks' }
-  | { name: 'settings' };
+export type { View } from './route';
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
 export const useApp = () => useContext(Ctx)!;
@@ -76,32 +49,14 @@ export function useServices(): AppServices {
   return services;
 }
 
-function parseHash(): View {
-  const h = location.hash.replace(/^#\/?/, '');
-  const [name, id, ply] = h.split('/');
-  if (name === 'match' && id) return { name: 'match', gameId: decodeURIComponent(id) };
-  if (name === 'analysis' && id) return { name: 'analysis', gameId: decodeURIComponent(id), ply: ply ? +ply : undefined };
-  if (name === 'analysis') return { name: 'analyses' };
-  if (name === 'competitor' && id) return { name: 'competitor', id: decodeURIComponent(id) };
-  if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
-  if (name === 'exhibition') return id ? { name: 'exhibition', id: decodeURIComponent(id) } : { name: 'exhibition' };
-  if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
-  if (name === 'federation') return { name: 'world' };
-  if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
-  if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks'].includes(name)) return { name } as View;
-  return { name: 'dashboard' };
+/** Re-render on per-move analysis progress (services.progress). It has its own channel: a background analysis publishes
+ *  several times a second, and data loads keyed on services.revision must not re-run for each analysed move. */
+export function useAnalysisProgress() {
+  const { services } = useApp();
+  useSyncExternalStore(l => services.subscribeProgress(l), () => services.progressRevision);
+  return services.progress;
 }
-function toHash(v: View): string {
-  if (v.name === 'match') return `#/match/${encodeURIComponent(v.gameId)}`;
-  if (v.name === 'analysis') return `#/analysis/${encodeURIComponent(v.gameId)}${v.ply !== undefined ? '/' + v.ply : ''}`;
-  if (v.name === 'analyses') return '#/analysis';
-  if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
-  if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
-  if (v.name === 'exhibition' && v.id) return `#/exhibition/${encodeURIComponent(v.id)}`;
-  if (v.name === 'grimoire' && v.path) return `#/grimoire/${encodeURIComponent(v.path)}`;
-  return `#/${v.name}`;
-}
+
 
 const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['name'] }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'home' },
@@ -127,10 +82,12 @@ const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
   useEffect(() => {
-    const on = () => setView(parseHash());
-    window.addEventListener('hashchange', on);
-    return () => window.removeEventListener('hashchange', on);
-  }, []);
+    // subscribes, then re-reads the hash once: a change between the first render and this effect is not lost (route.ts)
+    const off = subscribeHash(window, setView);
+    mark('app:mounted');
+    void services.background.firstScreen(); // background work starts after this first screen has been painted
+    return off;
+  }, [services]);
   const go = (v: View) => { const h = toHash(v); if (location.hash !== h) location.hash = h; else setView(v); window.scrollTo(0, 0); };
   const section = SECTION[view.name] ?? view.name;
   return (

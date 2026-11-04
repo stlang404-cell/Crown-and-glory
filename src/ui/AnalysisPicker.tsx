@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useApp, useServices } from './App';
+import { useApp, useServices, useAnalysisProgress } from './App';
 import { buildRows, type LibraryRow } from './LibraryScreen';
 import { AppServices } from '../app/services';
 import { DEFAULT_ANALYSIS } from '../analysis/analyzer';
@@ -15,6 +15,7 @@ const STATUS_LABEL: Record<string, string> = {
  */
 export function AnalysisPicker() {
   const services = useServices();
+  useAnalysisProgress(); // per-move analysis progress (its own channel: it does not re-run data loads)
   const { go } = useApp();
   const [rows, setRows] = useState<LibraryRow[] | null>(null);
   const [current, setCurrent] = useState<Set<string>>(new Set());

@@ -7,6 +7,10 @@ import { updates, CURRENT_BUILD } from './app/updates';
 import { installAudioUnlock } from './ui/sound';
 import './ui/themes.css';
 import './ui/styles.css';
+import { mark, startupMarks } from './app/startup';
+
+mark('main');
+(window as unknown as { __crownStartup?: unknown }).__crownStartup = { marks: startupMarks }; // startup timeline (e2e/startup.mjs)
 
 applyPrefs(); // idempotent with the inline pre-paint script in index.html
 installAudioUnlock(); // audio starts only after the player's first tap or key press
@@ -16,8 +20,9 @@ const root = createRoot(document.getElementById('root')!);
 AppServices.boot().then(services => {
   (window as unknown as { __crown?: AppServices }).__crown = services; // debugging / e2e inspection only
   void import('./ui/sound').then(m => { (window as unknown as { __crownSound?: unknown }).__crownSound = m; }); // e2e inspection only
+  mark('render:start');
   root.render(<StrictMode><App services={services} /></StrictMode>);
-  void services.processQueue();
+  // the analysis queue, back-fills and live scheduler start once <App> has painted its first screen (services.background)
 }).catch(e => {
   // Nothing is in progress when the app could not even open: switch to a downloaded fix as soon as one is ready.
   const tryFix = () => { if (updates.state.waiting || updates.state.activatedElsewhere) updates.apply(); };

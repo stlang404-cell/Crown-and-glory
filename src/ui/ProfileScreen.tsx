@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { RecordsReloader } from '../app/reloader';
+import { mark } from '../app/startup';
 import { useApp, useServices } from './App';
 import { Icon } from './Icons';
 import { RatingChart } from './Charts';
@@ -46,17 +48,26 @@ export function ProfileScreen() {
   const [fFrom, setFFrom] = useState('');
   const [fTo, setFTo] = useState('');
 
+  // The player's own rating data first (one short transaction), then the rest of the saved records; afterwards
+  // reloaded only when the saved records changed, never two loads at once (src/app/reloader.ts).
+  const reloader = useRef<RecordsReloader | null>(null);
   useEffect(() => {
-    void (async () => {
-      const st = await services.db.allRatingStates();
-      setStates(Object.fromEntries(st.map(s => [s.pool, s])));
-      setEvents(await services.db.ratingEvents());
-      setGames(await services.db.allGames());
-      setReports(await services.db.allReports());
-      setAttempts(await services.db.getAll<Attempt>('attempts'));
-      setRuns(await services.db.getAll<TrainingRun>('trainingRuns'));
-    })();
-  }, [services, services.revision]);
+    const db = services.db;
+    const r = new RecordsReloader(async () => `${await db.savedRecordsKey()}|${services.playedLikeVersion}`, async alive => {
+      const own = await db.careerRatings();
+      if (!alive()) return;
+      setStates(Object.fromEntries(own.states.map(s => [s.pool, s])));
+      setEvents(own.events);
+      mark('profile:events');
+      const [g, rep, att, tr] = await Promise.all([db.allGames(), db.allReports(), db.getAll<Attempt>('attempts'), db.getAll<TrainingRun>('trainingRuns')]);
+      if (!alive()) return;
+      setGames(g); setReports(rep); setAttempts(att); setRuns(tr);
+    });
+    reloader.current = r;
+    void r.request();
+    return () => r.stop();
+  }, [services]);
+  useEffect(() => { void reloader.current?.request(); }, [services.revision]);
 
   const s = states[pool] ?? newPoolState(pool, services.db.ratingStart);
   const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);

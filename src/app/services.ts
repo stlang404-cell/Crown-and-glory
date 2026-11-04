@@ -22,6 +22,9 @@ import { START_FEN } from './schedulerEngine';
 import { prepareNewCareer, startNewCareer, type PreparedCareerChange } from './career';
 import type { CareerRecord } from '../ratings/career';
 import { ExhibitionRunner, isExhibitionId, loadExhibition, saveExhibitionReport } from './exhibition';
+import { mark, phase } from './startup';
+import { BackgroundStart, browserEnv } from './backgroundStart';
+import { whenForegroundIdle } from './reloader';
 
 /** The release version, from the build identity (package.json); '0.0.0-dev' only outside a Vite build. */
 export const APP_VERSION: string = typeof __BUILD__ !== 'undefined' ? __BUILD__.version : '0.0.0-dev';
@@ -77,15 +80,18 @@ export class AppServices {
   /** Set while a new career replaces this one: no more background writes. */
   private closing = false;
   revision = 0;
+  /** Ordered background start after the first screen (App reports it; src/app/backgroundStart.ts). */
+  readonly background = new BackgroundStart(browserEnv(mark, () => whenForegroundIdle(3000)));
 
   constructor(readonly db: CrownDB) { this.exhibitions = this.makeExhibitions(); }
   /** Engine job log (diagnostics, e2e inspection). */
   engineEvents() { return [...ENGINE_EVENTS]; }
 
   static async boot(): Promise<AppServices> {
-    const db = await CrownDB.open();
+    mark('boot:start');
+    const db = await phase('db:open', () => CrownDB.open());
     const s = new AppServices(db);
-    await s.acquireLease();
+    await phase('lease', () => s.acquireLease());
     s.fed = new FederationService(db, async () => { const p = await db.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; });
     s.fed.runSelfplay = (req, onMove) => s.spectator.selfplay(req, m => onMove(m)).then(r => ({ moves: r.moves, result: r.result, termination: r.termination }));
     s.fed.computeMove = req => s.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
@@ -95,31 +101,41 @@ export class AppServices {
     // scheduled-game commits arrive several times a second: re-render at most twice a second for them
     let pending: ReturnType<typeof setTimeout> | null = null;
     s.fed.onLiveChange = () => { if (!pending) pending = setTimeout(() => { pending = null; s.notify(); }, 500); };
-    await s.fed.load();
+    await phase('fed:load', () => s.fed.load());
+    mark('fed:ensure:start');
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));
     if (!s.readOnly) await s.fed.ensureHeraldry().catch(e => console.error('heraldry', e));
     if (!s.readOnly) await s.fed.ensureEngineCommitment(CANON_BUILD).catch(e => console.error('engine commitment', e));
+    mark('fed:ensure:end');
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
+    mark('jobs:requeued');
     // Live scheduler: starts after the first screen; nothing runs while the app is closed or hidden (docs/FEDERATION_SCALE.md)
     s.live = new LiveScheduler(s.fed, s.livePool.map(ch => ({
       compute: req => ch.move({ initialFen: START_FEN, moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
         .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs })),
     })), { settings: () => s.liveSettings, readOnly: () => s.readOnly });
     if (!s.readOnly && typeof document !== 'undefined') {
-      setTimeout(() => { void s.live.start(); }, 1500);
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) { s.live.pause('hidden'); s.exhibitions.pause(); }
         else { s.live.resume('hidden'); void s.live.catchUp().catch(e => console.error('live catch-up', e)); }
       });
     }
-    // Vault: first evaluation (and one-time backfill) after the first screen has rendered, off the boot path
     s.vault = new VaultService(s);
     s.legacy = new LegacyService(s);
-    setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)).finally(() => s.legacy.start().catch(e => console.error('legacy', e))); }, 800);
-    // Played Like records for analysed games saved before v0.10 / before the current model (cheap, off the boot path)
-    setTimeout(() => { void s.backfillPlayedLike().catch(e => console.error('played like backfill', e)); }, 1200);
+    // Background work starts after the first screen has been painted, one idle step at a time, in this fixed order
+    // (src/app/backgroundStart.ts): the analysis queue (left "running" jobs were re-queued above), the Vault (first
+    // evaluation and its one-time back-fills), legacy trophies (back-fill), Played Like records for analysed games saved
+    // before v0.10 / before the current model, then the live scheduler with its reopen catch-up.
+    s.background
+      .add('analysis', () => { void s.processQueue(); })
+      .add('vault', () => s.vault.start())
+      .add('legacy', () => s.legacy.start())
+      .add('playedLike', () => s.backfillPlayedLike())
+      .add('live', () => { if (!s.readOnly && typeof document !== 'undefined') void s.live.start().catch(e => console.error('live start', e)); });
+    s.background.arm();
+    mark('boot:end');
     return s;
   }
 
@@ -140,7 +156,14 @@ export class AppServices {
   get readOnly(): boolean { return this.writerLease === 'unavailable'; }
 
   subscribe(l: Listener): () => void { this.listeners.add(l); return () => this.listeners.delete(l); }
-  notify(): void { this.revision++; for (const l of this.listeners) l(); }
+  notify(): void { this.revision++; for (const l of this.listeners) l(); this.notifyProgress(); }
+  /** Per-move analysis progress: its own channel (useAnalysisProgress). Before v1.0 every analysed move bumped
+   *  `revision`, so every open screen re-read its saved records several times a second during a background analysis
+   *  — right when a reloaded app was loading its first screen (docs/evidence/v1.0/reload-flake.md). */
+  progressRevision = 0;
+  private progressListeners = new Set<Listener>();
+  subscribeProgress(l: Listener): () => void { this.progressListeners.add(l); return () => this.progressListeners.delete(l); }
+  private notifyProgress(): void { this.progressRevision++; for (const l of this.progressListeners) l(); }
 
   async saveGame(g: GameRecord): Promise<void> {
     if (this.readOnly) return;
@@ -301,6 +324,7 @@ export class AppServices {
         const jobs = (await this.db.allJobs()).filter(j => j.status === 'queued').sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const job = jobs[0];
         if (!job) return;
+        mark('analysis:job');
         const exh = isExhibitionId(job.gameId);
         const game = job.gameId.startsWith('wg:') ? await this.worldGameAsRecord(job.gameId) : exh ? await this.exhibitionAsRecord(job.gameId) : await this.db.getGame(job.gameId);
         const settings = ANALYSIS_PRESETS.find(s => s.id === job.settingsId);
@@ -318,7 +342,7 @@ export class AppServices {
             (ply, i, n) => {
               if (this.progress?.jobId !== job.id) return;
               this.progress = { ...this.progress, done: i + 1, total: n, partial: [...this.progress.partial, ply] };
-              this.notify();
+              this.notifyProgress();
             },
           );
           if (exh) {
@@ -359,6 +383,7 @@ export class AppServices {
   async startNewCareer(prepared: PreparedCareerChange): Promise<CareerRecord> {
     if (this.readOnly) throw new Error('This tab is read-only. Close the other tab first.');
     this.closing = true;
+    this.background.stop();
     this.live?.stop();
     this.exhibitions?.pause(); // an exhibition in progress stops (its in-flight reply is discarded)
     // the Vault stops listening; an evaluation in flight finishes (into the OLD career) before the wipe
