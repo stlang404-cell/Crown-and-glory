@@ -8,12 +8,14 @@
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { FenError, Position, perft } from '../src/rules';
 import { mulberry32 } from '../src/rules/tables';
 import { movePromo } from '../src/rules/types';
 import { generatePseudoReference, isAttackedReference } from './helpers/movegenReference';
 
-const corpus = (JSON.parse(readFileSync(new URL('../tools/bench/tune/positions.json', import.meta.url), 'utf8')) as { positions: { fen: string }[] }).positions.map(p => p.fen);
+// FENs of tools/bench/tune/positions.json (git-ignored), committed as a gzipped fixture so a clean checkout runs this test.
+const corpus = (JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/position-corpus.json.gz', import.meta.url))).toString('utf8')) as { fens: string[] }).fens;
 
 function snapshot(p: Position): string {
   return [p.toFen(), p.hashKey(), p.kingSq.join(','), p.ply, p.halfmove, p.fullmove, Array.from(p.pieceCnt).join(','), Array.from(p.pawnBits).join(','), Array.from(p.occ).join(','), p.psqMg, p.psqEg].join('|');

@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { Position } from '../src/rules';
 import { mulberry32 } from '../src/rules/tables';
 import { NUM_PAIRS, evaluate4, setTrace, lastTraceScale, type Eval4Weights } from '../src/engine/eval4';
@@ -14,7 +15,8 @@ import { EVAL4_WEIGHTS } from '../src/engine/evaluate';
 import { styledWeights } from '../src/engine/styles';
 import { evaluate4Reference, referenceTraceScale } from './helpers/eval4Reference';
 
-const corpus = (JSON.parse(readFileSync(new URL('../tools/bench/tune/positions.json', import.meta.url), 'utf8')) as { positions: { fen: string }[] }).positions.map(p => p.fen);
+// FENs of tools/bench/tune/positions.json (git-ignored), committed as a gzipped fixture so a clean checkout runs this test.
+const corpus = (JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/position-corpus.json.gz', import.meta.url))).toString('utf8')) as { fens: string[] }).fens;
 
 const P = EVAL4_WEIGHTS.p;
 const perturb = (seed: number) => { const r = mulberry32(seed); return Int32Array.from(P, v => v + ((r() % 41) - 20)); };
