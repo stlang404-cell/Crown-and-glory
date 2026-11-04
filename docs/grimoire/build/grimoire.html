@@ -6830,26 +6830,43 @@ doubling of nodes). <strong>The hidden strength is never shown and is
 never used by forecasts or NPC traders.</strong> The public rating is
 only an estimate updated from results. So a high-RD competitor&#39;s rating
 is a weak signal, and a low-RD rating is a better one.</p>
-<p><strong>Styles. [Demonstrated]</strong> src/engine/styles.ts and
-styles-validation.json. Six labels exist: Universal, Tactical attacker,
-Positional strategist, Defensive specialist, Endgame technician,
-Risk-taking aggressor. A style is <strong>played only if it passed
-validation</strong>. In the current build only <strong>Tactical</strong>
-and <strong>Positional</strong> passed (validation id
-styles-3-2026-11-03), and both act <strong>only as an opening repertoire
-for the first six plies</strong>. A styled competitor picks among book
-moves the engine judges within <strong>30 cp</strong> of the best at
-depth 7. A Tactical competitor prefers moves that attack pieces,
-capture, check, or develop knights and the queen. A Positional one
-prefers knight moves, piece development and central files. <strong>After
-the book, every competitor plays the same engine policy.</strong> Every
-other style plays as Universal.</p>
-<p>That is the honest profile: style shapes the <em>first three
-moves</em> of each side and never the strength. Do not prepare for a
-&quot;Defensive specialist&#39;s&quot; grinding middlegame. That behaviour is not in
-the game.</p>
+<p><strong>Styles. [Demonstrated]</strong> src/engine/styles.ts,
+styles-validation.json and docs/STYLES_REPORT.md. Six labels exist:
+Universal, Tactical attacker, Positional strategist, Defensive
+specialist, Endgame technician, Risk-taking aggressor. A style is
+<strong>played only if it passed validation</strong> (validation id
+styles-5-2026-11-04). Four passed: <strong>Tactical, Positional,
+Defensive and Endgame</strong>. Each one changes the engine&#39;s evaluation
+<strong>for the whole game</strong>, for its own side only, and stays
+within ±50 Elo of Universal (200 colour-swapped games per style):</p>
+<ul>
+<li><strong>Tactical</strong> values threats and loose enemy pieces more
+and avoids draws a little (contempt +15). Measured: 21 % draws against
+Universal&#39;s 31 % in self-play.</li>
+<li><strong>Positional</strong> values supported pawns, pawn chains,
+outposts and mobility, and threats slightly less.</li>
+<li><strong>Defensive</strong> values its king&#39;s pawn shield and fears
+the opponent&#39;s attackers, loose pieces and queen more, so it welcomes
+queen trades and accepts draws (contempt −20). Measured: about 10 %
+fewer attacks on its king zone, 35.5 % draws.</li>
+<li><strong>Endgame</strong> values passed pawns and an active king in
+the endgame and likes to simplify. Measured: queens leave the board
+earlier (median ply 28 against 31).</li>
+</ul>
+<p>In addition, Tactical and Positional keep their <strong>opening
+repertoire for the first six plies</strong>: a choice among book moves
+the engine judges within <strong>30 cp</strong> of the best at depth 7.
+Tactical prefers moves that attack pieces, capture, check, or develop
+knights and the queen; Positional prefers knight moves, piece
+development and central files. <strong>Risk-taking aggressor failed
+validation</strong> (it did not give more checks than its opponent) and
+plays as Universal; its profile says so.</p>
+<p>That is the honest profile: a style shapes <em>tendencies over a
+whole game</em> and never the strength. Single moves barely differ
+(10–21 % of positions get a different move); the style shows in what
+kind of game you get.</p>
 <h3 id="illustrated-example-38">Illustrated example</h3>
-<figure class="board"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 224" width="280" height="280" role="img" aria-label="board rnqk1r/pppppp/5n/5N/PPPPPP/RNQK1R"><rect x="16" y="0" width="34" height="34" fill="#efe3c8"></rect><text x="33" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♜</text><rect x="50" y="0" width="34" height="34" fill="#b8956a"></rect><text x="67" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♞</text><rect x="84" y="0" width="34" height="34" fill="#efe3c8"></rect><text x="101" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♛</text><rect x="118" y="0" width="34" height="34" fill="#b8956a"></rect><text x="135" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♚</text><rect x="152" y="0" width="34" height="34" fill="#efe3c8"></rect><rect x="186" y="0" width="34" height="34" fill="#b8956a"></rect><text x="203" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♜</text><rect x="16" y="34" width="34" height="34" fill="#b8956a"></rect><text x="33" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="50" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="67" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="84" y="34" width="34" height="34" fill="#b8956a"></rect><text x="101" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="118" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="135" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="152" y="34" width="34" height="34" fill="#b8956a"></rect><text x="169" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="186" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="16" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="50" y="68" width="34" height="34" fill="#b8956a"></rect><rect x="84" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="118" y="68" width="34" height="34" fill="#b8956a"></rect><rect x="152" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="186" y="68" width="34" height="34" fill="#b8956a"></rect><text x="203" y="94.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♞</text><rect x="16" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="50" y="102" width="34" height="34" fill="#efe3c8"></rect><rect x="84" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="118" y="102" width="34" height="34" fill="#efe3c8"></rect><rect x="152" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="186" y="102" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="128.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♘</text><rect x="16" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="33" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="50" y="136" width="34" height="34" fill="#b8956a"></rect><text x="67" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="84" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="101" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="118" y="136" width="34" height="34" fill="#b8956a"></rect><text x="135" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="152" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="169" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="186" y="136" width="34" height="34" fill="#b8956a"></rect><text x="203" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="16" y="170" width="34" height="34" fill="#b8956a"></rect><text x="33" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♖</text><rect x="50" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="67" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♘</text><rect x="84" y="170" width="34" height="34" fill="#b8956a"></rect><text x="101" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♕</text><rect x="118" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="135" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♔</text><rect x="152" y="170" width="34" height="34" fill="#b8956a"></rect><rect x="186" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♖</text><text x="8" y="21.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">6</text><text x="33" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">a</text><text x="8" y="55.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">5</text><text x="67" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">b</text><text x="8" y="89.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">4</text><text x="101" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">c</text><text x="8" y="123.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">3</text><text x="135" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">d</text><text x="8" y="157.07999999999998" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">2</text><text x="169" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">e</text><text x="8" y="191.07999999999998" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">1</text><text x="203" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">f</text><rect x="16" y="0" width="204" height="204" fill="none" stroke="#5a4630" stroke-width="1.5"></rect></svg><figcaption>White to move — After 1.Nf3 Nf4: knight moves score well with both validated styles.</figcaption></figure>
+<figure class="board"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 224" width="280" height="280" role="img" aria-label="board rnqk1r/pppppp/5n/5N/PPPPPP/RNQK1R"><rect x="16" y="0" width="34" height="34" fill="#efe3c8"></rect><text x="33" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♜</text><rect x="50" y="0" width="34" height="34" fill="#b8956a"></rect><text x="67" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♞</text><rect x="84" y="0" width="34" height="34" fill="#efe3c8"></rect><text x="101" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♛</text><rect x="118" y="0" width="34" height="34" fill="#b8956a"></rect><text x="135" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♚</text><rect x="152" y="0" width="34" height="34" fill="#efe3c8"></rect><rect x="186" y="0" width="34" height="34" fill="#b8956a"></rect><text x="203" y="26.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♜</text><rect x="16" y="34" width="34" height="34" fill="#b8956a"></rect><text x="33" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="50" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="67" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="84" y="34" width="34" height="34" fill="#b8956a"></rect><text x="101" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="118" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="135" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="152" y="34" width="34" height="34" fill="#b8956a"></rect><text x="169" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="186" y="34" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="60.519999999999996" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♟</text><rect x="16" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="50" y="68" width="34" height="34" fill="#b8956a"></rect><rect x="84" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="118" y="68" width="34" height="34" fill="#b8956a"></rect><rect x="152" y="68" width="34" height="34" fill="#efe3c8"></rect><rect x="186" y="68" width="34" height="34" fill="#b8956a"></rect><text x="203" y="94.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♞</text><rect x="16" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="50" y="102" width="34" height="34" fill="#efe3c8"></rect><rect x="84" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="118" y="102" width="34" height="34" fill="#efe3c8"></rect><rect x="152" y="102" width="34" height="34" fill="#b8956a"></rect><rect x="186" y="102" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="128.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♘</text><rect x="16" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="33" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="50" y="136" width="34" height="34" fill="#b8956a"></rect><text x="67" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="84" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="101" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="118" y="136" width="34" height="34" fill="#b8956a"></rect><text x="135" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="152" y="136" width="34" height="34" fill="#efe3c8"></rect><text x="169" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="186" y="136" width="34" height="34" fill="#b8956a"></rect><text x="203" y="162.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♙</text><rect x="16" y="170" width="34" height="34" fill="#b8956a"></rect><text x="33" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♖</text><rect x="50" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="67" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♘</text><rect x="84" y="170" width="34" height="34" fill="#b8956a"></rect><text x="101" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♕</text><rect x="118" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="135" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♔</text><rect x="152" y="170" width="34" height="34" fill="#b8956a"></rect><rect x="186" y="170" width="34" height="34" fill="#efe3c8"></rect><text x="203" y="196.52" font-size="29.24" text-anchor="middle" font-family="DejaVu Sans, Segoe UI Symbol, Noto Sans Symbols2, sans-serif" fill="#1b1712">♖</text><text x="8" y="21.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">6</text><text x="33" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">a</text><text x="8" y="55.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">5</text><text x="67" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">b</text><text x="8" y="89.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">4</text><text x="101" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">c</text><text x="8" y="123.08" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">3</text><text x="135" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">d</text><text x="8" y="157.07999999999998" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">2</text><text x="169" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">e</text><text x="8" y="191.07999999999998" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">1</text><text x="203" y="216" font-size="10" text-anchor="middle" font-family="sans-serif" fill="#6b6457">f</text><rect x="16" y="0" width="204" height="204" fill="none" stroke="#5a4630" stroke-width="1.5"></rect></svg><figcaption>White to move — After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional).</figcaption></figure>
 
 <p>Suppose your Federation opponent is a <em>Positional strategist</em>.
 Its repertoire weights favour knight moves (+2), any piece move (+1) and
@@ -6862,9 +6879,10 @@ three, not one.</p>
 <ol type="1">
 <li><strong>Read the profile:</strong> public rating, RD (is the rating
 trustworthy?), division, style label.</li>
-<li><strong>Translate the label into behaviour:</strong> Tactical or
-Positional means an opening preference for six plies. Anything else
-means Universal, so expect the engine&#39;s main moves.</li>
+<li><strong>Translate the label into behaviour:</strong> Tactical,
+Positional, Defensive and Endgame change the whole game (and Tactical
+and Positional also the first six plies). Aggressive and Universal mean
+the engine&#39;s main moves.</li>
 <li><strong>Translate the rating into an engine profile:</strong> under
 about 1976, a sampling level (loose choices, shallow sight); above it, a
 full search with a node budget (precise but short-sighted in quiet
@@ -6878,8 +6896,10 @@ its documentation.</li>
 </ol>
 <h3 id="common-mistakes-19">Common mistakes</h3>
 <ul>
-<li><strong>Believing a style label changes the middlegame.</strong> It
-does not (see above).</li>
+<li><strong>Expecting a style to change strength or every move.</strong>
+It changes tendencies (draw rate, king safety, when the queens come
+off), not the level of play, and most single moves are the same as
+Universal&#39;s.</li>
 <li><strong>Trusting a provisional rating.</strong> A rating with a high
 RD can be hundreds of points away from the real strength.</li>
 <li><strong>Treating L1–L4 as random.</strong> They choose among
@@ -6935,11 +6955,12 @@ Positional strategist? Explain from the preference weights.</li>
 </ol>
 <h3 id="answers-2">Answers</h3>
 <ul>
-<li><strong>Guided:</strong> (a) Defensive is not validated, so the
-opponent plays as <strong>Universal</strong>: no special style at all.
-(b) 2100 is above L5&#39;s 1976, so it is a <strong>full search</strong>
-with a node budget between L5 and L6. (c) RD 45 is low, so the rating is
-<strong>fairly trustworthy</strong>.</li>
+<li><strong>Guided:</strong> (a) Defensive is validated: expect an
+opponent that guards its king, welcomes queen trades and is content with
+a draw (more draws, fewer attacks on its king). Its strength is
+unchanged. (b) 2100 is above L5&#39;s 1976, so it is a <strong>full
+search</strong> with a node budget between L5 and L6. (c) RD 45 is low,
+so the rating is <strong>fairly trustworthy</strong>.</li>
 <li><strong>1:</strong> bounded selection keeps only moves within the
 margin of the best, and drops moves whose score is a mate
 <em>against</em> the mover (<code>!isMateScore(-s.score)</code>). A move
@@ -9814,8 +9835,8 @@ Forecasting</em>).</li>
 <li><strong>Demonstrate:</strong> one game with no Mistake in its quiet
 (non-critical) moves; a written opponent profile that correctly states
 which styles affect play.</li>
-<li><strong>Review questions:</strong> (1) Which two styles are
-validated, and what do they change? (2) What does a high RD tell you
+<li><strong>Review questions:</strong> (1) Which four styles are
+validated, and what does each change? (2) What does a high RD tell you
 about a rating? (3) Why are three markets on one competitor a single
 exposure?</li>
 <li><strong>Progress check:</strong> the Lab&#39;s <em>Positional
@@ -10224,8 +10245,10 @@ s). Rated 3038 ± 171 (derived). → V.8.</p>
 no legal move: a draw. → RB §9; I.7.</p>
 <p><strong>Style.</strong> A competitor&#39;s label (Universal, Tactical,
 Positional, Defensive, Endgame, Aggressive). Only validated styles
-(currently Tactical and Positional) change play, and only through their
-opening repertoire. → V.3.</p>
+change play: Tactical, Positional, Defensive and Endgame, through a
+whole-game styled evaluation (Tactical and Positional also through an
+opening repertoire). Aggressive is not validated and plays as Universal.
+→ V.3.</p>
 <p><strong>Subsidy.</strong> The maker&#39;s worst-case loss b·ln n, funded
 before a market opens (match market: $131.83). → VI.2.</p>
 <p><strong>Swiss.</strong> A pairing system matching players on similar

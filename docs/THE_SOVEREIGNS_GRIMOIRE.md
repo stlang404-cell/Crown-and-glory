@@ -8297,17 +8297,29 @@ per doubling of nodes). **The hidden strength is never shown and is never used b
 public rating is only an estimate updated from results. So a high-RD competitor's rating is a weak signal, and a
 low-RD rating is a better one.
 
-**Styles. [Demonstrated]** src/engine/styles.ts and styles-validation.json. Six labels exist: Universal, Tactical
-attacker, Positional strategist, Defensive specialist, Endgame technician, Risk-taking aggressor. A style is
-**played only if it passed validation**. In the current build only **Tactical** and **Positional** passed (validation
-id styles-3-2026-11-03), and both act **only as an opening repertoire for the first six plies**. A styled competitor
-picks among book moves the engine judges within **30 cp** of the best at depth 7. A Tactical competitor prefers moves
-that attack pieces, capture, check, or develop knights and the queen. A Positional one prefers knight moves, piece
-development and central files. **After the book, every competitor plays the same engine policy.** Every other style
-plays as Universal.
+**Styles. [Demonstrated]** src/engine/styles.ts, styles-validation.json and docs/STYLES_REPORT.md. Six labels
+exist: Universal, Tactical attacker, Positional strategist, Defensive specialist, Endgame technician, Risk-taking
+aggressor. A style is **played only if it passed validation** (validation id styles-5-2026-11-04). Four passed:
+**Tactical, Positional, Defensive and Endgame**. Each one changes the engine's evaluation **for the whole game**,
+for its own side only, and stays within ±50 Elo of Universal (200 colour-swapped games per style):
 
-That is the honest profile: style shapes the *first three moves* of each side and never the strength. Do not prepare
-for a "Defensive specialist's" grinding middlegame. That behaviour is not in the game.
+* **Tactical** values threats and loose enemy pieces more and avoids draws a little (contempt +15). Measured: 21 %
+  draws against Universal's 31 % in self-play.
+* **Positional** values supported pawns, pawn chains, outposts and mobility, and threats slightly less.
+* **Defensive** values its king's pawn shield and fears the opponent's attackers, loose pieces and queen more, so
+  it welcomes queen trades and accepts draws (contempt −20). Measured: about 10 % fewer attacks on its king zone,
+  35.5 % draws.
+* **Endgame** values passed pawns and an active king in the endgame and likes to simplify. Measured: queens leave
+  the board earlier (median ply 28 against 31).
+
+In addition, Tactical and Positional keep their **opening repertoire for the first six plies**: a choice among book
+moves the engine judges within **30 cp** of the best at depth 7. Tactical prefers moves that attack pieces, capture,
+check, or develop knights and the queen; Positional prefers knight moves, piece development and central files.
+**Risk-taking aggressor failed validation** (it did not give more checks than its opponent) and plays as Universal;
+its profile says so.
+
+That is the honest profile: a style shapes *tendencies over a whole game* and never the strength. Single moves
+barely differ (10–21 % of positions get a different move); the style shows in what kind of game you get.
 
 ### Illustrated example
 
@@ -8315,7 +8327,7 @@ for a "Defensive specialist's" grinding middlegame. That behaviour is not in the
 fen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1
 line: Nf3 Nf4
 show: after
-caption: After 1.Nf3 Nf4: knight moves score well with both validated styles.
+caption: After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional).
 ```
 <!-- diagram -->
 ```text
@@ -8329,7 +8341,7 @@ caption: After 1.Nf3 Nf4: knight moves score well with both validated styles.
   └─────────────
     a b c d e f    White to move
 ```
-*After 1.Nf3 Nf4: knight moves score well with both validated styles.*
+*After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional).*
 <!-- /diagram -->
 
 Suppose your Federation opponent is a *Positional strategist*. Its repertoire weights favour knight moves (+2), any
@@ -8339,8 +8351,8 @@ choices are random, though (seeded per game), so prepare for two or three, not o
 
 ### Step-by-step reasoning
 1. **Read the profile:** public rating, RD (is the rating trustworthy?), division, style label.
-2. **Translate the label into behaviour:** Tactical or Positional means an opening preference for six plies. Anything
-   else means Universal, so expect the engine's main moves.
+2. **Translate the label into behaviour:** Tactical, Positional, Defensive and Endgame change the whole game (and
+   Tactical and Positional also the first six plies). Aggressive and Universal mean the engine's main moves.
 3. **Translate the rating into an engine profile:** under about 1976, a sampling level (loose choices, shallow
    sight); above it, a full search with a node budget (precise but short-sighted in quiet positions).
 4. **Choose your battlefield:** against shallow searchers, slow multi-move threats; against node-limited full
@@ -8349,7 +8361,8 @@ choices are random, though (seeded per game), so prepare for two or three, not o
    you or from its documentation.
 
 ### Common mistakes
-* **Believing a style label changes the middlegame.** It does not (see above).
+* **Expecting a style to change strength or every move.** It changes tendencies (draw rate, king safety, when the
+  queens come off), not the level of play, and most single moves are the same as Universal's.
 * **Trusting a provisional rating.** A rating with a high RD can be hundreds of points away from the real strength.
 * **Treating L1–L4 as random.** They choose among *near-best* moves. A 0.7-pawn margin (L4) is quite strict.
 * **Over-adapting.** If you play badly to "exploit" an opponent, you also lose to the moves it plays when it plays
@@ -8389,7 +8402,8 @@ trustworthy?
    attacker or the Positional strategist? Explain from the preference weights.
 
 ### Answers
-* **Guided:** (a) Defensive is not validated, so the opponent plays as **Universal**: no special style at all.
+* **Guided:** (a) Defensive is validated: expect an opponent that guards its king, welcomes queen trades and is
+  content with a draw (more draws, fewer attacks on its king). Its strength is unchanged.
   (b) 2100 is above L5's 1976, so it is a **full search** with a node budget between L5 and L6. (c) RD 45 is low,
   so the rating is **fairly trustworthy**.
 * **1:** bounded selection keeps only moves within the margin of the best, and drops moves whose score is a mate
@@ -10194,7 +10208,7 @@ The weekly targets below assume the **30-minute** session. With 10 minutes, halv
   Forecasting*).
 * **Demonstrate:** one game with no Mistake in its quiet (non-critical) moves; a written opponent profile that
   correctly states which styles affect play.
-* **Review questions:** (1) Which two styles are validated, and what do they change? (2) What does a high RD tell you
+* **Review questions:** (1) Which four styles are validated, and what does each change? (2) What does a high RD tell you
   about a rating? (3) Why are three markets on one competitor a single exposure?
 * **Progress check:** the Lab's *Positional understanding* and *Defensive awareness* rates.
 
@@ -10507,7 +10521,8 @@ drew. → V.4.
 **Stalemate.** The side to move is not in check and has no legal move: a draw. → RB §9; I.7.
 
 **Style.** A competitor's label (Universal, Tactical, Positional, Defensive, Endgame, Aggressive). Only validated
-styles (currently Tactical and Positional) change play, and only through their opening repertoire. → V.3.
+styles change play: Tactical, Positional, Defensive and Endgame, through a whole-game styled evaluation (Tactical and
+Positional also through an opening repertoire). Aggressive is not validated and plays as Universal. → V.3.
 
 **Subsidy.** The maker's worst-case loss b·ln n, funded before a market opens (match market: $131.83). → VI.2.
 

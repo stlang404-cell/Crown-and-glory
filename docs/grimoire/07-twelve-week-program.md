@@ -197,7 +197,7 @@ The weekly targets below assume the **30-minute** session. With 10 minutes, halv
   Forecasting*).
 * **Demonstrate:** one game with no Mistake in its quiet (non-critical) moves; a written opponent profile that
   correctly states which styles affect play.
-* **Review questions:** (1) Which two styles are validated, and what do they change? (2) What does a high RD tell you
+* **Review questions:** (1) Which four styles are validated, and what does each change? (2) What does a high RD tell you
   about a rating? (3) Why are three markets on one competitor a single exposure?
 * **Progress check:** the Lab's *Positional understanding* and *Defensive awareness* rates.
 

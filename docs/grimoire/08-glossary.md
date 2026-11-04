@@ -235,7 +235,8 @@ drew. → V.4.
 **Stalemate.** The side to move is not in check and has no legal move: a draw. → RB §9; I.7.
 
 **Style.** A competitor's label (Universal, Tactical, Positional, Defensive, Endgame, Aggressive). Only validated
-styles (currently Tactical and Positional) change play, and only through their opening repertoire. → V.3.
+styles change play: Tactical, Positional, Defensive and Endgame, through a whole-game styled evaluation (Tactical and
+Positional also through an opening repertoire). Aggressive is not validated and plays as Universal. → V.3.
 
 **Subsidy.** The maker's worst-case loss b·ln n, funded before a market opens (match market: $131.83). → VI.2.
 
