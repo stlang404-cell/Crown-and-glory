@@ -1,0 +1,58 @@
+{
+ "universal": {
+  "games": {
+   "games": 0,
+   "avgPlies": 0,
+   "drawRate": 0,
+   "queensOffRate": 0,
+   "medianQueensOffPly": null
+  },
+  "side": {
+   "capturesPerGame": 0,
+   "checksPerGame": 0,
+   "promosPerGame": 0,
+   "kingZoneAttacksPerMove": 0,
+   "attacksSufferedPerMove": 0
+  }
+ },
+ "aggressive": {
+  "decisions": null,
+  "games": {
+   "games": 120,
+   "avgPlies": 89.3,
+   "drawRate": 0.275,
+   "queensOffRate": 0.825,
+   "medianQueensOffPly": 31
+  },
+  "styledSide": {
+   "capturesPerGame": 9.22,
+   "checksPerGame": 6.22,
+   "promosPerGame": 0.38,
+   "kingZoneAttacksPerMove": 3.118,
+   "attacksSufferedPerMove": 2.798
+  },
+  "universalSide": {
+   "capturesPerGame": 9.38,
+   "checksPerGame": 6.31,
+   "promosPerGame": 0.35,
+   "kingZoneAttacksPerMove": 3.034,
+   "attacksSufferedPerMove": 2.853
+  },
+  "strength": {
+   "games": 120,
+   "nodes": 8000,
+   "wdl": [
+    37,
+    33,
+    50
+   ],
+   "score": 0.446,
+   "elo": -38,
+   "eloCI": [
+    -89,
+    14
+   ]
+  },
+  "strengthPass": true
+ }
+}

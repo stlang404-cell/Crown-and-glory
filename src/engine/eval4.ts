@@ -139,16 +139,50 @@ function psqTableFor(Q: Int32Array, R: Int32Array, sc: number): Int32Array {
 
 // ---- pawn-structure cache (v0.9) ----
 // Everything that depends on the pawns alone, keyed EXACTLY by the two pawn masks Position maintains
-// incrementally (pawnBits; no hash collisions possible): pawns per file, pawn attack counts, the "an enemy pawn
-// can still attack this square" map (outposts), per-colour counts of doubled / isolated / supported / phalanx
-// pawns and the passed-pawn masks. King- and piece-dependent pawn terms (passed-pawn king distances, free
-// square ahead, unstoppable pawns, king-zone pawn attacks, shield and open files) are evaluated per call.
-const PC_BITS = 13, PC_SIZE = 1 << PC_BITS, PC_MASK = PC_SIZE - 1;
+// incrementally (pawnBits; no hash collisions possible): pawns per file, pawn attack counts, per-colour counts of
+// doubled / isolated / supported / phalanx pawns and the passed-pawn masks. King- and piece-dependent pawn
+// terms (passed-pawn king distances, free square ahead, unstoppable pawns, king-zone pawn attacks, shield and
+// open files) are evaluated per call.
+// Pawn masks: bit sq for sq < 32 (pawns only ever stand on squares 6..29).
+/** FRONT_SPAN[c * 36 + sq]: pawn-square mask of the same and adjacent files strictly ahead of sq (passed pawns). */
+const FRONT_SPAN = new Int32Array(72);
+/** ATT_SPAN[c * 36 + sq]: pawn-square mask of the adjacent files strictly ahead of sq (an enemy pawn there can
+ *  still attack sq: outposts). */
+const ATT_SPAN = new Int32Array(72);
+/** ADJ_FILES[f]: pawn-square mask of the files next to f (isolated pawns). */
+const ADJ_FILES = new Int32Array(6);
+for (let c = 0; c < 2; c++) for (let sq = 0; sq < 36; sq++) {
+  let front = 0, side = 0;
+  for (let s2 = 6; s2 < 30; s2++) {
+    const df = Math.abs(FILE[s2] - FILE[sq]);
+    const ahead = c === 0 ? RANK[s2] > RANK[sq] : RANK[s2] < RANK[sq];
+    if (df <= 1 && ahead) front |= 1 << s2;
+    if (df === 1 && ahead) side |= 1 << s2;
+  }
+  FRONT_SPAN[c * 36 + sq] = front; ATT_SPAN[c * 36 + sq] = side;
+}
+for (let f = 0; f < 6; f++) for (let s2 = 6; s2 < 30; s2++) if (Math.abs(FILE[s2] - f) === 1) ADJ_FILES[f] |= 1 << s2;
+
+/** ZONE_LIST[k]: the king zone of k (k and its neighbours). */
+const ZONE_LIST: Int8Array[] = [];
+for (let k = 0; k < 36; k++) ZONE_LIST.push(Int8Array.from([k, ...KING_TARGETS[k]]));
+/** ZONE_PAWNS[c * 36 + k]: pawn-square mask of the squares from which a pawn of colour c attacks the zone of k. */
+const ZONE_PAWNS = new Int32Array(72);
+for (let c = 0; c < 2; c++) for (let k = 0; k < 36; k++) for (let s2 = 6; s2 < 30; s2++) {
+  const a = PAWN_ATTACKS[c][s2];
+  for (let i = 0; i < a.length; i++) if (ZONE[k * 36 + a[i]]) ZONE_PAWNS[c * 36 + k] |= 1 << s2;
+}
+function popcount(x: number): number {
+  x = x - ((x >>> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >>> 2) & 0x33333333);
+  return Math.imul((x + (x >>> 4)) & 0x0f0f0f0f, 0x01010101) >>> 24;
+}
+
+const PC_BITS = 14, PC_SIZE = 1 << PC_BITS, PC_MASK = PC_SIZE - 1;
 const pcKeyW = new Int32Array(PC_SIZE), pcKeyB = new Int32Array(PC_SIZE);
 const pcUsed = new Uint8Array(PC_SIZE);
 const pcFiles = new Int8Array(PC_SIZE * 12); // [c * 6 + file]
 const pcAtt = new Int8Array(PC_SIZE * 72); // [c * 36 + sq] pawn attack counts
-const pcCanAtt = new Uint8Array(PC_SIZE * 72); // [c * 36 + sq]: a pawn of colour c^1 can ever attack sq
 const pcCounts = new Int16Array(PC_SIZE * 8); // [c * 4 + (doubled, isolated, supported, phalanx)]
 const pcPassed = new Int32Array(PC_SIZE * 2); // passed-pawn mask per colour
 let pcProbes = 0, pcHits = 0;
@@ -167,9 +201,8 @@ function pawnEntry(wBits: number, bBits: number): number {
   if (pcUsed[e] && pcKeyW[e] === wBits && pcKeyB[e] === bBits) { pcHits++; return e; }
   pcUsed[e] = 1; pcKeyW[e] = wBits; pcKeyB[e] = bBits;
   const fo = e * 12, ao = e * 72, co = e * 8;
-  for (let i = 0; i < 12; i++) pcFiles[fo + i] = 0;
-  for (let i = 0; i < 72; i++) { pcAtt[ao + i] = 0; pcCanAtt[ao + i] = 0; }
-  for (let i = 0; i < 8; i++) pcCounts[co + i] = 0;
+  pcFiles.fill(0, fo, fo + 12);
+  pcAtt.fill(0, ao, ao + 72);
   for (let c = 0; c < 2; c++) {
     let m = c === 0 ? wBits : bBits;
     const at = PAWN_ATT[c];
@@ -178,35 +211,20 @@ function pawnEntry(wBits: number, bBits: number): number {
       pcFiles[fo + c * 6 + FILE[sq]]++;
       const a = at[sq];
       for (let i = 0; i < a.length; i++) pcAtt[ao + c * 36 + a[i]]++;
-      // squares a pawn of colour c can ever attack: adjacent files, any rank ahead of it
-      const f = FILE[sq], r = RANK[sq];
-      for (let df = -1; df <= 1; df += 2) {
-        const nf = f + df;
-        if (nf < 0 || nf > 5) continue;
-        if (c === 0) { for (let nr = r + 1; nr < 6; nr++) pcCanAtt[ao + 36 + nr * 6 + nf] = 1; }
-        else { for (let nr = r - 1; nr >= 0; nr--) pcCanAtt[ao + nr * 6 + nf] = 1; }
-      }
     }
   }
   for (let c = 0; c < 2; c++) {
-    let m = c === 0 ? wBits : bBits;
     const own = c === 0 ? wBits : bBits, enemy = c === 0 ? bBits : wBits;
+    let m = own;
     let doubled = 0, isolated = 0, supported = 0, phalanx = 0, passed = 0;
     while (m) {
       const sq = 31 - Math.clz32(m & -m); m &= m - 1;
-      const f = FILE[sq], r = RANK[sq], pf = fo + c * 6;
-      if (pcFiles[pf + f] > 1) doubled++;
-      if (!(f > 0 && pcFiles[pf + f - 1]) && !(f < 5 && pcFiles[pf + f + 1])) isolated++;
+      const f = FILE[sq];
+      if (pcFiles[fo + c * 6 + f] > 1) doubled++;
+      if (!(own & ADJ_FILES[f])) isolated++;
       if (pcAtt[ao + c * 36 + sq]) supported++;
       if ((f > 0 && (own >>> (sq - 1)) & 1) || (f < 5 && (own >>> (sq + 1)) & 1)) phalanx++;
-      let isPassed = true;
-      for (let df = -1; df <= 1 && isPassed; df++) {
-        const nf = f + df;
-        if (nf < 0 || nf > 5) continue;
-        if (c === 0) { for (let nr = r + 1; nr < 6; nr++) { const s2 = nr * 6 + nf; if (s2 < 32 && (enemy >>> s2) & 1) { isPassed = false; break; } } }
-        else { for (let nr = r - 1; nr >= 0; nr--) { const s2 = nr * 6 + nf; if (s2 < 32 && (enemy >>> s2) & 1) { isPassed = false; break; } } }
-      }
-      if (isPassed) passed |= 1 << sq;
+      if (!(enemy & FRONT_SPAN[c * 36 + sq])) passed |= 1 << sq;
     }
     pcCounts[co + c * 4] = doubled; pcCounts[co + c * 4 + 1] = isolated;
     pcCounts[co + c * 4 + 2] = supported; pcCounts[co + c * 4 + 3] = phalanx;
@@ -281,17 +299,11 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
         if (5 - relRank < kd) { k = O_UNSTOPPABLE; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
       }
     }
-    // pawn attacks on the enemy king zone
-    const zb = enemyKing * 36;
-    const at = PAWN_ATT[c];
-    m = pb[c];
-    while (m) {
-      const sq = 31 - Math.clz32(m & -m); m &= m - 1;
-      const a = at[sq];
-      let hitsZone = false;
-      for (let i = 0; i < a.length; i++) if (ZONE[zb + a[i]]) { zoneAtt[c]++; hitsZone = true; }
-      if (hitsZone) zoneAttackers[c]++;
-    }
+    // pawn attacks on the enemy king zone: (pawn, zone square) attack pairs and the number of such pawns
+    const zl = ZONE_LIST[enemyKing], po = pao + c * 36;
+    let za = 0;
+    for (let i = 0; i < zl.length; i++) za += pawnAtt[po + zl[i]];
+    if (za) { zoneAtt[c] += za; zoneAttackers[c] += popcount(pb[c] & ZONE_PAWNS[c * 36 + enemyKing]); }
   }
 
   // pass 2: pieces
@@ -367,7 +379,7 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
     k = O_MOBT + t * 16 + (mob > 15 ? 15 : mob); mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s;
     const tro = 6 - DIST[sq * 36 + enemyKing];
     k = O_TROPISM + t; mg += s * Pc[2 * k] * tro; eg += s * Pc[2 * k + 1] * tro; if (T) T[k] += s * tro;
-    if (t === P_KNIGHT && RANK[rel] >= 2 && RANK[rel] <= 4 && pawnAtt[pao + own + sq] && !pcCanAtt[pao + own + sq]) {
+    if (t === P_KNIGHT && RANK[rel] >= 2 && RANK[rel] <= 4 && pawnAtt[pao + own + sq] && !(pb[c ^ 1] & ATT_SPAN[own + sq])) {
       k = O_OUTPOST; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s;
     }
     if (zoneHits) { zoneAtt[c] += zoneHits; zoneAttackers[c]++; }

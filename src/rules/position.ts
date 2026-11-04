@@ -14,13 +14,10 @@ import {
   ZOBRIST_HI, ZOBRIST_LO, ZOBRIST_SIDE_HI, ZOBRIST_SIDE_LO,
 } from './tables';
 
-interface Undo {
-  move: Move;
-  captured: number;
-  halfmove: number;
-  hashLo: number;
-  hashHi: number;
-}
+/** Undo record stride in Position.undoBuf: move, captured piece, halfmove clock, hashLo, hashHi. */
+const U_STRIDE = 5;
+/** Scratch move buffer for legalMoves / hasLegalMove (synchronous, never re-entered). */
+const scratchMoves = new Int32Array(256);
 
 export class FenError extends Error {}
 
@@ -35,7 +32,8 @@ export class Position {
   /** Hash history of every position reached so far (including the current one at index `ply`). */
   histLo: number[] = [];
   histHi: number[] = [];
-  private undo: Undo[] = [];
+  private undoBuf = new Int32Array(64 * U_STRIDE);
+  private undoLen = 0;
   /**
    * Incremental evaluation support (engine hot path; no rules semantics). Maintained by setFen, makeMove,
    * unmakeMove and clone; null moves do not change them.
@@ -140,7 +138,7 @@ export class Position {
     this.setPsqTable(this.psqTab);
     this.histLo = [this.hashLo];
     this.histHi = [this.hashHi];
-    this.undo = [];
+    this.undoLen = 0;
   }
 
   toFen(): string {
@@ -178,7 +176,8 @@ export class Position {
     p.hashHi = this.hashHi;
     p.histLo = this.histLo.slice();
     p.histHi = this.histHi.slice();
-    p.undo = this.undo.slice();
+    p.undoBuf = this.undoBuf.slice();
+    p.undoLen = this.undoLen;
     p.pieceCnt.set(this.pieceCnt);
     p.pawnBits.set(this.pawnBits);
     p.psqTab = this.psqTab;
@@ -293,7 +292,7 @@ export class Position {
     const from = moveFrom(m), to = moveTo(m), promo = movePromo(m);
     const piece = b[from];
     const captured = b[to];
-    this.undo.push({ move: m, captured, halfmove: this.halfmove, hashLo: this.hashLo, hashHi: this.hashHi });
+    this.pushUndo(m, captured);
     let lo = this.hashLo, hi = this.hashHi;
     lo ^= ZOBRIST_LO[piece * 36 + from]; hi ^= ZOBRIST_HI[piece * 36 + from];
     if (captured) { lo ^= ZOBRIST_LO[captured * 36 + to]; hi ^= ZOBRIST_HI[captured * 36 + to]; }
@@ -328,16 +327,17 @@ export class Position {
   }
 
   unmakeMove(): void {
-    const u = this.undo.pop();
-    if (!u) throw new Error('unmakeMove with empty undo stack');
+    if (this.undoLen === 0) throw new Error('unmakeMove with empty undo stack');
+    const ub = this.undoBuf, uo = --this.undoLen * U_STRIDE;
+    const move = ub[uo];
     this.histLo.pop(); this.histHi.pop();
     this.side = (this.side ^ 1) as Color;
     if (this.side === BLACK) this.fullmove--;
-    const from = moveFrom(u.move), to = moveTo(u.move), promo = movePromo(u.move);
+    const from = moveFrom(move), to = moveTo(move), promo = movePromo(move);
     const b = this.board;
     const placed = b[to];
     const moved = promo ? makePiece(PAWN, this.side) : placed;
-    const captured = u.captured;
+    const captured = ub[uo + 1];
     b[from] = moved;
     b[to] = captured;
     // incremental evaluation state (exact inverse of makeMove)
@@ -358,13 +358,25 @@ export class Position {
       this.psqEg -= tab[a + 1] - tab[r + 1] - tab[c + 1];
     }
     if ((moved & 7) === KING) this.kingSq[this.side] = from;
-    this.halfmove = u.halfmove;
-    this.hashLo = u.hashLo; this.hashHi = u.hashHi;
+    this.halfmove = ub[uo + 2];
+    this.hashLo = ub[uo + 3]; this.hashHi = ub[uo + 4];
+  }
+
+  private pushUndo(m: Move, captured: number): void {
+    let ub = this.undoBuf;
+    const uo = this.undoLen * U_STRIDE;
+    if (uo + U_STRIDE > ub.length) {
+      const nb = new Int32Array(ub.length * 2);
+      nb.set(ub);
+      this.undoBuf = ub = nb;
+    }
+    ub[uo] = m; ub[uo + 1] = captured; ub[uo + 2] = this.halfmove; ub[uo + 3] = this.hashLo; ub[uo + 4] = this.hashHi;
+    this.undoLen++;
   }
 
   /** Null move for search pruning only (never part of a game record). */
   makeNullMove(): void {
-    this.undo.push({ move: 0xffff, captured: 0, halfmove: this.halfmove, hashLo: this.hashLo, hashHi: this.hashHi });
+    this.pushUndo(0xffff, 0);
     this.hashLo ^= ZOBRIST_SIDE_LO; this.hashHi ^= ZOBRIST_SIDE_HI;
     this.side = (this.side ^ 1) as Color;
     this.halfmove++;
@@ -372,11 +384,12 @@ export class Position {
   }
 
   unmakeNullMove(): void {
-    const u = this.undo.pop()!;
+    if (this.undoLen === 0) throw new Error('unmakeNullMove with empty undo stack');
+    const ub = this.undoBuf, uo = --this.undoLen * U_STRIDE;
     this.histLo.pop(); this.histHi.pop();
     this.side = (this.side ^ 1) as Color;
-    this.halfmove = u.halfmove;
-    this.hashLo = u.hashLo; this.hashHi = u.hashHi;
+    this.halfmove = ub[uo + 2];
+    this.hashLo = ub[uo + 3]; this.hashHi = ub[uo + 4];
   }
 
   /** True if the last made move left the mover's own king attacked (i.e. was illegal). */
@@ -386,7 +399,7 @@ export class Position {
   }
 
   legalMoves(): Move[] {
-    const buf: Move[] = [];
+    const buf = scratchMoves;
     const n = this.generatePseudo(buf);
     const out: Move[] = [];
     for (let i = 0; i < n; i++) {
@@ -399,7 +412,7 @@ export class Position {
   }
 
   hasLegalMove(): boolean {
-    const buf: Move[] = [];
+    const buf = scratchMoves;
     const n = this.generatePseudo(buf);
     for (let i = 0; i < n; i++) {
       this.makeMove(buf[i]);

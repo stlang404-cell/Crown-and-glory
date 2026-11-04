@@ -99,6 +99,8 @@ export class FederationService {
   private busy = false;
   live = new Map<string, SelfplayMove[]>();
   onChange: (() => void) | null = null;
+  /** Change notification for live-scheduler commits (the app throttles these); falls back to onChange. */
+  onLiveChange: (() => void) | null = null;
   /** Featured-game runner: the app plugs in a Web Worker; tests run in-process. */
   runSelfplay: (req: { initialFen: string; white: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; black: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; seed: number; maxPlies: number }, onMove: (m: SelfplayMove) => void) => Promise<{ moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string }>
     = async (req, onMove) => playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, m => onMove(m));
@@ -307,7 +309,7 @@ export class FederationService {
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
     this.state = next;
-    this.onChange?.();
+    if (this.busyKind === 'scheduler' && this.onLiveChange) this.onLiveChange(); else this.onChange?.();
   }
 
   private snapshotFinance(st: FedState): void {
@@ -675,10 +677,18 @@ export class FederationService {
   sandboxBalance(): number { return this.balance('sandbox:player'); }
   sandboxMarketFor(gameId: string): Market | undefined { return this.state?.markets.get(`sb:${gameId}`); }
 
+  /** A Training Hall sparring game (see sparringGameFor: id `spar-…`, engine participant `spar:<competitor>`). */
+  static isSparring(g: GameRecord): boolean {
+    return g.id.startsWith('spar-') || g.white.id.startsWith('spar:') || g.black.id.startsWith('spar:');
+  }
+
   /** Why a game cannot carry a sandbox market, or null if it can. */
   static sandboxIneligible(g: GameRecord): string | null {
     if (g.mode === 'rated' || g.rated) return 'Rated games never carry markets';
     if (g.context.kind !== 'quick-match') return 'Only casual quick matches (federation and training games are excluded)';
+    // Training Hall sparring is created with context 'quick-match' but is a training game, not one started from Play or
+    // Random Match (RULEBOOK §Sandbox; RULES_TRACEABILITY D10): it never carries a practice market.
+    if (FederationService.isSparring(g)) return 'Only casual quick matches (federation and training games are excluded)';
     if (g.initialFen !== START_FEN || (g.setupMoves?.length ?? 0) > 0) return 'Only games from the standard start position';
     if (g.assistance.length) return 'Assisted games are excluded';
     if (g.moves.length) return 'The sandbox market closes when the game starts';
@@ -900,7 +910,9 @@ export class FederationService {
     const home = `league:${s.world.player.region}:${s.world.player.division}`;
     const rating = (id: string) => s.competitors.get(id)?.rating ?? 0;
     const pri = (e: string) => (e === home ? 0 : e === 'open' || e === 'challenger' ? 1 : 2 + Number(e.split(':')[2] ?? 9));
-    return rec.abstract.filter(a => a[3] === null).map(a => [a[0], a[1], a[2]] as [string, string, string])
+    // (an abstract entry may already hold its tier-3 draw — settleRound draws them when a featured game finishes; the
+    // draw is deterministic, so a promoted fixture resolved abstractly later gets the same value)
+    return rec.abstract.map(a => [a[0], a[1], a[2]] as [string, string, string])
       .sort((a, b) => pri(a[0]) - pri(b[0]) || (rating(b[1]) + rating(b[2])) - (rating(a[1]) + rating(a[2])) || a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[2].localeCompare(b[2]));
   }
 
@@ -926,7 +938,7 @@ export class FederationService {
       const out: LiveGame[] = [];
       const at = this.now();
       for (const [event, white, black] of cands) {
-        const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black && a[3] === null);
+        const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black);
         if (idx < 0) continue;
         rec.abstract.splice(idx, 1);
         const id = `${rec.season}:${rec.round}:${event}:s-${white}-${black}`;

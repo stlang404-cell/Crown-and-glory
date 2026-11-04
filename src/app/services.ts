@@ -13,6 +13,8 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 import { VaultService } from '../vault/service';
+import { LiveScheduler, detectDevice, loadLiveSettings, poolSizeFor, saveLiveSettings, type LiveSettings } from './scheduler';
+import { START_FEN } from './schedulerEngine';
 
 export const APP_VERSION = '0.8.0';
 
@@ -33,6 +35,11 @@ export class AppServices {
   readonly assist = new EngineChannel(undefined, 'assist');
   readonly spectator = new EngineChannel(undefined, 'spectator');
   fed!: FederationService;
+  /** v0.9 live scheduler: watchable AI-vs-AI games in progress, on their own pool of spectator workers. */
+  readonly device = detectDevice();
+  liveSettings: LiveSettings = loadLiveSettings(this.device);
+  readonly livePool = Array.from({ length: poolSizeFor(this.device) }, (_, i) => new EngineChannel(undefined, `live-${i}`));
+  live!: LiveScheduler;
   /** The Sovereign Vault (permanent collectibles), evaluated from saved records after boot. */
   vault!: VaultService;
   private listeners = new Set<Listener>();
@@ -55,6 +62,9 @@ export class AppServices {
     s.fed.computeMove = req => s.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
       .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs }));
     s.fed.onChange = () => s.notify();
+    // scheduled-game commits arrive several times a second: re-render at most twice a second for them
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    s.fed.onLiveChange = () => { if (!pending) pending = setTimeout(() => { pending = null; s.notify(); }, 500); };
     await s.fed.load();
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));
@@ -62,6 +72,18 @@ export class AppServices {
     if (!s.readOnly) await s.fed.ensureEngineCommitment(CANON_BUILD).catch(e => console.error('engine commitment', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
+    // Live scheduler: starts after the first screen; nothing runs while the app is closed or hidden (docs/FEDERATION_SCALE.md)
+    s.live = new LiveScheduler(s.fed, s.livePool.map(ch => ({
+      compute: req => ch.move({ initialFen: START_FEN, moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
+        .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs })),
+    })), { settings: () => s.liveSettings, readOnly: () => s.readOnly });
+    if (!s.readOnly && typeof document !== 'undefined') {
+      setTimeout(() => { void s.live.start(); }, 1500);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) s.live.pause('hidden');
+        else { s.live.resume('hidden'); void s.live.catchUp().catch(e => console.error('live catch-up', e)); }
+      });
+    }
     // Vault: first evaluation (and one-time backfill) after the first screen has rendered, off the boot path
     s.vault = new VaultService(s);
     setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)); }, 800);
@@ -190,8 +212,17 @@ export class AppServices {
     this.notify();
   }
 
+  /** Change the live-scheduler settings (stored on this device). */
+  setLiveSettings(next: LiveSettings): void {
+    saveLiveSettings(next);
+    this.liveSettings = loadLiveSettings(this.device);
+    this.notify();
+  }
+
   setMatchActive(active: boolean): void {
     this.matchActive = active;
+    // your own game has the CPU: scheduled games pause while it is on the board
+    if (this.live) { if (active) this.live.pause('match'); else this.live.resume('match'); }
     if (active && this.progress) {
       // Foreground play has priority: pause (cancel and re-queue) background analysis.
       const p = this.progress;
