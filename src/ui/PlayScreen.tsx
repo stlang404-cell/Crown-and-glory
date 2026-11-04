@@ -24,6 +24,7 @@ import { claimsOf, claimPrices, statesOf } from '../exchange/market';
 import { fmtCrowns, fmtPrice } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
 import { playOnce, playSound } from './sound';
+import { QuickMatch } from './QuickMatch';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtClock = (ms: number) => {
@@ -82,6 +83,7 @@ export function PlayScreen() {
           <p className="muted" style={{ margin: 0 }}>Six-square chess against engine opponents. Every game is saved, rated games change your rating, and every finished game gets a full analysis.</p>
         </div>
       </section>
+      <QuickMatch />
       <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
         {[
           { k: '1 · Play', t: 'Play a rated or casual game against an engine opponent.', a: null },

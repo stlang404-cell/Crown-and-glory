@@ -424,3 +424,11 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .insignia-cell:not(.have) .emblem { filter: grayscale(1) opacity(.35); }
 .insignia-cell:not(.have) > span:first-of-type { color: var(--muted); }
 .insignia-cell.have { border-color: var(--accent-line, var(--line)); background: color-mix(in srgb, var(--panel) 90%, var(--accent) 10%); }
+/* ---- Random Federation Quick Match (v0.9) ---- */
+.quick-match { border-color: var(--accent-line, var(--line)); }
+.qm-draw { min-height: 52px; font-size: var(--fs-lg); padding: 0 28px; }
+.qm-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 88%, var(--accent) 12%); animation: qm-in 220ms var(--ease); }
+@keyframes qm-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 700px) { .qm-card { grid-template-columns: auto minmax(0, 1fr); } .qm-actions { grid-column: 1 / -1; flex-wrap: wrap; } .qm-draw { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .qm-card { animation: none; } }
+:root[data-motion="reduce"] .qm-card { animation: none; }

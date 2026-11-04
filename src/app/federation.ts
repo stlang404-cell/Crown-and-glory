@@ -433,6 +433,30 @@ export class FederationService {
     });
   }
 
+  /** v0.9 Random Federation Quick Match: a rapid game against any active competitor, played by its own calibrated
+   *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
+   *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
+   *  Not a league fixture: standings, prize pools and markets are untouched. */
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number }): Promise<GameRecord> {
+    const c = this.state?.competitors.get(competitorId);
+    if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
+    const profile = profileForStrength(c.latent);
+    const { createGameRecord } = await import('../games/session');
+    const { TIME_CONTROLS } = await import('../games/types');
+    const { LEVELS_ID } = await import('../engine/levels');
+    const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
+    const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
+    const { playStyle, STYLE_LABEL } = await import('../engine/styles');
+    const style = playStyle(c.style);
+    return createGameRecord({
+      id: `qm-${c.id.replace(/:/g, '-')}-${opts.nowMs.toString(36)}`, mode: opts.rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS.rapid, humanColor: opts.humanColor,
+      human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
+      engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
+      engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
+      context: { kind: 'quick-match', eventName: `Quick Match vs ${c.name}` },
+    });
+  }
+
   /** Called after a federation game has been finalized by the normal (atomic, rated) path. */
   async recordPlayerGame(game: GameRecord): Promise<void> {
     return this.run(async () => {
