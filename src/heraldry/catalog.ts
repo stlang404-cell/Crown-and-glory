@@ -76,9 +76,9 @@ export function regionEmblem(r: number): EmblemSpec {
 export const regionTitle = (r: number) => `Arms of ${REGION_NAMES[r]}`;
 
 // ---------------------------------------------------------------- major tournaments
-export const TOURNAMENTS = ['league', 'challenger', 'open', 'champ', 'club'] as const;
+export const TOURNAMENTS = ['league', 'challenger', 'open', 'champ', 'club', 'zonal', 'cup'] as const;
 export type TournamentId = typeof TOURNAMENTS[number];
-export const TOURNAMENT_NAME: Record<TournamentId, string> = { league: 'Division League', challenger: 'Challenger Open', open: 'Federation Open', champ: 'Crown Championship', club: 'Club Weekend' };
+export const TOURNAMENT_NAME: Record<TournamentId, string> = { league: 'Division League', challenger: 'Challenger Open', open: 'Federation Open', champ: 'Crown Championship', club: 'Club Weekend', zonal: 'Zonal Championship', cup: 'Regional Cup' };
 export function tournamentCrest(t: TournamentId): EmblemSpec {
   switch (t) {
     case 'league': return base({ shape: 'roundel', field: ['sable', 'steel'], division: 'fess', charge: 'rook', border: 'double', prestige: 1 });
@@ -86,10 +86,15 @@ export function tournamentCrest(t: TournamentId): EmblemSpec {
     case 'open': return base({ shape: 'octagon', field: ['azure', 'sable'], division: 'saltire', charge: 'knight', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 3 });
     case 'champ': return base({ shape: 'cartouche', field: ['sanguine', 'sable'], division: 'chief', charge: 'crown', chargeColor: 'or', border: 'pixel', crest: 'crown', wreath: true, pips: 3, prestige: 5 });
     case 'club': return base({ shape: 'banner', field: ['tenne', 'sable'], division: 'chevron', charge: 'gate', border: 'single', prestige: 1 });
+    // v0.11 crown-competition-2 knockouts
+    case 'zonal': return base({ shape: 'heater', field: ['purpure', 'sable'], division: 'pale', charge: 'tower', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 4 });
+    case 'cup': return base({ shape: 'roundel', field: ['vert', 'or'], division: 'bend', charge: 'sword', chargeColor: 'argent', border: 'single', pips: 1, prestige: 2 });
   }
 }
 /** Trophy silhouette per event (rendered by <Trophy/>). */
-export const TROPHY_FOR: Record<TournamentId, string> = { champ: 'grand', open: 'amphora', challenger: 'goblet', league: 'plate', club: 'cup' };
+export const TROPHY_FOR: Record<TournamentId, string> = { champ: 'grand', open: 'amphora', challenger: 'goblet', league: 'plate', club: 'cup', zonal: 'amphora', cup: 'goblet' };
+/** Crest family of any event id (zonal-<z> → 'zonal', cup-<r> → 'cup', league:… → 'league'). */
+export const tournamentOf = (event: string): TournamentId => (event.startsWith('zonal-') ? 'zonal' : event.startsWith('cup-') ? 'cup' : event.startsWith('league') ? 'league' : (TOURNAMENTS as readonly string[]).includes(event) ? event as TournamentId : 'league');
 
 // ---------------------------------------------------------------- financial prestige tiers
 export const FIN_TIERS = ['Apprentice', 'Saver', 'Investor', 'Patron', 'Magnate'] as const;

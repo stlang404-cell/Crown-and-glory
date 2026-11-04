@@ -3,7 +3,8 @@
  * these functions; the service persists the results atomically (src/app/federationService.ts).
  */
 import { CHAMPIONSHIP_ROUNDS, Fixture, LEAGUE_ROUNDS, ROUNDS_PER_SEASON, topologyOf } from './model';
-import { Ctx, RoundRecord, SeasonEndResult, applyRound, buildChampionship, advanceKo, endSeason, makePlan, openRound, settleRound } from './world';
+import { Ctx, RoundRecord, SeasonEndResult, applyRound, buildChampionship, buildCups, advanceKo, endSeason, makePlan, openRound, settleRound } from './world';
+import { RULES_V2, rulesOf } from './competitions';
 
 export type SeasonGame = { event: string; white: string; black: string; result: number | null };
 
@@ -37,15 +38,24 @@ export function processRound(ctx: Ctx, rec: RoundRecord, seasonRounds: RoundReco
   applyRound(ctx, rec, gamesOf(all));
   let championshipBuilt = false;
   let koAdvanced: string[] = [];
-  if (rec.round === LEAGUE_ROUNDS) { ctx.plan.champ = buildChampionship(ctx, gamesOf(all)); championshipBuilt = true; }
+  if (rec.round === LEAGUE_ROUNDS) {
+    ctx.plan.champ = buildChampionship(ctx, gamesOf(all)); championshipBuilt = true;
+    // crown-competition-2: Zonal Championships and Regional Cups in rounds 16–19 (never reached under rules 1)
+    if (rulesOf(ctx.plan) >= RULES_V2) ctx.plan.cups = buildCups(ctx, gamesOf(all));
+  }
   if (ctx.plan.champ && CHAMPIONSHIP_ROUNDS.includes(rec.round)) koAdvanced = advanceKo(ctx.plan.champ, rec.round);
   if (ctx.plan.club && ctx.plan.club.stages.some(s => s.round === rec.round)) advanceKo(ctx.plan.club, rec.round);
+  for (const ko of ctx.plan.cups ?? []) if (ko.stages.some(s => s.round === rec.round)) advanceKo(ko, rec.round);
   let seasonEnd: SeasonEndResult | null = null;
   if (rec.round === ROUNDS_PER_SEASON) {
     seasonEnd = endSeason(ctx, gamesOf(all));
     ctx.world.season += 1;
     ctx.world.round = 1;
-    ctx.plan = makePlan(ctx.world.seed, ctx.world.season, [...ctx.competitors.values()], ctx.world.player, topologyOf(ctx.world));
+    // v0.11: an older world adopts the newer competition rules at its next season start (never mid-season)
+    if ((ctx.targetRules ?? 0) > rulesOf(ctx.world)) ctx.world.rules = ctx.targetRules;
+    const rules = rulesOf(ctx.world);
+    const opts = rules >= RULES_V2 ? { rules, invites: ctx.world.openInvites?.season === ctx.world.season ? ctx.world.openInvites.ids : [] } : {};
+    ctx.plan = makePlan(ctx.world.seed, ctx.world.season, [...ctx.competitors.values()], ctx.world.player, topologyOf(ctx.world), opts);
     ctx.swissHistory = [];
   } else ctx.world.round += 1;
   return { record: rec, seasonEnd, koAdvanced, championshipBuilt };

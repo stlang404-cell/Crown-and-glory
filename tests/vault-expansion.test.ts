@@ -200,8 +200,8 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
     const CLARIFIED = new Set(['upset-higher', 'giant-slayer', 'titan-slayer', 'qm-giant', 'qm-titan']);
     const CLAUSE = ' Counts only while your rating is established (±100 or less).';
     for (const [i, d] of now.entries()) if (CLARIFIED.has(d.id)) {
-      expect(d.rule).toBe(`${(v1[i] as { rule: string }).rule}${CLAUSE}`);
-      now[i] = { ...d, rule: (v1[i] as { rule: string }).rule };
+      expect(d.rule).toBe(`${(v1[i] as unknown as { rule: string }).rule}${CLAUSE}`);
+      now[i] = { ...d, rule: (v1[i] as unknown as { rule: string }).rule };
     }
     expect(now).toEqual(v1);
     expect(VAULT.slice(0, v1.length).every(d => d.since === 'crown-vault-1')).toBe(true);

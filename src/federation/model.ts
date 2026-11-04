@@ -109,6 +109,8 @@ export interface Fixture {
    *  computed by the engine, but after the app reopened rather than live; 'abstract' = drawn from the tier-3 result
    *  model (exactly the draw the fixture would have had without the scheduler) — no game record exists. */
   resolution?: 'simulated' | 'fast-forwarded' | 'abstract';
+  /** v0.11: a league game the player postponed from this round (played in a later round; src/app/federation.ts). */
+  postponedFrom?: number;
 }
 
 export const PLAYER_ID = 'player';

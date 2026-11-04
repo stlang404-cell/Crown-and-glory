@@ -17,7 +17,7 @@
  */
 export const RIVALRY_ID = 'crown-rivalry-1';
 export interface Meeting { season: number; round: number; event: string; a: string; b: string; scoreA: number | null; ratingA?: number; ratingB?: number; gameId?: string | null }
-export interface KoMeeting { season: number; event: 'champ' | 'club'; stage: string; winner: string; loser: string }
+export interface KoMeeting { season: number; event: 'champ' | 'club' | 'cup'; stage: string; winner: string; loser: string; /** v0.11 Zonal Championships / Regional Cups: the event title. */ title?: string }
 export interface SeasonFinish { season: number; region: number; division: number; rank: number; id: string }
 export interface RivalryEvent { season: number; kind: string; points: number; text: string }
 export interface Rivalry { a: string; b: string; intensity: number; level: string; w: number; d: number; l: number; meetings: number; events: RivalryEvent[]; lastSeason: number }
@@ -50,7 +50,7 @@ export function computeRivalry(a: string, b: string, meetings: Meeting[], kos: K
   }
   for (const k of kos) {
     if (!((k.winner === a && k.loser === b) || (k.winner === b && k.loser === a))) continue;
-    events.push({ season: k.season, kind: 'elimination', points: k.event === 'champ' ? 18 : 12, text: `${nameOf(k.winner)} eliminated ${nameOf(k.loser)} (${k.event === 'champ' ? 'Crown Championship' : 'Club Weekend'} ${k.stage})` });
+    events.push({ season: k.season, kind: 'elimination', points: k.event === 'champ' ? 18 : 12, text: `${nameOf(k.winner)} eliminated ${nameOf(k.loser)} (${k.event === 'champ' ? 'Crown Championship' : k.event === 'club' ? 'Club Weekend' : k.title ?? 'Cup'} ${k.stage})` });
   }
   const champSeasons = [...new Set(kos.filter(k => k.event === 'champ' && ((k.winner === a && k.loser === b) || (k.winner === b && k.loser === a))).map(k => k.season))].sort((x, y) => x - y);
   champSeasons.slice(1).forEach(s => events.push({ season: s, kind: 'rematch', points: 10, text: `Championship rematch in season ${s}` }));

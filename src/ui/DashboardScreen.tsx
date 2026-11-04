@@ -5,7 +5,7 @@ import { Emblem } from './Emblem';
 import { Icon } from './Icons';
 import { RatingChart } from './Charts';
 import { PriceChart } from './ExchangeScreen';
-import { tournamentCrest } from '../heraldry/catalog';
+import { tournamentCrest, tournamentOf } from '../heraldry/catalog';
 import { insigniaSpec, titleFor } from '../ratings/titles';
 import { eventName } from '../app/federation';
 import { gamesOf } from '../federation/driver';
@@ -22,6 +22,7 @@ import {
   type DashEvent, type DashGrimoire, type DashMatch, type DashSide, type MatchStatus,
 } from '../app/dashboard';
 import './dashboard.css';
+import { Opportunities, StandingSummary, UpcomingMatches, DeadlineRule } from './CareerPanels';
 
 const noop = () => () => {};
 /** Re-render on Vault changes only. */
@@ -114,7 +115,7 @@ function EventCard({ e }: { e: DashEvent }) {
   return (
     <li className="dash-event-card" data-testid="dash-event" data-event={e.id} data-status={e.status}>
       <div className="row" style={{ gap: 8 }}>
-        <Emblem spec={tournamentCrest(e.id)} size="sm" title={`${e.name} crest`} />
+        <Emblem spec={tournamentCrest(tournamentOf(e.id))} size="sm" title={`${e.name} crest`} />
         <strong>{e.name}</strong>
         <span className="spacer" />
         <span className={`chip ${e.status === 'in-progress' ? 'gold' : e.status === 'finished' ? 'info' : ''}`}>{EVENT_STATUS[e.status]}</span>
@@ -167,6 +168,7 @@ export function DashboardScreen() {
   const matches = useMemo(() => (st ? liveMatches(st, featured, id => fed.isLive(id)) : []), [st, featured, rev]); // eslint-disable-line react-hooks/exhaustive-deps
   const events = useMemo(() => (st ? tournamentEvents(st, gamesOf(fed.seasonRounds().filter(r => SWISS_ROUNDS.includes(r.round)))) : []), [st, rev]); // eslint-disable-line react-hooks/exhaustive-deps
   const book = useMemo(() => (st ? portfolio(st) : null), [st, rev]);
+  const seasonGames = useMemo(() => (st ? gamesOf(fed.seasonRounds()) : []), [st, rev]); // eslint-disable-line react-hooks/exhaustive-deps
   const markets = useMemo(() => (st ? openMarkets(st) : []), [st, rev]);
   const settlements = useMemo(() => (st ? recentSettlements(st) : []), [st, rev]);
   const chart = useMemo(() => (st ? featuredMarketForChart(st, featured) : null), [st, featured]);
@@ -206,6 +208,17 @@ export function DashboardScreen() {
 
       <div className="dash-grid">
         <div className="dash-qm"><QuickMatch /></div>
+
+        {st && (
+          <Section title="Your Season" id="season" className="dash-wide" action={<button className="btn ghost small" data-testid="dash-open-federation" onClick={() => go({ name: 'world' })}>Your Fixtures</button>}>
+            <StandingSummary games={seasonGames} />
+            <div className="grid-2" style={{ marginTop: 8 }}>
+              <div><h3 className="dash-sub">Upcoming Matches</h3><UpcomingMatches limit={6} /></div>
+              <div><h3 className="dash-sub">Qualification · What You Need</h3><Opportunities games={seasonGames} /></div>
+            </div>
+            <DeadlineRule />
+          </Section>
+        )}
 
         <Section title="Live Federation Matches" id="matches" className="dash-wide" action={st ? <button className="btn ghost small" onClick={() => go({ name: 'world' })}>All Fixtures</button> : undefined}>
           {!st ? <Empty action={foundCta}>Featured matches appear here once you found the Federation.</Empty>

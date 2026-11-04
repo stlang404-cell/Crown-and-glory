@@ -15,7 +15,10 @@ import { gamesOf } from '../federation/driver';
 import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
 import { fmtCrowns, MICRO } from '../exchange/ledger';
-import { CHALLENGER_FEE, RECOVERY_THRESHOLD } from '../economy/economy';
+import { CHALLENGER_FEE, RECOVERY_THRESHOLD, CUP_POOL, ZONAL_POOL } from '../economy/economy';
+import { Bracket, DeadlineRule, Opportunities, UpcomingMatches } from './CareerPanels';
+import { CUP_ROUNDS, RULES_V2, ZONAL_ROUNDS, koTitle, rulesOf, zoneOf } from '../federation/competitions';
+import { swissEventsOpenTo } from '../federation/world';
 
 /** League division insignia (crown-heraldry-1 emblem family: one shield shape per division). */
 export function Insignia({ division, size = 28 }: { division: number; size?: number }) {
@@ -39,6 +42,7 @@ export function WorldScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmForfeit, setConfirmForfeit] = useState<string | null>(null);
+  const [confirmAdvance, setConfirmAdvance] = useState(false);
 
   const act = async (label: string, fn: () => Promise<unknown>) => {
     setBusy(label); setMsg(null);
@@ -52,7 +56,7 @@ export function WorldScreen() {
         <div className="panel stack" style={{ maxWidth: 760 }}>
           <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
           <details className="small"><summary>Details</summary>
-            <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
+            <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout), Zonal Championships and Regional Cups (knockouts in rounds 16–19) and, for club owners, a Club Weekend. You enter the same competitions as every AI competitor.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
           </details>
           <label className="small">Federation Size{' '}
@@ -78,9 +82,12 @@ export function WorldScreen() {
   const myCircuit = st.plan.circuits.find(c => c.members.includes(PLAYER_ID));
   const table = myCircuit ? leagueTable(myCircuit, games) : [];
   const mine = fed.playerFixtures();
+  const blocking = fed.blockingFixtures();
   const featured = fed.featuredFixtures();
-  const myEvent = swissEventFor(w.player.division);
+  const myEvent = swissEventsOpenTo(w)[0] ?? swissEventFor(w.player.division);
+  const invited = w.player.invite?.season === w.season;
   const mySwiss = st.plan.swiss.find(s => s.event === (myEvent ?? 'challenger'))!;
+  const v2 = rulesOf(st.plan) >= RULES_V2;
   const registered = st.plan.swiss.some(s => s.entrants.includes(PLAYER_ID));
   const cash = fed.balance('player:cash');
 
@@ -116,6 +123,7 @@ export function WorldScreen() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
                   <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {Math.round(c.rating)} ±{Math.round(c.rd)} · Rapid 5+3, rated</div>
+                  {f.postponedFrom !== undefined && <div className="small"><span className="chip neg" data-testid="postponed-chip">Postponed from round {f.postponedFrom}</span> <span className="muted">Play by the end of round {LEAGUE_ROUNDS}.</span></div>}
                 </div>
                 <button className="btn primary small" disabled={!!busy} data-testid="play-fixture" onClick={() => act('play', async () => {
                   const pr = await services.db.ratingState('rapid');
@@ -128,15 +136,21 @@ export function WorldScreen() {
                   await services.saveGame(g);
                   go({ name: 'match', gameId: g.id });
                 })}>Spar</button>}
+                {f.postponedFrom === undefined && !fed.postponeBlocker(f.id) && <button className="btn small" data-testid="postpone-fixture" disabled={!!busy || services.readOnly} title={`Play it later; due by the end of round ${LEAGUE_ROUNDS}`} onClick={() => act('postpone', () => fed.postpone(f.id))}>Postpone</button>}
                 {confirmForfeit === f.id
                   ? <><button className="btn danger small" onClick={() => act('forfeit', () => fed.forfeit(f.id)).then(() => setConfirmForfeit(null))}>Confirm Forfeit</button><button className="btn small" onClick={() => setConfirmForfeit(null)}>Keep</button></>
                   : <button className="btn ghost small" onClick={() => setConfirmForfeit(f.id)}>Forfeit</button>}
               </div>
             );
           })}
-          <button className="btn primary" data-testid="advance-round" disabled={!!busy || mine.length > 0 || services.readOnly} onClick={() => act('advance', () => fed.advanceRound())}>
+          <button className="btn primary" data-testid="advance-round" disabled={!!busy || blocking.length > 0 || services.readOnly} onClick={() => act('advance', () => fed.advanceRound())}>
             {busy === 'advance' ? 'Advancing… Playing featured games' : `Advance to Round ${w.round === ROUNDS_PER_SEASON ? `1 of Season ${w.season + 1}` : w.round + 1}`}
           </button>
+          {blocking.length > 0 && !services.readOnly && (confirmAdvance
+            ? <div className="notice warn small" data-testid="forfeit-confirm">Forfeit {blocking.map(f => `${fed.name(f.white === PLAYER_ID ? f.black : f.white)} (${eventName(f.event)})`).join(', ')}? Each is recorded as a loss with no game and no rating change{blocking.some(f => !f.event.startsWith('league:')) ? '; a forfeited knockout match is lost' : ''}.
+                <div className="row" style={{ marginTop: 6 }}><button className="btn danger small" data-testid="forfeit-and-advance" disabled={!!busy} onClick={() => act('advance', () => fed.forfeitAndAdvance()).then(() => setConfirmAdvance(false))}>Forfeit and Advance</button><button className="btn small" onClick={() => setConfirmAdvance(false)}>Keep My Games</button></div></div>
+            : <button className="btn ghost small" data-testid="advance-forfeit" onClick={() => setConfirmAdvance(true)}>Advance Without Playing ({blocking.length} forfeit{blocking.length === 1 ? '' : 's'})…</button>)}
+          <DeadlineRule />
           <div className="small muted">Advancing plays the round's other {((st.rounds.get(`${w.season}:${w.round}`)?.abstract.length) ?? 0).toLocaleString('en')} games (results only, no replays) and any featured games you haven't watched, then updates ratings and standings and settles markets.</div>
         </div>
         <div className="panel stack" data-testid="featured">
@@ -168,14 +182,22 @@ export function WorldScreen() {
         </div>
         <div className="panel stack">
           <h3>Season Calendar</h3>
-          <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · At season end, the top two are promoted and the bottom two relegated.</div>
+          <div className="small" data-testid="season-calendar">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]}{v2 ? <> · Zonal Championships (Crown Division, {fmtCrowns(ZONAL_POOL, 0)} each): rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]} · Regional Cups (division champions, {fmtCrowns(CUP_POOL, 0)} each): rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}</> : null} · At season end, the top two are promoted and the bottom two relegated.</div>
           <div className="panel" style={{ background: 'transparent' }}>
-            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'Divisions 2–4, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship' : 'Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes'}.
-            <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>
+            <strong>Your Next Matches</strong>
+            <UpcomingMatches limit={5} />
+          </div>
+          <div className="panel" style={{ background: 'transparent' }}>
+            <strong>Qualification · What You Need</strong>
+            <Opportunities games={games} />
+          </div>
+          <div className="panel" style={{ background: 'transparent' }}>
+            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? `Divisions 2–4${v2 ? ' and invited Regional Cup winners' : ''}, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship` : 'Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes'}.
+            <div className="small muted">{invited && myEvent === 'open' ? `Invited (${w.player.invite!.reason}): free entry` : `Entry ${fmtCrowns(CHALLENGER_FEE, 0)}`}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>
             {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && myEvent ? (
               <div className="row" style={{ marginTop: 6 }}>
-                <button className="btn small" disabled={!!busy || cash < CHALLENGER_FEE} onClick={() => act('reg', () => fed.registerChallenger(false))}>Register ({fmtCrowns(CHALLENGER_FEE, 0)})</button>
-                {cash < RECOVERY_THRESHOLD && <button className="btn small" disabled={!!busy || st.extra.vouchers.includes(w.season)} onClick={() => act('reg', () => fed.registerChallenger(true))}>Use Recovery Voucher</button>}
+                <button className="btn small" data-testid="register-swiss" disabled={!!busy || (cash < CHALLENGER_FEE && !(invited && myEvent === 'open'))} onClick={() => act('reg', () => fed.registerChallenger(false, myEvent ?? undefined))}>{invited && myEvent === 'open' ? 'Accept Invitation (free)' : `Register (${fmtCrowns(CHALLENGER_FEE, 0)})`}</button>
+                {cash < RECOVERY_THRESHOLD && !(invited && myEvent === 'open') && <button className="btn small" disabled={!!busy || st.extra.vouchers.includes(w.season)} onClick={() => act('reg', () => fed.registerChallenger(true, myEvent ?? undefined))}>Use Recovery Voucher</button>}
               </div>
             ) : <span className="chip">{!myEvent ? 'Crown Division: Qualify Through Your League' : 'Registration Closed'}</span>}
           </div>
@@ -298,10 +320,35 @@ export function TournamentsScreen() {
       {st.plan.club && (
         <div className="panel" style={{ marginTop: 14 }}>
           <h3>Club Weekend</h3>
-          {st.plan.club.stages.map(sg => <div key={sg.label} className="small"><strong>{sg.label}</strong>: {sg.matches.map((m, i) => <span key={i}>{fed.name(m.a)} vs {fed.name(m.b)}{m.winner ? ` → ${fed.name(m.winner)}` : ''}; </span>)}</div>)}
+          <Bracket ko={st.plan.club} testId="bracket-club" />
         </div>
       )}
+      <CupsPanel />
       <HallOfChampions />
+    </div>
+  );
+}
+
+/** crown-competition-2: Zonal Championships and Regional Cups — yours first, any other by selection. */
+function CupsPanel() {
+  const services = useServices();
+  const fed = services.fed;
+  const st = fed.state!;
+  const cups = st.plan.cups ?? [];
+  const regions = fed.topology().regions;
+  const mine = cups.find(k => k.qualifiers.includes(PLAYER_ID)) ?? cups.find(k => k.kind === 'zonal' && k.zone === zoneOf(st.world.player.region, regions)) ?? cups.find(k => k.kind === 'cup' && k.region === st.world.player.region) ?? cups[0];
+  const [sel, setSel] = useState<string | null>(null);
+  if (rulesOf(st.plan) < RULES_V2) return null;
+  const ko = cups.find(k => k.name === sel) ?? mine;
+  return (
+    <div className="panel" style={{ marginTop: 14 }} data-testid="cups">
+      <div className="panel-title"><h3 style={{ margin: 0 }}>Zonal Championships &amp; Regional Cups</h3>{cups.length > 0 && (
+        <select aria-label="Choose an event" value={ko?.name ?? ''} onChange={e => setSel(e.target.value)} style={{ maxWidth: '100%' }}>
+          {cups.map(k => <option key={k.name} value={k.name}>{koTitle(k)}{k.qualifiers.includes(PLAYER_ID) ? ' (you)' : ''}</option>)}
+        </select>)}</div>
+      {!ko ? <div className="small muted"><p>Drawn after league round {LEAGUE_ROUNDS}. <strong>Zonal Championships</strong> (rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]}, 16 players): Crown Division finishers of each zone's regions, by finishing rank, except Crown Championship qualifiers; the zonal champion qualifies for next season's Crown Championship. <strong>Regional Cups</strong> (rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}, 8 players): the champions of divisions 2–8 and the Grand Division runner-up; the 8 highest-rated cup winners are invited to next season's Federation Open.</p></div>
+        : <><div className="small muted" style={{ marginBottom: 6 }}>{ko.kind === 'zonal' ? `The winner qualifies for next season's Crown Championship · ${fmtCrowns(ZONAL_POOL, 0)} in prizes` : `The 8 highest-rated cup winners are invited to next season's Federation Open · ${fmtCrowns(CUP_POOL, 0)} in prizes`} · two-game matches, then rapid and blitz pairs; still level: the higher seed advances.</div>
+          <Bracket ko={ko} testId="bracket-cup" /></>}
     </div>
   );
 }
@@ -310,8 +357,10 @@ function HallOfChampions() {
   const services = useServices();
   const fed = services.fed;
   const champs: { season: number; title: string; name: string }[] = [];
-  for (const c of fed.state!.competitors.values()) for (const t of c.titles) if (t.title.includes('Crown Champion') || t.title.includes('Open winner')) champs.push({ season: t.season, title: t.title, name: c.name });
-  for (const t of fed.state!.world.player.titles) if (t.title.includes('Crown Champion') || t.title.includes('Open winner')) champs.push({ season: t.season, title: t.title, name: 'You' });
+  const major = (t: string) => t.includes('Crown Champion') || t.includes('Open winner') || t.includes('Zonal Champion');
+  for (const c of fed.state!.competitors.values()) for (const t of c.titles) if (major(t.title)) champs.push({ season: t.season, title: t.title, name: c.name });
+  // the player's every title (including Regional Cups and league titles): their own record
+  for (const t of fed.state!.world.player.titles) champs.push({ season: t.season, title: t.title, name: 'You' });
   if (!champs.length) return null;
   return (
     <div className="panel" style={{ marginTop: 14 }}>
