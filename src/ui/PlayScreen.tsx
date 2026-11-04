@@ -1,3 +1,4 @@
+import { CONTEMPORARY_DISCLOSURE, isContemporaryId, shownPersona } from '../federation/rosterPersonas';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
@@ -421,10 +422,14 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     const isHuman = c === humanColor;
     const ms = session.remaining(c, now);
     const running = session.timed && session.sideToMove === c && !session.isOver && !session.paused;
+    // Federation opponent: shown under the contemporary-names setting, with the persona disclosure
+    const comp = !isHuman && p.id ? services.fed.state?.competitors.get(p.id.replace(/^spar:/, '')) : undefined;
+    const sp = shownPersona(comp, services.fed.showNames);
+    const shownName = comp && isContemporaryId(comp.persona) ? `${comp.name}${p.id.startsWith('spar:') ? ' (sparring)' : ''}` : p.name;
     return (
       <PlayerBar color={color} active={session.sideToMove === c && !session.isOver} testId={isHuman ? 'human-bar' : 'engine-bar'}
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
-        name={<>{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</>}
+        name={<>{shownName} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}{sp && <> <span className="chip" data-testid="opponent-persona" title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Fictional persona. ${CONTEMPORARY_DISCLOSURE}`}>Fictional Persona</span></>}</>}
         meta={<>
           {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}

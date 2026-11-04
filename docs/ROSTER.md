@@ -1,77 +1,149 @@
-# Historical roster (crown-roster-1)
+# Federation persona roster (crown-roster-1 and crown-roster-pub-1)
 
-Owner request, v0.10 Decision 2 (docs/V10_PLAN.md). Part of the Federation's population carries the names of
-historical figures as **clearly fictional chess personas**. This file is the policy, the exclusion list and the
-provenance record for every identity. Data: `src/federation/rosterIdentities.json`. Logic:
-`src/federation/rosterPersonas.ts`. Tests: `tests/roster.test.ts`.
+Owner request, v0.10 Decision 2 as revised after the owner's explicit instruction (docs/V10_PLAN.md). Part of the
+Federation's population carries the names of real people as **clearly fictional chess personas**, in two sets:
+
+* the **historical set** (`hist-…`, crown-roster-1): figures who died in 1925 or earlier;
+* the **contemporary set** (`pub-…`, crown-roster-pub-1): widely known adult public figures who are living or died
+  after 1925 — musicians, singers, actors, heads of state and government, politicians, scientists, inventors,
+  athletes, artists, authors, philosophers, explorers and chess players — included because the owner explicitly asked
+  for them (twice), naming e.g. Taylor Swift, Beyoncé, Drake, Michael Jackson, Barack Obama, Donald Trump, Leonardo
+  DiCaprio, Tom Cruise, Morgan Freeman, Albert Einstein, Marie Curie, Michael Jordan, LeBron James and Serena Williams.
+
+This file is the policy, the safeguards, the exclusion list and the provenance record for every identity. Data:
+`src/federation/rosterIdentities.json` (historical), `src/federation/rosterContemporary.json` (contemporary). Logic:
+`src/federation/rosterPersonas.ts`. Display switch: `src/app/namePrefs.ts`. Tests: `tests/roster.test.ts`.
 
 ## Policy
 
-* **Inclusion rule.** Only historical figures who **died in 1925 or earlier** (more than 100 years before 2026). This
-  stays clear of post-mortem personality and publicity rights (which last up to 100 years after death in some
-  jurisdictions) and of any suggestion that a living person plays, endorses or is depicted by the game.
+* **Historical inclusion rule.** Historical figures who **died in 1925 or earlier** (more than 100 years before 2026).
+* **Contemporary inclusion rule.** Adult, widely known public figures, known for their public work, who are living or
+  died after 1925; accurately spelled, with their English Wikipedia article title as reference, spread across every
+  region of the world and, for leaders, across many countries and parties (no selection by viewpoint).
 * **Fictional personas.** A persona is a name laid over a competitor the population generator has already made.
   Rating, hidden strength, playing style, Federation region, division, age, career, titles and results come from the
   seeded generator and the simulation. They are assigned **independently of the person** (by seeded hashes of the world
   seed and competitor id), never by fame, nationality, politics or any other trait, and say nothing about the real
-  person. The in-game note reads: *"Historical figures appear as fictional chess personas. Their ratings, styles and
-  results are invented and say nothing about the real people."* It is shown on every persona's profile and in the
-  competitor browser.
-* **No likenesses.** No photographs, paintings, likenesses, signatures or logos. Personas use the same original,
-  procedurally generated pixel portraits and heraldic insignias as every other competitor.
+  person: a famous politician or athlete can be rated 300 or 3,000 by chance. Tests check this (the attributes of a
+  persona competitor are exactly those of the plain generation; personas spread over every division and region; their
+  mean rating is the population's).
+* **Names only, no personal data.** A contemporary entry holds only what identifies the public figure: id, display
+  name, category, real-world region, a neutral one-line profession descriptor ("American singer-songwriter", "44th
+  President of the United States"), the Wikipedia reference and a `living` flag (as of compilation). No birth dates,
+  no claims about anyone's views, private life, health or controversies.
+* **No likenesses.** No photographs, paintings, likenesses, signatures, logos or official branding. Personas use the
+  same original, procedurally generated pixel portraits and heraldic insignias as every other competitor.
 * **Federation region is not the person's homeland.** The Federation's regions (Ashmere, Brightwater, …) are
-  invented. The `region` field below records the person's real-world region, for provenance and to keep the roster
-  global; it is not used to place the persona.
-* **Accuracy before count.** An identity is included only when its name, lifespan and reference are well
-  established. Where a year is uncertain the record is marked *c.* (circa). Years are Gregorian; negative years are BC.
-  Names that are ambiguous carry their common disambiguator (e.g. *Johann Strauss II*), and the reference is the
-  English Wikipedia article title.
+  invented. The `region` field records the person's real-world region, for provenance and to keep the roster global;
+  it is not used to place the persona.
+* **Accuracy before count.** An identity is included only when its name and reference are well established; entries
+  we were not sure about are listed below as left out.
+
+## Safeguards for the contemporary set
+
+* **Disclosure on every persona surface.** *"Fictional chess persona — not the real person; no participation or
+  endorsement."* appears on the competitor profile, in the roster browser (Discover Competitors: note above the list
+  and on each Persona chip), on the spectator / Match Center player bars (Persona chip and a line under the board) and
+  on the player's own game screen against a Federation persona ("Fictional Persona" chip). Profiles add *"Rating,
+  style, region, division and career are assigned by the world seed, independently of the person."*
+* **Settings → Federation Names → "Show contemporary famous names"** (default **on**, as the owner asked). When it is
+  off, every contemporary persona is shown under its **stable original fictional name**: the competitor's own
+  generated name, kept as `altName` when the persona was assigned. Ids, ratings, results, titles and history never
+  change; turning the switch on again restores the famous name. Generated names are reserved independently of the
+  switch, so it can never change what the simulation produces. Historical personas are not affected. The setting is
+  remembered in this browser only.
+* **Exclusions** (below): minors, private individuals, people known primarily for atrocities, terrorism or violent
+  crime, people subject to an international criminal arrest warrant, religious figures of worship and clergy known
+  as such, and anyone whose fame is primarily scandal.
+* **Residual risk.** The game is free and non-commercial, but the GitHub Pages site is **public**: anyone can open it
+  and see these names. Rights of publicity differ by jurisdiction, and a living person could object to the use of
+  their name even as a clearly fictional persona.
+* **Removal procedure.** If any person or their representative objects, or a reviewer finds an entry inaccurate:
+  delete the entry from `src/federation/rosterContemporary.json`, add the name to the exclusion list in
+  `tests/roster.test.ts`, run `npx tsx tools/roster/gen-doc.mts` and the tests, and publish. Existing worlds need no
+  migration: a competitor whose identity is no longer in the data keeps its id, record and history and is shown under
+  its original name (`altName`) on every device, whatever the setting. (Text already written into older career
+  milestones and the player's own saved game records keeps the name it was written with until those records are
+  replaced.) The id is never reused.
 
 ## How personas enter a Federation
 
 * **Existing federations keep every competitor's name and id.** Nothing already stored is renamed, and loading an
   older save never adds a persona to an existing competitor.
-* **New federations:** when a federation is founded, 8% of its competitors (164 of 2,048) carry a persona, capped at
-  60% of the roster so that later entrants can still bring new identities. The rest keep original generated names.
+* **New federations (2,048 competitors):** when a federation is founded, **8% carry a historical persona (164)** and
+  **6% carry a contemporary persona (123)**, on different competitors: 287 personas (14%), the rest original names.
+  Each share is capped at 60% of its set (245 historical, 210 contemporary) so that later entrants can still bring new
+  identities.
+* **Owner-named people first.** Within each set the world's seeded hand-out order puts the people the owner named
+  first (contemporary: Taylor Swift, Beyoncé, Drake, Michael Jackson, Barack Obama, Donald Trump, Leonardo DiCaprio,
+  Tom Cruise, Morgan Freeman, Albert Einstein, Marie Curie, Michael Jordan, LeBron James, Serena Williams; historical:
+  Abraham Lincoln, Napoleon Bonaparte, Isaac Newton, Leonardo da Vinci, Vincent van Gogh, Julius Caesar), so every new
+  federation carries all of them — still on seeded-random competitors, and so at seeded-random ratings, styles and
+  divisions. Everyone else follows in seeded order.
 * **Turnover (every federation, old and new):** each new entrant that replaces a retirement at a season's end has a
-  12% seeded chance of carrying the next unused identity. Identities are never reused within a world, even after
-  their competitor retires.
-* Everything is deterministic for a world seed. Each competitor record holds `persona: <identity id>`; the UI uses it
-  to show the *Historical persona (fictional)* label, lifespan and descriptor.
+  12% seeded chance of carrying the next unused historical identity and a separate 8% chance of carrying the next
+  unused contemporary identity. Identities are never reused within a world, even after their competitor retires.
+  Older (v0.9) worlds therefore meet the owner-named contemporary people first among their entrants.
+* Everything is deterministic for a world seed. Each competitor record holds `persona: <identity id>` (and, for a
+  contemporary persona, `altName`); the UI uses it to show the persona label, descriptor and disclosure.
 
 ## Not used, and why
 
 | Who | Reason | Original alternative |
 |---|---|---|
-| Living people, e.g. Taylor Swift, Beyoncé, Serena Williams, Magnus Carlsen, Lionel Messi, LeBron James, and any current politician | Living people have rights of publicity and their consent is not given; the game must not imply that they play, endorse or are depicted by it | Original generated names |
-| Albert Einstein (d. 1955) | Died after 1925; his name is commercially licensed by his estate | Original names; earlier physicists such as Michael Faraday or James Clerk Maxwell are in the roster |
-| Marie Curie (d. 1934) | Died after 1925 | Pierre Curie (d. 1906) is in the roster; Ada Lovelace, Caroline Herschel and other earlier scientists |
-| Others who died after 1925, e.g. Claude Monet (1926), Harry Houdini (1926), Annie Oakley (1926), Antoni Gaudí (1926), Rudolph Valentino (1926), Rainer Maria Rilke (1926), Mary Cassatt (1926), Gertrude Bell (1926), Bessie Coleman (1926), Fred Spofforth (1926), Camillo Golgi (1926), Thomas Edison (1931), Nikola Tesla (1943), Mahatma Gandhi (1948), Emanuel Lasker (1941), Siegbert Tarrasch (1934) | Died after 1925 (several in 1926, just outside the rule) | Earlier figures in the same fields |
-| Figures known primarily for atrocities, e.g. Adolf Hitler, Joseph Stalin, Pol Pot, Genghis Khan, Timur, Attila, Vlad the Impaler, Ivan the Terrible, Caligula, Nero, Leopold II of Belgium, Ranavalona I, Christopher Columbus, Hernán Cortés, Francisco Pizarro, Vasco da Gama, Henry Morton Stanley, Cecil Rhodes, Andrew Jackson | Known primarily for mass killing, conquest or colonial brutality | — |
-| Conquerors whose fame rests on wars of conquest, e.g. Alexander the Great, Julius Caesar, Napoleon | Left out conservatively | — |
-| Religious founders and figures of worship, e.g. Jesus, Muhammad, Gautama Buddha, Moses, Zoroaster, Confucius, Laozi, Guru Nanak, Martin Luther, Pythagoras; saints and venerated figures, e.g. Joan of Arc, Francis of Assisi, Hildegard of Bingen, Thomas Aquinas, Mary MacKillop, Rumi, Kabir; rulers worshipped or enshrined as divine, e.g. Emperor Meiji, Chulalongkorn, Augustus; founders of religious movements, e.g. Akbar (Din-i Ilahi), Auguste Comte (Religion of Humanity), Ram Mohan Roy; clergy known as such, e.g. Miguel Hidalgo, Sor Juana Inés de la Cruz | Religious founders, objects of worship or veneration | — |
-| Serious crimes or contested legacies, e.g. Juan Luna and Max Linder (killed their wives), Caravaggio (killed a man), Paul Gauguin, Egon Schiele, Richard Wagner, P. T. Barnum, Cap Anson, Ned Kelly, Mata Hari, Jean-Jacques Dessalines, Tipu Sultan | Left out conservatively; a chess persona should not invite controversy about the person | — |
+| Minors (anyone under 18 at compilation), e.g. child performers and junior athletes; and Anne Frank | Minors are never included; Anne Frank is remembered as a child victim | — |
+| Private individuals, and people known only pseudonymously (e.g. Banksy, Satoshi Nakamoto, Elena Ferrante) | Not public figures, or their identity is deliberately private | — |
+| Figures known primarily for atrocities, terrorism or violent crime, e.g. Adolf Hitler, Joseph Stalin, Mao Zedong, Pol Pot, Kim Jong Un, Saddam Hussein, Idi Amin, Muammar Gaddafi, Osama bin Laden; earlier, Genghis Khan, Timur, Attila, Vlad the Impaler, Ivan the Terrible, Caligula, Nero, Leopold II of Belgium, Ranavalona I, Christopher Columbus, Hernán Cortés, Francisco Pizarro, Vasco da Gama, Henry Morton Stanley, Cecil Rhodes, Andrew Jackson | Known primarily for mass killing, terror, conquest or colonial brutality | — |
+| Current or former leaders subject to an International Criminal Court arrest warrant or such proceedings, e.g. Vladimir Putin, Benjamin Netanyahu, Rodrigo Duterte, Omar al-Bashir | A neutral, objective rule applied to every country alike | Other heads of state and government of the same countries' histories (e.g. Mikhail Gorbachev, Golda Meir, Yitzhak Rabin, Menachem Begin, Corazon Aquino) |
+| People convicted of violent or sexual crimes, or of attempting a coup, e.g. Mike Tyson, Floyd Mayweather, Gérard Depardieu, Jair Bolsonaro; and people whose public profile is dominated by such allegations, e.g. Conor McGregor, Neil Gaiman | "Violent crime" exclusion | — |
+| People whose fame is primarily scandal or celebrity of controversy, e.g. Kim Kardashian, Paris Hilton | "Primarily scandal" exclusion | — |
+| Religious founders, leaders and figures of worship, e.g. Jesus, Muhammad, Gautama Buddha, Moses, Zoroaster, Confucius, Laozi, Guru Nanak, Martin Luther, Pythagoras; contemporary: Pope Francis, the Dalai Lama, Mother Teresa, Desmond Tutu, Haile Selassie (venerated in the Rastafari movement), B. R. Ambedkar (founder of the Navayana Buddhist movement), Ruhollah Khomeini, Japanese emperors (Emperor Meiji, Akihito); saints and venerated figures, e.g. Joan of Arc, Francis of Assisi, Hildegard of Bingen, Thomas Aquinas, Mary MacKillop, Rumi, Kabir; rulers worshipped or enshrined as divine, e.g. Chulalongkorn, Augustus; founders of religious movements, e.g. Akbar (Din-i Ilahi), Auguste Comte (Religion of Humanity), Ram Mohan Roy; clergy known as such, e.g. Miguel Hidalgo, Sor Juana Inés de la Cruz | Religious founders, objects of worship or veneration, clergy | — |
+| Serious crimes or contested legacies in the historical set, e.g. Juan Luna and Max Linder (killed their wives), Caravaggio (killed a man), Paul Gauguin, Egon Schiele, Richard Wagner, P. T. Barnum, Cap Anson, Ned Kelly, Mata Hari, Jean-Jacques Dessalines, Tipu Sultan | Left out conservatively; a chess persona should not invite controversy about the person | — |
+| Alexander the Great | Conqueror whose fame rests on wars of conquest; left out conservatively (Julius Caesar and Napoleon Bonaparte, also conquerors, are included because the owner named them explicitly) | — |
 | People remembered mainly for suffering or martyrdom, e.g. Truganini, Yu Gwan-sun, Sacagawea, General Tom Thumb | Left out out of respect | — |
+| People whose name is itself a commercial brand, e.g. Walt Disney, Soichiro Honda, Enzo Ferrari, Coco Chanel, Henry Ford | "No logos or official branding" | — |
+
+Between the two sets, people who died between 1926 and the present (e.g. Albert Einstein, Marie Curie, Claude
+Monet, Thomas Edison, Nikola Tesla, Mahatma Gandhi, Winston Churchill) are in the contemporary set or left out by
+the rules above; they are no longer excluded for their date of death.
 
 ### Considered and left out because a fact could not be confirmed with confidence
 
-Gioachino Greco, Ruy López de Segura and Pedro Damiano (uncertain lifespans), Euclid, Homer, Sappho, Aesop,
-Hypatia, Murasaki Shikibu and Sei Shōnagon (uncertain or legendary lifespans), Pierre de Fermat (disputed birth year),
-Florentino Ameghino (birth year given as 1853 or 1854), Alexander Hamilton (disputed birth year), Hatshepsut,
+Historical set: Gioachino Greco, Ruy López de Segura and Pedro Damiano (uncertain lifespans), Euclid, Homer, Sappho,
+Aesop, Hypatia, Murasaki Shikibu and Sei Shōnagon (uncertain or legendary lifespans), Pierre de Fermat (disputed birth
+year), Florentino Ameghino (birth year given as 1853 or 1854), Alexander Hamilton (disputed birth year), Hatshepsut,
 Ashoka, Mansa Musa, Nzinga of Ndongo and Matamba, Kamehameha I, Lakshmibai (Rani of Jhansi, disputed birth year),
 Tyagaraja and Muthuswami Dikshitar (venerated as saints), Antonio Maceo, Rachel Félix, Mademoiselle Mars, Vernon
 Castle, the Montgolfier brothers, Francis Bacon (shares a name with a 20th-century painter) and Bai Bureh, Almeida
-Júnior (reference titles not certain). They can be added later if a reviewer confirms the record.
+Júnior (reference titles not certain).
 
-## Roster
+Contemporary set:
+* **Living status could not be confirmed for the data date** (very old, or reported deaths we could not verify):
+  David Attenborough, Noam Chomsky, Jürgen Habermas, Wole Soyinka, Clint Eastwood, Sophia Loren, Judi Dench, Michael
+  Caine, Buzz Aldrin, Mahathir Mohamad, Fernando Henrique Cardoso, Amartya Sen, Tu Youyou, Yang Chen-Ning, Fairuz,
+  Asha Bhosle, John Williams, Yayoi Kusama, Thomas Sowell, Sylvia Earle, Dolores Huerta, Frank Gehry, Giorgio Armani,
+  James Watson, Alasdair MacIntyre, Paulin Hountondji, Martin Cooper.
+* **Reference title or spelling not certain:** Psy, Sia, Khaled, Tarkan, Dimash Kudaibergen, Chinghiz Aitmatov, Ash
+  Barty, Norman Foster, Allan Cormack, Jügderdemidiin Gürragchaa, Andy Thomas.
+* **Contested or controversy-dominated public profile, left out conservatively:** Kanye West, Johnny Depp, Will
+  Smith, Roald Dahl, Hergé, Le Corbusier, Guglielmo Marconi, Wernher von Braun, Charles Lindbergh, Alexander Alekhine,
+  Martin Heidegger, Richard Nixon, Henry Kissinger, Fidel Castro, Che Guevara, Yasser Arafat, Deng Xiaoping, Ho Chi
+  Minh, Sukarno, Aung San Suu Kyi, Sheikh Hasina, Nayib Bukele, Abiy Ahmed, Paul Kagame, Alice Munro, Yukio Mishima,
+  M. F. Husain, Malcolm X, Russell Crowe, Salman Khan, Fan Bingbing, PewDiePie.
+* **Trimmed to keep the set near 350 and the regions balanced:** many further well-known people (e.g. Johnny Cash,
+  Ella Fitzgerald, Harrison Ford, Helen Mirren, Niels Bohr, Max Planck, Thor Heyerdahl). This is no judgement on
+  them; they can be added later with the same checks.
+
+## Historical roster
+
 
 <!-- roster:generated:begin -->
 
-**407 identities.** Generated from `src/federation/rosterIdentities.json` by `npx tsx tools/roster/gen-doc.mts`; do not edit by hand.
+**409 identities.** Generated from `src/federation/rosterIdentities.json` by `npx tsx tools/roster/gen-doc.mts`; do not edit by hand. Owner-named people are marked ★.
 
 | Category | Identities |
 |---|---:|
-| Leaders & Statespeople | 52 |
+| Leaders & Statespeople | 54 |
 | Musicians & Composers | 34 |
 | Actors & Performers | 20 |
 | Artists & Architects | 45 |
@@ -86,7 +158,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 
 | Region | Identities |
 |---|---:|
-| Europe | 171 |
+| Europe | 173 |
 | North America | 68 |
 | Latin America & Caribbean | 34 |
 | Sub-Saharan Africa | 12 |
@@ -101,6 +173,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 
 | Id | Name | Lifespan | Category | Region | Descriptor | Reference (English Wikipedia title) |
 |---|---|---|---|---|---|---|
+| `hist-julius-caesar` | Julius Caesar ★ | c. 100 BC – 44 BC | Leaders & Statespeople | Europe | Roman general and statesman | Julius Caesar |
 | `hist-cleopatra` | Cleopatra | 69 BC – 30 BC | Leaders & Statespeople | Middle East & North Africa | Last active ruler of Ptolemaic Egypt | Cleopatra |
 | `hist-sejong-the-great` | Sejong the Great | 1397–1450 | Leaders & Statespeople | East Asia | King of Joseon who promulgated the Hangul script | Sejong the Great |
 | `hist-elizabeth-i` | Elizabeth I | 1533–1603 | Leaders & Statespeople | Europe | Queen of England and Ireland | Elizabeth I |
@@ -111,6 +184,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-tadeusz-kosciuszko` | Tadeusz Kościuszko | 1746–1817 | Leaders & Statespeople | Europe | Polish-Lithuanian military engineer and national leader | Tadeusz Kościuszko |
 | `hist-william-wilberforce` | William Wilberforce | 1759–1833 | Leaders & Statespeople | Europe | British parliamentarian against the slave trade | William Wilberforce |
 | `hist-tecumseh` | Tecumseh | 1768–1813 | Leaders & Statespeople | North America | Shawnee leader of a Native American confederacy | Tecumseh |
+| `hist-napoleon-bonaparte` | Napoleon Bonaparte ★ | 1769–1821 | Leaders & Statespeople | Europe | French military leader and Emperor of the French | Napoleon |
 | `hist-laura-secord` | Laura Secord | 1775–1868 | Leaders & Statespeople | North America | Canadian heroine of the War of 1812 | Laura Secord |
 | `hist-bernardo-ohiggins` | Bernardo O'Higgins | 1778–1842 | Leaders & Statespeople | Latin America & Caribbean | Chilean independence leader | Bernardo O'Higgins |
 | `hist-jose-de-san-martin` | José de San Martín | 1778–1850 | Leaders & Statespeople | Latin America & Caribbean | Argentine general of South American independence | José de San Martín |
@@ -124,7 +198,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-benito-juarez` | Benito Juárez | 1806–1872 | Leaders & Statespeople | Latin America & Caribbean | President of Mexico and liberal reformer | Benito Juárez |
 | `hist-amir-kabir` | Amir Kabir | 1807–1852 | Leaders & Statespeople | Middle East & North Africa | Chief minister and reformer of Qajar Iran | Amir Kabir |
 | `hist-giuseppe-garibaldi` | Giuseppe Garibaldi | 1807–1882 | Leaders & Statespeople | Europe | Italian unification leader | Giuseppe Garibaldi |
-| `hist-abraham-lincoln` | Abraham Lincoln | 1809–1865 | Leaders & Statespeople | North America | 16th President of the United States | Abraham Lincoln |
+| `hist-abraham-lincoln` | Abraham Lincoln ★ | 1809–1865 | Leaders & Statespeople | North America | 16th President of the United States | Abraham Lincoln |
 | `hist-joseph-jenkins-roberts` | Joseph Jenkins Roberts | 1809–1876 | Leaders & Statespeople | Sub-Saharan Africa | First President of Liberia | Joseph Jenkins Roberts |
 | `hist-domingo-faustino-sarmiento` | Domingo Faustino Sarmiento | 1811–1888 | Leaders & Statespeople | Latin America & Caribbean | Argentine president, writer and educator | Domingo Faustino Sarmiento |
 | `hist-melchora-aquino` | Melchora Aquino | 1812–1919 | Leaders & Statespeople | Southeast Asia | Filipino revolutionary known as Tandang Sora | Melchora Aquino |
@@ -209,7 +283,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-olive-thomas` | Olive Thomas | 1894–1920 | Actors & Performers | North America | American silent film actress | Olive Thomas |
 | `hist-wang-xizhi` | Wang Xizhi | c. 303–361 | Artists & Architects | East Asia | Chinese calligrapher | Wang Xizhi |
 | `hist-araniko` | Araniko | 1245–1306 | Artists & Architects | South Asia | Nepalese artist and architect | Araniko |
-| `hist-leonardo-da-vinci` | Leonardo da Vinci | 1452–1519 | Artists & Architects | Europe | Italian Renaissance painter and polymath | Leonardo da Vinci |
+| `hist-leonardo-da-vinci` | Leonardo da Vinci ★ | 1452–1519 | Artists & Architects | Europe | Italian Renaissance painter and polymath | Leonardo da Vinci |
 | `hist-wen-zhengming` | Wen Zhengming | 1470–1559 | Artists & Architects | East Asia | Chinese Ming dynasty painter and calligrapher | Wen Zhengming |
 | `hist-michelangelo` | Michelangelo | 1475–1564 | Artists & Architects | Europe | Italian Renaissance sculptor and painter | Michelangelo |
 | `hist-mimar-sinan` | Mimar Sinan | c. 1490–1588 | Artists & Architects | Middle East & North Africa | Ottoman chief architect | Mimar Sinan |
@@ -247,7 +321,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-edmonia-lewis` | Edmonia Lewis | c. 1844–1907 | Artists & Architects | North America | American sculptor | Edmonia Lewis |
 | `hist-raja-ravi-varma` | Raja Ravi Varma | 1848–1906 | Artists & Architects | South Asia | Indian painter | Raja Ravi Varma |
 | `hist-jose-guadalupe-posada` | José Guadalupe Posada | 1852–1913 | Artists & Architects | Latin America & Caribbean | Mexican printmaker and illustrator | José Guadalupe Posada |
-| `hist-vincent-van-gogh` | Vincent van Gogh | 1853–1890 | Artists & Architects | Europe | Dutch Post-Impressionist painter | Vincent van Gogh |
+| `hist-vincent-van-gogh` | Vincent van Gogh ★ | 1853–1890 | Artists & Architects | Europe | Dutch Post-Impressionist painter | Vincent van Gogh |
 | `hist-frederick-mccubbin` | Frederick McCubbin | 1855–1917 | Artists & Architects | Oceania | Australian painter of the Heidelberg School | Frederick McCubbin |
 | `hist-john-singer-sargent` | John Singer Sargent | 1856–1925 | Artists & Architects | North America | American portrait painter | John Singer Sargent |
 | `hist-gustav-klimt` | Gustav Klimt | 1862–1918 | Artists & Architects | Europe | Austrian Symbolist painter | Gustav Klimt |
@@ -268,7 +342,7 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-tycho-brahe` | Tycho Brahe | 1546–1601 | Scientists & Mathematicians | Europe | Danish astronomer | Tycho Brahe |
 | `hist-galileo-galilei` | Galileo Galilei | 1564–1642 | Scientists & Mathematicians | Europe | Italian astronomer and physicist | Galileo Galilei |
 | `hist-johannes-kepler` | Johannes Kepler | 1571–1630 | Scientists & Mathematicians | Europe | German astronomer | Johannes Kepler |
-| `hist-isaac-newton` | Isaac Newton | 1643–1727 | Scientists & Mathematicians | Europe | English mathematician and physicist | Isaac Newton |
+| `hist-isaac-newton` | Isaac Newton ★ | 1643–1727 | Scientists & Mathematicians | Europe | English mathematician and physicist | Isaac Newton |
 | `hist-carl-linnaeus` | Carl Linnaeus | 1707–1778 | Scientists & Mathematicians | Europe | Swedish botanist | Carl Linnaeus |
 | `hist-leonhard-euler` | Leonhard Euler | 1707–1783 | Scientists & Mathematicians | Europe | Swiss mathematician | Leonhard Euler |
 | `hist-benjamin-banneker` | Benjamin Banneker | 1731–1806 | Scientists & Mathematicians | North America | American almanac author and surveyor | Benjamin Banneker |
@@ -510,3 +584,382 @@ Júnior (reference titles not certain). They can be added later if a reviewer co
 | `hist-kartini` | Kartini | 1879–1904 | Reformers & Other Cultural Figures | Southeast Asia | Javanese advocate of women's education | Kartini |
 
 <!-- roster:generated:end -->
+
+## Contemporary roster
+
+<!-- roster:contemporary:begin -->
+
+**350 identities** (191 living, 159 deceased after 1925, as of compilation). Generated from `src/federation/rosterContemporary.json` by `npx tsx tools/roster/gen-doc.mts`; do not edit by hand. Owner-named people are marked ★.
+
+| Category | Europe | North America | Latin America & Caribbean | Sub-Saharan Africa | Middle East & North Africa | Central Asia | South Asia | East Asia | Southeast Asia | Oceania | Total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Leaders & Statespeople | 14 | 10 | 7 | 8 | 7 | 2 | 9 | 3 | 4 | 4 | 68 |
+| Musicians & Composers | 9 | 14 | 5 | 5 | 3 | 0 | 3 | 4 | 0 | 2 | 45 |
+| Actors & Performers | 6 | 14 | 1 | 1 | 1 | 0 | 4 | 3 | 1 | 4 | 35 |
+| Artists & Architects | 5 | 3 | 2 | 2 | 1 | 0 | 2 | 5 | 0 | 1 | 21 |
+| Scientists & Mathematicians | 9 | 4 | 1 | 0 | 3 | 0 | 3 | 3 | 0 | 2 | 25 |
+| Inventors & Engineers | 3 | 6 | 1 | 2 | 0 | 0 | 1 | 2 | 0 | 0 | 15 |
+| Authors & Poets | 6 | 5 | 5 | 4 | 3 | 0 | 2 | 4 | 2 | 1 | 32 |
+| Philosophers & Thinkers | 6 | 3 | 2 | 1 | 1 | 0 | 2 | 0 | 0 | 1 | 16 |
+| Explorers & Travellers | 4 | 4 | 1 | 0 | 1 | 1 | 2 | 2 | 1 | 1 | 17 |
+| Athletes | 7 | 11 | 7 | 4 | 2 | 2 | 4 | 5 | 2 | 4 | 48 |
+| Chess Masters | 5 | 2 | 1 | 0 | 1 | 1 | 1 | 2 | 1 | 0 | 14 |
+| Reformers & Other Cultural Figures | 2 | 5 | 1 | 1 | 2 | 0 | 2 | 0 | 0 | 1 | 14 |
+| **Total** | 76 | 81 | 34 | 28 | 25 | 6 | 35 | 33 | 11 | 21 | 350 |
+
+### Contemporary provenance
+
+| Id | Name | Living | Category | Region | Descriptor | Reference (English Wikipedia title) |
+|---|---|---|---|---|---|---|
+| `pub-abdullah-ii-of-jordan` | Abdullah II of Jordan | yes | Leaders & Statespeople | Middle East & North Africa | King of Jordan | Abdullah II of Jordan |
+| `pub-angela-merkel` | Angela Merkel | yes | Leaders & Statespeople | Europe | Former Chancellor of Germany | Angela Merkel |
+| `pub-anwar-sadat` | Anwar Sadat | no | Leaders & Statespeople | Middle East & North Africa | President of Egypt | Anwar Sadat |
+| `pub-atal-bihari-vajpayee` | Atal Bihari Vajpayee | no | Leaders & Statespeople | South Asia | Prime Minister of India | Atal Bihari Vajpayee |
+| `pub-ban-ki-moon` | Ban Ki-moon | yes | Leaders & Statespeople | East Asia | Former Secretary-General of the United Nations | Ban Ki-moon |
+| `pub-barack-obama` | Barack Obama ★ | yes | Leaders & Statespeople | North America | 44th President of the United States | Barack Obama |
+| `pub-benazir-bhutto` | Benazir Bhutto | no | Leaders & Statespeople | South Asia | Prime Minister of Pakistan | Benazir Bhutto |
+| `pub-bill-clinton` | Bill Clinton | yes | Leaders & Statespeople | North America | 42nd President of the United States | Bill Clinton |
+| `pub-charles-de-gaulle` | Charles de Gaulle | no | Leaders & Statespeople | Europe | President of France | Charles de Gaulle |
+| `pub-charles-iii` | Charles III | yes | Leaders & Statespeople | Europe | King of the United Kingdom | Charles III |
+| `pub-claudia-sheinbaum` | Claudia Sheinbaum | yes | Leaders & Statespeople | Latin America & Caribbean | President of Mexico | Claudia Sheinbaum |
+| `pub-condoleezza-rice` | Condoleezza Rice | yes | Leaders & Statespeople | North America | 66th United States Secretary of State | Condoleezza Rice |
+| `pub-corazon-aquino` | Corazon Aquino | no | Leaders & Statespeople | Southeast Asia | President of the Philippines | Corazon Aquino |
+| `pub-cyril-ramaphosa` | Cyril Ramaphosa | yes | Leaders & Statespeople | Sub-Saharan Africa | President of South Africa | Cyril Ramaphosa |
+| `pub-donald-trump` | Donald Trump ★ | yes | Leaders & Statespeople | North America | 45th and 47th President of the United States | Donald Trump |
+| `pub-elizabeth-ii` | Elizabeth II | no | Leaders & Statespeople | Europe | Queen of the United Kingdom | Elizabeth II |
+| `pub-ellen-johnson-sirleaf` | Ellen Johnson Sirleaf | yes | Leaders & Statespeople | Sub-Saharan Africa | Former President of Liberia | Ellen Johnson Sirleaf |
+| `pub-emmanuel-macron` | Emmanuel Macron | yes | Leaders & Statespeople | Europe | President of France | Emmanuel Macron |
+| `pub-george-w-bush` | George W. Bush | yes | Leaders & Statespeople | North America | 43rd President of the United States | George W. Bush |
+| `pub-giorgia-meloni` | Giorgia Meloni | yes | Leaders & Statespeople | Europe | Prime Minister of Italy | Giorgia Meloni |
+| `pub-golda-meir` | Golda Meir | no | Leaders & Statespeople | Middle East & North Africa | Prime Minister of Israel | Golda Meir |
+| `pub-indira-gandhi` | Indira Gandhi | no | Leaders & Statespeople | South Asia | Prime Minister of India | Indira Gandhi |
+| `pub-jacinda-ardern` | Jacinda Ardern | yes | Leaders & Statespeople | Oceania | Former Prime Minister of New Zealand | Jacinda Ardern |
+| `pub-javier-milei` | Javier Milei | yes | Leaders & Statespeople | Latin America & Caribbean | President of Argentina | Javier Milei |
+| `pub-jawaharlal-nehru` | Jawaharlal Nehru | no | Leaders & Statespeople | South Asia | First Prime Minister of India | Jawaharlal Nehru |
+| `pub-joe-biden` | Joe Biden | yes | Leaders & Statespeople | North America | 46th President of the United States | Joe Biden |
+| `pub-john-f-kennedy` | John F. Kennedy | no | Leaders & Statespeople | North America | 35th President of the United States | John F. Kennedy |
+| `pub-john-howard` | John Howard | yes | Leaders & Statespeople | Oceania | Former Prime Minister of Australia | John Howard |
+| `pub-john-key` | John Key | yes | Leaders & Statespeople | Oceania | Former Prime Minister of New Zealand | John Key |
+| `pub-joko-widodo` | Joko Widodo | yes | Leaders & Statespeople | Southeast Asia | Former President of Indonesia | Joko Widodo |
+| `pub-jose-mujica` | José Mujica | no | Leaders & Statespeople | Latin America & Caribbean | Former President of Uruguay | José Mujica |
+| `pub-jose-ramos-horta` | José Ramos-Horta | yes | Leaders & Statespeople | Southeast Asia | President of Timor-Leste | José Ramos-Horta |
+| `pub-julia-gillard` | Julia Gillard | yes | Leaders & Statespeople | Oceania | Former Prime Minister of Australia | Julia Gillard |
+| `pub-julius-nyerere` | Julius Nyerere | no | Leaders & Statespeople | Sub-Saharan Africa | First President of Tanzania | Julius Nyerere |
+| `pub-justin-trudeau` | Justin Trudeau | yes | Leaders & Statespeople | North America | 23rd Prime Minister of Canada | Justin Trudeau |
+| `pub-kassym-jomart-tokayev` | Kassym-Jomart Tokayev | yes | Leaders & Statespeople | Central Asia | President of Kazakhstan | Kassym-Jomart Tokayev |
+| `pub-keir-starmer` | Keir Starmer | yes | Leaders & Statespeople | Europe | Prime Minister of the United Kingdom | Keir Starmer |
+| `pub-kenneth-kaunda` | Kenneth Kaunda | no | Leaders & Statespeople | Sub-Saharan Africa | First President of Zambia | Kenneth Kaunda |
+| `pub-kofi-annan` | Kofi Annan | no | Leaders & Statespeople | Sub-Saharan Africa | Secretary-General of the United Nations | Kofi Annan |
+| `pub-kwame-nkrumah` | Kwame Nkrumah | no | Leaders & Statespeople | Sub-Saharan Africa | First President of Ghana | Kwame Nkrumah |
+| `pub-lech-walesa` | Lech Wałęsa | yes | Leaders & Statespeople | Europe | Former President of Poland | Lech Wałęsa |
+| `pub-lee-kuan-yew` | Lee Kuan Yew | no | Leaders & Statespeople | Southeast Asia | First Prime Minister of Singapore | Lee Kuan Yew |
+| `pub-leopold-sedar-senghor` | Léopold Sédar Senghor | no | Leaders & Statespeople | Sub-Saharan Africa | First President of Senegal | Léopold Sédar Senghor |
+| `pub-luiz-inacio-lula-da-silva` | Luiz Inácio Lula da Silva | yes | Leaders & Statespeople | Latin America & Caribbean | President of Brazil | Luiz Inácio Lula da Silva |
+| `pub-mahatma-gandhi` | Mahatma Gandhi | no | Leaders & Statespeople | South Asia | Leader of the Indian independence movement | Mahatma Gandhi |
+| `pub-margaret-thatcher` | Margaret Thatcher | no | Leaders & Statespeople | Europe | Prime Minister of the United Kingdom | Margaret Thatcher |
+| `pub-menachem-begin` | Menachem Begin | no | Leaders & Statespeople | Middle East & North Africa | Prime Minister of Israel | Menachem Begin |
+| `pub-michelle-bachelet` | Michelle Bachelet | yes | Leaders & Statespeople | Latin America & Caribbean | Former President of Chile | Michelle Bachelet |
+| `pub-mikhail-gorbachev` | Mikhail Gorbachev | no | Leaders & Statespeople | Europe | Leader of the Soviet Union | Mikhail Gorbachev |
+| `pub-muhammad-ali-jinnah` | Muhammad Ali Jinnah | no | Leaders & Statespeople | South Asia | Founder of Pakistan | Muhammad Ali Jinnah |
+| `pub-mustafa-kemal-ataturk` | Mustafa Kemal Atatürk | no | Leaders & Statespeople | Middle East & North Africa | Founding President of Turkey | Mustafa Kemal Atatürk |
+| `pub-narendra-modi` | Narendra Modi | yes | Leaders & Statespeople | South Asia | Prime Minister of India | Narendra Modi |
+| `pub-nelson-mandela` | Nelson Mandela | no | Leaders & Statespeople | Sub-Saharan Africa | President of South Africa | Nelson Mandela |
+| `pub-recep-tayyip-erdogan` | Recep Tayyip Erdoğan | yes | Leaders & Statespeople | Middle East & North Africa | President of Turkey | Recep Tayyip Erdoğan |
+| `pub-ronald-reagan` | Ronald Reagan | no | Leaders & Statespeople | North America | 40th President of the United States | Ronald Reagan |
+| `pub-roza-otunbayeva` | Roza Otunbayeva | yes | Leaders & Statespeople | Central Asia | Former President of Kyrgyzstan | Roza Otunbayeva |
+| `pub-sebastian-pinera` | Sebastián Piñera | no | Leaders & Statespeople | Latin America & Caribbean | Former President of Chile | Sebastián Piñera |
+| `pub-sheikh-mujibur-rahman` | Sheikh Mujibur Rahman | no | Leaders & Statespeople | South Asia | Founding leader of Bangladesh | Sheikh Mujibur Rahman |
+| `pub-shinzo-abe` | Shinzo Abe | no | Leaders & Statespeople | East Asia | Prime Minister of Japan | Shinzo Abe |
+| `pub-sirimavo-bandaranaike` | Sirimavo Bandaranaike | no | Leaders & Statespeople | South Asia | Prime Minister of Sri Lanka | Sirimavo Bandaranaike |
+| `pub-stephen-harper` | Stephen Harper | yes | Leaders & Statespeople | North America | 22nd Prime Minister of Canada | Stephen Harper |
+| `pub-tony-blair` | Tony Blair | yes | Leaders & Statespeople | Europe | Former Prime Minister of the United Kingdom | Tony Blair |
+| `pub-vicente-fox` | Vicente Fox | yes | Leaders & Statespeople | Latin America & Caribbean | Former President of Mexico | Vicente Fox |
+| `pub-viktor-orban` | Viktor Orbán | yes | Leaders & Statespeople | Europe | Prime Minister of Hungary | Viktor Orbán |
+| `pub-volodymyr-zelenskyy` | Volodymyr Zelenskyy | yes | Leaders & Statespeople | Europe | President of Ukraine | Volodymyr Zelenskyy |
+| `pub-winston-churchill` | Winston Churchill | no | Leaders & Statespeople | Europe | Prime Minister of the United Kingdom | Winston Churchill |
+| `pub-xi-jinping` | Xi Jinping | yes | Leaders & Statespeople | East Asia | President of the People's Republic of China | Xi Jinping |
+| `pub-yitzhak-rabin` | Yitzhak Rabin | no | Leaders & Statespeople | Middle East & North Africa | Prime Minister of Israel | Yitzhak Rabin |
+| `pub-a-r-rahman` | A. R. Rahman | yes | Musicians & Composers | South Asia | Indian composer | A. R. Rahman |
+| `pub-adele` | Adele | yes | Musicians & Composers | Europe | English singer-songwriter | Adele |
+| `pub-amr-diab` | Amr Diab | yes | Musicians & Composers | Middle East & North Africa | Egyptian singer | Amr Diab |
+| `pub-andrea-bocelli` | Andrea Bocelli | yes | Musicians & Composers | Europe | Italian tenor | Andrea Bocelli |
+| `pub-angelique-kidjo` | Angélique Kidjo | yes | Musicians & Composers | Sub-Saharan Africa | Beninese singer-songwriter | Angélique Kidjo |
+| `pub-aretha-franklin` | Aretha Franklin | no | Musicians & Composers | North America | American singer and pianist | Aretha Franklin |
+| `pub-bad-bunny` | Bad Bunny | yes | Musicians & Composers | Latin America & Caribbean | Puerto Rican rapper and singer | Bad Bunny |
+| `pub-beyonce` | Beyoncé ★ | yes | Musicians & Composers | North America | American singer and songwriter | Beyoncé |
+| `pub-bob-dylan` | Bob Dylan | yes | Musicians & Composers | North America | American singer-songwriter | Bob Dylan |
+| `pub-bob-marley` | Bob Marley | no | Musicians & Composers | Latin America & Caribbean | Jamaican singer-songwriter | Bob Marley |
+| `pub-burna-boy` | Burna Boy | yes | Musicians & Composers | Sub-Saharan Africa | Nigerian singer | Burna Boy |
+| `pub-caetano-veloso` | Caetano Veloso | yes | Musicians & Composers | Latin America & Caribbean | Brazilian singer-songwriter | Caetano Veloso |
+| `pub-david-bowie` | David Bowie | no | Musicians & Composers | Europe | English singer-songwriter | David Bowie |
+| `pub-drake` | Drake ★ | yes | Musicians & Composers | North America | Canadian rapper and singer | Drake (musician) |
+| `pub-ed-sheeran` | Ed Sheeran | yes | Musicians & Composers | Europe | English singer-songwriter | Ed Sheeran |
+| `pub-edith-piaf` | Édith Piaf | no | Musicians & Composers | Europe | French singer | Édith Piaf |
+| `pub-elton-john` | Elton John | yes | Musicians & Composers | Europe | English singer, pianist and composer | Elton John |
+| `pub-elvis-presley` | Elvis Presley | no | Musicians & Composers | North America | American singer and actor | Elvis Presley |
+| `pub-eminem` | Eminem | yes | Musicians & Composers | North America | American rapper | Eminem |
+| `pub-fela-kuti` | Fela Kuti | no | Musicians & Composers | Sub-Saharan Africa | Nigerian musician | Fela Kuti |
+| `pub-frank-sinatra` | Frank Sinatra | no | Musicians & Composers | North America | American singer and actor | Frank Sinatra |
+| `pub-freddie-mercury` | Freddie Mercury | no | Musicians & Composers | Europe | British singer and songwriter | Freddie Mercury |
+| `pub-googoosh` | Googoosh | yes | Musicians & Composers | Middle East & North Africa | Iranian singer | Googoosh |
+| `pub-jay-chou` | Jay Chou | yes | Musicians & Composers | East Asia | Taiwanese singer-songwriter | Jay Chou |
+| `pub-john-lennon` | John Lennon | no | Musicians & Composers | Europe | English singer-songwriter | John Lennon |
+| `pub-kylie-minogue` | Kylie Minogue | yes | Musicians & Composers | Oceania | Australian singer | Kylie Minogue |
+| `pub-lady-gaga` | Lady Gaga | yes | Musicians & Composers | North America | American singer, songwriter and actress | Lady Gaga |
+| `pub-lang-lang` | Lang Lang | yes | Musicians & Composers | East Asia | Chinese pianist | Lang Lang |
+| `pub-lata-mangeshkar` | Lata Mangeshkar | no | Musicians & Composers | South Asia | Indian playback singer | Lata Mangeshkar |
+| `pub-lorde` | Lorde | yes | Musicians & Composers | Oceania | New Zealand singer-songwriter | Lorde |
+| `pub-madonna` | Madonna | yes | Musicians & Composers | North America | American singer and songwriter | Madonna |
+| `pub-michael-jackson` | Michael Jackson ★ | no | Musicians & Composers | North America | American singer, songwriter and dancer | Michael Jackson |
+| `pub-miriam-makeba` | Miriam Makeba | no | Musicians & Composers | Sub-Saharan Africa | South African singer | Miriam Makeba |
+| `pub-nusrat-fateh-ali-khan` | Nusrat Fateh Ali Khan | no | Musicians & Composers | South Asia | Pakistani singer | Nusrat Fateh Ali Khan |
+| `pub-paul-mccartney` | Paul McCartney | yes | Musicians & Composers | Europe | English singer-songwriter and bassist | Paul McCartney |
+| `pub-prince` | Prince | no | Musicians & Composers | North America | American singer, songwriter and musician | Prince (musician) |
+| `pub-rihanna` | Rihanna | yes | Musicians & Composers | Latin America & Caribbean | Barbadian singer | Rihanna |
+| `pub-ryuichi-sakamoto` | Ryuichi Sakamoto | no | Musicians & Composers | East Asia | Japanese composer and musician | Ryuichi Sakamoto |
+| `pub-shakira` | Shakira | yes | Musicians & Composers | Latin America & Caribbean | Colombian singer-songwriter | Shakira |
+| `pub-stevie-wonder` | Stevie Wonder | yes | Musicians & Composers | North America | American singer, songwriter and musician | Stevie Wonder |
+| `pub-taylor-swift` | Taylor Swift ★ | yes | Musicians & Composers | North America | American singer-songwriter | Taylor Swift |
+| `pub-teresa-teng` | Teresa Teng | no | Musicians & Composers | East Asia | Taiwanese singer | Teresa Teng |
+| `pub-umm-kulthum` | Umm Kulthum | no | Musicians & Composers | Middle East & North Africa | Egyptian singer | Umm Kulthum |
+| `pub-whitney-houston` | Whitney Houston | no | Musicians & Composers | North America | American singer | Whitney Houston |
+| `pub-youssou-n-dour` | Youssou N'Dour | yes | Musicians & Composers | Sub-Saharan Africa | Senegalese singer | Youssou N'Dour |
+| `pub-amitabh-bachchan` | Amitabh Bachchan | yes | Actors & Performers | South Asia | Indian actor | Amitabh Bachchan |
+| `pub-anthony-hopkins` | Anthony Hopkins | yes | Actors & Performers | Europe | Welsh actor | Anthony Hopkins |
+| `pub-audrey-hepburn` | Audrey Hepburn | no | Actors & Performers | Europe | British actress | Audrey Hepburn |
+| `pub-bruce-lee` | Bruce Lee | no | Actors & Performers | East Asia | Hong Kong-American actor and martial artist | Bruce Lee |
+| `pub-cate-blanchett` | Cate Blanchett | yes | Actors & Performers | Oceania | Australian actress | Cate Blanchett |
+| `pub-charlie-chaplin` | Charlie Chaplin | no | Actors & Performers | Europe | English comic actor and filmmaker | Charlie Chaplin |
+| `pub-denzel-washington` | Denzel Washington | yes | Actors & Performers | North America | American actor | Denzel Washington |
+| `pub-dwayne-johnson` | Dwayne Johnson | yes | Actors & Performers | North America | American actor | Dwayne Johnson |
+| `pub-emma-watson` | Emma Watson | yes | Actors & Performers | Europe | English actress | Emma Watson |
+| `pub-gong-li` | Gong Li | yes | Actors & Performers | East Asia | Chinese actress | Gong Li |
+| `pub-hugh-jackman` | Hugh Jackman | yes | Actors & Performers | Oceania | Australian actor | Hugh Jackman |
+| `pub-idris-elba` | Idris Elba | yes | Actors & Performers | Europe | English actor | Idris Elba |
+| `pub-jackie-chan` | Jackie Chan | yes | Actors & Performers | East Asia | Hong Kong actor and martial artist | Jackie Chan |
+| `pub-keanu-reeves` | Keanu Reeves | yes | Actors & Performers | North America | Canadian actor | Keanu Reeves |
+| `pub-leonardo-dicaprio` | Leonardo DiCaprio ★ | yes | Actors & Performers | North America | American actor | Leonardo DiCaprio |
+| `pub-lupita-nyong-o` | Lupita Nyong'o | yes | Actors & Performers | Sub-Saharan Africa | Kenyan-Mexican actress | Lupita Nyong'o |
+| `pub-marilyn-monroe` | Marilyn Monroe | no | Actors & Performers | North America | American actress | Marilyn Monroe |
+| `pub-marlon-brando` | Marlon Brando | no | Actors & Performers | North America | American actor | Marlon Brando |
+| `pub-meryl-streep` | Meryl Streep | yes | Actors & Performers | North America | American actress | Meryl Streep |
+| `pub-michelle-yeoh` | Michelle Yeoh | yes | Actors & Performers | Southeast Asia | Malaysian actress | Michelle Yeoh |
+| `pub-morgan-freeman` | Morgan Freeman ★ | yes | Actors & Performers | North America | American actor | Morgan Freeman |
+| `pub-nicole-kidman` | Nicole Kidman | yes | Actors & Performers | Oceania | Australian-American actress | Nicole Kidman |
+| `pub-omar-sharif` | Omar Sharif | no | Actors & Performers | Middle East & North Africa | Egyptian actor | Omar Sharif |
+| `pub-oprah-winfrey` | Oprah Winfrey | yes | Actors & Performers | North America | American television host | Oprah Winfrey |
+| `pub-priyanka-chopra` | Priyanka Chopra | yes | Actors & Performers | South Asia | Indian actress | Priyanka Chopra |
+| `pub-rajinikanth` | Rajinikanth | yes | Actors & Performers | South Asia | Indian actor | Rajinikanth |
+| `pub-robert-de-niro` | Robert De Niro | yes | Actors & Performers | North America | American actor | Robert De Niro |
+| `pub-salma-hayek` | Salma Hayek | yes | Actors & Performers | Latin America & Caribbean | Mexican-American actress | Salma Hayek |
+| `pub-sean-connery` | Sean Connery | no | Actors & Performers | Europe | Scottish actor | Sean Connery |
+| `pub-shah-rukh-khan` | Shah Rukh Khan | yes | Actors & Performers | South Asia | Indian actor | Shah Rukh Khan |
+| `pub-sidney-poitier` | Sidney Poitier | no | Actors & Performers | North America | Bahamian-American actor | Sidney Poitier |
+| `pub-steve-irwin` | Steve Irwin | no | Actors & Performers | Oceania | Australian wildlife television presenter | Steve Irwin |
+| `pub-tom-cruise` | Tom Cruise ★ | yes | Actors & Performers | North America | American actor | Tom Cruise |
+| `pub-tom-hanks` | Tom Hanks | yes | Actors & Performers | North America | American actor | Tom Hanks |
+| `pub-zendaya` | Zendaya | yes | Actors & Performers | North America | American actress and singer | Zendaya |
+| `pub-ai-weiwei` | Ai Weiwei | yes | Artists & Architects | East Asia | Chinese artist | Ai Weiwei |
+| `pub-akira-kurosawa` | Akira Kurosawa | no | Artists & Architects | East Asia | Japanese filmmaker | Akira Kurosawa |
+| `pub-alfred-hitchcock` | Alfred Hitchcock | no | Artists & Architects | Europe | English filmmaker | Alfred Hitchcock |
+| `pub-amrita-sher-gil` | Amrita Sher-Gil | no | Artists & Architects | South Asia | Hungarian-Indian painter | Amrita Sher-Gil |
+| `pub-andy-warhol` | Andy Warhol | no | Artists & Architects | North America | American pop artist | Andy Warhol |
+| `pub-bong-joon-ho` | Bong Joon-ho | yes | Artists & Architects | East Asia | South Korean filmmaker | Bong Joon-ho |
+| `pub-christopher-nolan` | Christopher Nolan | yes | Artists & Architects | Europe | British-American filmmaker | Christopher Nolan |
+| `pub-el-anatsui` | El Anatsui | yes | Artists & Architects | Sub-Saharan Africa | Ghanaian sculptor | El Anatsui |
+| `pub-frank-lloyd-wright` | Frank Lloyd Wright | no | Artists & Architects | North America | American architect | Frank Lloyd Wright |
+| `pub-frida-kahlo` | Frida Kahlo | no | Artists & Architects | Latin America & Caribbean | Mexican painter | Frida Kahlo |
+| `pub-guillermo-del-toro` | Guillermo del Toro | yes | Artists & Architects | Latin America & Caribbean | Mexican filmmaker | Guillermo del Toro |
+| `pub-hayao-miyazaki` | Hayao Miyazaki | yes | Artists & Architects | East Asia | Japanese animator and filmmaker | Hayao Miyazaki |
+| `pub-henri-matisse` | Henri Matisse | no | Artists & Architects | Europe | French painter | Henri Matisse |
+| `pub-ousmane-sembene` | Ousmane Sembène | no | Artists & Architects | Sub-Saharan Africa | Senegalese filmmaker and writer | Ousmane Sembène |
+| `pub-pablo-picasso` | Pablo Picasso | no | Artists & Architects | Europe | Spanish painter and sculptor | Pablo Picasso |
+| `pub-salvador-dali` | Salvador Dalí | no | Artists & Architects | Europe | Spanish Surrealist painter | Salvador Dalí |
+| `pub-satyajit-ray` | Satyajit Ray | no | Artists & Architects | South Asia | Indian filmmaker | Satyajit Ray |
+| `pub-shigeru-miyamoto` | Shigeru Miyamoto | yes | Artists & Architects | East Asia | Japanese video game designer | Shigeru Miyamoto |
+| `pub-steven-spielberg` | Steven Spielberg | yes | Artists & Architects | North America | American filmmaker | Steven Spielberg |
+| `pub-taika-waititi` | Taika Waititi | yes | Artists & Architects | Oceania | New Zealand filmmaker and actor | Taika Waititi |
+| `pub-zaha-hadid` | Zaha Hadid | no | Artists & Architects | Middle East & North Africa | Iraqi-British architect | Zaha Hadid |
+| `pub-a-p-j-abdul-kalam` | A. P. J. Abdul Kalam | no | Scientists & Mathematicians | South Asia | Indian aerospace scientist and 11th President of India | A. P. J. Abdul Kalam |
+| `pub-abdus-salam` | Abdus Salam | no | Scientists & Mathematicians | South Asia | Pakistani theoretical physicist | Abdus Salam |
+| `pub-ada-yonath` | Ada Yonath | yes | Scientists & Mathematicians | Middle East & North Africa | Israeli crystallographer | Ada Yonath |
+| `pub-ahmed-zewail` | Ahmed Zewail | no | Scientists & Mathematicians | Middle East & North Africa | Egyptian-American chemist | Ahmed Zewail |
+| `pub-alan-turing` | Alan Turing | no | Scientists & Mathematicians | Europe | English mathematician and computer scientist | Alan Turing |
+| `pub-albert-einstein` | Albert Einstein ★ | no | Scientists & Mathematicians | Europe | German-born theoretical physicist | Albert Einstein |
+| `pub-c-v-raman` | C. V. Raman | no | Scientists & Mathematicians | South Asia | Indian physicist | C. V. Raman |
+| `pub-carl-sagan` | Carl Sagan | no | Scientists & Mathematicians | North America | American astronomer and science communicator | Carl Sagan |
+| `pub-chien-shiung-wu` | Chien-Shiung Wu | no | Scientists & Mathematicians | East Asia | Chinese-American physicist | Chien-Shiung Wu |
+| `pub-elizabeth-blackburn` | Elizabeth Blackburn | yes | Scientists & Mathematicians | Oceania | Australian-American molecular biologist | Elizabeth Blackburn |
+| `pub-emmy-noether` | Emmy Noether | no | Scientists & Mathematicians | Europe | German mathematician | Emmy Noether |
+| `pub-hideki-yukawa` | Hideki Yukawa | no | Scientists & Mathematicians | East Asia | Japanese theoretical physicist | Hideki Yukawa |
+| `pub-jane-goodall` | Jane Goodall | no | Scientists & Mathematicians | Europe | English primatologist | Jane Goodall |
+| `pub-jennifer-doudna` | Jennifer Doudna | yes | Scientists & Mathematicians | North America | American biochemist | Jennifer Doudna |
+| `pub-katalin-kariko` | Katalin Karikó | yes | Scientists & Mathematicians | Europe | Hungarian-American biochemist | Katalin Karikó |
+| `pub-katherine-johnson` | Katherine Johnson | no | Scientists & Mathematicians | North America | American mathematician | Katherine Johnson |
+| `pub-lise-meitner` | Lise Meitner | no | Scientists & Mathematicians | Europe | Austrian-Swedish physicist | Lise Meitner |
+| `pub-marie-curie` | Marie Curie ★ | no | Scientists & Mathematicians | Europe | Polish-French physicist and chemist | Marie Curie |
+| `pub-mario-molina` | Mario Molina | no | Scientists & Mathematicians | Latin America & Caribbean | Mexican chemist | Mario Molina |
+| `pub-maryam-mirzakhani` | Maryam Mirzakhani | no | Scientists & Mathematicians | Middle East & North Africa | Iranian mathematician | Maryam Mirzakhani |
+| `pub-richard-feynman` | Richard Feynman | no | Scientists & Mathematicians | North America | American theoretical physicist | Richard Feynman |
+| `pub-rosalind-franklin` | Rosalind Franklin | no | Scientists & Mathematicians | Europe | English chemist and X-ray crystallographer | Rosalind Franklin |
+| `pub-shinya-yamanaka` | Shinya Yamanaka | yes | Scientists & Mathematicians | East Asia | Japanese stem cell researcher | Shinya Yamanaka |
+| `pub-stephen-hawking` | Stephen Hawking | no | Scientists & Mathematicians | Europe | English theoretical physicist | Stephen Hawking |
+| `pub-terence-tao` | Terence Tao | yes | Scientists & Mathematicians | Oceania | Australian-American mathematician | Terence Tao |
+| `pub-akio-morita` | Akio Morita | no | Inventors & Engineers | East Asia | Japanese electronics entrepreneur | Akio Morita |
+| `pub-alberto-santos-dumont` | Alberto Santos-Dumont | no | Inventors & Engineers | Latin America & Caribbean | Brazilian aviation pioneer | Alberto Santos-Dumont |
+| `pub-aliko-dangote` | Aliko Dangote | yes | Inventors & Engineers | Sub-Saharan Africa | Nigerian industrialist | Aliko Dangote |
+| `pub-bill-gates` | Bill Gates | yes | Inventors & Engineers | North America | American software entrepreneur and philanthropist | Bill Gates |
+| `pub-elon-musk` | Elon Musk | yes | Inventors & Engineers | North America | South African-born American entrepreneur | Elon Musk |
+| `pub-erno-rubik` | Ernő Rubik | yes | Inventors & Engineers | Europe | Hungarian inventor and architect | Ernő Rubik |
+| `pub-grace-hopper` | Grace Hopper | no | Inventors & Engineers | North America | American computer scientist | Grace Hopper |
+| `pub-jeff-bezos` | Jeff Bezos | yes | Inventors & Engineers | North America | American internet entrepreneur | Jeff Bezos |
+| `pub-mo-ibrahim` | Mo Ibrahim | yes | Inventors & Engineers | Sub-Saharan Africa | Sudanese-British telecommunications entrepreneur | Mo Ibrahim |
+| `pub-nikola-tesla` | Nikola Tesla | no | Inventors & Engineers | Europe | Serbian-American inventor and engineer | Nikola Tesla |
+| `pub-ratan-tata` | Ratan Tata | no | Inventors & Engineers | South Asia | Indian industrialist | Ratan Tata |
+| `pub-shuji-nakamura` | Shuji Nakamura | yes | Inventors & Engineers | East Asia | Japanese-American electronic engineer | Shuji Nakamura |
+| `pub-steve-jobs` | Steve Jobs | no | Inventors & Engineers | North America | American technology entrepreneur | Steve Jobs |
+| `pub-thomas-edison` | Thomas Edison | no | Inventors & Engineers | North America | American inventor | Thomas Edison |
+| `pub-tim-berners-lee` | Tim Berners-Lee | yes | Inventors & Engineers | Europe | English computer scientist | Tim Berners-Lee |
+| `pub-agatha-christie` | Agatha Christie | no | Authors & Poets | Europe | English crime novelist | Agatha Christie |
+| `pub-aleksandr-solzhenitsyn` | Aleksandr Solzhenitsyn | no | Authors & Poets | Europe | Russian novelist | Aleksandr Solzhenitsyn |
+| `pub-chimamanda-ngozi-adichie` | Chimamanda Ngozi Adichie | yes | Authors & Poets | Sub-Saharan Africa | Nigerian writer | Chimamanda Ngozi Adichie |
+| `pub-chinua-achebe` | Chinua Achebe | no | Authors & Poets | Sub-Saharan Africa | Nigerian novelist | Chinua Achebe |
+| `pub-ernest-hemingway` | Ernest Hemingway | no | Authors & Poets | North America | American novelist | Ernest Hemingway |
+| `pub-f-sionil-jose` | F. Sionil José | no | Authors & Poets | Southeast Asia | Filipino novelist | F. Sionil José |
+| `pub-gabriel-garcia-marquez` | Gabriel García Márquez | no | Authors & Poets | Latin America & Caribbean | Colombian novelist | Gabriel García Márquez |
+| `pub-george-orwell` | George Orwell | no | Authors & Poets | Europe | English novelist and essayist | George Orwell |
+| `pub-han-kang` | Han Kang | yes | Authors & Poets | East Asia | South Korean novelist | Han Kang |
+| `pub-haruki-murakami` | Haruki Murakami | yes | Authors & Poets | East Asia | Japanese novelist | Haruki Murakami |
+| `pub-isabel-allende` | Isabel Allende | yes | Authors & Poets | Latin America & Caribbean | Chilean-American writer | Isabel Allende |
+| `pub-j-k-rowling` | J. K. Rowling | yes | Authors & Poets | Europe | British author | J. K. Rowling |
+| `pub-j-r-r-tolkien` | J. R. R. Tolkien | no | Authors & Poets | Europe | English writer and philologist | J. R. R. Tolkien |
+| `pub-jorge-luis-borges` | Jorge Luis Borges | no | Authors & Poets | Latin America & Caribbean | Argentine writer | Jorge Luis Borges |
+| `pub-lu-xun` | Lu Xun | no | Authors & Poets | East Asia | Chinese writer | Lu Xun |
+| `pub-mahmoud-darwish` | Mahmoud Darwish | no | Authors & Poets | Middle East & North Africa | Palestinian poet | Mahmoud Darwish |
+| `pub-margaret-atwood` | Margaret Atwood | yes | Authors & Poets | North America | Canadian novelist and poet | Margaret Atwood |
+| `pub-maya-angelou` | Maya Angelou | no | Authors & Poets | North America | American poet and memoirist | Maya Angelou |
+| `pub-mo-yan` | Mo Yan | yes | Authors & Poets | East Asia | Chinese novelist | Mo Yan |
+| `pub-nadine-gordimer` | Nadine Gordimer | no | Authors & Poets | Sub-Saharan Africa | South African writer | Nadine Gordimer |
+| `pub-naguib-mahfouz` | Naguib Mahfouz | no | Authors & Poets | Middle East & North Africa | Egyptian novelist | Naguib Mahfouz |
+| `pub-ngugi-wa-thiong-o` | Ngũgĩ wa Thiong'o | no | Authors & Poets | Sub-Saharan Africa | Kenyan writer | Ngũgĩ wa Thiong'o |
+| `pub-orhan-pamuk` | Orhan Pamuk | yes | Authors & Poets | Middle East & North Africa | Turkish novelist | Orhan Pamuk |
+| `pub-pablo-neruda` | Pablo Neruda | no | Authors & Poets | Latin America & Caribbean | Chilean poet | Pablo Neruda |
+| `pub-patrick-white` | Patrick White | no | Authors & Poets | Oceania | Australian novelist | Patrick White |
+| `pub-paulo-coelho` | Paulo Coelho | yes | Authors & Poets | Latin America & Caribbean | Brazilian novelist | Paulo Coelho |
+| `pub-pramoedya-ananta-toer` | Pramoedya Ananta Toer | no | Authors & Poets | Southeast Asia | Indonesian novelist | Pramoedya Ananta Toer |
+| `pub-rabindranath-tagore` | Rabindranath Tagore | no | Authors & Poets | South Asia | Bengali poet and polymath | Rabindranath Tagore |
+| `pub-salman-rushdie` | Salman Rushdie | yes | Authors & Poets | South Asia | Indian-born British-American novelist | Salman Rushdie |
+| `pub-stephen-king` | Stephen King | yes | Authors & Poets | North America | American author | Stephen King |
+| `pub-toni-morrison` | Toni Morrison | no | Authors & Poets | North America | American novelist | Toni Morrison |
+| `pub-virginia-woolf` | Virginia Woolf | no | Authors & Poets | Europe | English writer | Virginia Woolf |
+| `pub-bertrand-russell` | Bertrand Russell | no | Philosophers & Thinkers | Europe | British philosopher and logician | Bertrand Russell |
+| `pub-edward-said` | Edward Said | no | Philosophers & Thinkers | Middle East & North Africa | Palestinian-American literary critic | Edward Said |
+| `pub-frantz-fanon` | Frantz Fanon | no | Philosophers & Thinkers | Latin America & Caribbean | Martinican psychiatrist and political philosopher | Frantz Fanon |
+| `pub-friedrich-hayek` | Friedrich Hayek | no | Philosophers & Thinkers | Europe | Austrian-British economist and philosopher | Friedrich Hayek |
+| `pub-hannah-arendt` | Hannah Arendt | no | Philosophers & Thinkers | Europe | German-American political theorist | Hannah Arendt |
+| `pub-jean-paul-sartre` | Jean-Paul Sartre | no | Philosophers & Thinkers | Europe | French philosopher and writer | Jean-Paul Sartre |
+| `pub-john-maynard-keynes` | John Maynard Keynes | no | Philosophers & Thinkers | Europe | English economist | John Maynard Keynes |
+| `pub-john-rawls` | John Rawls | no | Philosophers & Thinkers | North America | American political philosopher | John Rawls |
+| `pub-kwame-anthony-appiah` | Kwame Anthony Appiah | yes | Philosophers & Thinkers | Sub-Saharan Africa | British-Ghanaian philosopher | Kwame Anthony Appiah |
+| `pub-martha-nussbaum` | Martha Nussbaum | yes | Philosophers & Thinkers | North America | American philosopher | Martha Nussbaum |
+| `pub-milton-friedman` | Milton Friedman | no | Philosophers & Thinkers | North America | American economist | Milton Friedman |
+| `pub-muhammad-iqbal` | Muhammad Iqbal | no | Philosophers & Thinkers | South Asia | South Asian poet and philosopher | Muhammad Iqbal |
+| `pub-paulo-freire` | Paulo Freire | no | Philosophers & Thinkers | Latin America & Caribbean | Brazilian educator and philosopher | Paulo Freire |
+| `pub-peter-singer` | Peter Singer | yes | Philosophers & Thinkers | Oceania | Australian moral philosopher | Peter Singer |
+| `pub-sarvepalli-radhakrishnan` | Sarvepalli Radhakrishnan | no | Philosophers & Thinkers | South Asia | Indian philosopher and 2nd President of India | Sarvepalli Radhakrishnan |
+| `pub-simone-de-beauvoir` | Simone de Beauvoir | no | Philosophers & Thinkers | Europe | French philosopher and writer | Simone de Beauvoir |
+| `pub-amelia-earhart` | Amelia Earhart | no | Explorers & Travellers | North America | American aviator | Amelia Earhart |
+| `pub-anousheh-ansari` | Anousheh Ansari | yes | Explorers & Travellers | Middle East & North Africa | Iranian-American engineer and space traveller | Anousheh Ansari |
+| `pub-edmund-hillary` | Edmund Hillary | no | Explorers & Travellers | Oceania | New Zealand mountaineer | Edmund Hillary |
+| `pub-franklin-chang-diaz` | Franklin Chang Díaz | yes | Explorers & Travellers | Latin America & Caribbean | Costa Rican-American astronaut | Franklin Chang Díaz |
+| `pub-jacques-cousteau` | Jacques Cousteau | no | Explorers & Travellers | Europe | French oceanographer | Jacques Cousteau |
+| `pub-junko-tabei` | Junko Tabei | no | Explorers & Travellers | East Asia | Japanese mountaineer | Junko Tabei |
+| `pub-kalpana-chawla` | Kalpana Chawla | no | Explorers & Travellers | South Asia | Indian-American astronaut | Kalpana Chawla |
+| `pub-mae-jemison` | Mae Jemison | yes | Explorers & Travellers | North America | American astronaut and physician | Mae Jemison |
+| `pub-neil-armstrong` | Neil Armstrong | no | Explorers & Travellers | North America | American astronaut | Neil Armstrong |
+| `pub-pham-tuan` | Phạm Tuân | yes | Explorers & Travellers | Southeast Asia | Vietnamese cosmonaut | Phạm Tuân |
+| `pub-reinhold-messner` | Reinhold Messner | yes | Explorers & Travellers | Europe | Italian mountaineer | Reinhold Messner |
+| `pub-sally-ride` | Sally Ride | no | Explorers & Travellers | North America | American astronaut and physicist | Sally Ride |
+| `pub-tenzing-norgay` | Tenzing Norgay | no | Explorers & Travellers | South Asia | Nepali-Indian Sherpa mountaineer | Tenzing Norgay |
+| `pub-tokhtar-aubakirov` | Tokhtar Aubakirov | yes | Explorers & Travellers | Central Asia | Kazakh cosmonaut | Tokhtar Aubakirov |
+| `pub-valentina-tereshkova` | Valentina Tereshkova | yes | Explorers & Travellers | Europe | Soviet cosmonaut | Valentina Tereshkova |
+| `pub-yang-liwei` | Yang Liwei | yes | Explorers & Travellers | East Asia | Chinese astronaut | Yang Liwei |
+| `pub-yuri-gagarin` | Yuri Gagarin | no | Explorers & Travellers | Europe | Soviet cosmonaut | Yuri Gagarin |
+| `pub-abebe-bikila` | Abebe Bikila | no | Athletes | Sub-Saharan Africa | Ethiopian marathon runner | Abebe Bikila |
+| `pub-ayrton-senna` | Ayrton Senna | no | Athletes | Latin America & Caribbean | Brazilian racing driver | Ayrton Senna |
+| `pub-cathy-freeman` | Cathy Freeman | yes | Athletes | Oceania | Australian sprinter | Cathy Freeman |
+| `pub-cristiano-ronaldo` | Cristiano Ronaldo | yes | Athletes | Europe | Portuguese footballer | Cristiano Ronaldo |
+| `pub-didier-drogba` | Didier Drogba | yes | Athletes | Sub-Saharan Africa | Ivorian footballer | Didier Drogba |
+| `pub-diego-maradona` | Diego Maradona | no | Athletes | Latin America & Caribbean | Argentine footballer | Diego Maradona |
+| `pub-don-bradman` | Don Bradman | no | Athletes | Oceania | Australian cricketer | Don Bradman |
+| `pub-eliud-kipchoge` | Eliud Kipchoge | yes | Athletes | Sub-Saharan Africa | Kenyan marathon runner | Eliud Kipchoge |
+| `pub-gennady-golovkin` | Gennady Golovkin | yes | Athletes | Central Asia | Kazakh boxer | Gennady Golovkin |
+| `pub-haile-gebrselassie` | Haile Gebrselassie | yes | Athletes | Sub-Saharan Africa | Ethiopian long-distance runner | Haile Gebrselassie |
+| `pub-hakuho-sho` | Hakuhō Shō | yes | Athletes | Central Asia | Mongolian-born sumo wrestler | Hakuhō Shō |
+| `pub-hicham-el-guerrouj` | Hicham El Guerrouj | yes | Athletes | Middle East & North Africa | Moroccan middle-distance runner | Hicham El Guerrouj |
+| `pub-jackie-robinson` | Jackie Robinson | no | Athletes | North America | American baseball player | Jackie Robinson |
+| `pub-jesse-owens` | Jesse Owens | no | Athletes | North America | American track and field athlete | Jesse Owens |
+| `pub-jonah-lomu` | Jonah Lomu | no | Athletes | Oceania | New Zealand rugby union player | Jonah Lomu |
+| `pub-lebron-james` | LeBron James ★ | yes | Athletes | North America | American basketball player | LeBron James |
+| `pub-lee-chong-wei` | Lee Chong Wei | yes | Athletes | Southeast Asia | Malaysian badminton player | Lee Chong Wei |
+| `pub-lewis-hamilton` | Lewis Hamilton | yes | Athletes | Europe | British racing driver | Lewis Hamilton |
+| `pub-li-na` | Li Na | yes | Athletes | East Asia | Chinese tennis player | Li Na |
+| `pub-lionel-messi` | Lionel Messi | yes | Athletes | Latin America & Caribbean | Argentine footballer | Lionel Messi |
+| `pub-manny-pacquiao` | Manny Pacquiao | yes | Athletes | Southeast Asia | Filipino boxer | Manny Pacquiao |
+| `pub-marta` | Marta | yes | Athletes | Latin America & Caribbean | Brazilian footballer | Marta (footballer) |
+| `pub-michael-jordan` | Michael Jordan ★ | yes | Athletes | North America | American basketball player | Michael Jordan |
+| `pub-michael-phelps` | Michael Phelps | yes | Athletes | North America | American swimmer | Michael Phelps |
+| `pub-mohamed-salah` | Mohamed Salah | yes | Athletes | Middle East & North Africa | Egyptian footballer | Mohamed Salah |
+| `pub-muhammad-ali` | Muhammad Ali | no | Athletes | North America | American boxer | Muhammad Ali |
+| `pub-muttiah-muralitharan` | Muttiah Muralitharan | yes | Athletes | South Asia | Sri Lankan cricketer | Muttiah Muralitharan |
+| `pub-nadia-comaneci` | Nadia Comăneci | yes | Athletes | Europe | Romanian gymnast | Nadia Comăneci |
+| `pub-naomi-osaka` | Naomi Osaka | yes | Athletes | East Asia | Japanese tennis player | Naomi Osaka |
+| `pub-neeraj-chopra` | Neeraj Chopra | yes | Athletes | South Asia | Indian javelin thrower | Neeraj Chopra |
+| `pub-novak-djokovic` | Novak Djokovic | yes | Athletes | Europe | Serbian tennis player | Novak Djokovic |
+| `pub-pele` | Pelé | no | Athletes | Latin America & Caribbean | Brazilian footballer | Pelé |
+| `pub-rafael-nadal` | Rafael Nadal | yes | Athletes | Europe | Spanish tennis player | Rafael Nadal |
+| `pub-roger-federer` | Roger Federer | yes | Athletes | Europe | Swiss tennis player | Roger Federer |
+| `pub-sachin-tendulkar` | Sachin Tendulkar | yes | Athletes | South Asia | Indian cricketer | Sachin Tendulkar |
+| `pub-serena-williams` | Serena Williams ★ | yes | Athletes | North America | American tennis player | Serena Williams |
+| `pub-shelly-ann-fraser-pryce` | Shelly-Ann Fraser-Pryce | yes | Athletes | Latin America & Caribbean | Jamaican sprinter | Shelly-Ann Fraser-Pryce |
+| `pub-shohei-ohtani` | Shohei Ohtani | yes | Athletes | East Asia | Japanese baseball player | Shohei Ohtani |
+| `pub-simone-biles` | Simone Biles | yes | Athletes | North America | American gymnast | Simone Biles |
+| `pub-son-heung-min` | Son Heung-min | yes | Athletes | East Asia | South Korean footballer | Son Heung-min |
+| `pub-tiger-woods` | Tiger Woods | yes | Athletes | North America | American golfer | Tiger Woods |
+| `pub-tom-brady` | Tom Brady | yes | Athletes | North America | American football quarterback | Tom Brady |
+| `pub-usain-bolt` | Usain Bolt | yes | Athletes | Latin America & Caribbean | Jamaican sprinter | Usain Bolt |
+| `pub-valerie-adams` | Valerie Adams | yes | Athletes | Oceania | New Zealand shot putter | Valerie Adams |
+| `pub-virat-kohli` | Virat Kohli | yes | Athletes | South Asia | Indian cricketer | Virat Kohli |
+| `pub-wayne-gretzky` | Wayne Gretzky | yes | Athletes | North America | Canadian ice hockey player | Wayne Gretzky |
+| `pub-yao-ming` | Yao Ming | yes | Athletes | East Asia | Chinese basketball player | Yao Ming |
+| `pub-zinedine-zidane` | Zinedine Zidane | yes | Athletes | Europe | French footballer and coach | Zinedine Zidane |
+| `pub-bassem-amin` | Bassem Amin | yes | Chess Masters | Middle East & North Africa | Egyptian chess grandmaster | Bassem Amin |
+| `pub-bobby-fischer` | Bobby Fischer | no | Chess Masters | North America | American chess grandmaster | Bobby Fischer |
+| `pub-ding-liren` | Ding Liren | yes | Chess Masters | East Asia | Chinese chess grandmaster | Ding Liren |
+| `pub-garry-kasparov` | Garry Kasparov | yes | Chess Masters | Europe | Russian-born chess grandmaster | Garry Kasparov |
+| `pub-hikaru-nakamura` | Hikaru Nakamura | yes | Chess Masters | North America | American chess grandmaster | Hikaru Nakamura |
+| `pub-hou-yifan` | Hou Yifan | yes | Chess Masters | East Asia | Chinese chess grandmaster | Hou Yifan |
+| `pub-jose-raul-capablanca` | José Raúl Capablanca | no | Chess Masters | Latin America & Caribbean | Cuban chess world champion | José Raúl Capablanca |
+| `pub-judit-polgar` | Judit Polgár | yes | Chess Masters | Europe | Hungarian chess grandmaster | Judit Polgár |
+| `pub-magnus-carlsen` | Magnus Carlsen | yes | Chess Masters | Europe | Norwegian chess grandmaster | Magnus Carlsen |
+| `pub-mikhail-tal` | Mikhail Tal | no | Chess Masters | Europe | Latvian-Soviet chess grandmaster | Mikhail Tal |
+| `pub-nona-gaprindashvili` | Nona Gaprindashvili | yes | Chess Masters | Europe | Georgian chess grandmaster | Nona Gaprindashvili |
+| `pub-rustam-kasimdzhanov` | Rustam Kasimdzhanov | yes | Chess Masters | Central Asia | Uzbek chess grandmaster | Rustam Kasimdzhanov |
+| `pub-viswanathan-anand` | Viswanathan Anand | yes | Chess Masters | South Asia | Indian chess grandmaster | Viswanathan Anand |
+| `pub-wesley-so` | Wesley So | yes | Chess Masters | Southeast Asia | Filipino-American chess grandmaster | Wesley So |
+| `pub-diana-princess-of-wales` | Diana, Princess of Wales | no | Reformers & Other Cultural Figures | Europe | Member of the British royal family | Diana, Princess of Wales |
+| `pub-eleanor-roosevelt` | Eleanor Roosevelt | no | Reformers & Other Cultural Figures | North America | American diplomat and activist | Eleanor Roosevelt |
+| `pub-fred-hollows` | Fred Hollows | no | Reformers & Other Cultural Figures | Oceania | New Zealand-Australian ophthalmologist | Fred Hollows |
+| `pub-irena-sendler` | Irena Sendler | no | Reformers & Other Cultural Figures | Europe | Polish humanitarian and social worker | Irena Sendler |
+| `pub-malala-yousafzai` | Malala Yousafzai | yes | Reformers & Other Cultural Figures | South Asia | Pakistani education activist | Malala Yousafzai |
+| `pub-martin-luther-king-jr` | Martin Luther King Jr. | no | Reformers & Other Cultural Figures | North America | American civil rights leader | Martin Luther King Jr. |
+| `pub-muhammad-yunus` | Muhammad Yunus | yes | Reformers & Other Cultural Figures | South Asia | Bangladeshi economist and social entrepreneur | Muhammad Yunus |
+| `pub-rigoberta-menchu` | Rigoberta Menchú | yes | Reformers & Other Cultural Figures | Latin America & Caribbean | Guatemalan Indigenous rights activist | Rigoberta Menchú |
+| `pub-rosa-parks` | Rosa Parks | no | Reformers & Other Cultural Figures | North America | American civil rights activist | Rosa Parks |
+| `pub-ruth-bader-ginsburg` | Ruth Bader Ginsburg | no | Reformers & Other Cultural Figures | North America | Associate Justice of the US Supreme Court | Ruth Bader Ginsburg |
+| `pub-shirin-ebadi` | Shirin Ebadi | yes | Reformers & Other Cultural Figures | Middle East & North Africa | Iranian lawyer and human rights activist | Shirin Ebadi |
+| `pub-tawakkol-karman` | Tawakkol Karman | yes | Reformers & Other Cultural Figures | Middle East & North Africa | Yemeni journalist and activist | Tawakkol Karman |
+| `pub-wangari-maathai` | Wangari Maathai | no | Reformers & Other Cultural Figures | Sub-Saharan Africa | Kenyan environmental activist | Wangari Maathai |
+| `pub-warren-buffett` | Warren Buffett | yes | Reformers & Other Cultural Figures | North America | American investor | Warren Buffett |
+
+<!-- roster:contemporary:end -->

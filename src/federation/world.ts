@@ -11,7 +11,7 @@ import {
 import { KoMatch, koNext, leagueOrder, roundRobin, standings, swissOrder, swissPairing, StandingRow } from './formats';
 import { ageOf, hashSeed, makeCompetitor, normal, rng01 } from './generator';
 import { sampleResult } from './resultModel';
-import { assignEntrantPersonas } from './rosterPersonas';
+import { assignEntrantPersonas, reservedNames } from './rosterPersonas';
 
 export const WORLD_ID = 'crown-world-1';
 
@@ -408,7 +408,8 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     }
   }
   // entrants fill vacated slots in each region's bottom division; a reserve (displaced by the player) re-enters first
-  const used = new Set([...competitors.values()].map(c => c.name));
+  // names reserved independently of the contemporary-names display setting (src/federation/rosterPersonas.ts)
+  const used = reservedNames(competitors.values());
   for (const id of res.retirements) {
     const old = competitors.get(id)!;
     const region = old.region, division = old.division;
@@ -423,7 +424,7 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
     competitors.set(e.id, e);
     res.entrants.push(e);
   }
-  // v0.10 historical roster: some entrants carry a persona name (seeded; strength, style and placement unchanged)
+  // v0.10 persona roster: some entrants carry a persona name (seeded; strength, style and placement unchanged)
   assignEntrantPersonas(world.seed, season, res.entrants, competitors.values());
   plan.status = 'complete';
   return res;
