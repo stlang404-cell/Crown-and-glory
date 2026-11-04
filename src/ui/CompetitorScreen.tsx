@@ -14,7 +14,7 @@ import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
 import { Emblem } from './Emblem';
 import { personalEmblem, divisionEmblem, titleEmblem, regionEmblem, FED_TITLES, FED_TITLE_ABBR } from '../heraldry/catalog';
-import { AI_CLUBS, clubOf, clubEmblem } from '../heraldry/clubs';
+import { clubOf, clubEmblem, clubsOf } from '../heraldry/clubs';
 import { ambitionOf } from '../heraldry/rivals';
 import { nextTitleProgress } from '../heraldry/titles';
 import { rivalriesOf, collect } from '../app/rivalries';
@@ -26,7 +26,7 @@ import { CATEGORY_LABEL, CONTEMPORARY_DISCLOSURE, CONTEMPORARY_NOTE, PERSONA_NOT
 
 /** Rating bands of the Federation's spectrum (docs/V10_PLAN.md Decision 1). */
 const RATING_BANDS: [number, number][] = [[0, 399], [400, 799], [800, 1199], [1200, 1599], [1600, 1999], [2000, 2399], [2400, 2799], [2800, 3199], [3200, 3999], [4000, 99999]];
-const PAGE_SIZE = 50;
+import { filterCompetitors, pageOf, PAGE_SIZE, type DiscoverySpecial } from '../app/discovery';
 
 /** All results of a competitor across stored rounds (summary results included), newest first. */
 function resultsOf(rounds: Iterable<{ season: number; round: number; abstract: [string, string, string, number | null][]; fixtures: { event: string; white: string; black: string; result: number | null; tier: number; gameId: string | null }[] }>, id: string) {
@@ -60,7 +60,7 @@ export function CompetitorsScreen() {
   const [title, setTitle] = useState('');
   const [style, setStyle] = useState('');
   const [club, setClub] = useState('');
-  const [special, setSpecial] = useState<'' | 'watch' | 'featured' | 'rival' | 'titled' | 'upcoming' | 'favorites'>('');
+  const [special, setSpecial] = useState<DiscoverySpecial>('');
   const [identity, setIdentity] = useState<'' | 'persona' | 'historical' | 'contemporary' | 'original'>('');
   const showNames = fed.showNames;
   const [category, setCategory] = useState('');
@@ -69,24 +69,18 @@ export function CompetitorsScreen() {
   const rivals = useMemo(() => (st && special === 'rival' ? new Set(rivalriesOf(st, PLAYER_ID, games).filter(r => r.intensity >= 10).map(r => r.b)) : null), [st, special, games]);
   const list = useMemo(() => {
     if (!st) return [];
-    const ql = q.trim().toLowerCase();
-    const featured = new Set((st.world.featured ?? []).map(f => f.id));
-    const upcoming = new Set(st.rounds.get(`${st.world.season}:${st.world.round}`)?.fixtures.flatMap(f => (f.result === null ? [f.white, f.black] : [])) ?? []);
-    const favs = new Set(st.extra.favorites ?? []);
-    return [...st.competitors.values()]
-      .filter(c => c.status === 'active' && (region < 0 || c.region === region) && (!division || c.division === division) && (!ql || c.name.toLowerCase().includes(ql))
-        && c.rating >= minR && c.rating <= maxR && (!title || (title === 'any' ? !!c.fedTitle : c.fedTitle === title)) && (!style || (isValidatedStyle(c.style) ? c.style : 'universal') === style)
-        && (!club || clubOf(c.id, c.region).id === club)
-        && (special !== 'watch' || st.extra.watchlist.includes(c.id)) && (special !== 'featured' || featured.has(c.id)) && (special !== 'rival' || !!rivals?.has(c.id))
-        && (special !== 'titled' || c.titles.length > 0) && (special !== 'upcoming' || upcoming.has(c.id)) && (special !== 'favorites' || favs.has(c.id))
-        && personaMatches(shownPersona(c, showNames), identity, category)
-        && (band < 0 || (c.rating >= RATING_BANDS[band][0] && c.rating < RATING_BANDS[band][1] + 1)))
-      .sort((a, b) => b.rating - a.rating || a.id.localeCompare(b.id));
+    const sets = {
+      watchlist: new Set(st.extra.watchlist), featured: new Set((st.world.featured ?? []).map(f => f.id)), rivals,
+      upcoming: new Set(st.rounds.get(`${st.world.season}:${st.world.round}`)?.fixtures.flatMap(f => (f.result === null ? [f.white, f.black] : [])) ?? []),
+      favorites: new Set(st.extra.favorites ?? []),
+    };
+    // fast pass (app/discovery), then the persona and rating-band filters of the v0.10 roster browser
+    return filterCompetitors(st.competitors.values(), { q, region, division, minR, maxR, title, style, club, special }, sets)
+      .filter(c => personaMatches(shownPersona(c, showNames), identity, category) && (band < 0 || (c.rating >= RATING_BANDS[band][0] && c.rating < RATING_BANDS[band][1] + 1)));
   }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, identity, category, band, showNames, services.revision]);
-  // any filter change returns to the first page; a page past the end (after a round) clamps to the last one
+  // any filter change returns to the first page; pageOf clamps a page past the end (after a round)
   useEffect(() => { setPage(0); }, [q, region, division, minR, maxR, title, style, club, special, identity, category, band]);
-  const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
-  const pg = Math.min(page, pages - 1);
+  const pg = pageOf(list, page);
   if (!st) return <NeedsFederation />;
   const active = [...st.competitors.values()].filter(c => c.status === 'active').length;
   const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const).filter(x => isValidatedStyle(x))];
@@ -96,6 +90,7 @@ export function CompetitorsScreen() {
         <button className="btn ghost small" onClick={() => go({ name: 'world' })}>← Federation</button>
         <h1 style={{ margin: 0 }}>Discover Competitors</h1>
         <span className="chip">{active.toLocaleString('en')} Active · {st.competitors.size.toLocaleString('en')} on Record</span>
+        <button className="btn ghost small" onClick={() => go({ name: 'population' })}>Population analytics</button>
       </div>
       <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }} data-testid="discovery-filters">
         <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label="Search Competitors" />
@@ -104,7 +99,7 @@ export function CompetitorsScreen() {
         <label className="small">Rating <input type="number" value={minR} step={50} onChange={e => setMinR(+e.target.value || 0)} style={{ width: 72 }} aria-label="Minimum Rating" />–<input type="number" value={maxR} step={50} onChange={e => setMaxR(+e.target.value || 5000)} style={{ width: 72 }} aria-label="Maximum Rating" /></label>
         <select value={title} onChange={e => setTitle(e.target.value)} aria-label="Federation Title"><option value="">Any Title or None</option><option value="any">Any Federation Title</option>{FED_TITLES.map(t => <option key={t} value={t}>{t}</option>)}</select>
         <select value={style} onChange={e => setStyle(e.target.value)} aria-label="Playing Style"><option value="">Any Style</option>{styles.map(x => <option key={x} value={x}>{STYLE_LABEL[x as keyof typeof STYLE_LABEL]}</option>)}</select>
-        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{AI_CLUBS.map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
+        <select value={club} onChange={e => setClub(e.target.value)} aria-label="Club"><option value="">Any Club</option>{clubsOf(fed.topology().regions).map(k => <option key={k.id} value={k.id}>{k.identity.name}</option>)}</select>
         <select value={band} onChange={e => setBand(+e.target.value)} aria-label="Rating Band"><option value={-1}>Any Rating Band</option>{RATING_BANDS.map(([lo, hi], i) => <option key={lo} value={i}>{hi > 9999 ? `${lo.toLocaleString('en')}+` : `${lo}–${hi.toLocaleString('en')}`}</option>)}</select>
         <select value={identity} onChange={e => { setIdentity(e.target.value as typeof identity); if (e.target.value === 'original') setCategory(''); }} aria-label="Identity"><option value="">Personas and Originals</option><option value="persona">All Personas</option><option value="historical">Historical Personas</option>{showNames && <option value="contemporary">Contemporary Personas</option>}<option value="original">Original Competitors</option></select>
         <select value={category} disabled={identity === 'original'} onChange={e => setCategory(e.target.value)} aria-label="Persona Category"><option value="">Any Persona Category</option>{ROSTER_CATEGORIES.map(k => <option key={k} value={k}>{CATEGORY_LABEL[k]}</option>)}</select>
@@ -115,9 +110,9 @@ export function CompetitorsScreen() {
         <table>
           <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th>Div</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
-            {list.slice(pg * PAGE_SIZE, (pg + 1) * PAGE_SIZE).map((c, i) => { const sp = shownPersona(c, showNames); return (
+            {pg.rows.map((c, i) => { const sp = shownPersona(c, showNames); return (
               <tr key={c.id} className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
-                <td>{pg * PAGE_SIZE + i + 1}</td>
+                <td>{pg.from + i + 1}</td>
                 <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}{c.fedTitle && <span className="chip gold">{FED_TITLE_ABBR[c.fedTitle]}</span>}{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
                 <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /></td>
                 <td className="mono">{Math.round(c.rating)} <span className="muted">±{Math.round(c.rd)}</span></td>
@@ -127,12 +122,12 @@ export function CompetitorsScreen() {
           </tbody>
         </table>
         {list.length > PAGE_SIZE && (
-          <div className="row small" data-testid="competitor-pages" style={{ marginTop: 8, flexWrap: 'wrap' }}>
-            <button className="btn small" disabled={pg === 0} onClick={() => setPage(0)} aria-label="First Page">«</button>
-            <button className="btn small" disabled={pg === 0} onClick={() => setPage(pg - 1)}>‹ Previous</button>
-            <span className="muted">{(pg * PAGE_SIZE + 1).toLocaleString('en')}–{Math.min(list.length, (pg + 1) * PAGE_SIZE).toLocaleString('en')} of {list.length.toLocaleString('en')} · Page {pg + 1} of {pages.toLocaleString('en')}</span>
-            <button className="btn small" disabled={pg >= pages - 1} onClick={() => setPage(pg + 1)}>Next ›</button>
-            <button className="btn small" disabled={pg >= pages - 1} onClick={() => setPage(pages - 1)} aria-label="Last Page">»</button>
+          <div className="row small" data-testid="discovery-pages" style={{ marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
+            <button className="btn small" disabled={pg.page === 0} onClick={() => setPage(0)} aria-label="First Page">«</button>
+            <button className="btn small" disabled={pg.page === 0} onClick={() => setPage(pg.page - 1)}>‹ Previous</button>
+            <span className="muted">{(pg.from + 1).toLocaleString('en')}–{(pg.from + pg.rows.length).toLocaleString('en')} of {list.length.toLocaleString('en')} by rating · page {pg.page + 1} of {pg.pages.toLocaleString('en')}</span>
+            <button className="btn small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.page + 1)}>Next ›</button>
+            <button className="btn small" disabled={pg.page >= pg.pages - 1} onClick={() => setPage(pg.pages - 1)} aria-label="Last Page">»</button>
           </div>
         )}
         {list.length === 0 && <div className="small muted">No competitors match these filters. Try widening them.</div>}

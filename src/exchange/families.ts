@@ -138,26 +138,52 @@ export function advancementState(qf: [string, string][], winners: string[]): num
 type G = { white: string; black: string; result: number | null };
 const draw = (ra: number, rb: number, u: number) => { const p = wdl(ra, rb, NU); return u < p.w ? 1 : u < p.w + p.d ? 0.5 : 0; };
 
-/** Remaining league rounds of one circuit simulated N times. Returns P(rank 1) and P(top 2) per member. */
-export function leagueModel(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 400, seed = 1): { title: Map<string, number>; top2: Map<string, number> } {
+/**
+ * The remaining fixtures of one circuit, prepared once for a Monte Carlo run: member indices and the cumulative
+ * W / W+D thresholds of each pairing. wdl depends only on the two public ratings, so computing it once per pairing
+ * instead of once per simulated game gives exactly the same draws (`u < w ? 1 : u < w + d ? ½ : 0`) as before —
+ * the per-game work is then one PRNG call and two comparisons (docs/FEDERATION_SCALE.md §0.2).
+ */
+interface PreparedCircuit { members: string[]; played: G[]; base: Float64Array; wi: Int32Array; bi: Int32Array; pw: Float64Array; pwd: Float64Array; pairs: [string, string][]; res: Float64Array; pts: Float64Array }
+function prepareCircuit(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number): PreparedCircuit {
   const rr = roundRobin(members);
-  const rnd = mulberry32(seed);
-  const title = new Map(members.map(m => [m, 0])), top2 = new Map(members.map(m => [m, 0]));
-  const seeds = new Map(members.map((m, i) => [m, i + 1]));
-  // exact fast path: points by array; the full tiebreak order only when 1st or 2nd place is tied on points
   const ix = new Map(members.map((m, i) => [m, i]));
   const rt = members.map(m => rating(m));
   const base = new Float64Array(members.length);
   for (const g of played) if (g.result !== null) { const wi = ix.get(g.white), bi = ix.get(g.black); if (wi !== undefined) base[wi] += g.result; if (bi !== undefined) base[bi] += 1 - g.result; }
+  const wi: number[] = [], bi: number[] = [], pw: number[] = [], pwd: number[] = [], pairs: [string, string][] = [];
+  for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) {
+    const a = ix.get(w)!, d = ix.get(b)!;
+    const p = wdl(rt[a], rt[d], NU);
+    wi.push(a); bi.push(d); pw.push(p.w); pwd.push(p.w + p.d); pairs.push([w, b]);
+  }
+  return { members, played, base, wi: Int32Array.from(wi), bi: Int32Array.from(bi), pw: Float64Array.from(pw), pwd: Float64Array.from(pwd), pairs, res: new Float64Array(wi.length), pts: new Float64Array(members.length) };
+}
+/** One simulated completion of a prepared circuit (fills `pts` and `res`, consuming one PRNG draw per game in order). */
+function simulateCircuit(c: PreparedCircuit, rnd: () => number): void {
+  const { pts, res, wi, bi, pw, pwd } = c;
+  pts.set(c.base);
+  for (let g = 0; g < wi.length; g++) {
+    const u = rnd() / 4294967296;
+    const x = u < pw[g] ? 1 : u < pwd[g] ? 0.5 : 0;
+    res[g] = x; pts[wi[g]] += x; pts[bi[g]] += 1 - x;
+  }
+}
+/** The full league order of a simulated completion (points, head-to-head, Sonneborn–Berger, seed). */
+function simulatedOrder(c: PreparedCircuit): StandingRow[] {
+  const games = c.played.concat(c.pairs.map(([w, b], g) => ({ white: w, black: b, result: c.res[g] })));
+  return leagueOrder(standings(c.members, games, new Map(c.members.map((m, i) => [m, i + 1]))), games);
+}
+
+/** Remaining league rounds of one circuit simulated N times. Returns P(rank 1) and P(top 2) per member. */
+export function leagueModel(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 400, seed = 1): { title: Map<string, number>; top2: Map<string, number> } {
+  const rnd = mulberry32(seed);
+  const title = new Map(members.map(m => [m, 0])), top2 = new Map(members.map(m => [m, 0]));
+  // exact fast path: points by array; the full tiebreak order only when 1st or 2nd place is tied on points
+  const c = prepareCircuit(members, played, fromRound, lastRound, rating);
+  const pts = c.pts;
   for (let k = 0; k < N; k++) {
-    const pts = base.slice();
-    const extra: G[] = [];
-    for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) {
-      const wi = ix.get(w)!, bi = ix.get(b)!;
-      const res = draw(rt[wi], rt[bi], rnd() / 4294967296);
-      pts[wi] += res; pts[bi] += 1 - res;
-      extra.push({ white: w, black: b, result: res });
-    }
+    simulateCircuit(c, rnd);
     let a = -1, b2 = -1;
     for (let i = 0; i < pts.length; i++) { if (a < 0 || pts[i] > pts[a]) { b2 = a; a = i; } else if (b2 < 0 || pts[i] > pts[b2]) b2 = i; }
     let unique = true;
@@ -165,7 +191,7 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
     if (Math.abs(pts[a] - pts[b2]) <= 1e-9) unique = false;
     let first: string, second: string;
     if (unique) { first = members[a]; second = members[b2]; }
-    else { const games = played.concat(extra); const order = leagueOrder(standings(members, games, seeds), games); first = order[0].id; second = order[1].id; }
+    else { const order = simulatedOrder(c); first = order[0].id; second = order[1].id; }
     title.set(first, title.get(first)! + 1 / N);
     top2.set(first, top2.get(first)! + 1 / N); top2.set(second, top2.get(second)! + 1 / N);
   }
@@ -173,35 +199,41 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
 }
 
 /** Probability that `target` (a Crown Division member) qualifies: wins its division AND is among the 8 best of the
- *  16 division-1 winners by points (then rating). All 16 division-1 leagues are simulated jointly. */
+ *  division-1 winners by points (then rating, then id). All division-1 leagues are simulated jointly.
+ *
+ *  Exact shortcuts (same value as sorting all winners, docs/FEDERATION_SCALE.md §0.2): the winners' order is a strict
+ *  total order (points, rating, id), so "target is in the top 8" is "target won its league and fewer than 8 other
+ *  winners rank above it". Another league's winner only needs its tiebreaks resolved when its points equal the
+ *  target's (otherwise its points alone decide), so the full league order is computed only in that case or when the
+ *  target's own league is tied at the top. The PRNG stream is consumed in the same order as before. */
 export function qualificationModel(target: string, circuits: { members: string[]; played: G[] }[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 300, seed = 2): number {
+  const tc = circuits.findIndex(c => c.members.includes(target));
+  if (tc < 0) return 0; // never a division-1 winner
   const rnd = mulberry32(seed);
   let hit = 0;
-  const rrs = circuits.map(c => roundRobin(c.members));
-  // Exact fast path (same result as the full order): tally points with arrays; the complete league order with its
-  // tiebreaks (head-to-head, Sonneborn–Berger, seed) is computed only when the top of a league is tied.
-  const idx = circuits.map(c => new Map(c.members.map((m, i) => [m, i])));
-  const base = circuits.map((c, ci) => { const a = new Float64Array(c.members.length); for (const g of c.played) if (g.result !== null) { const wi = idx[ci].get(g.white), bi = idx[ci].get(g.black); if (wi !== undefined) a[wi] += g.result; if (bi !== undefined) a[bi] += 1 - g.result; } return a; });
-  const ratings = circuits.map(c => c.members.map(m => rating(m)));
+  const prep = circuits.map(c => prepareCircuit(c.members, c.played, fromRound, lastRound, rating));
+  const max = new Float64Array(prep.length), top = new Int32Array(prep.length), tied = new Uint8Array(prep.length);
+  const rTarget = rating(target);
   for (let k = 0; k < N; k++) {
-    const winners: StandingRow[] = [];
-    circuits.forEach((c, ci) => {
-      const pts = base[ci].slice();
-      const extra: G[] = [];
-      for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rrs[ci][(r - 1) % rrs[ci].length] ?? []) {
-        const wi = idx[ci].get(w)!, bi = idx[ci].get(b)!;
-        const res = draw(ratings[ci][wi], ratings[ci][bi], rnd() / 4294967296);
-        pts[wi] += res; pts[bi] += 1 - res;
-        extra.push({ white: w, black: b, result: res });
-      }
-      let max = -1, n = 0, at = -1;
-      for (let i = 0; i < pts.length; i++) { if (pts[i] > max + 1e-9) { max = pts[i]; n = 1; at = i; } else if (Math.abs(pts[i] - max) <= 1e-9) n++; }
-      if (n === 1) { winners.push({ id: c.members[at], points: max } as StandingRow); return; }
-      const games = c.played.concat(extra);
-      winners.push(leagueOrder(standings(c.members, games, new Map(c.members.map((m, i) => [m, i + 1]))), games)[0]);
-    });
-    const top8 = winners.sort((a, b) => b.points - a.points || rating(b.id) - rating(a.id) || a.id.localeCompare(b.id)).slice(0, 8).map(r => r.id);
-    if (top8.includes(target)) hit++;
+    for (let ci = 0; ci < prep.length; ci++) {
+      const c = prep[ci];
+      simulateCircuit(c, rnd);
+      const pts = c.pts;
+      let mx = -1, n = 0, at = -1;
+      for (let i = 0; i < pts.length; i++) { if (pts[i] > mx + 1e-9) { mx = pts[i]; n = 1; at = i; } else if (Math.abs(pts[i] - mx) <= 1e-9) n++; }
+      max[ci] = mx; top[ci] = at; tied[ci] = n === 1 ? 0 : 1;
+    }
+    const winnerOf = (ci: number) => (tied[ci] ? simulatedOrder(prep[ci])[0].id : prep[ci].members[top[ci]]);
+    if (winnerOf(tc) !== target) continue;
+    const T = max[tc];
+    let above = 0;
+    for (let ci = 0; ci < prep.length && above < 8; ci++) {
+      if (ci === tc) continue;
+      if (max[ci] !== T) { if (max[ci] > T) above++; continue; }
+      const w = winnerOf(ci), rw = rating(w);
+      if (rTarget - rw < 0 || (rTarget - rw === 0 && w.localeCompare(target) < 0)) above++;
+    }
+    if (above < 8) hit++;
   }
   return hit / N;
 }

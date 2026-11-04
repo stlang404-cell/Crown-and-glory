@@ -10,7 +10,7 @@
 import type { FedState } from './federation';
 import type { Ctx, RoundRecord } from '../federation/world';
 import { leagueTable, swissTable } from '../federation/world';
-import { LEAGUE_EVENT, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, divisionLabel, REGION_NAMES } from '../federation/model';
+import { LEAGUE_EVENT, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, divisionLabel, REGION_NAMES, topologyOf } from '../federation/model';
 import { hashSeed } from '../federation/generator';
 import { Journal, validateJournal } from '../exchange/ledger';
 import { Market, Position, openGenericMarket, closeMarket, resolveMarket, acct, unitPayout, MarketKind, uniformPayout } from '../exchange/market';
@@ -161,7 +161,8 @@ function settle(ops: MarketOps, m: Market, payout: number[], memo: string): void
 function subjects(st: FedState) {
   const pr = st.world.player.region;
   const circuit = (region: number, division: number) => st.plan.circuits.find(c => c.region === region && c.division === division)!;
-  const rp = (pr + 5) % 16, rq = (pr + 9) % 16, rs = (pr + 13) % 16;
+  const R = topologyOf(st.world).regions; // 16 in the original world (subjects unchanged); every region in larger ones
+  const rp = (pr + 5) % R, rq = (pr + 9) % R, rs = (pr + 13) % R;
   const promoDiv = 3 + (st.world.season % 5); // divisions 3..7 rotate by season
   const promoCircuit = circuit(rp, promoDiv);
   const byRating = (ids: string[]) => [...ids].sort((a, b) => rating(st)(b) - rating(st)(a) || a.localeCompare(b));
@@ -171,12 +172,15 @@ function subjects(st: FedState) {
     season: { circuit: circuit(rs, 1) },
   };
 }
-function playedIn(st: FedState, event: string): G[] {
-  const out: G[] = [];
+/** The current season's recorded results grouped by event, in the order a scan of the rounds yields them (one pass
+ *  instead of one pass per event: the qualification model reads every division-1 league). */
+function playedByEvent(st: FedState): Map<string, G[]> {
+  const out = new Map<string, G[]>();
+  const add = (g: G) => { const l = out.get(g.event); if (l) l.push(g); else out.set(g.event, [g]); };
   for (const r of st.rounds.values()) {
     if (r.season !== st.world.season) continue;
-    for (const [e, w, b, res] of r.abstract) if (e === event && res !== null) out.push({ event: e, white: w, black: b, result: res });
-    for (const f of r.fixtures) if (f.event === event && f.result !== null) out.push({ event: f.event, white: f.white, black: f.black, result: f.result });
+    for (const [e, w, b, res] of r.abstract) if (res !== null) add({ event: e, white: w, black: b, result: res });
+    for (const f of r.fixtures) if (f.result !== null) add({ event: f.event, white: f.white, black: f.black, result: f.result });
   }
   return out;
 }
@@ -186,6 +190,8 @@ function models(st: FedState, m: Market): number[] {
   const S = st.world.season, seed = hashSeed(st.world.seed, 'model', m.id, st.world.round);
   const from = lastLeagueRoundPlayed(st) + 1;
   const sub = subjects(st);
+  let byEvent: Map<string, G[]> | null = null;
+  const playedIn = (_st: FedState, event: string) => (byEvent ??= playedByEvent(st)).get(event) ?? [];
   switch (m.kind) {
     case 'promotion': { const c = sub.promo.circuit; const p = leagueModel(c.members, playedIn(st, LEAGUE_EVENT(c.region, c.division)), from, LEAGUE_ROUNDS, rating(st), 300, seed).top2.get(String(m.ref!.subject)) ?? 0; return normaliseModel([p, 1 - p], 0.002); }
     case 'season': { const c = sub.season.circuit; const t = leagueModel(c.members, playedIn(st, LEAGUE_EVENT(c.region, c.division)), from, LEAGUE_ROUNDS, rating(st), 300, seed).title; return normaliseModel(c.members.map(x => t.get(x) ?? 0)); }

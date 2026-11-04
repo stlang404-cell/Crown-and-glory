@@ -1,7 +1,8 @@
 import { Emblem, Trophy } from './Emblem';
 import { divisionLabel, regionNamesOf, TOPOLOGY_V1 } from '../federation/model';
 import { divisionEmblem, rankEmblem, RANK_ORDER, titleEmblem, FED_TITLES, FED_TITLE_ABBR, regionEmblem, tournamentCrest, TOURNAMENTS, TOURNAMENT_NAME, TROPHY_FOR, financialEmblem, FIN_TIERS, ACHIEVEMENTS, achievementEmblem } from '../heraldry/catalog';
-import { AI_CLUBS, clubEmblem } from '../heraldry/clubs';
+import { clubEmblem, clubsOf } from '../heraldry/clubs';
+import { useServices } from './App';
 import { TITLE_RULES, TITLES_ID } from '../heraldry/titles';
 import { RIVALRY_ID } from '../heraldry/rivalry';
 import type { EmblemSpec } from '../heraldry/spec';
@@ -21,6 +22,9 @@ function Row({ items }: { items: { spec: EmblemSpec; label: string; sub?: string
 
 /** The federation's heraldry: every emblem family, its sizes, and the rules behind earned insignia. */
 export function HeraldryScreen() {
+  const fed = useServices().fed;
+  // the regions and clubs of your federation (the original 16 regions before one is founded)
+  const topo = fed.ready ? fed.topology() : TOPOLOGY_V1;
   return (
     <div>
       <h1>Heraldry of the Federation</h1>
@@ -45,7 +49,7 @@ export function HeraldryScreen() {
         </details>
         <div className="small muted">Fictional honours of this federation, earned like real chess titles through norms and a peak rating. They are not FIDE titles.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={regionNamesOf(TOPOLOGY_V1).map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
+      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={regionNamesOf(topo).map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
       <section className="panel stack" data-testid="gallery-tournaments">
         <h3>Major Tournaments and Their Trophies</h3>
         <div className="emblem-row">{TOURNAMENTS.map(t => <div key={t} className="emblem-cell"><span className="row"><Emblem spec={tournamentCrest(t)} size="md" title={`${TOURNAMENT_NAME[t]} crest`} /><Trophy kind={TROPHY_FOR[t]} size="md" title={`${TOURNAMENT_NAME[t]} trophy`} /></span><span className="small"><strong>{TOURNAMENT_NAME[t]}</strong></span></div>)}</div>
@@ -53,7 +57,7 @@ export function HeraldryScreen() {
       </section>
       <section className="panel stack" data-testid="gallery-finance"><h3>Financial Prestige</h3><Row items={FIN_TIERS.map(t => ({ spec: financialEmblem(t), label: t }))} /></section>
       <section className="panel stack" data-testid="gallery-achievements"><h3>Achievements</h3><Row items={ACHIEVEMENTS.map(a => ({ spec: achievementEmblem(a, true), label: a.name, sub: a.description }))} /></section>
-      <section className="panel stack" data-testid="gallery-clubs"><h3>Clubs of the Federation</h3><Row items={AI_CLUBS.map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
+      <section className="panel stack" data-testid="gallery-clubs"><h3>Clubs of the Federation</h3><Row items={clubsOf(topo.regions).map(c => ({ spec: clubEmblem(c.identity), label: c.identity.name, sub: `“${c.identity.motto}”` }))} /></section>
       <details className="small muted"><summary>Details</summary>Rules versions: rivalries {RIVALRY_ID}, titles {TITLES_ID}. A competitor's profile shows how your rivalry with them was scored.</details>
     </div>
   );

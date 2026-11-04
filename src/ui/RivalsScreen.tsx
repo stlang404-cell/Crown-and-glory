@@ -5,7 +5,8 @@ import { Portrait } from './Portrait';
 import { Emblem } from './Emblem';
 import { PLAYER_ID, divisionLabel, REGION_NAMES } from '../federation/model';
 import { personalEmblem, titleEmblem, divisionEmblem } from '../heraldry/catalog';
-import { AI_CLUBS, clubEmblem, clubOf } from '../heraldry/clubs';
+import { clubEmblem, clubOf, clubsOf } from '../heraldry/clubs';
+import type { Competitor } from '../federation/model';
 import { ambitionOf } from '../heraldry/rivals';
 import { rivalriesOf, featuredRivalries } from '../app/rivalries';
 import { fmtCrowns } from '../exchange/ledger';
@@ -86,8 +87,12 @@ export function RivalsScreen() {
       {tab === 'clubs' && (
         <div className="panel" data-testid="clubs">
           <table className="small"><thead><tr><th>Club</th><th className="hide-sm">Region</th><th>Members</th><th>Titles</th><th>Treasury</th></tr></thead>
-            <tbody>{AI_CLUBS.map(k => {
-              const members = [...st.competitors.values()].filter(c => c.status === 'active' && c.region === k.region && clubOf(c.id, c.region).id === k.id);
+            <tbody>{(() => {
+              // members grouped once (a 10,240 world has 160 clubs: one pass, not one pass per club)
+              const byClub = new Map<string, Competitor[]>();
+              for (const c of st.competitors.values()) { if (c.status !== 'active') continue; const id = clubOf(c.id, c.region).id; const l = byClub.get(id); if (l) l.push(c); else byClub.set(id, [c]); }
+              return clubsOf(fed.topology().regions).map(k => ({ k, members: byClub.get(k.id) ?? [] }));
+            })().map(({ k, members }) => {
               return <tr key={k.id}><td><span className="row" style={{ gap: 8 }}><Emblem spec={clubEmblem(k.identity, members.reduce((a, c) => a + c.titles.length, 0) >= 10 ? 2 : 1)} size="sm" title={k.identity.name} /><span>{k.identity.name}<div className="muted">“{k.identity.motto}”</div></span></span></td><td className="hide-sm">{REGION_NAMES[k.region]}</td><td>{members.length}</td><td>{members.reduce((a, c) => a + c.titles.length, 0)}</td><td className="mono">{fmtCrowns(fed.balance(`club:${k.id}`), 0)}</td></tr>;
             })}</tbody></table>
           <div className="small muted">Each season, members pay 5% of their balance in dues and the club spends 60% of its treasury on running costs.</div>

@@ -7,7 +7,7 @@ import { CHARGES, SHAPES, TINCTURES } from '../src/heraldry/charges';
 import { divisionEmblem, rankEmblem, RANK_ORDER, titleEmblem, FED_TITLES, regionEmblem, tournamentCrest, TOURNAMENTS, financialEmblem, FIN_TIERS, ACHIEVEMENTS, achievementEmblem, personalEmblem } from '../src/heraldry/catalog';
 import { performance, normTier, makeNorm, earnedTitle, TITLE_RULES } from '../src/heraldry/titles';
 import { computeRivalry, type Meeting } from '../src/heraldry/rivalry';
-import { AI_CLUBS, clubOf, validateIdentity, defaultIdentity, clubEmblem } from '../src/heraldry/clubs';
+import { AI_CLUBS, clubOf, clubsOf, validateIdentity, defaultIdentity, clubEmblem } from '../src/heraldry/clubs';
 import { selectFeatured } from '../src/heraldry/rivals';
 import { generateFederation } from '../src/federation/generator';
 
@@ -98,16 +98,31 @@ describe('rivalry model', () => {
 
 describe('clubs and featured rivals', () => {
   it('32 AI clubs with unique names; affiliation is stable; identity validation', () => {
-    expect(AI_CLUBS).toHaveLength(32);
-    expect(new Set(AI_CLUBS.map(c => c.identity.name)).size).toBe(32);
-    expect(new Set(AI_CLUBS.map(c => `${c.identity.shape}|${c.identity.symbol}|${c.identity.primary}|${c.identity.secondary}`)).size).toBe(32);
-    expect(new Set(AI_CLUBS.map(c => c.identity.motto)).size).toBe(32);
+    const first = AI_CLUBS.slice(0, 32); // the clubs of the original 16 regions
+    expect(new Set(first.map(c => c.identity.name)).size).toBe(32);
+    expect(new Set(first.map(c => `${c.identity.shape}|${c.identity.symbol}|${c.identity.primary}|${c.identity.secondary}`)).size).toBe(32);
+    expect(new Set(first.map(c => c.identity.motto)).size).toBe(32);
     for (const c of AI_CLUBS) expect(validateIdentity(c.identity)).toBeNull();
     expect(clubOf('c0007', 3)).toBe(clubOf('c0007', 3));
     expect(clubOf('c0007', 3).region).toBe(3);
     expect(validateIdentity({ ...defaultIdentity(0), name: 'x' })).toMatch(/2–32/);
     expect(validateIdentity({ ...defaultIdentity(0), primary: 'or', secondary: 'or' })).toMatch(/differ/);
     expect(validateIdentity({ ...defaultIdentity(0), name: '<script>' })).toBeTruthy();
+  });
+  it('v0.10: 80 regions have distinct arms and 160 clubs have unique names, arms and mottos; the first 32 are unchanged', () => {
+    expect(new Set(Array.from({ length: 80 }, (_, i) => signature(regionEmblem(i)))).size).toBe(80);
+    const others = new Set(all.filter(s => !Array.from({ length: 16 }, (_, i) => signature(regionEmblem(i))).includes(signature(s))).map(signature));
+    for (let i = 16; i < 80; i++) expect(others.has(signature(regionEmblem(i)))).toBe(false);
+    expect(AI_CLUBS).toHaveLength(160);
+    expect(new Set(AI_CLUBS.map(c => c.id)).size).toBe(160);
+    expect(new Set(AI_CLUBS.map(c => c.identity.name)).size).toBe(160);
+    expect(new Set(AI_CLUBS.map(c => `${c.identity.shape}|${c.identity.symbol}|${c.identity.primary}|${c.identity.secondary}`)).size).toBe(160);
+    expect(new Set(AI_CLUBS.map(c => c.identity.motto)).size).toBe(160);
+    for (const c of AI_CLUBS) expect(validateIdentity(c.identity)).toBeNull();
+    expect(AI_CLUBS.slice(0, 32).map(c => c.identity.name)[0]).toBe(AI_CLUBS[0].identity.name);
+    expect(clubsOf(16)).toHaveLength(32);
+    expect(clubsOf(80)).toHaveLength(160);
+    for (const r of [0, 15, 16, 47, 79]) { expect(clubOf('c0007', r).region).toBe(r); expect(clubOf('c0008', r).region).toBe(r); }
   });
   it('selects 28 stable featured rivals (24 legends + 4 from the player division)', () => {
     const comps = generateFederation(77);

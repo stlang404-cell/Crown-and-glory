@@ -49,11 +49,26 @@ export function titleEmblem(t: FedTitle): EmblemSpec {
   return base({ shape: shape[i], field: [['azure', 'sanguine', 'purpure', 'sable'][i], 'or'], division: i >= 2 ? 'chief' : 'plain', charge: charge[i], chargeColor: i >= 2 ? 'or' : 'argent', border: i === 3 ? 'pixel' : i >= 1 ? 'double' : 'single', crest: i === 3 ? 'crown' : i === 2 ? 'helm' : null, wreath: i === 3, pips: i + 1, monogram: FED_TITLE_ABBR[t], prestige: [1, 2, 4, 5][i] });
 }
 
-// ---------------------------------------------------------------- regional federations (16 distinct arms)
+// ---------------------------------------------------------------- regional federations (distinct arms for 128 regions)
 const REGION_CHARGE: ChargeId[] = ['anchor', 'sun', 'moon', 'tower', 'key', 'flame', 'griffin', 'quill', 'scales', 'chalice', 'book', 'star', 'hourglass', 'sword', 'gate', 'laurel'];
 const REGION_FIELD: [Tincture, Tincture][] = [['azure', 'argent'], ['or', 'sanguine'], ['sable', 'celeste'], ['vert', 'or'], ['gules', 'argent'], ['tenne', 'sable'], ['purpure', 'or'], ['celeste', 'azure'], ['steel', 'sable'], ['sanguine', 'or'], ['bronze', 'vert'], ['azure', 'or'], ['sable', 'gules'], ['argent', 'gules'], ['vert', 'argent'], ['purpure', 'argent']];
 const REGION_DIV: DivisionId[] = ['fess', 'pale', 'bend', 'chevron', 'chief', 'quarterly', 'saltire', 'pily'];
+/** Division/charge pairs of regions 17+ (v0.10 larger topologies): every pair not used by regions 1–16, in a fixed
+ *  spread order, so each of the 80 named regions has its own silhouette (shape · division · charge). */
+const EXTRA_REGION_PAIRS: [number, number][] = (() => {
+  const used = new Set(Array.from({ length: 16 }, (_, i) => `${i % 8}:${i % 16}`));
+  const free: [number, number][] = [];
+  for (let c = 0; c < 16; c++) for (let d = 0; d < 8; d++) if (!used.has(`${d}:${c}`)) free.push([d, c]);
+  return Array.from({ length: free.length }, (_, k) => free[(k * 37) % free.length]); // 37 is coprime to 112
+})();
 export function regionEmblem(r: number): EmblemSpec {
+  if (r >= 16 && r < 16 + EXTRA_REGION_PAIRS.length) {
+    const [d, c] = EXTRA_REGION_PAIRS[r - 16];
+    const [a, b] = REGION_FIELD[(r * 5 + Math.floor(r / 16)) % 16];
+    const light = a === 'argent' || a === 'or' || a === 'celeste';
+    // a double border keeps these silhouettes apart from the (single-bordered) club and federation emblems
+    return base({ shape: 'heater', field: [a, b], division: REGION_DIV[d], charge: REGION_CHARGE[c], chargeColor: light ? 'sable' : 'argent', border: 'double', prestige: 1 });
+  }
   const [a, b] = REGION_FIELD[r % 16];
   const light = a === 'argent' || a === 'or' || a === 'celeste';
   return base({ shape: 'heater', field: [a, b], division: REGION_DIV[r % 8], charge: REGION_CHARGE[r % 16], chargeColor: light ? 'sable' : 'argent', border: 'single', prestige: 1 });
