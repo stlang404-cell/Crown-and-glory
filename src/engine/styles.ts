@@ -90,30 +90,50 @@ export function repertoireChoice(style: StyleId, pos: Position, seed: number): M
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Full-game styles (crown-styles-4): an asymmetric evaluation for the styled side plus a draw contempt.
-// Multipliers scale crown-eval-4 terms for the styled side's OWN terms (`own`) or for the opponent's terms as
-// the styled side sees them (`opp`, e.g. a defensive player over-weights the opponent's attacking chances).
-// They change judgement, never legality, depth or node budgets. Used only for styles listed in
-// styles-validation.json → fullGame (tools/styles/validate_full.ts).
+// Full-game styles (crown-styles-5): an asymmetric evaluation for the styled side plus a draw contempt.
+// Adjustments change crown-eval-4 parameters for the styled side's OWN terms (`own`) or for the opponent's
+// terms as the styled side sees them (`opp`, e.g. a defensive player over-weights the opponent's attacking
+// chances). They change judgement only, never legality, depth or node budgets; the opponent's own search is
+// untouched. Played only by styles listed in styles-validation.json → fullGame (tools/styles/measure.ts);
+// design and measurements: docs/STYLES_REPORT.md.
 type Term = keyof typeof OFF;
-/** A term adjustment: a multiplier, or [mg, eg] centipawns added to every entry of the term. */
-type Adj = number | [number, number];
-export interface StyleEval { own?: Partial<Record<Term, Adj>>; opp?: Partial<Record<Term, Adj>>; contempt: number; simplify?: number }
+/**
+ * A term adjustment: a multiplier for mg and eg (number), [mg, eg] centipawns added to every entry of the term,
+ * or { x: [mgMul, egMul] } separate multipliers. A key `TERM.i` addresses entry i of a table term only
+ * (MAT.4 = queen value, PST.5 = the king square table, MOB.5 = king mobility).
+ */
+type Adj = number | [number, number] | { x: [number, number] };
+type TermKey = Term | `${Term}.${number}`;
+export interface StyleEval { own?: Partial<Record<TermKey, Adj>>; opp?: Partial<Record<TermKey, Adj>>; contempt: number; simplify?: number }
+export const STYLES_EVAL_ID = 'crown-styles-5';
 export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
-  tactical: { own: { HANGING: [40, 20], THREAT_PAWN: [30, 10], THREAT_MINOR: [30, 10], THREAT_ROOK: [30, 10], KING_ATTACKERS: [10, 0] }, contempt: 20 },
-  positional: { own: { THREAT_PAWN: 0.4, THREAT_MINOR: 0.4, THREAT_ROOK: 0.4, HANGING: 0.4, SUPPORTED: [20, 10], PHALANX: [15, 10], OUTPOST: [30, 20] }, contempt: 0 },
-  aggressive: { own: { KING_ATTACKERS: [25, 0], KING_ATTACK: [3, 0], TROPISM: [8, 0] }, contempt: 40 },
-  defensive: { own: { KING_SHIELD: [20, 0] }, opp: { KING_ATTACKERS: [25, 0], KING_ATTACK: [3, 0], TROPISM: [8, 0] }, contempt: -30 },
-  endgame: { own: { PASSED: 1.5, PASSED_FREE: 1.5, UNSTOPPABLE: 1.5 }, contempt: 10, simplify: 200 },
+  // more value on attacking enemy pieces (threats, hanging pieces) and on checks-leading king pressure
+  tactical: { own: { HANGING: [25, 10], THREAT_PAWN: [20, 5], THREAT_MINOR: [20, 5], THREAT_ROOK: [20, 5], KING_ATTACKERS: [8, 0] }, contempt: 15 },
+  // structure and piece placement over immediate threats
+  positional: { own: { THREAT_PAWN: 0.85, THREAT_MINOR: 0.85, THREAT_ROOK: 0.85, HANGING: 0.85, SUPPORTED: [8, 4], PHALANX: [8, 4], OUTPOST: [20, 10], MOB: 1.1 }, contempt: 0 },
+  // king hunt: attackers / attack weight / piece tropism up, own shelter worth half, keeps its queen, avoids draws
+  aggressive: { own: { KING_ATTACKERS: [12, 0], KING_ATTACK: [1, 0], TROPISM: [4, 0], KING_SHIELD: 0.75, 'MAT.4': [25, 0] }, contempt: 25 },
+  // safety first: own shelter and open king files weigh more, the opponent's attack and threats look bigger,
+  // the opponent's queen is feared (queens off is welcome), and a draw is acceptable when not better
+  defensive: { own: { KING_SHIELD: [15, 0], KING_OPEN: [-15, 0] }, opp: { KING_ATTACKERS: [15, 0], KING_ATTACK: [2, 0], TROPISM: [5, 0], HANGING: [25, 10], 'MAT.4': [30, 0] }, contempt: -25 },
+  // conversion: trades when ahead (simplify), passed pawns and an active king weigh more in the endgame,
+  // queens off is welcome
+  endgame: { own: { PASSED: { x: [1, 1.5] }, PASSED_FREE: { x: [1, 1.5] }, PASSED_OWNK: { x: [1, 1.5] }, UNSTOPPABLE: [0, 60], 'PST.5': { x: [1, 1.5] } }, opp: { 'MAT.4': [25, 0] }, contempt: 15, simplify: 100 },
 };
 const TERM_SIZE: Partial<Record<Term, number>> = { MAT: 6, PST: 216, MOB: 6, PASSED: 6, PASSED_FREE: 6, MOBT: 96, TROPISM: 6 };
-function scaled(base: Int32Array, adj: Partial<Record<Term, Adj>>): Int32Array {
+/** Size of one entry of a table term addressed as `TERM.i` (PST and MOBT entries are whole per-type tables). */
+const ENTRY_SIZE: Partial<Record<Term, number>> = { PST: 36, MOBT: 16 };
+function scaled(base: Int32Array, adj: Partial<Record<TermKey, Adj>>): Int32Array {
   const p = Int32Array.from(base);
-  for (const [term, a] of Object.entries(adj) as [Term, Adj][]) {
-    const start = OFF[term], n = TERM_SIZE[term] ?? 1;
+  for (const [key, a] of Object.entries(adj) as [TermKey, Adj][]) {
+    const [term, idx] = key.split('.') as [Term, string | undefined];
+    if (!(term in OFF)) throw new Error(`unknown style term ${key}`);
+    let start = OFF[term], n = TERM_SIZE[term] ?? 1;
+    if (idx !== undefined) { const es = ENTRY_SIZE[term] ?? 1; start += +idx * es; n = es; }
     for (let i = start; i < start + n; i++) {
       if (typeof a === 'number') { p[2 * i] = Math.round(base[2 * i] * a); p[2 * i + 1] = Math.round(base[2 * i + 1] * a); }
-      else { p[2 * i] = base[2 * i] + a[0]; p[2 * i + 1] = base[2 * i + 1] + a[1]; }
+      else if (Array.isArray(a)) { p[2 * i] = base[2 * i] + a[0]; p[2 * i + 1] = base[2 * i + 1] + a[1]; }
+      else { p[2 * i] = Math.round(base[2 * i] * a.x[0]); p[2 * i + 1] = Math.round(base[2 * i + 1] * a.x[1]); }
     }
   }
   return p;
@@ -122,9 +142,17 @@ function scaled(base: Int32Array, adj: Partial<Record<Term, Adj>>): Int32Array {
 export function styledWeights(style: StyleId, base: EvalWeights, defs: Partial<Record<StyleId, StyleEval>> = STYLE_EVAL): { weights: EvalWeights; contempt: number } | null {
   const d = defs[style];
   if (!d || base.version !== 4) return null;
-  return { weights: { ...base, own: d.own ? scaled(base.p, d.own) : undefined, opp: d.opp ? scaled(base.p, d.opp) : undefined, simplify: d.simplify }, contempt: d.contempt };
+  // memoised per (base weights, definition): the same parameter arrays are reused move after move, so the
+  // evaluator's per-weights tables stay warm (results are identical either way)
+  let m = memo.get(base);
+  if (!m) { m = new WeakMap(); memo.set(base, m); }
+  const hit = m.get(d);
+  if (hit) return hit;
+  const r = { weights: { ...base, own: d.own ? scaled(base.p, d.own) : undefined, opp: d.opp ? scaled(base.p, d.opp) : undefined, simplify: d.simplify }, contempt: d.contempt };
+  m.set(d, r);
+  return r;
 }
-
+const memo = new WeakMap<EvalWeights, WeakMap<StyleEval, { weights: EvalWeights; contempt: number }>>();
 const V = validation as unknown as { id: string; validated: StyleId[]; repertoireStyles?: StyleId[]; fullGame?: StyleId[]; results: Record<string, unknown> };
 export const STYLE_VALIDATION_ID = V.id;
 /** A style is shown and played if any of its components passed validation. */

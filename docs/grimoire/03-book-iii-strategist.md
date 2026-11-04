@@ -1583,6 +1583,7 @@ A single extra pawn wins less than half the time even between engines. Conversio
 fen: 3kr1/6/3K2/3P2/6/4R1 w - - 0 1
 line: Rxe6+ Kxe6
 show: after
+claim: tablebase win-in-9
 caption: A conversion choice. White traded rooks with 1. Rxe6+ Kxe6, reaching a king-and-pawn ending that is won with certainty: proven by exhaustive enumeration (mate in 9 more moves with best play).
 ```
 <!-- diagram -->

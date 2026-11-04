@@ -21,6 +21,9 @@
  *   best <SAN>             the move passes the Academy puzzle policy (crown-puzzle-verify-2: engine best by a clear
  *                          margin, no alternative winning mate) — an engine judgement, labelled as such in the text
  *   puzzle <id>            refers to a verified Academy puzzle (src/academy/data/puzzles.json); fen must match
+ *   tablebase <result>     exhaustive endgame value of the position AFTER `line` (if given), for the side to move:
+ *                          `win-in-N`, `loss-in-N` (N = moves to mate with best play) or `draw`; 3–4 men only,
+ *                          solved by tools/grimoire/endgame.ts (retrograde analysis over src/rules)
  *
  *   npx tsx tools/grimoire/check.ts            check all books, print a report, exit 1 on any failure
  *   npx tsx tools/grimoire/check.ts --render   also (re)write the diagram under every block
@@ -155,6 +158,12 @@ for (const b of blocks) {
       const p = puzzles.get(arg);
       if (!p) fail(`unknown puzzle ${arg}`);
       else if (p.fen !== fen) fail(`fen differs from puzzle ${arg}`);
+    } else if (kind === 'tablebase') {
+      const { probePosition } = await import('./endgame');
+      const pr = probePosition(pos);
+      const got = pr.result === 'draw' ? 'draw' : `${pr.result}-in-${pr.moves}`;
+      if (got !== arg) fail(`claim tablebase ${arg} but the solver gives ${got} (${pr.key})`);
+      else report.push(`ok   ${where} — tablebase ${got} (${pr.key})`);
     } else fail(`unknown claim "${claim}"`);
   } catch (e) { fail(`check error: ${(e as Error).message}`); }
 }

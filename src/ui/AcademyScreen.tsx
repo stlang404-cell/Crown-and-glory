@@ -13,6 +13,7 @@ import type { GameRecord } from '../games/types';
 import { TIME_CONTROLS } from '../games/types';
 import { createGameRecord } from '../games/session';
 import { ROSTER, opponentSnapshot } from '../federation/roster';
+import { practiceForLevel, requestPractice } from '../app/practice';
 import {
   DEFAULT_PLAN, GRIMOIRE_INDEX, LEVELS, LEVEL_LABEL, LEVEL_PLAN, MINUTES, dailyPlan, dueReviews, loadProgress, savePlan, suggestLevel,
   type GrimProgress, type Level, type PlanSettings,
@@ -327,7 +328,7 @@ function LearningPlan({ data, onPuzzles }: { data: Data; onPuzzles: (ids: string
           {plan.chapter && <li>Read <button className="btn ghost small" onClick={() => go({ name: 'grimoire', path: plan.chapter!.id })}>{bookOf(plan.chapter.book)}: {plan.chapter.title}</button></li>}
           {plan.reviews.length > 0 && <li>Review {plan.reviews.length} missed exercise{plan.reviews.length > 1 ? 's' : ''} <button className="btn ghost small" onClick={() => go({ name: 'grimoire', path: 'review' })}>Start Review</button></li>}
           {plan.puzzles && <li>{plan.puzzles.ids.length} Academy puzzles on {themeLabel(plan.puzzles.theme)} <span className="muted">({plan.puzzles.reason})</span> <button className="btn ghost small" onClick={() => onPuzzles(plan.puzzles!.ids)}>Solve</button></li>}
-          {opp && <li>Practice game vs {opp.name} (L{opp.level}, {opp.title}) <button className="btn ghost small" onClick={() => go({ name: 'play' })}>Play</button></li>}
+          {opp && plan.game && <li data-testid="plan-practice">Practice game vs {opp.name} (L{opp.level}, {opp.title}) <span className="muted">· {TIME_CONTROLS[plan.game.timeControl].label} · Casual</span> <button className="btn ghost small" data-testid="plan-practice-play" onClick={() => { const s = practiceForLevel(opp.level, plan.game!.timeControl); if (s) requestPractice(s); go({ name: 'play' }); }}>Play</button></li>}
           {!plan.chapter && !plan.reviews.length && !plan.puzzles && !opp && <li>Everything is done for today.</li>}
         </ol>
       )}

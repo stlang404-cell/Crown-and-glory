@@ -5,7 +5,7 @@
  * veterans) so that forecasts begin informative but imperfect. Names are generated from original syllables.
  */
 import { mulberry32 } from '../rules/tables';
-import { Competitor, DIVISIONS, DIVISION_SIZE, REGIONS, StyleId } from './model';
+import { Competitor, StyleId, Topology, TOPOLOGY_V1 } from './model';
 
 const FIRST_A = ['Al', 'Be', 'Ca', 'Da', 'El', 'Fa', 'Ga', 'Ha', 'Is', 'Jo', 'Ka', 'Le', 'Ma', 'Ne', 'Or', 'Pa', 'Qu', 'Ro', 'Sa', 'Te', 'Ul', 'Va', 'Wi', 'Ya', 'Ze', 'Mi', 'No', 'Ri', 'Lu', 'Eo'];
 const FIRST_B = ['ra', 'ren', 'lia', 'mon', 'nis', 'tor', 'via', 'den', 'ric', 'sha', 'lan', 'mira', 'dov', 'ella', 'tis', 'ko', 'rin', 'sel', 'vin', 'na', 'th', 'mar', 'ise', 'dan'];
@@ -58,12 +58,12 @@ export function makeCompetitor(seed: number, index: number, region: number, divi
   };
 }
 
-/** Generate the initial 2,048 competitors (deterministic for a world seed). */
-export function generateFederation(seed: number): Competitor[] {
+/** Generate the initial competitors (2,048 for crown-topology-1; deterministic for a world seed and topology). */
+export function generateFederation(seed: number, topology: Topology = TOPOLOGY_V1): Competitor[] {
   const used = new Set<string>();
   const out: Competitor[] = [];
   let i = 0;
-  for (let region = 0; region < REGIONS; region++) for (let division = 1; division <= DIVISIONS; division++) for (let k = 0; k < DIVISION_SIZE; k++) {
+  for (let region = 0; region < topology.regions; region++) for (let division = 1; division <= topology.divisions; division++) for (let k = 0; k < topology.divisionSize; k++) {
     out.push(makeCompetitor(seed, i++, region, division, 1, used));
   }
   return out;

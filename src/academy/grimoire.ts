@@ -164,7 +164,8 @@ export interface DailyPlan {
   chapter: { id: string; title: string; book: number } | null;
   reviews: ReviewState[];
   puzzles: { theme: string; ids: string[]; reason: string } | null;
-  game: { opponentLevel: number; reason: string } | null;
+  /** A practice game: always casual (never rated), Rapid 5+3 by default; the Play screen preselects it. */
+  game: { opponentLevel: number; timeControl: 'rapid'; mode: 'casual'; reason: string } | null;
 }
 /** Today's plan from real items: the next unread chapter, due reviews, Academy puzzles for the weakest topic, a practice game. */
 export function dailyPlan(o: {
@@ -188,7 +189,7 @@ export function dailyPlan(o: {
     const pick = (fresh.length >= b.puzzles ? fresh : pool).slice().sort((x, y) => x.difficulty - y.difficulty || x.id.localeCompare(y.id)).slice(0, b.puzzles);
     if (pick.length) puzzles = { theme, ids: pick.map(p => p.id), reason: weak[0] ? `Weakest topic: ${weak[0].topic.label} (${Math.round(weak[0].mastery! * 100)}% first try over your latest attempts)` : `Practice for the chapter you are reading next` };
   }
-  const game = b.game ? { opponentLevel: LEVEL_PLAN[o.settings.level].opponentLevel, reason: `A practice game at your chosen level (${LEVEL_LABEL[o.settings.level]})` } : null;
+  const game = b.game ? { opponentLevel: LEVEL_PLAN[o.settings.level].opponentLevel, timeControl: 'rapid' as const, mode: 'casual' as const, reason: `A practice game at your chosen level (${LEVEL_LABEL[o.settings.level]})` } : null;
   return { chapter: next ? { id: next.id, title: next.title, book: next.book } : null, reviews, puzzles, game };
 }
 

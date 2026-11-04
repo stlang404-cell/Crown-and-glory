@@ -11,8 +11,8 @@ import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed } from '../federation/generator';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
-import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId } from '../federation/model';
-import { wdl, RESULT_MODEL_ID } from '../federation/resultModel';
+import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
+import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } from '../exchange/odds';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
@@ -39,7 +39,7 @@ export interface WorldGame {
   id: string; fixtureId: string; season: number; round: number; event: string; stage?: string;
   white: string; black: string; whiteName: string; blackName: string; whiteRating: number; blackRating: number;
   initialFen: string; moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string;
-  createdAt: string; mode: 'watched-live' | 'background'; seed: number; profiles: string[];
+  createdAt: string; mode: 'watched-live' | 'background' | 'scheduled-live' | 'fast-forwarded'; seed: number; profiles: string[];
 }
 export interface FinanceHistory { key: 'history'; points: { season: number; round: number; at: string; cash: number; assets: number; positions: number; netWorth: number }[]; peak: number }
 /** A featured game played move by move with in-play trading windows (persisted after every move). */
@@ -48,6 +48,14 @@ export interface LiveGame {
   status: 'live' | 'done'; startedAt: string; marketId: string | null;
   /** Public information published after each move: market prices and the live model (for charts). */
   points: { ply: number; prices: number[]; model: number[]; at: string; revision?: string }[];
+  /** v0.9: 'scheduled' = driven by the live scheduler (src/app/scheduler.ts), no market; absent = in-play featured game. */
+  kind?: 'in-play' | 'scheduled';
+  /** v0.9 scheduled games: when the last move was committed (pacing and reopen catch-up). */
+  lastMoveAt?: string;
+  /** v0.9 scheduled games: how the game ended or is being completed (see Fixture.resolution). */
+  resolution?: 'simulated' | 'fast-forwarded' | 'abstract';
+  /** Why a scheduled game was resolved abstractly (shown with the label). */
+  note?: string;
 }
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
@@ -120,11 +128,17 @@ export class FederationService {
   }
 
   // ------------------------------------------------------------------ helpers
-  private clone(): FedState {
+  /**
+   * Working copy for one command. Competitor records are deep-copied only for the commands that change them
+   * (`competitors: true`: round advance); every other command shares the committed (immutable-by-convention) records,
+   * which was the dominant cost of a command at scale (docs/FEDERATION_SCALE.md; tests/federationScale.test.ts
+   * freezes the records to prove those commands never write to them).
+   */
+  private clone(opts: { competitors?: boolean } = {}): FedState {
     const s = this.state!;
     return {
       world: structuredClone(s.world), plan: structuredClone(s.plan), plans: new Map(s.plans),
-      competitors: new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])),
+      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])) : new Map(s.competitors),
       rounds: new Map(s.rounds), markets: new Map(s.markets), positions: new Map(s.positions),
       balances: new Map(s.balances), journalIds: new Set(s.journalIds), assets: new Map(s.assets),
       finance: structuredClone(s.finance), extra: structuredClone(s.extra),
@@ -248,11 +262,23 @@ export class FederationService {
     return { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
   }
 
-  /** Serialize commands: one at a time, guarded by the committed cursor. */
-  private async run<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.busy) throw new Error('Another federation action is still running. Wait a moment and try again.');
+  /**
+   * Serialize commands: one at a time, guarded by the committed cursor. A user command that meets another user
+   * command fails fast (as before); a short live-scheduler commit is waited for instead, and scheduler commits wait
+   * behind anything (docs/FEDERATION_SCALE.md).
+   */
+  private busyKind: 'user' | 'scheduler' = 'user';
+  private idle: Promise<void> = Promise.resolve();
+  private async run<T>(fn: () => Promise<T>, kind: 'user' | 'scheduler' = 'user'): Promise<T> {
+    while (this.busy) {
+      if (kind === 'user' && this.busyKind === 'user') throw new Error('Another federation action is still running. Wait a moment and try again.');
+      await this.idle;
+    }
     this.busy = true;
-    try { return await fn(); } finally { this.busy = false; }
+    this.busyKind = kind;
+    let release!: () => void;
+    this.idle = new Promise<void>(r => { release = r; });
+    try { return await fn(); } finally { this.busy = false; release(); }
   }
 
   private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[]; liveGames?: LiveGame[]; contracts?: Contract[] }, expect: { season: number; round: number } | null): Promise<void> {
@@ -293,11 +319,14 @@ export class FederationService {
   }
 
   // ------------------------------------------------------------------ creation
-  async create(region: number, seed = Date.now() % 2_147_483_647): Promise<void> {
+  /** Found a federation. New worlds get NEW_FEDERATION_TOPOLOGY unless a topology is given (tests, scale probes);
+   *  the topology is stored in the world record and never changes afterwards. */
+  async create(region: number, seed = Date.now() % 2_147_483_647, topology: Topology = NEW_FEDERATION_TOPOLOGY): Promise<void> {
+    if (!Number.isInteger(region) || region < 0 || region >= topology.regions) throw new Error('Choose one of the regions of this federation.');
     return this.run(async () => {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
-      const comps = generateFederation(seed);
-      const { world, plan } = createWorld(seed, comps, this.now());
+      const comps = generateFederation(seed, topology);
+      const { world, plan } = createWorld(seed, comps, this.now(), topology);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
@@ -331,8 +360,8 @@ export class FederationService {
       // a market opens only with its worst-case subsidy funded; otherwise the match is still featured, unlisted
       if ((st.balances.get('treasury') ?? 0) < subsidyMicro(MARKET_B, 3)) continue;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
-      const p = wdl(w.rating, b.rating);
-      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${RESULT_MODEL_ID} on public ratings` }, at: this.now() });
+      const p = pregameWdl({ rating: w.rating, rd: w.rd }, { rating: b.rating, rd: b.rd });
+      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now() });
       this.post(st, [journal], posted);
       // NPC trading on public information; all-or-nothing per market so the market and ledger never diverge
       const res = npcRound(market, new Map(), a => st.balances.get(a) ?? 0, st.world.seed, this.now(), 1);
@@ -378,7 +407,11 @@ export class FederationService {
   currentRound(): RoundRecord | null { const s = this.state; return s ? s.rounds.get(`${s.world.season}:${s.world.round}`) ?? null : null; }
   seasonRounds(season?: number): RoundRecord[] { const s = this.state!; const n = season ?? s.world.season; return [...s.rounds.values()].filter(r => r.season === n).sort((a, b) => a.round - b.round); }
   playerFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
-  featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2) ?? []; }
+  featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2 && !f.slate) ?? []; }
+  /** v0.9: fixtures of the current round promoted to scheduled live games (src/app/scheduler.ts). */
+  slateFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.slate) ?? []; }
+  /** The federation's topology (fixed when it was founded). */
+  topology(): Topology { return topologyOf(this.state?.world); }
   marketFor(fixtureId: string): Market | undefined { return this.state?.markets.get(`mk:${fixtureId}`); }
   name(id: string): string { return id === PLAYER_ID ? 'You' : this.state?.competitors.get(id)?.name ?? id; }
   ratingOf(id: string): number { return this.state?.competitors.get(id)?.rating ?? 0; }
@@ -823,12 +856,9 @@ export class FederationService {
       if (m && lockedRevision !== null && revisionOf(m) !== lockedRevision) throw new Error('Market revision changed while the move was computed'); // invariant
       if (m && m.status === 'open' && move && !end) {
         // public information after the move: the engine's evaluation → live model (a forecast, never the price)
+        // crown-odds-2 (src/exchange/odds.ts): pre-game prior from public ratings/RDs + published evaluation, ply, material
         const u = expectedU(toPov(move.score, 'white'));
-        const d0 = m.forecast.d;
-        const d = Math.max(0.01, d0 * (1 - Math.abs(2 * u - 1)));
-        const live = [Math.max(0.005, u - d / 2), d, Math.max(0.005, 1 - u - d / 2)];
-        const sum = live.reduce((a, x) => a + x, 0);
-        const model = live.map(x => x / sum);
+        const model = liveModelVector({ white: { rating: w.rating, rd: w.rd }, black: { rating: b.rating, rd: b.rd }, ply: lg.moves.length, evalCp: whiteCp(move.score), material: materialOfFen(move.fen) });
         const prev = lg.points.length ? lg.points[lg.points.length - 1].prices : undefined;
         const ops = this.opsOf(st, posted);
         m = npcBatch(ops, { ...m, live: { plies: lg.moves.length, lastEval: u } }, 'live', model, prev);
@@ -860,7 +890,7 @@ export class FederationService {
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
     if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
     return this.run(async () => {
-      const st = this.clone();
+      const st = this.clone({ competitors: true });
       const expect = { season: st.world.season, round: st.world.round };
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);

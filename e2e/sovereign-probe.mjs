@@ -20,7 +20,7 @@ rmSync(ART, { recursive: true, force: true }); mkdirSync(ART, { recursive: true 
 const ctx = await chromium.launchPersistentContext(ART + 'profile', { viewport: { width: 1366, height: 900 } });
 const page = ctx.pages()[0] ?? await ctx.newPage();
 page.on('pageerror', e => console.log('pageerror ' + e));
-await page.goto(url); await page.waitForFunction(() => window.__crown);
+await page.goto(url + '#/play'); await page.waitForFunction(() => window.__crown);
 await page.getByRole('button', { name: /The Sovereign/ }).click();
 await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Casual', exact: true }).click();
 await page.locator('[data-testid="max-budget"]').getByRole('button', { name: `${BUDGET} s`, exact: true }).click();

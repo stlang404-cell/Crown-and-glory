@@ -32,7 +32,7 @@ async function open(viewport = { width: 1366, height: 900 }) {
   const page = ctx.pages()[0] ?? await ctx.newPage();
   page.on('pageerror', e => step('pageerror: ' + e));
   page.on('console', m => { if (m.type() === 'error') step('console.error: ' + m.text()); });
-  await page.goto(url);
+  await page.goto(url + '#/play');
   return { ctx, page };
 }
 

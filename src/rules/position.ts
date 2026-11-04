@@ -36,6 +36,51 @@ export class Position {
   histLo: number[] = [];
   histHi: number[] = [];
   private undo: Undo[] = [];
+  /**
+   * Incremental evaluation support (engine hot path; no rules semantics). Maintained by setFen, makeMove,
+   * unmakeMove and clone; null moves do not change them.
+   * pieceCnt[pieceCode] = number of such pieces on the board; pawnBits[color] has bit sq set for every pawn
+   * of that color (pawns only ever stand on squares 6..29, so the mask fits an int32).
+   */
+  pieceCnt = new Int8Array(16);
+  pawnBits = new Int32Array(2);
+  /**
+   * Optional piece-square table (psqTab[(piece * 36 + sq) * 2] = mg, + 1 = eg; entries of piece code 0 must be 0)
+   * installed by the evaluation;
+   * while set, psqMg / psqEg hold the sum of the table over all pieces on the board.
+   */
+  psqTab: Int32Array | null = null;
+  psqMg = 0;
+  psqEg = 0;
+
+  /** Install (or re-install) a piece-square table and recompute its sums from scratch. */
+  setPsqTable(tab: Int32Array | null): void {
+    this.psqTab = tab;
+    let mg = 0, eg = 0;
+    if (tab) {
+      const b = this.board;
+      for (let sq = 0; sq < NUM_SQUARES; sq++) {
+        const p = b[sq];
+        if (p) { mg += tab[(p * 36 + sq) * 2]; eg += tab[(p * 36 + sq) * 2 + 1]; }
+      }
+    }
+    this.psqMg = mg; this.psqEg = eg;
+  }
+
+  /** Recompute piece counts and pawn masks from the board. */
+  private recomputeCounts(): void {
+    const cnt = this.pieceCnt, b = this.board;
+    cnt.fill(0);
+    let w = 0, bl = 0;
+    for (let sq = 0; sq < NUM_SQUARES; sq++) {
+      const p = b[sq];
+      if (!p) continue;
+      cnt[p]++;
+      if (p === PAWN) w |= 1 << sq;
+      else if (p === (PAWN | 8)) bl |= 1 << sq;
+    }
+    this.pawnBits[0] = w; this.pawnBits[1] = bl;
+  }
 
   static fromFen(fen: string): Position {
     const p = new Position();
@@ -91,6 +136,8 @@ export class Position {
     // The side NOT to move must not be in check.
     if (this.isAttacked(this.kingSq[this.side ^ 1], this.side)) throw new FenError('Side not to move is in check');
     this.recomputeHash();
+    this.recomputeCounts();
+    this.setPsqTable(this.psqTab);
     this.histLo = [this.hashLo];
     this.histHi = [this.hashHi];
     this.undo = [];
@@ -132,6 +179,11 @@ export class Position {
     p.histLo = this.histLo.slice();
     p.histHi = this.histHi.slice();
     p.undo = this.undo.slice();
+    p.pieceCnt.set(this.pieceCnt);
+    p.pawnBits.set(this.pawnBits);
+    p.psqTab = this.psqTab;
+    p.psqMg = this.psqMg;
+    p.psqEg = this.psqEg;
     return p;
   }
 
@@ -250,6 +302,23 @@ export class Position {
     lo ^= ZOBRIST_SIDE_LO; hi ^= ZOBRIST_SIDE_HI;
     b[to] = placed;
     b[from] = EMPTY;
+    // incremental evaluation state
+    const cnt = this.pieceCnt;
+    if (captured) {
+      cnt[captured]--;
+      if ((captured & 7) === PAWN) this.pawnBits[captured >> 3] ^= 1 << to;
+    }
+    if ((piece & 7) === PAWN) {
+      const pb = this.pawnBits;
+      if (promo) { cnt[piece]--; cnt[placed]++; pb[this.side] ^= 1 << from; }
+      else pb[this.side] ^= (1 << from) | (1 << to);
+    }
+    const tab = this.psqTab;
+    if (tab) {
+      const a = (placed * 36 + to) * 2, r = (piece * 36 + from) * 2, c = (captured * 36 + to) * 2;
+      this.psqMg += tab[a] - tab[r] - tab[c];
+      this.psqEg += tab[a + 1] - tab[r + 1] - tab[c + 1];
+    }
     if ((piece & 7) === KING) this.kingSq[this.side] = to;
     this.halfmove = (piece & 7) === PAWN || captured ? 0 : this.halfmove + 1;
     if (this.side === BLACK) this.fullmove++;
@@ -266,9 +335,28 @@ export class Position {
     if (this.side === BLACK) this.fullmove--;
     const from = moveFrom(u.move), to = moveTo(u.move), promo = movePromo(u.move);
     const b = this.board;
-    const moved = promo ? makePiece(PAWN, this.side) : b[to];
+    const placed = b[to];
+    const moved = promo ? makePiece(PAWN, this.side) : placed;
+    const captured = u.captured;
     b[from] = moved;
-    b[to] = u.captured;
+    b[to] = captured;
+    // incremental evaluation state (exact inverse of makeMove)
+    const cnt = this.pieceCnt;
+    if (captured) {
+      cnt[captured]++;
+      if ((captured & 7) === PAWN) this.pawnBits[captured >> 3] ^= 1 << to;
+    }
+    if ((moved & 7) === PAWN) {
+      const pb = this.pawnBits;
+      if (promo) { cnt[moved]++; cnt[placed]--; pb[this.side] ^= 1 << from; }
+      else pb[this.side] ^= (1 << from) | (1 << to);
+    }
+    const tab = this.psqTab;
+    if (tab) {
+      const a = (placed * 36 + to) * 2, r = (moved * 36 + from) * 2, c = (captured * 36 + to) * 2;
+      this.psqMg -= tab[a] - tab[r] - tab[c];
+      this.psqEg -= tab[a + 1] - tab[r + 1] - tab[c + 1];
+    }
     if ((moved & 7) === KING) this.kingSq[this.side] = from;
     this.halfmove = u.halfmove;
     this.hashLo = u.hashLo; this.hashHi = u.hashHi;

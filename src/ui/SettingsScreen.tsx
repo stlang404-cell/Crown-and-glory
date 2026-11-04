@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { APP_VERSION } from '../app/services';
+import { CURRENT_BUILD } from '../app/updates';
 import { DB_VERSION } from '../storage/db';
 import { RULES_VERSION } from '../rules/types';
 import { PieceSvg } from './Pieces';
@@ -109,7 +109,7 @@ export function SettingsScreen() {
         </div>
         <dl>
           <dt>Game</dt><dd>Crown &amp; Calculation: The Six-Square Federation</dd>
-          <dt>Version</dt><dd className="mono">v{APP_VERSION}</dd>
+          <dt>Version</dt><dd className="mono" data-testid="build-info">Version {CURRENT_BUILD.version} · commit {CURRENT_BUILD.commit}{CURRENT_BUILD.builtAt ? ` · built ${CURRENT_BUILD.builtAt.slice(0, 16).replace('T', ' ')} UTC` : ''}</dd>
           <dt>Saves</dt><dd>Stored on this device only.</dd>
           <dt>Money</dt><dd>Federation dollars ($) are fictional and have no cash value.</dd>
           <dt>Network</dt><dd>Works fully offline. The engine, Match Analysis and the federation all run on this device. No accounts, ads or tracking.</dd>

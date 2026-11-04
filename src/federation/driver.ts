@@ -2,7 +2,7 @@
  * Round/season driver shared by the app service and long-horizon tests. All world mutations go through
  * these functions; the service persists the results atomically (src/app/federationService.ts).
  */
-import { CHAMPIONSHIP_ROUNDS, Fixture, LEAGUE_ROUNDS, ROUNDS_PER_SEASON } from './model';
+import { CHAMPIONSHIP_ROUNDS, Fixture, LEAGUE_ROUNDS, ROUNDS_PER_SEASON, topologyOf } from './model';
 import { Ctx, RoundRecord, SeasonEndResult, applyRound, buildChampionship, advanceKo, endSeason, makePlan, openRound, settleRound } from './world';
 
 export type SeasonGame = { event: string; white: string; black: string; result: number | null };
@@ -45,7 +45,7 @@ export function processRound(ctx: Ctx, rec: RoundRecord, seasonRounds: RoundReco
     seasonEnd = endSeason(ctx, gamesOf(all));
     ctx.world.season += 1;
     ctx.world.round = 1;
-    ctx.plan = makePlan(ctx.world.seed, ctx.world.season, [...ctx.competitors.values()], ctx.world.player);
+    ctx.plan = makePlan(ctx.world.seed, ctx.world.season, [...ctx.competitors.values()], ctx.world.player, topologyOf(ctx.world));
     ctx.swissHistory = [];
   } else ctx.world.round += 1;
   return { record: rec, seasonEnd, koAdvanced, championshipBuilt };

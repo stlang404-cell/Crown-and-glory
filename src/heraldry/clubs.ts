@@ -54,6 +54,7 @@ export const AI_CLUBS: AiClub[] = Array.from({ length: 32 }, (_, i) => {
   };
 });
 /** A competitor's club: one of the two clubs of their region, fixed by their id. */
-export const clubOf = (competitorId: string, region: number): AiClub => AI_CLUBS[region * 2 + (h32(competitorId) & 1)];
+export const clubOf = (competitorId: string, region: number): AiClub => AI_CLUBS[(region % 16) * 2 + (h32(competitorId) & 1)];
+// (region % 16: regions 17+ exist only in scale experiments, docs/FEDERATION_SCALE.md; identical for regions 0–15)
 export const CLUB_DUES_SHARE = 0.05; // of a member's balance at season end
 export const CLUB_OPS_SHARE = 0.6; // of a club's balance spent each season (venue, coaching, travel)
