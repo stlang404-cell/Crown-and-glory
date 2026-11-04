@@ -6,7 +6,7 @@
 | Insignias (heraldry grammar) | **Implemented** — 31 unique, prestige rises by era |
 | Federation identity banner | **Implemented** — `src/ui/IdentityBanner.tsx`, desktop + phone verified in Chromium |
 | Passport: current title, peak title, insignia collection | **Implemented** |
-| Achievement framework + Sovereign Vault | **Implemented (v0.8.0, Vault v1)** — 134 collectibles: 83 earnable achievements, 9 Exchange titles, 31 insignias, 11 awaiting validated grading; see `src/vault/catalog.ts` (the catalog below was the design; the implemented set is in the code) |
+| Achievement framework + Sovereign Vault | **Implemented (v0.8.0, Vault v1; v0.11 crown-vault-2, §5.1)** — 214 collectibles: 174 achievements (163 earnable, 11 awaiting validated grading), 9 Exchange titles, 31 insignias, in 20 tiered families; see `src/vault/catalog.ts` (the catalog below was the design; the implemented set is in the code) |
 | Ceremonies, collection sets, equippable identity | **PLANNED v0.9** |
 
 ## 1. Concepts (kept separate everywhere)
@@ -119,6 +119,157 @@ a rating is established; Peak/Lowest now says when it will appear.
 * **Rewards:** cosmetic (banner trims, portrait frames, insignia variants, board accents); currency only for a few
   career milestones, capped at ≤ 2 % of a typical season's earnings each (economy simulation must confirm).
 * **Secret** achievements hide conditions until earned.
+
+### 5.1 Vault expansion — crown-vault-2 (v0.11, package J)
+
+The implemented catalog is `src/vault/catalog.ts` (rules) + `src/vault/families.ts` (families, tiers); tests
+`tests/vault.test.ts` (crown-vault-1) and `tests/vault-expansion.test.ts` (crown-vault-2); journey `e2e/vault.mjs`.
+
+* **Preservation.** All 142 crown-vault-1 collectibles keep their id, name, description, rule, rarity, collection,
+  art and order (asserted byte for byte against `tests/fixtures/vault-v1-catalog.json`). No id was re-keyed or
+  removed; no collection was added (so `all-collections` keeps its meaning). Existing `ach:<id>` records are never
+  rewritten. 72 achievements were added: **214 collectibles, 174 achievements (163 earnable), 9 Exchange titles,
+  31 insignias, 11 awaiting validated grading, 8 secret.**
+* **Families and tiers.** Every collectible belongs to one of 20 families (the 17 skill and career threads below, plus
+  Federation Career, Patron's Treasury and Rating Insignias). The tier is a fixed reading of rarity — Common/Uncommon =
+  **Bronze**, Rare = **Silver**, Epic/Legendary = **Gold**, Mythic = **Sovereign** — so old and new entries share one
+  ladder without changing any old definition.
+* **Grading.** No new achievement reads the move grading. The Brilliant / accuracy entries and the two crown-vault-1
+  Played Like entries (unchanged definitions) stay "Awaiting validated grading (experimental)" and can never be earned
+  while `GRADING_ID` is experimental.
+* **Played Like.** Four new entries (`pl-1200/1800/2400/3000`) read the validated Played Like Performance Elo
+  (crown-played-like-2, held-out gate passed, docs/PLAYED_LIKE.md): only "counted" records (≥ 15 informative moves),
+  inside the calibrated range (not capped), of unassisted rated games, against an opponent rated at least the
+  threshold − 800. They are flagged `requiresValidatedPlayedLike` and become unearnable if the model's gate fails.
+* **Event-driven, idempotent.** The VaultService re-evaluates when a record is committed (finalized game, rating
+  event, report, Academy/Grimoire record, Federation round, title, settlement, forecast, asset, finance point) and
+  writes unlocks put-if-absent under `ach:<id>`. On the first start of v0.11 on an older save, the expansion is
+  back-filled from history once (`vault:backfilled:crown-vault-2`), recorded as `backfill: true` (no notice flood);
+  crown-vault-1 behaves exactly as before. Unlocks made by the expansion carry `catalog: 'crown-vault-2'`.
+
+**Anti-farming rules (crown-vault-2).**
+
+| Rule | Applies to | Why |
+|---|---|---|
+| Played Like: counted records of the validated model only, in rated games against an opponent rated ≥ threshold − 800 | pl-N | playing weak engines cannot inflate a performance rating into a trophy |
+| Rated games only (a rating event exists, so never casual, assisted, training, retry, imported, abandoned or set-up positions); the opponent must be an engine or Federation competitor (never self-play) | every new chess rule | unrated/assisted/sandbox/practice play is never rewarded |
+| A win against an opponent rated **more than 400 below you** (both ratings recorded) never counts | all new win counters, mates, endgames, streaks, rivalries, regions, secrets | no farming a weak opponent |
+| **One counted win per opponent per UTC day** and **at most 10 counted wins per UTC day** | mates, endgame wins, promotions, regions, home region, marathon, anniversary | repeat-opponent and rate limit |
+| Distinct opponents / distinct regions / distinct days | upsets-5/25, rivals-ahead, home-region, regions-32/80, days-N, long-rivalry | volume against one opponent never adds |
+| Win streaks: a draw or loss always ends the run; weak or same-opponent-same-day wins neither extend nor break it | winstreak-5/10/20/40 | a streak cannot be padded with weak opponents |
+| A material deficit counts only when held **4 consecutive plies** | fortress, against-odds, miracle | a capture-recapture is not a comeback |
+| Rating milestones and climbs read **established** ratings only (20+ games, RD ≤ 100) | rating-3500/4000, climb-N | provisional swings never count |
+| Calibration: latest forecast per market only; sandbox/unsettled markets never count; the Brier score must also be no worse than (or better than) the market price | calibration-30/100/250 | re-forecasting or hedging to 1/3 never qualifies |
+| Profit: official settled markets with shares held at settlement; P&L must clear the bar after removing your single best market; sandbox and practice never count | pnl-1k/10k, profit-seasons-N | one lucky market or round-tripping never qualifies |
+| Recovery uses only the Federation finance record (sandbox/practice money never enters it) | weathered-storm, second-fortune, from-ashes | |
+| Analysis counts one report per game; Grand Archive needs games of 20+ plies; Lessons in Defeat needs rated losses | analyses-300, lessons-defeat | no resign-and-analyse farming |
+| Grimoire first-sight exercises use the **first ever** attempt outcome | first-try-25/100 | re-solving after seeing the answer never counts |
+
+Residual risk (not preventable offline): changing the device clock can spread games over more calendar days; the
+day rules then count them, but every other rule (rated, weak-opponent, distinct-opponent) still applies.
+
+**Counts by family and tier** (generated from the catalog):
+
+| Family | crown-vault-1 | added | Bronze | Silver | Gold | Sovereign |
+|---|---|---|---|---|---|---|
+| Chess Mastery | 13 | 7 | 8 | 5 | 5 | 2 |
+| Tactical Brilliance | 9 | 2 | 4 | 2 | 5 | 0 |
+| Defensive Resilience | 2 | 4 | 1 | 3 | 1 | 1 |
+| Endgame Technique | 0 | 5 | 2 | 1 | 2 | 0 |
+| Tournament Victories | 9 | 5 | 2 | 6 | 4 | 2 |
+| Upsets | 5 | 3 | 2 | 2 | 3 | 1 |
+| Win Streaks | 2 | 4 | 1 | 1 | 3 | 1 |
+| Rating Milestones | 10 | 5 | 5 | 3 | 3 | 4 |
+| Federation Career | 6 | 2 | 1 | 3 | 3 | 1 |
+| Rivalries | 6 | 4 | 3 | 3 | 4 | 0 |
+| Regional Conquest | 3 | 3 | 3 | 0 | 2 | 1 |
+| Grimoire Mastery | 8 | 5 | 3 | 4 | 5 | 1 |
+| Forecasting Calibration | 4 | 3 | 1 | 2 | 4 | 0 |
+| Exchange Profitability | 13 | 4 | 6 | 4 | 5 | 2 |
+| Financial Recovery | 3 | 3 | 1 | 3 | 2 | 0 |
+| Patron’s Treasury | 5 | 0 | 2 | 1 | 2 | 0 |
+| Career Longevity | 2 | 6 | 3 | 1 | 2 | 2 |
+| Replay Analysis | 7 | 3 | 5 | 3 | 2 | 0 |
+| Rare Secrets | 4 | 4 | 2 | 2 | 3 | 1 |
+| Rating Insignias | 31 | 0 | 12 | 4 | 14 | 1 |
+| **Total** | **142** | **72** | 67 | 53 | 74 | 20 |
+
+Tiers, crown-vault-1 / added: Bronze 49 / 18, Silver 36 / 17, Gold 49 / 25, Sovereign 8 / 12.
+
+| id | Name | Family | Tier (rarity) | Rule |
+|---|---|---|---|---|
+| `mates-10` | Mating Net | Chess Mastery | Bronze (uncommon) | Win 10 rated games by checkmate. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `mates-50` | Executioner's Art | Chess Mastery | Gold (epic) | Win 50 rated games by checkmate. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `miniature` | Miniature | Chess Mastery | Silver (rare) | Win a rated game by checkmate within 30 plies (15 moves each) against an opponent rated no more than 100 below you (both ratings recorded). |
+| `pl-1200` | Measured Strength | Chess Mastery | Bronze (uncommon) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 1,200 or more in an unassisted rated game against an opponent rated at least 400 (recorded). |
+| `pl-1800` | Played Like a Master | Chess Mastery | Silver (rare) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 1,800 or more in an unassisted rated game against an opponent rated at least 1,000 (recorded). |
+| `pl-2400` | Played Like a Legend | Chess Mastery | Gold (epic) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 2,400 or more in an unassisted rated game against an opponent rated at least 1,600 (recorded). |
+| `pl-3000` | Played Like a Sovereign | Chess Mastery | Sovereign (mythic) | A counted Played Like estimate (model crown-played-like-2, at least 15 informative moves, inside the calibrated range) of 3,000 or more in an unassisted rated game against an opponent rated at least 2,200 (recorded). |
+| `sacrificial-mate` | Sacrificial Mate | Tactical Brilliance | Gold (epic) | Win a rated game by checkmate while at least 2 points down in material in the final position, against an opponent rated no more than 200 below you (both ratings recorded). |
+| `puzzles-25` | Puzzle Apprentice | Tactical Brilliance | Bronze (common) | Solve 25 different Academy puzzles on the first try without hints. |
+| `fortress` | Fortress | Defensive Resilience | Bronze (uncommon) | Draw a rated game after being at least 3 points down in material for at least 4 consecutive plies. Rated games only. |
+| `hold-the-line` | Hold the Line | Defensive Resilience | Silver (rare) | Draw a rated game against an opponent rated at least 300 above you (both ratings recorded). |
+| `against-odds` | Against the Odds | Defensive Resilience | Gold (epic) | Win a rated game after being at least 6 points down in material for at least 4 consecutive plies. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `miracle` | Miracle Escape | Defensive Resilience | Sovereign (mythic) | Win a rated game after being at least 9 points down in material for at least 4 consecutive plies, against an opponent rated at or above you (both ratings recorded). |
+| `endgame-5` | Endgame Technician | Endgame Technique | Bronze (uncommon) | Win 5 rated games that reached an endgame (at most 2 queens, rooks or knights left on the whole board). Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `endgame-25` | Endgame Master | Endgame Technique | Silver (rare) | Win 25 rated games that reached an endgame (at most 2 queens, rooks or knights left on the whole board). Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `endgame-100` | Endgame Sovereign | Endgame Technique | Gold (legendary) | Win 100 rated games that reached an endgame (at most 2 queens, rooks or knights left on the whole board). Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `crowned-pawn` | Crowned Pawn | Endgame Technique | Bronze (uncommon) | Win a rated game in which you promoted a pawn. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `endgame-giant` | Endgame Giant | Endgame Technique | Gold (epic) | Win a rated game that reached an endgame against an opponent rated at least 200 above you (both ratings recorded). |
+| `upsets-5` | Upstart | Upsets | Bronze (uncommon) | Win rated games against 5 different opponents, each rated at least 100 above you at the time (both ratings recorded). |
+| `upsets-25` | Kingmaker's Bane | Upsets | Gold (epic) | Win rated games against 25 different opponents, each rated at least 100 above you at the time (both ratings recorded). |
+| `colossus` | Colossus Slayer | Upsets | Sovereign (mythic) | Win a rated game against an opponent whose recorded rating is at least 800 above yours. |
+| `winstreak-5` | Hot Hand | Win Streaks | Bronze (uncommon) | Win 5 rated games in a row. A draw or loss ends the run; a win against an opponent rated more than 400 below you, or a second win against the same opponent on the same day, neither extends nor breaks it. |
+| `winstreak-10` | Unstoppable | Win Streaks | Gold (epic) | Win 10 rated games in a row. A draw or loss ends the run; a win against an opponent rated more than 400 below you, or a second win against the same opponent on the same day, neither extends nor breaks it. |
+| `winstreak-20` | Inexorable | Win Streaks | Gold (legendary) | Win 20 rated games in a row. A draw or loss ends the run; a win against an opponent rated more than 400 below you, or a second win against the same opponent on the same day, neither extends nor breaks it. |
+| `winstreak-40` | Sovereign Run | Win Streaks | Sovereign (mythic) | Win 40 rated games in a row. A draw or loss ends the run; a win against an opponent rated more than 400 below you, or a second win against the same opponent on the same day, neither extends nor breaks it. |
+| `rating-3500` | Rating 3,500 | Rating Milestones | Sovereign (mythic) | Your established Rapid rating reaches 3,500 or more. |
+| `rating-4000` | Rating 4,000 | Rating Milestones | Sovereign (mythic) | Your established Rapid rating reaches 4,000 or more. |
+| `climb-200` | Rising Star | Rating Milestones | Bronze (uncommon) | Your established Rapid rating peaks at least 200 above the rating at which it first became established (20+ rated games and RD 100 or less). |
+| `climb-500` | Ascendant | Rating Milestones | Silver (rare) | Your established Rapid rating peaks at least 500 above the rating at which it first became established (20+ rated games and RD 100 or less). |
+| `climb-1000` | Meteoric Rise | Rating Milestones | Gold (legendary) | Your established Rapid rating peaks at least 1,000 above the rating at which it first became established (20+ rated games and RD 100 or less). |
+| `division-masters` | Masters' Gate | Federation Career | Silver (rare) | Play in Division 4 (Masters) or higher. |
+| `promotions-3` | Climber | Federation Career | Silver (rare) | Be promoted at the end of three different seasons. |
+| `titles-3` | Laurel Collector | Tournament Victories | Silver (rare) | Win 3 Federation titles in total (division leagues, Swiss events, the Crown Championship and the Club Weekend). |
+| `titles-10` | Hall of Titles | Tournament Victories | Gold (epic) | Win 10 Federation titles in total (division leagues, Swiss events, the Crown Championship and the Club Weekend). |
+| `titles-25` | Dynasty | Tournament Victories | Sovereign (mythic) | Win 25 Federation titles in total (division leagues, Swiss events, the Crown Championship and the Club Weekend). |
+| `season-double` | Double Crown | Tournament Victories | Gold (epic) | Win two or more Federation titles in the same season. |
+| `triple-crown` | Triple Crown | Tournament Victories | Gold (legendary) | Over your career, win a division league, a Swiss event (Federation Open or Challenger Open) and a knockout (the Crown Championship or the Club Weekend). |
+| `rivals-ahead-3` | Circle of Rivals | Rivalries | Bronze (uncommon) | Hold a winning head-to-head record (more wins than losses, at least 3 meetings) against 3 different Federation competitors. Rated games only; the first game per opponent per day counts, and wins against opponents rated more than 400 below you are ignored. |
+| `rivals-ahead-10` | Feared Across the Federation | Rivalries | Gold (epic) | Hold a winning head-to-head record (more wins than losses, at least 3 meetings) against 10 different Federation competitors. Rated games only; the first game per opponent per day counts, and wins against opponents rated more than 400 below you are ignored. |
+| `long-rivalry` | Old Acquaintance | Rivalries | Silver (rare) | Play rated games against the same Federation competitor on 15 different days. |
+| `featured-sweep` | Every Score Settled | Rivalries | Gold (legendary) | Beat each of your featured rivals (at least 3) in a rated game. Wins against opponents rated more than 400 below you do not count. |
+| `home-region` | Home Turf | Regional Conquest | Bronze (common) | Win rated games against 5 different Federation competitors from your own region. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `regions-32` | Continental | Regional Conquest | Gold (legendary) | Win rated games against Federation competitors from 32 different regions (needs a federation of at least 32 regions). Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `regions-80` | Conqueror of the Eighty | Regional Conquest | Sovereign (mythic) | Win rated games against Federation competitors from 80 different regions (needs a federation of at least 80 regions). Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `strategist-graduate` | The Strategist | Grimoire Mastery | Silver (rare) | Complete every chapter of Book III — The Strategist. |
+| `oracle-reader` | The Oracle's Reading | Grimoire Mastery | Gold (epic) | Complete every chapter of Book VI — The Oracle (read each to the end). |
+| `grimoire-complete` | Keeper of the Grimoire | Grimoire Mastery | Sovereign (mythic) | Complete every chapter of Books I to VI. |
+| `first-try-25` | Sharp Eye | Grimoire Mastery | Bronze (uncommon) | Solve 25 different Grimoire exercises first try on your very first attempt at each (later re-solves never count). |
+| `first-try-100` | Flawless Scholar | Grimoire Mastery | Gold (legendary) | Solve 100 different Grimoire exercises first try on your very first attempt at each (later re-solves never count). |
+| `calibration-30` | Steady Calibration | Forecasting Calibration | Bronze (uncommon) | At least 30 resolved paper forecasts on different markets (latest forecast per market) with an expected calibration error of 0.10 or less over 10 bins, and a mean Brier score no more than 0.02 worse than the market price. Sandbox markets never count. |
+| `calibration-100` | True Calibration | Forecasting Calibration | Silver (rare) | At least 100 resolved paper forecasts on different markets (latest forecast per market) with an expected calibration error of 0.06 or less over 10 bins, and a mean Brier score equal to or better than the market price. Sandbox markets never count. |
+| `calibration-250` | Perfect Calibration | Forecasting Calibration | Gold (legendary) | At least 250 resolved paper forecasts on different markets (latest forecast per market) with an expected calibration error of 0.04 or less over 10 bins, and a mean Brier score better than the market price. Sandbox markets never count. |
+| `pnl-1k` | Steady Profits | Exchange Profitability | Silver (rare) | Realized P&L of $1,000 or more across at least 10 settled Grand Exchange markets, even after removing your single best market. Sandbox and practice markets never count; shares sold before settlement never count. |
+| `pnl-10k` | Merchant Prince | Exchange Profitability | Gold (legendary) | Realized P&L of $10,000 or more across at least 40 settled Grand Exchange markets, even after removing your single best market. Sandbox and practice markets never count; shares sold before settlement never count. |
+| `profit-seasons-3` | Three Good Seasons | Exchange Profitability | Silver (rare) | Positive realized P&L in 3 different seasons, each with at least 5 settled positions. |
+| `profit-seasons-10` | Golden Decade | Exchange Profitability | Sovereign (mythic) | Positive realized P&L in 10 different seasons, each with at least 5 settled positions. |
+| `weathered-storm` | Weathered the Storm | Financial Recovery | Bronze (uncommon) | Net worth falls at least 30% below an earlier recorded peak of $2,000 or more, then later rises above that peak. Only the Federation finance record counts. |
+| `second-fortune` | Second Fortune | Financial Recovery | Gold (epic) | Net worth falls at least 60% below an earlier recorded peak of $10,000 or more, then later rises above that peak. |
+| `from-ashes` | From Ashes | Financial Recovery | Gold (legendary) | Recover from a recorded net worth below $100 to $10,000 or more. |
+| `days-7` | Regular | Career Longevity | Bronze (common) | Finish rated games on 7 different calendar days (UTC). |
+| `days-30` | Devoted | Career Longevity | Silver (rare) | Finish rated games on 30 different calendar days (UTC). |
+| `days-100` | Lifelong | Career Longevity | Gold (epic) | Finish rated games on 100 different calendar days (UTC). |
+| `days-365` | A Year at the Board | Career Longevity | Sovereign (mythic) | Finish rated games on 365 different calendar days (UTC). |
+| `seasons-3` | Seasoned | Career Longevity | Bronze (common) | Complete 3 Federation seasons. |
+| `seasons-25` | Elder of the Federation | Career Longevity | Sovereign (mythic) | Complete 25 Federation seasons. |
+| `analyses-300` | Grand Archive | Replay Analysis | Gold (epic) | Complete a Match Analysis of 300 of your own finished games of at least 20 plies (re-analysing a game does not count twice). |
+| `lessons-defeat` | Lessons in Defeat | Replay Analysis | Bronze (uncommon) | Complete a Match Analysis of 10 different rated games you lost. |
+| `retry-25` | Relentless | Replay Analysis | Silver (rare) | Win 25 different training retries started from your own mistakes (each source position counts once). |
+| `stalemate-swindle` | Stalemate Swindle (secret) | Rare Secrets | Silver (rare) | Draw a rated game by stalemate while at least 3 points down in material in the final position. |
+| `humble-crown` | Humble Crown (secret) | Rare Secrets | Silver (rare) | Win a rated game in which you promoted a pawn to a rook or a knight. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `marathon` | Marathon (secret) | Rare Secrets | Bronze (uncommon) | Win a rated game of at least 200 plies. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
+| `anniversary` | Anniversary (secret) | Rare Secrets | Gold (epic) | Win a rated game on the calendar anniversary (same month and day, UTC) of your first counted rated win, a year or more later. Rated games only; one win per opponent per day, at most 10 counted a day, and wins against opponents rated more than 400 below you never count. |
 
 ### Catalog (112; ids stable; ★ = already implemented in v0.5–v0.8 under the same id)
 

@@ -218,8 +218,8 @@ describe('Vault catalog', () => {
     const r2 = evaluateAll(VAULT, facts({ fed: fed() }));
     expect([...r2].filter(([, x]) => x.earned).map(([id]) => id)).toEqual([]);
   });
-  it('every implemented achievement has a positive scenario', () => {
-    const ids = VAULT.filter(d => d.kind === 'achievement' && earnable(d)).map(d => d.id);
+  it('every implemented crown-vault-1 achievement has a positive scenario (crown-vault-2: tests/vault-expansion.test.ts)', () => {
+    const ids = VAULT.filter(d => d.kind === 'achievement' && earnable(d) && d.since === 'crown-vault-1').map(d => d.id);
     expect(ids.filter(id => !SCENARIOS[id])).toEqual([]);
   });
   for (const [id, mk] of Object.entries(SCENARIOS)) {
@@ -316,7 +316,7 @@ describe('Vault rules: negatives and anti-exploit', () => {
 
 describe('Vault secrets and grading', () => {
   it('secret collectibles exist and their rules are only shown once earned (UI masks by state)', () => {
-    const secret = VAULT.filter(d => d.secret).map(d => d.id).sort();
+    const secret = VAULT.filter(d => d.secret && d.since === 'crown-vault-1').map(d => d.id).sort();
     expect(secret).toEqual(['all-collections', 'comeback-run', 'night-owl', 'perfect-promotion']);
   });
   it('Brilliant and grading-based collectibles are never earned while grading is experimental', () => {

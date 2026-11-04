@@ -1,4 +1,7 @@
 /**
+ * v0.11 adds (crown-vault-2): collection dashboard with 20 tiered families, rarity counts and Next Goals; the family
+ * filter; tier chips; a rated game moves a crown-vault-2 goal (days-7) without awarding anything unjustified; phone
+ * page scroll.
  * v0.9 The Sovereign Vault, through the real UI: fresh career → Vault shows 0 earned with locked, awaiting and insignia
  * items → filters and search (secret rules never match) → item detail → found the Federation → rated Quick Match,
  * resign → casual Quick Match, resign → nothing wrongly awarded (no win, draw or Quick Match collectible) → register for
@@ -11,7 +14,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const url = process.argv[2] ?? 'http://127.0.0.1:4403/';
-const SHOTS = new URL('../docs/screenshots/v0.9.0/', import.meta.url).pathname;
+const SHOTS = new URL('../docs/screenshots/v0.11.0/vault/', import.meta.url).pathname;
 const ART = new URL('./artifacts/vault/', import.meta.url).pathname;
 mkdirSync(SHOTS, { recursive: true }); rmSync(ART, { recursive: true, force: true }); mkdirSync(ART, { recursive: true });
 const log = []; let failed = 0;
@@ -48,6 +51,22 @@ s0.meta = await page.evaluate(async () => (await window.__crown.db.metaWithPrefi
 check(1, s0.earned.startsWith('0 ') && s0.earnedItems === 0 && s0.meta === 0 && s0.items >= 120 && s0.locked > 80 && s0.awaiting >= 10 && s0.insignias.startsWith('0 '),
   `Fresh career: "${s0.earned}" earned, ${s0.items} items (${s0.locked} locked, ${s0.awaiting} awaiting grading), insignias "${s0.insignias}", ${s0.meta} unlock records`);
 await page.screenshot({ path: SHOTS + 'vault-empty-desktop.png', fullPage: false });
+const dash = await page.evaluate(() => ({
+  families: document.querySelectorAll('[data-testid="vault-family"]').length,
+  counts: [...document.querySelectorAll('[data-testid="vault-family-count"]')].map(e => e.textContent),
+  rarity: document.querySelectorAll('[data-testid="vault-rarity"] .vault-rarity-cell').length,
+  tiers: new Set([...document.querySelectorAll('[data-testid="vault-tier"]')].map(e => e.textContent)).size,
+  next: document.querySelectorAll('[data-testid="vault-next-item"]').length,
+}));
+check('1b', dash.families === 20 && dash.counts.every(c => /^0\/\d+$/.test(c)) && dash.rarity === 6 && dash.tiers === 4 && dash.next === 0,
+  `Dashboard: ${dash.families} family cards (all 0/n), ${dash.rarity} rarity counts, ${dash.tiers} tier labels on cards, ${dash.next} next goals on a fresh career`);
+await page.locator('[data-testid="vault-family"][data-family="defence"]').click();
+const famCount = await count();
+const famIds = await page.evaluate(() => [...document.querySelectorAll('[data-testid="vault-item"]')].map(e => e.dataset.id));
+const famSel = await page.locator('[data-testid="vault-filter-family"]').inputValue();
+await page.selectOption('[data-testid="vault-filter-family"]', 'all');
+check('1c', famSel === 'defence' && famCount === '6 collectibles' && famIds.includes('miracle') && famIds.includes('comeback'),
+  `Clicking Defensive Resilience filters the grid: ${famCount} (${famIds.join(', ')})`);
 
 // filters and search
 await page.selectOption('[data-testid="vault-filter-collection"]', 'Insignias');
@@ -98,6 +117,8 @@ await page.goto(url + '#/vault'); await page.waitForSelector('[data-testid="vaul
 await settle();
 const ev1 = await page.evaluate(() => ({ n: window.__crown.vault.evaluations, games: window.__crown.vault.facts.games.length, rated: window.__crown.vault.facts.rated.length }));
 const o1 = await owned();
+const nextIds = await page.evaluate(() => [...document.querySelectorAll('[data-testid="vault-next-item"]')].map(e => e.dataset.id));
+check('4b', nextIds.includes('days-7') && !o1.some(u => ['days-7', 'winstreak-5', 'fortress', 'hold-the-line'].includes(u.id)), `Next Goals after one rated game: [${nextIds.join(', ')}] (days-7 at 1/7, nothing awarded)`);
 check(4, ev1.n > ev0 && ev1.games === 1 && ev1.rated === 1 && !o1.some(u => ['first-win', 'first-draw', 'qm-first', 'giant-slayer'].includes(u.id)) && (await justified()).length === 0,
   `After a resigned rated Quick Match the Vault re-evaluated (${ev0} → ${ev1.n}; ${ev1.games} game, ${ev1.rated} rating event); owned: [${o1.map(u => u.id).join(', ')}] — no win/draw/Quick Match award, every unlock backed by its rule`);
 await playQm(false);
@@ -156,6 +177,9 @@ await page.waitForSelector('[data-testid="vault-detail"]');
 const ov2 = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 await page.screenshot({ path: SHOTS + 'vault-phone-detail.png' });
 await page.locator('[data-testid="vault-detail-close"]').click();
+const scrolled = await page.evaluate(async () => { window.scrollTo(0, document.documentElement.scrollHeight); await new Promise(r => setTimeout(r, 300)); return { y: Math.round(window.scrollY), h: document.documentElement.scrollHeight }; });
+const famPhone = await page.evaluate(() => [...document.querySelectorAll('[data-testid="vault-family"]')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).length);
+check('9b', scrolled.y > 500 && famPhone === 0, `Phone page scroll works (scrollY ${scrolled.y} of ${scrolled.h}); family cards past the edge: ${famPhone}`);
 check(9, ov <= 0 && wide === 0 && ov2 <= 0, `Phone (390 px, reached from Career Passport): horizontal overflow ${ov}px, ${wide} elements past the edge, detail overflow ${ov2}px`);
 check(10, errors.length === 0, `No page errors (${errors.length})`);
 await ctx.close();

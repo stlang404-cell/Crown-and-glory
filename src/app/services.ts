@@ -62,6 +62,8 @@ export class AppServices {
   }); }
   /** The Sovereign Vault (permanent collectibles), evaluated from saved records after boot. */
   vault!: VaultService;
+  /** Played Like record writes (the Vault re-evaluates on them; they do not change record counts). */
+  playedLikeVersion = 0;
   private listeners = new Set<Listener>();
   progress: AnalysisProgress | null = null;
   matchActive = false;
@@ -343,7 +345,7 @@ export class AppServices {
   async recordPlayedLike(gameId: string): Promise<boolean> {
     if (this.readOnly) return false;
     const ok = await recordPlayedLikeIn(this.db, gameId);
-    if (ok) this.notify();
+    if (ok) { this.playedLikeVersion++; this.notify(); }
     return ok;
   }
 
@@ -352,7 +354,7 @@ export class AppServices {
   async backfillPlayedLike(): Promise<number> {
     if (this.readOnly) return 0;
     const n = await backfillPlayedLikeIn(this.db);
-    if (n) this.notify();
+    if (n) { this.playedLikeVersion++; this.notify(); }
     return n;
   }
 }
