@@ -101,25 +101,30 @@ for (let i = 0; i < 10; i++) {
 await page.waitForFunction(() => document.querySelector('[data-testid="match"]')?.getAttribute('data-turn') !== 'engine', null, { timeout: 30000 }).catch(() => {});
 await page.waitForTimeout(500);
 const m1 = await motion();
-const plyCount2 = await page.evaluate(async () => (await window.__crown.db.unfinishedGames())[0]?.moves.length ?? 0);
+// the game may have ended (the robot can be mated) — read the newest game, finished or not
+const plyCount2 = await page.evaluate(async () => { const gs = await window.__crown.db.allGames(); gs.sort((a, b) => String(b.createdAt ?? b.id).localeCompare(String(a.createdAt ?? a.id))); return gs[0]?.moves.length ?? 0; });
 const sPlay = (await sounds()).slice(s0);
 const unlocked = await page.evaluate(() => window.__crownSound?.audioUnlocked());
 const plies = await page.evaluate(() => (document.querySelector('[data-testid="match"]').getAttribute('data-fen') ? 0 : 0));
 check(2, m1.slides >= plyCount2 - 1 && m1.maxExtra === 0 && m1.minMissing === 0 && m1.samples > 50,
   `${plyCount2} plies (${myMoves} by the player): ${m1.slides} slides, ${m1.ghosts} capture-ghost frames; over ${m1.samples} frames never an extra (${m1.maxExtra}) or missing (${m1.minMissing}) piece`);
 const moveSounds = sPlay.filter(x => ['move', 'capture', 'check', 'promotion'].includes(x));
-const plyCount = await page.evaluate(async () => (await window.__crown.db.unfinishedGames())[0]?.moves.length ?? 0);
+const plyCount = plyCount2;
 check(3, unlocked === true && moveSounds.length >= plyCount - 1 && moveSounds.length <= plyCount,
   `Audio unlocked by the first tap (${unlocked}); ${moveSounds.length} move sounds for ${plyCount} plies (player and engine): ${JSON.stringify(sPlay)}`);
 void plies;
 
 // 3. resign → one result sound
-await page.getByRole('button', { name: /Resign/ }).first().click();
-await page.getByRole('button', { name: 'Yes, Resign' }).click();
+const overAlready = await page.getAttribute('[data-testid="match"]', 'data-turn') === 'over';
+if (!overAlready) {
+  await page.getByRole('button', { name: /Resign/ }).first().click();
+  await page.getByRole('button', { name: 'Yes, Resign' }).click();
+}
 await page.waitForSelector('.result-overlay');
-await page.waitForTimeout(300);
-const sRes = (await sounds()).slice(s0 + sPlay.length);
-check(4, sRes.filter(x => x === 'defeat').length === 1, `Resigning plays one result sound: ${JSON.stringify(sRes)}`);
+await page.waitForTimeout(800);
+const RESULT = ['defeat', 'victory', 'draw'];
+const sRes = overAlready ? (await sounds()).slice(s0).filter(x => RESULT.includes(x)) : (await sounds()).slice(s0 + sPlay.length);
+check(4, sRes.filter(x => RESULT.includes(x)).length === 1, `${overAlready ? 'The game ended on the board; it played' : 'Resigning plays'} one result sound: ${JSON.stringify(sRes)}`);
 
 // 4. analysis replay: autoplay animates and sounds each step; scrubbing is instant and silent; stepping back silent
 await page.getByRole('button', { name: /View Analysis/i }).click();

@@ -64,7 +64,10 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
     const t = flipped ? null : detectTransition(prev, board);
     const forward = !!t && isForward(t, lastMove);
     const ms = pieceMoveMs();
-    let rapid = since < Math.max(90, ms * 0.6);
+    // Rapid changes (scrubbing a replay, a catch-up burst) skip animation and sound. On a live board a forward move
+    // is a real move — the player's own click right after the engine's reply included — so only near-simultaneous
+    // changes (a burst drawn in one go, < 60 ms apart) count as rapid there.
+    let rapid = since < (live && forward ? 60 : Math.max(90, ms * 0.6));
     // Live boards: a reply that arrives while the previous move is still sliding (an instant engine move) waits for
     // that slide, then slides itself. Only one move is ever queued; a longer backlog is drawn instantly.
     const chain = !!live && rapid && forward && !chained.current && busyUntil.current > now;

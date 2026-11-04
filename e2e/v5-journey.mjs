@@ -273,7 +273,24 @@ await ctx.close();
 // ---- 23: restart continuity (original profile)
 ({ ctx, page } = await open());
 const snapC = await dump(page);
-check(23, JSON.stringify(snapC.games) === JSON.stringify(snapA.games) && JSON.stringify(snapC.reports) === JSON.stringify(snapA.reports) && JSON.stringify(snapC.federation) === JSON.stringify(snapA.federation), 'Browser restarted: games, reports and the whole federation state identical');
+{ // diagnostic: name exactly what differs (store → record ids)
+  const diff = {};
+  for (const k of new Set([...Object.keys(snapA.federation), ...Object.keys(snapC.federation)])) {
+    const A = new Map((snapA.federation[k] ?? []).map(r => [String(r.id ?? r.pool ?? r.key), JSON.stringify(r)]));
+    const C = new Map((snapC.federation[k] ?? []).map(r => [String(r.id ?? r.pool ?? r.key), JSON.stringify(r)]));
+    const ids = [...new Set([...A.keys(), ...C.keys()])].filter(id => A.get(id) !== C.get(id));
+    if (ids.length) diff[k] = ids.slice(0, 8).map(id => `${id}${A.has(id) ? '' : ' (new)'}${C.has(id) ? '' : ' (gone)'}`);
+  }
+  for (const k of ['games', 'reports']) if (JSON.stringify(snapA[k]) !== JSON.stringify(snapC[k])) diff[k] = 'differs';
+  step('restart diff: ' + JSON.stringify(diff).slice(0, 1500));
+}
+// v0.9: the live scheduler resumes background games when the app opens, so a scheduled live game may have gained
+// moves. Everything else must be identical; a scheduled game must keep every earlier move (its old moves a prefix).
+const sched = snap => (snap.federation.liveGames ?? []).filter(g => g.kind === 'scheduled');
+const resumedOk = sched(snapA).every(a => { const c = sched(snapC).find(x => x.id === a.id); return c && JSON.stringify(c.moves.slice(0, a.moves.length)) === JSON.stringify(a.moves); });
+const nonSched = snap => ({ ...snap.federation, liveGames: (snap.federation.liveGames ?? []).filter(g => g.kind !== 'scheduled') });
+check(23, JSON.stringify(snapC.games) === JSON.stringify(snapA.games) && JSON.stringify(snapC.reports) === JSON.stringify(snapA.reports) && JSON.stringify(nonSched(snapC)) === JSON.stringify(nonSched(snapA)) && resumedOk,
+  `Browser restarted: games, reports and the whole federation state identical; ${sched(snapA).length} scheduled background game(s) resumed with every earlier move kept`);
 
 // ---- 27: offline restart, engine move offline
 await page.evaluate(() => navigator.serviceWorker.ready);
