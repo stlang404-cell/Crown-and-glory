@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { ClubEditor } from './ClubEditor';
 import { CosmeticsShop } from './Cosmetics';
@@ -67,7 +68,7 @@ export function FinanceScreen() {
   const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
   useEffect(() => { if (fed.ready) fed.playerJournal(400).then(setJournal); }, [services.revision]);
-  if (!fed.ready) return <div className="panel"><h1>Finance</h1><p>Found the federation first. You receive a 1,000 ₵ starting grant (fictional).</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
+  if (!fed.ready) return <NeedsFederation title="Finance" />;
   const st = fed.state!;
   const fin = fed.finance();
   const byKind = new Map<string, number>();

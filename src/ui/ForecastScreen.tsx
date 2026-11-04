@@ -1,3 +1,4 @@
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { scoreAll, summary, calibration, rollingBrier, FORECAST_ID } from '../app/forecasting';
 import { statesOf } from '../exchange/market';
@@ -43,7 +44,7 @@ export function ForecastScreen() {
   const services = useServices();
   const { go } = useApp();
   const st = services.fed.state;
-  if (!st) return <div className="panel"><h1>Forecasting</h1><p>Found the federation first.</p></div>;
+  if (!st) return <NeedsFederation title="Forecasting" />;
   const sc = scoreAll(st.extra.forecasts, st.markets);
   const s = summary(sc);
   const bins = calibration(sc);

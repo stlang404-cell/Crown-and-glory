@@ -1,3 +1,4 @@
+import { NeedsFederation } from './NeedsFederation';
 import { useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
@@ -205,7 +206,7 @@ export function StandingsScreen() {
     const c = st.plan.circuits.find(x => x.region === region && x.division === division)!;
     return leagueTable(c, gamesOf(fed.seasonRounds()).filter(g => g.event === LEAGUE_EVENT(region, division)));
   }, [st, region, division, fed, services.revision]);
-  if (!st) return <div className="panel"><p>Found the federation first.</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
+  if (!st) return <NeedsFederation />;
   return (
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
@@ -229,7 +230,7 @@ export function TournamentsScreen() {
   const fed = services.fed;
   const { go } = useApp();
   const st = fed.state;
-  if (!st) return <div className="panel"><p>Found the federation first.</p></div>;
+  if (!st) return <NeedsFederation />;
   const games = gamesOf(fed.seasonRounds());
   const champ = st.plan.champ;
   const previewRivalry = (a: string, b: string) => { const d = collect(st, new Set([a])); return computeRivalry(a, b, d.meetings, d.kos, d.finishes, st.world.season, x => fed.name(x)); };

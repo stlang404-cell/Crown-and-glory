@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Emblem, Trophy } from './Emblem';
@@ -42,7 +43,7 @@ export function HallScreen() {
     const titled = [...st.competitors.values()].filter(c => c.fedTitle && FED_TITLES.indexOf(c.fedTitle) >= 2).sort((a, b) => FED_TITLES.indexOf(b.fedTitle!) - FED_TITLES.indexOf(a.fedTitle!) || b.rating - a.rating).slice(0, 24);
     return { champs: [...champs].sort((a, b) => b[0] - a[0]), events: events.sort((a, b) => b.season - a.season), titled };
   }, [st, services.revision]);
-  if (!st || !data) return <div className="panel"><h1>Hall of Fame</h1><p>Found the federation first.</p></div>;
+  if (!st || !data) return <NeedsFederation title="Hall of Fame" />;
   const p = st.world.player;
   const progress = nextTitleProgress({ norms: p.norms ?? [], peakRating: p.peakRating ?? 0, establishedPeak: p.establishedPeak ?? 0, honours: p.titles.map(t => t.title), current: p.fedTitle ?? null });
   const ach = achievementsOf(st, rivalriesOf(st, PLAYER_ID, games));

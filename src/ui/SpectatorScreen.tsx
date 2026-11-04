@@ -15,6 +15,7 @@
 import { Position } from '../rules/position';
 import { squareName } from '../rules/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
 import { whiteU, formatScore } from './Charts';
@@ -127,7 +128,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   }, [postAllowed, !!report]);
   const postCurve = useMemo(() => (postReady ? report!.plies.map(p => expectedU(toPov(p.evalAfter, 'white'), report!.methodology.accuracyId)) : null), [postReady, report]);
 
-  if (!st) return <div className="panel"><p>Found the federation first.</p></div>;
+  if (!st) return <NeedsFederation title="Live Arena" />;
   if (!fixture) return <div className="panel"><p>This match doesn't exist.</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
   const w = st.competitors.get(fixture.white), b = st.competitors.get(fixture.black);
   const start = async () => {

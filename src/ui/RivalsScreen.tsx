@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Emblem } from './Emblem';
@@ -31,7 +32,7 @@ export function RivalsScreen() {
   const [tab, setTab] = useState<'featured' | 'mine' | 'legends' | 'clubs'>('featured');
   const mine = useMemo(() => (st ? rivalriesOf(st, PLAYER_ID, games, id => fed.name(id)) : []), [st, games, services.revision]);
   const legends = useMemo(() => (st && tab === 'legends' ? featuredRivalries(st, id => fed.name(id)) : []), [st, tab, services.revision]);
-  if (!st) return <div className="panel"><h1>Rivals</h1><p>Found the federation first.</p></div>;
+  if (!st) return <NeedsFederation title="Rivals" />;
   const featured = st.world.featured ?? [];
   const favs = new Set(st.extra.favorites ?? []);
   const rivalryWith = (id: string) => mine.find(r => r.b === id);

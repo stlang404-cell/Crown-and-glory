@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { PLAYER_ID } from '../federation/model';
 import type { WorldGame } from '../app/federation';
@@ -50,7 +51,7 @@ export function NewsScreen() {
     const rivalries = [...pairs.values()].filter(p => p.n >= 3).sort((x, y) => y.champ - x.champ || y.n - x.n || Math.abs(y.sa / y.n - 0.5) - Math.abs(x.sa / x.n - 0.5)).slice(0, 15);
     return { news: news.slice(0, 60), champs: [...champs].sort((a, b) => b[0] - a[0]), archive: [...archive].sort((a, b) => b[0] - a[0]), rivalries, name };
   }, [st, services.revision]);
-  if (!st || !data) return <div className="panel"><h1>News &amp; History</h1><p>Found the federation first.</p></div>;
+  if (!st || !data) return <NeedsFederation title="News & History" />;
   const finalGame = (season: number) => finals.find(g => g.season === season && (g.stage ?? '').startsWith('Final'));
   return (
     <div>

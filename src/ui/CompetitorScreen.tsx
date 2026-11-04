@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Insignia } from './WorldScreen';
@@ -61,7 +62,7 @@ export function CompetitorsScreen() {
         && (special !== 'titled' || c.titles.length > 0) && (special !== 'upcoming' || upcoming.has(c.id)) && (special !== 'favorites' || favs.has(c.id)))
       .sort((a, b) => b.rating - a.rating);
   }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, services.revision]);
-  if (!st) return <div className="panel"><p>Found the federation first.</p><button className="btn" onClick={() => go({ name: 'world' })}>Federation</button></div>;
+  if (!st) return <NeedsFederation />;
   const active = [...st.competitors.values()].filter(c => c.status === 'active').length;
   const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const).filter(x => isValidatedStyle(x))];
   return (
