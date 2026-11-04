@@ -312,7 +312,9 @@ export class AppServices {
             },
           );
           if (exh) {
-            // exhibitions: the report stays with the exhibition (isolation from career records)
+            // exhibitions: the report (with its Played Like for both sides) stays with the exhibition — never in
+            // `reports` and never a permanent Played Like record (isolation from career records)
+            if (report.status === 'complete') report.playedLike = playedLikeRecord(report);
             await saveExhibitionReport(this.db, report);
             await this.db.putJob({ ...running, status: report.status === 'complete' ? 'complete' : 'partial', progress: report.plies.length, reportId: report.id, updatedAt: new Date().toISOString() });
             continue;

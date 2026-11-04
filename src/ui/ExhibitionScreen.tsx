@@ -16,7 +16,7 @@ import { Portrait } from './Portrait';
 import { EvalBoard, GradeIcon, GRADE_LABEL, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar, formatEval, moveKeys } from './MatchCenter';
 import { EvalGraph as LiveEvalGraph } from './SpectatorScreen';
 import { LessonLinks, MatchEventList, SandboxPanel, TurningPointList, useSandbox } from './ReplayTools';
-import { fmtPlayedLike } from './PlayedLikeCard';
+import { PlayedLikePanel } from './PlayedLikeCard';
 import { filterCompetitors, pageOf } from '../app/discovery';
 import { RATING_BANDS } from '../app/population';
 import {
@@ -24,7 +24,6 @@ import {
   type ExhibitionGame, type ExhibitionSide,
 } from '../app/exhibition';
 import { matchEvents, turningPoints } from '../app/replay';
-import { playedLike, PLAYED_LIKE_INFO } from '../analysis/playedLike';
 import { expectedU, toPov } from '../analysis/methodology';
 import { ENGINE_BUILD, DEFAULT_ANALYSIS } from '../analysis/analyzer';
 import type { AnalysisReport, EngineScore, Grade, Pov } from '../analysis/types';
@@ -420,24 +419,13 @@ function ExhibitionStudy({ g, report, turns, ply, onSelect, onPractise }: {
   );
 }
 
-/** Played Like for both sides of an exhibition (the same estimate as official games; kept with the exhibition only). */
+/** Played Like for both sides of an exhibition (package H's panel, from the report's playedLike; kept with the exhibition only). */
 function ExhibitionPlayedLike({ g, report }: { g: ExhibitionGame; report: AnalysisReport }) {
-  const [lo, hi] = PLAYED_LIKE_INFO.calibratedRange;
-  const side = (s: ExhibitionSide, pov: Pov) => {
-    const pl = playedLike(report, pov);
-    return (
-      <div className="stat" data-testid={`exh-played-like-${pov}`}>
-        <span className="k">{s.name} · career {elo(s.rating)}</span>
-        <span className="v mono" data-testid={`exh-played-like-${pov}-value`}>{fmtPlayedLike(pl)}</span>
-        <span className="small muted">{pl.status === 'ok' ? `likely ${pl.low}–${pl.high} · ${pl.moves} moves` : pl.status === 'insufficient' ? `${pl.moves} informative moves; needs ${pl.needed}` : pl.status === 'below-range' || pl.status === 'above-range' ? `outside the calibrated range (${lo}–${hi})` : ''}</span>
-      </div>
-    );
-  };
   return (
     <div className="stack" data-testid="exh-played-like">
-      <h4 style={{ margin: 0 }}>Played Like (Performance Elo) <span className="chip gold small">Estimate</span></h4>
-      <div className="grid-2" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>{side(g.white, 'white')}{side(g.black, 'black')}</div>
-      <div className="small muted">From move quality in this game only; never from the result or the ratings. Shown here only: exhibition Played Like never enters career records or averages.</div>
+      <PlayedLikePanel report={report} sides={{ white: { name: g.white.name, career: g.white.rating }, black: { name: g.black.name, career: g.black.rating } }}
+        testIds={{ white: 'exh-played-like-white', black: 'exh-played-like-black' }} />
+      <div className="small muted">Shown here only: exhibition Played Like never enters your career records or averages.</div>
     </div>
   );
 }
