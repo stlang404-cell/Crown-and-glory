@@ -164,3 +164,18 @@ cached an "enemy pawn can still attack" byte map was replaced by a mask (cheaper
 (selection sort in `searchNode`, ≈ 16 % of its self time) was left alone: any change to its tie order would
 change the search. Step 4 (lazy eval) is behaviour-changing and still needs its confirmation match.
 
+
+### Equal-time strength of the v0.9 speed-up (measured)
+
+The search is node-for-node identical (same checksums), so the speed-up is worth exactly what 1.38× more thinking
+time is worth. Measured as the v0.9 engine at 200 ms against itself at 145 ms (200 / 1.38), L8/L9 configuration
+(partialRoot + fullBudget), 4-ply opening book, colour-swapped pairs, 320 games
+(`tools/bench/results/chunks/speed9-T200-vs-T145-o*.json`):
+
+| Games | W / D / L | Score | Elo [95 % CI] | Avg time used per move | Illegal moves |
+|---|---|---|---|---|---|
+| 320 | 114 / 130 / 76 | 55.9 % | **+41 [12, 71]** | 162 ms vs 119 ms | 0 |
+
+This is the expected value of v0.9 against v0.8 at equal time on this machine. The match ran partly while browser
+journeys used the same 4-core VM; both sides were slowed alike. A device with a different speed ratio between the
+old and new code (e.g. Safari's JavaScript engine) may gain more or less; that was not measured.
