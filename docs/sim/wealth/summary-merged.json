@@ -1,0 +1,590 @@
+{
+ "16": {
+  "population": 2048,
+  "archetypes": {
+   "chess-only": {
+    "netWorth": {
+     "n": 3,
+     "mean": 4915.616666666667,
+     "sd": 593.3076359135564,
+     "min": 4398.3,
+     "median": 4785.3,
+     "max": 5563.25
+    },
+    "division": 3,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "club-owner": {
+    "netWorth": {
+     "n": 3,
+     "mean": 6443.247038,
+     "sd": 494.10281355203256,
+     "min": 5873.763152,
+     "median": 6697.927909,
+     "max": 6758.050053
+    },
+    "division": 2.6666666666666665,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "sponsor": {
+    "netWorth": {
+     "n": 3,
+     "mean": 4775.616666666667,
+     "sd": 795.9162649634277,
+     "min": 3958.3,
+     "median": 4820.3,
+     "max": 5548.25
+    },
+    "division": 3,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "trader": {
+    "netWorth": {
+     "n": 3,
+     "mean": 5227.436457666667,
+     "sd": 518.9260987740511,
+     "min": 4792.654282,
+     "median": 5087.745425,
+     "max": 5801.909666
+    },
+    "division": 3,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "magnate": {
+    "netWorth": {
+     "n": 3,
+     "mean": 2342.0354809999994,
+     "sd": 576.9217885993478,
+     "min": 1713.496471,
+     "median": 2465.143314,
+     "max": 2847.466658
+    },
+    "division": 2.6666666666666665,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "reckless": {
+    "netWorth": {
+     "n": 3,
+     "mean": 683.2982226666667,
+     "sd": 332.9685790490591,
+     "min": 334.294934,
+     "median": 718.10161,
+     "max": 997.498124
+    },
+    "division": 3,
+    "runsWithAdmin": 3,
+    "episodes": 6,
+    "recoveredSeasons": {
+     "n": 6,
+     "mean": 1,
+     "sd": 0,
+     "min": 1,
+     "median": 1,
+     "max": 1
+    },
+    "unrecovered": 0,
+    "loans": 1,
+    "ok": true
+   }
+  },
+  "supply": {
+   "perCompetitor": [
+    {
+     "season": 1,
+     "n": 18,
+     "mean": 86.81411111111112,
+     "sd": 0.14122609694215835,
+     "min": 86.507,
+     "median": 86.85249999999999,
+     "max": 87.063
+    },
+    {
+     "season": 6,
+     "n": 18,
+     "mean": 107.53538888888892,
+     "sd": 0.6068951977448421,
+     "min": 105.934,
+     "median": 107.6225,
+     "max": 108.449
+    },
+    {
+     "season": 12,
+     "n": 18,
+     "mean": 108.32966666666665,
+     "sd": 0.7272783268501001,
+     "min": 106.79,
+     "median": 108.471,
+     "max": 109.423
+    },
+    {
+     "season": 18,
+     "n": 18,
+     "mean": 108.1236111111111,
+     "sd": 0.8173464337785163,
+     "min": 106.596,
+     "median": 108.30799999999999,
+     "max": 109.134
+    },
+    {
+     "season": 24,
+     "n": 18,
+     "mean": 108.0525,
+     "sd": 1.029682546738958,
+     "min": 106.1,
+     "median": 108.2085,
+     "max": 109.429
+    }
+   ],
+   "lateGrowth": {
+    "n": 216,
+    "mean": -0.0002097222222222218,
+    "sd": 0.003045690499731554,
+    "min": -0.0074,
+    "median": -0.0001,
+    "max": 0.0067
+   },
+   "meanCompetitorBalance": [
+    {
+     "season": 1,
+     "n": 18,
+     "mean": 12.767666666666665,
+     "sd": 0.10838276398676973,
+     "min": 12.619,
+     "median": 12.808,
+     "max": 12.889
+    },
+    {
+     "season": 12,
+     "n": 18,
+     "mean": 16.742444444444445,
+     "sd": 0.2706432907900605,
+     "min": 16.343,
+     "median": 16.7845,
+     "max": 17.338
+    },
+    {
+     "season": 24,
+     "n": 18,
+     "mean": 16.3395,
+     "sd": 0.1955947942288131,
+     "min": 16.034,
+     "median": 16.2875,
+     "max": 16.842
+    }
+   ],
+   "mintedPerCompetitor": {
+    "n": 18,
+    "mean": 55.908203125,
+    "sd": 0,
+    "min": 55.908203125,
+    "median": 55.908203125,
+    "max": 55.908203125
+   },
+   "sunkPerCompetitor": {
+    "n": 18,
+    "mean": 56.06797416460503,
+    "sd": 0.2618897970668663,
+    "min": 55.700821755371095,
+    "median": 56.0285204038086,
+    "max": 56.4550490390625
+   },
+   "treasury": {
+    "n": 18,
+    "mean": 29011.521966722223,
+    "sd": 165.77325871561098,
+    "min": 28840.818228,
+    "median": 28935.630776,
+    "max": 29331.453745
+   }
+  },
+  "flowsChessOnly": {
+   "club-dues": {
+    "competitors": -6978.670000000001,
+    "AI clubs": 6978.670000000001
+   },
+   "club-ops": {
+    "AI clubs": -6783.296666666666,
+    "sink": 6783.296666666666
+   },
+   "entry-fee": {
+    "player": -25,
+    "sink": 25
+   },
+   "expenses": {
+    "competitors": -104852.18666666666,
+    "sink": 104852.18666666666
+   },
+   "grant": {
+    "mint": -41.67,
+    "player": 41.67
+   },
+   "market-cancel": {
+    "markets": -713.52,
+    "NPC traders": 238.11666666666667,
+    "treasury": 475.40333333333336
+   },
+   "market-settle": {
+    "markets": -30217.623333333333,
+    "NPC traders": 24778.153333333335,
+    "treasury": 5439.473333333333
+   },
+   "market-subsidy": {
+    "treasury": -9470.223333333333,
+    "markets": 9470.223333333333
+   },
+   "mint": {
+    "mint": -121711.66666666667,
+    "treasury": 2440.8366666666666,
+    "prize escrow": 118020.83,
+    "sponsor budget": 1250
+   },
+   "npc-fund": {
+    "treasury": -1741.5433333333333,
+    "NPC traders": 1741.5433333333333
+   },
+   "prize": {
+    "prize escrow": -113300,
+    "competitors": 113220.18333333333,
+    "player": 79.81666666666666
+   },
+   "sponsor": {
+    "sponsor budget": -108.33333333333333,
+    "player": 108.33333333333333
+   },
+   "trade-buy": {
+    "NPC traders": -21811.350000000002,
+    "markets": 21595.399999999998,
+    "fees": 215.95333333333335
+   },
+   "transfer": {
+    "sponsor budget": -1091.6666666666667,
+    "treasury": 4900.66,
+    "fees": -215.13333333333335,
+    "NPC traders": -3593.86
+   },
+   "treasury-sweep": {
+    "treasury": -837.5633333333334,
+    "sink": 837.5633333333334
+   }
+  }
+ },
+ "80": {
+  "population": 10240,
+  "archetypes": {
+   "chess-only": {
+    "netWorth": {
+     "n": 3,
+     "mean": 5001.433333333333,
+     "sd": 1732.1445539657868,
+     "min": 3436.95,
+     "median": 4704.5,
+     "max": 6862.85
+    },
+    "division": 2.3333333333333335,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "club-owner": {
+    "netWorth": {
+     "n": 3,
+     "mean": 6164.031443666667,
+     "sd": 2047.77937251879,
+     "min": 4946.475131,
+     "median": 5017.370103,
+     "max": 8528.249097
+    },
+    "division": 2.6666666666666665,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "sponsor": {
+    "netWorth": {
+     "n": 3,
+     "mean": 4764.766666666666,
+     "sd": 2442.8884042938466,
+     "min": 2571.95,
+     "median": 4324.5,
+     "max": 7397.85
+    },
+    "division": 2.3333333333333335,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "trader": {
+    "netWorth": {
+     "n": 3,
+     "mean": 4499.8479573333325,
+     "sd": 1173.0813092857406,
+     "min": 3596.643748,
+     "median": 4077.215325,
+     "max": 5825.684799
+    },
+    "division": 2.3333333333333335,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "magnate": {
+    "netWorth": {
+     "n": 3,
+     "mean": 2188.301341,
+     "sd": 587.0010984991853,
+     "min": 1760.432809,
+     "median": 1946.970103,
+     "max": 2857.501111
+    },
+    "division": 2.6666666666666665,
+    "runsWithAdmin": 0,
+    "episodes": 0,
+    "recoveredSeasons": null,
+    "unrecovered": 0,
+    "loans": 0,
+    "ok": true
+   },
+   "reckless": {
+    "netWorth": {
+     "n": 3,
+     "mean": 946.590836,
+     "sd": 417.52394280316514,
+     "min": 513.723258,
+     "median": 979.189134,
+     "max": 1346.860116
+    },
+    "division": 2.3333333333333335,
+    "runsWithAdmin": 3,
+    "episodes": 8,
+    "recoveredSeasons": {
+     "n": 7,
+     "mean": 1,
+     "sd": 0,
+     "min": 1,
+     "median": 1,
+     "max": 1
+    },
+    "unrecovered": 1,
+    "loans": 1,
+    "ok": true
+   }
+  },
+  "supply": {
+   "perCompetitor": [
+    {
+     "season": 1,
+     "n": 18,
+     "mean": 63.871777777777766,
+     "sd": 0.022004158846361956,
+     "min": 63.829,
+     "median": 63.875,
+     "max": 63.907
+    },
+    {
+     "season": 6,
+     "n": 18,
+     "mean": 71.34022222222221,
+     "sd": 0.11529836260025733,
+     "min": 71.093,
+     "median": 71.32,
+     "max": 71.542
+    },
+    {
+     "season": 12,
+     "n": 18,
+     "mean": 71.49661111111111,
+     "sd": 0.15484494669294002,
+     "min": 71.173,
+     "median": 71.477,
+     "max": 71.761
+    },
+    {
+     "season": 18,
+     "n": 18,
+     "mean": 71.47461111111112,
+     "sd": 0.17618010132978892,
+     "min": 71.174,
+     "median": 71.50999999999999,
+     "max": 71.745
+    },
+    {
+     "season": 24,
+     "n": 18,
+     "mean": 71.43627777777778,
+     "sd": 0.26776895342496454,
+     "min": 71.068,
+     "median": 71.4135,
+     "max": 71.961
+    }
+   ],
+   "lateGrowth": {
+    "n": 216,
+    "mean": -0.00006990740740740797,
+    "sd": 0.0016870979598916178,
+    "min": -0.0049,
+    "median": 0.0002,
+    "max": 0.0049
+   },
+   "meanCompetitorBalance": [
+    {
+     "season": 1,
+     "n": 18,
+     "mean": 11.147722222222221,
+     "sd": 0.007322853474331702,
+     "min": 11.137,
+     "median": 11.149,
+     "max": 11.158
+    },
+    {
+     "season": 12,
+     "n": 18,
+     "mean": 14.441222222222223,
+     "sd": 0.07697559243075242,
+     "min": 14.324,
+     "median": 14.432500000000001,
+     "max": 14.565
+    },
+    {
+     "season": 24,
+     "n": 18,
+     "mean": 14.370555555555557,
+     "sd": 0.08000972163153411,
+     "min": 14.235,
+     "median": 14.382,
+     "max": 14.507
+    }
+   ],
+   "mintedPerCompetitor": {
+    "n": 18,
+    "mean": 48.369140625,
+    "sd": 0,
+    "min": 48.369140625,
+    "median": 48.369140625,
+    "max": 48.369140625
+   },
+   "sunkPerCompetitor": {
+    "n": 18,
+    "mean": 48.22186214339735,
+    "sd": 0.08403754817835367,
+    "min": 48.0194559984375,
+    "median": 48.26462242207032,
+    "max": 48.314609969140626
+   },
+   "treasury": {
+    "n": 18,
+    "mean": 29167.465156888895,
+    "sd": 362.593752549563,
+    "min": 28894.53785,
+    "median": 29019.521581,
+    "max": 30076.735529
+   }
+  },
+  "flowsChessOnly": {
+   "club-dues": {
+    "competitors": -30511.196666666667,
+    "AI clubs": 30511.196666666667
+   },
+   "club-ops": {
+    "AI clubs": -29655.01,
+    "sink": 29655.01
+   },
+   "entry-fee": {
+    "player": -25,
+    "sink": 25
+   },
+   "expenses": {
+    "competitors": -457388.7866666667,
+    "sink": 457388.7866666667
+   },
+   "grant": {
+    "mint": -41.67,
+    "player": 41.67
+   },
+   "market-cancel": {
+    "markets": -699.2566666666667,
+    "NPC traders": 234.96,
+    "treasury": 464.2966666666667
+   },
+   "market-settle": {
+    "markets": -31672.823333333334,
+    "NPC traders": 26687.22333333333,
+    "treasury": 4985.599999999999
+   },
+   "market-subsidy": {
+    "treasury": -9461.176666666666,
+    "markets": 9461.176666666666
+   },
+   "mint": {
+    "mint": -518435.00333333336,
+    "treasury": 2497.5033333333336,
+    "prize escrow": 514687.5,
+    "sponsor budget": 1250
+   },
+   "npc-fund": {
+    "treasury": -1678.7866666666669,
+    "NPC traders": 1678.7866666666669
+   },
+   "prize": {
+    "prize escrow": -494100,
+    "competitors": 494019.5266666667,
+    "player": 80.47333333333334
+   },
+   "sponsor": {
+    "sponsor budget": -111.25,
+    "player": 111.25
+   },
+   "trade-buy": {
+    "NPC traders": -23281.309999999998,
+    "markets": 23050.803333333333,
+    "fees": 230.51
+   },
+   "transfer": {
+    "sponsor budget": -1088.75,
+    "treasury": 5307.23,
+    "fees": -229.63333333333333,
+    "NPC traders": -3988.85
+   },
+   "treasury-sweep": {
+    "treasury": -892.9499999999999,
+    "sink": 892.9499999999999
+   }
+  }
+ }
+}

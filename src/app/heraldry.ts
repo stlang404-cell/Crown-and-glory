@@ -11,6 +11,7 @@ import { clubOf, clubsOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/cl
 import type { Journal } from '../exchange/ledger';
 import type { KoState } from '../federation/world';
 import { hashSeed } from '../federation/generator';
+import { wealthAppealParts, wealthOf } from '../economy/wealth';
 
 type G = { event: string; white: string; black: string; result: number | null };
 const MAX_NORMS = 24;
@@ -101,6 +102,8 @@ export function playerClubAppeal(st: FedState, season: number): { share: number;
     { label: `${contracts} sponsored player(s)`, value: 0.03 * contracts },
     { label: `${titles} recent title(s)`, value: 0.02 * titles },
     { label: 'Club suspended (unpaid upkeep)', value: club.suspended ? -0.1 : 0 },
+    // v0.11: facilities, sponsored events, administration (src/economy/wealth.ts); the 45% ceiling still applies
+    ...wealthAppealParts(wealthOf(st.extra), season),
   ];
   const share = Math.max(0, Math.min(0.45, parts.reduce((a, x) => a + x.value, 0)));
   return { share, parts };
