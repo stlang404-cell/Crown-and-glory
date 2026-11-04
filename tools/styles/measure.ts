@@ -15,6 +15,10 @@
  *   npx tsx tools/styles/measure.ts decisions            # (a), writes tools/styles/results/decisions.json
  *   npx tsx tools/styles/measure.ts games [style ...]    # (b)+(c), writes tools/styles/results/games-<style>.json
  *   npx tsx tools/styles/measure.ts summary [--write]    # tables; --write updates src/engine/styles-validation.json
+ * crown-styles-6 (v0.10): new styles (gambiteer, materialist, complicator), new per-side statistics (behind / ahead on
+ *   material after own moves, pieces at ply 40, pawns at ply 30), and `summary --write` needs TAG2K (the tag of the
+ *   2 000-node summary) because the strength rule must hold at both budgets. EXTRA=name,… summarises pilot-only
+ *   variants defined through DEFS. crown-styles-6 run: TAG=s6 (decisions, 8k games) and TAG=s6-n2k (NODES=2000).
  * Env: NODES (8000), PAIRS (100), DECISIONS (300), THREADS (2), DEFS (JSON STYLE_EVAL overrides, pilot only),
  *      TAG (suffix for result files, pilot only), OFFSET (first opening line; pilots used 200+ so the measured
  *      openings 0–99 were never used for choosing magnitudes).

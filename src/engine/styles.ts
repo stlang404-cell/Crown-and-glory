@@ -10,6 +10,8 @@
  * direction AND strength parity (src/engine/styles-validation.json); otherwise it plays as Universal.
  * crown-styles-5 (v0.9, below STYLE_EVAL) adds a full-game styled evaluation + draw contempt, measured by
  * tools/styles/measure.ts (docs/STYLES_REPORT.md); styles listed in styles-validation.json → fullGame use it.
+ * crown-styles-6 (v0.10) redesigns Aggressive, adds Gambiteer, Materialist and Complication seeker (the last one
+ * failed and is not played) and a measured scouting summary per played style (styleTendency).
  */
 import { Position } from '../rules/position';
 import { KING, KNIGHT, Move, PAWN, QUEEN, moveFrom, moveTo, movePromo, pieceColor, pieceType, fileOf, rankOf } from '../rules/types';
@@ -188,13 +190,13 @@ type StyleResult = { games: GameStats; styledSide: SideStats; universalSide: Sid
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 const rel = (a: number, b: number) => `${Math.round(Math.abs(a / b - 1) * 100)} %`;
 const TENDENCY: Partial<Record<StyleId, (r: StyleResult, u: { games: GameStats; side: SideStats }) => string>> = {
-  tactical: (r, u) => `Seeks tactics: draws ${pct(r.games.drawRate)} of games (standard engine ${pct(u.games.drawRate)}) and makes more captures and checks than its opponents.`,
-  positional: r => `Quiet, structural play: fewer checks than its opponents (${r.styledSide.checksPerGame} vs ${r.universalSide.checksPerGame} per game).`,
+  tactical: (r, u) => `Seeks tactics: draws ${pct(r.games.drawRate)} of games (standard engine ${pct(u.games.drawRate)}) and makes slightly more captures and checks than its opponents.`,
+  positional: r => `Quiet, structural play: slightly fewer checks than its opponents (${r.styledSide.checksPerGame} vs ${r.universalSide.checksPerGame} per game).`,
   defensive: (r, u) => `Safety first: its king zone is attacked ${rel(r.styledSide.attacksSufferedPerMove, r.universalSide.attacksSufferedPerMove)} less often than its opponents'; draws ${pct(r.games.drawRate)} (standard engine ${pct(u.games.drawRate)}) and trades queens early.`,
-  endgame: (r, u) => `Heads for the ending: queens are off by ply ${r.games.medianQueensOffPly} at the median (standard engine ${u.games.medianQueensOffPly}), and its games run long (${r.games.avgPlies} plies).`,
-  aggressive: (r, u) => `Hunts the king: ${rel(r.styledSide.kingZoneAttacksPerMove, r.universalSide.kingZoneAttacksPerMove)} more attacks on the enemy king zone and more checks than its opponents (${r.styledSide.checksPerGame} vs ${r.universalSide.checksPerGame} per game); draws only ${pct(r.games.drawRate)} (standard engine ${pct(u.games.drawRate)}).`,
-  gambiteer: r => `Gives material for activity: behind on material after ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}), with more pressure on the enemy king.`,
-  materialist: r => `Counts the material: behind on material after only ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}).`,
+  endgame: (r, u) => `Heads for the ending: queens are off by ply ${r.games.medianQueensOffPly} at the median (standard engine ${u.games.medianQueensOffPly}), and its games run long (${r.games.avgPlies} plies; standard engine ${u.games.avgPlies}).`,
+  aggressive: (r, u) => `Hunts the king: ${rel(r.styledSide.kingZoneAttacksPerMove, r.universalSide.kingZoneAttacksPerMove)} more attacks on the enemy king zone than its opponents, ${r.styledSide.checksPerGame} checks per game (standard engine ${+u.side.checksPerGame.toFixed(2)}); draws ${pct(r.games.drawRate)} (standard engine ${pct(u.games.drawRate)}).`,
+  gambiteer: r => `Gives material for activity: behind on material after ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}), with slightly more pressure on the enemy king.`,
+  materialist: r => `Counts the material: behind on material after only ${pct(r.styledSide.behindRate ?? 0)} of its moves (its opponents ${pct(r.universalSide.behindRate ?? 0)}) and ahead after ${pct(r.styledSide.aheadRate ?? 0)} (its opponents ${pct(r.universalSide.aheadRate ?? 0)}).`,
   complicator: (r, u) => `Keeps the pieces on: ${r.games.piecesAt40} knights, rooks and queens left at ply 40 (standard engine ${u.games.piecesAt40 ?? '—'}), queens off later and fewer draws.`,
 };
 /** Measured tendency summary for the scouting profile, or null for Universal and styles that are not played. */

@@ -11,7 +11,12 @@ const FIRST_A = ['Al', 'Be', 'Ca', 'Da', 'El', 'Fa', 'Ga', 'Ha', 'Is', 'Jo', 'Ka
 const FIRST_B = ['ra', 'ren', 'lia', 'mon', 'nis', 'tor', 'via', 'den', 'ric', 'sha', 'lan', 'mira', 'dov', 'ella', 'tis', 'ko', 'rin', 'sel', 'vin', 'na', 'th', 'mar', 'ise', 'dan'];
 const LAST_A = ['Ash', 'Brack', 'Cold', 'Dar', 'Ever', 'Fair', 'Gold', 'Hollow', 'Iron', 'Kings', 'Lark', 'Marr', 'North', 'Oak', 'Pike', 'Quill', 'Raven', 'Stone', 'Thorn', 'Vale', 'West', 'Wren', 'Brook', 'Crane', 'Dusk', 'Fen', 'Glen', 'Hart', 'Moss', 'Rook'];
 const LAST_B = ['ford', 'well', 'mere', 'wood', 'by', 'ton', 'field', 'grave', 'holt', 'stead', 'ley', 'worth', 'combe', 'ridge', 'more', 'gate', 'shaw', 'bury', 'den', 'hurst'];
-export const STYLES: StyleId[] = ['universal', 'tactical', 'positional', 'defensive', 'endgame', 'aggressive'];
+/**
+ * Styles assigned to generated competitors. gambiteer and materialist were appended when they passed validation
+ * (crown-styles-6, docs/STYLES_REPORT.md §8); complicator failed and is not assigned. Appending changes only which
+ * style a newly generated competitor draws (same random stream); stored competitors keep their style.
+ */
+export const STYLES: StyleId[] = ['universal', 'tactical', 'positional', 'defensive', 'endgame', 'aggressive', 'gambiteer', 'materialist'];
 
 export function normal(r: () => number): number {
   const u = Math.max(1e-12, r()), v = r();
