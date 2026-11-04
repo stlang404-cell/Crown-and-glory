@@ -10,7 +10,7 @@
  *  - archetypes are scripted decision rules, not a human.
  * Usage: npx tsx tools/sim/wealth.ts <seasons> <out.json> <regions:16|80> <seeds,comma> [archetypes,comma] [--check-idb]
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { FederationService } from '../../src/app/federation';
 import { wdl } from '../../src/federation/resultModel';
@@ -216,16 +216,21 @@ async function checkIdb() {
 
 if (CHECK_IDB) await checkIdb();
 const t0 = Date.now();
-const results = [];
+// incremental and resumable: the output is rewritten after every run; runs already in it are skipped
+mkdirSync(dirname(OUT), { recursive: true });
+type Result = Awaited<ReturnType<typeof run>>;
+const results: Result[] = existsSync(OUT) ? (JSON.parse(readFileSync(OUT, 'utf8')) as { results: Result[] }).results : [];
+const save = () => writeFileSync(OUT, JSON.stringify({ id: 'crown-wealth-sim-1', seasons: SEASONS, regions: REGIONS, seeds: SEEDS, generatedAt: new Date().toISOString(), seconds: Math.round((Date.now() - t0) / 1000), results }, null, 1));
 for (const a of ARCHETYPES) {
   if (ONLY && !ONLY.includes(a.id)) continue;
   for (const sd of SEEDS) {
+    if (results.some(r => r.archetype === a.id && r.seed === sd && r.regions === REGIONS)) continue;
     const t = Date.now();
     const r = await run(a, sd, REGIONS);
     results.push(r);
+    save();
     console.log(`${a.id} seed ${sd} regions ${REGIONS}: net worth ${r.final.netWorth.toFixed(0)} admin ${r.administration.episodes.length} (${Math.round((Date.now() - t) / 1000)} s)`);
   }
 }
-mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, JSON.stringify({ id: 'crown-wealth-sim-1', seasons: SEASONS, regions: REGIONS, seeds: SEEDS, generatedAt: new Date().toISOString(), seconds: Math.round((Date.now() - t0) / 1000), results }, null, 1));
+save();
 console.log('wrote', OUT, Math.round((Date.now() - t0) / 1000), 's');

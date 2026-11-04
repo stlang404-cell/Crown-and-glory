@@ -1145,6 +1145,7 @@ export class FederationService {
       const res = processRound(ctx, rec, seasonRounds, this.now());
       const expensesPaid = new Map<string, number>();
       let wealthEnd: { contracts: Contract[]; assets: OwnedAsset[]; delAssets: string[] } = { contracts: [], assets: [], delAssets: [] };
+      const changedContracts: Contract[] = [];
       st.rounds.set(rec.id, rec);
       const games = gamesOf([...seasonRounds, rec]);
       const season = expect.season, round = expect.round;
@@ -1225,6 +1226,9 @@ export class FederationService {
         // leftover prize escrow (e.g. rounding) returns to the treasury
         for (const [acc, bal] of st.balances) if (acc.startsWith(`prize:${season}:`) && bal > 0) this.post(st, [{ id: `prize-return:${acc}`, at: this.now(), kind: 'transfer', memo: `Unpaid remainder of ${acc}`, lines: [{ account: acc, amount: -bal }, { account: 'treasury', amount: bal }], season }], posted);
         // AI club finances (dues from members' balances, operating costs) before competitor expenses
+        // sponsorship contracts take their share of this command's prizes BEFORE dues and season expenses reduce the
+        // competitors' balances (v0.11 fix: afterwards a championship prize could exceed what was left → LedgerError)
+        this.contractShares(st, posted, changedContracts);
         clubFinances(st, season, js => this.post(st, js, posted), this.now());
         // v0.11 (crown-wealth-1): loan instalment, upkeep of assets, facilities and estates (after the club's dues, so
         // a club's income counts toward its own upkeep), then administration entry/exit. Unpaid upkeep suspends; no
@@ -1273,8 +1277,8 @@ export class FederationService {
         if (ceremonies.length) st.extra.ceremonies = [...(st.extra.ceremonies ?? []).filter(c => !ceremonies.some(n => n.id === c.id)), ...ceremonies].slice(-60);
       }
       // sponsorship contracts: share of prizes paid this round; next season's stipends at season end
-      const changedContracts: Contract[] = [...wealthEnd.contracts];
-      this.contractShares(st, posted, changedContracts);
+      changedContracts.push(...wealthEnd.contracts);
+      if (!res.seasonEnd) this.contractShares(st, posted, changedContracts);
       if (res.seasonEnd) {
         for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) {
           const comp = st.competitors.get(ct.competitorId);
@@ -1298,7 +1302,7 @@ export class FederationService {
       st.rounds.set(opened.rec.id, opened.rec);
       openSeasonMarkets(ops); // new season: lists all families; otherwise only fills gaps within their windows
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts, liveGames: slateClosed, assets: wealthEnd.assets, delAssets: wealthEnd.delAssets }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: [...new Set(changedContracts.map(c => c.id))].map(id => st.contracts.get(id)!), liveGames: slateClosed, assets: wealthEnd.assets, delAssets: wealthEnd.delAssets }, expect);
       return res;
     });
   }
