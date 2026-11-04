@@ -1,4 +1,4 @@
 service worker active: http://127.0.0.1:4173/sw.js
 reloaded while offline: app shell served from cache
-offline engine (worker) played White's first move; FEN now rnqknr/pppppp/6/1P4/P1PPPP/RNQKNR b - - 0 1
+offline engine (worker) played White's first move; FEN now rnqknr/pppppp/6/5P/PPPPP1/RNQKNR b - - 0 1
 PASS: offline play works in Chromium
