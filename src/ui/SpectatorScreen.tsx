@@ -39,6 +39,7 @@ import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
 import { divisionEmblem, titleEmblem } from '../heraldry/catalog';
 import { clubEmblem, clubOf } from '../heraldry/clubs';
 import { divisionLabel } from '../federation/model';
+import { claimModel } from '../exchange/api';
 import { ENGINE_BUILD } from '../analysis/analyzer';
 import { GRADING_ID, expectedU, toPov } from '../analysis/methodology';
 import type { AnalysisReport, EngineScore } from '../analysis/types';
@@ -299,8 +300,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     <div className="stack" data-testid="arena-forecast">
       <div className="panel-title"><h4 style={{ margin: 0 }}>Model Forecast</h4><span className="small muted">{ODDS_ID} · information, not the price</span></div>
       <table className="small arena-forecast"><thead><tr><th>Forecast</th>{claims.map(c => <th key={c.label}>{c.label}</th>)}</tr></thead><tbody>
-        {model && <tr><td>{inPlay ? 'Live' : `After move ${atPly?.point?.ply ?? 0}`}</td>{model.map((x, i) => <td key={i} className="mono" data-testid={`model-${i}`}>{(x * 100).toFixed(1)}%</td>)}</tr>}
-        <tr><td>Pre-match</td>{[market.forecast.w, market.forecast.d, market.forecast.l].map((x, i) => <td key={i} className="mono">{(x * 100).toFixed(0)}%</td>)}</tr>
+        {model && <tr><td>{inPlay ? 'Live' : `After move ${atPly?.point?.ply ?? 0}`}</td>{claimModel(market, model).map((x, i) => <td key={i} className="mono" data-testid={`model-${i}`}>{(x * 100).toFixed(1)}%</td>)}</tr>}
+        <tr><td>Pre-match</td>{claimModel(market, [market.forecast.w, market.forecast.d, market.forecast.l]).map((x, i) => <td key={i} className="mono">{(x * 100).toFixed(0)}%</td>)}</tr>
       </tbody></table>
     </div>
   );
