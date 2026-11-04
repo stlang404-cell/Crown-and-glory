@@ -287,3 +287,20 @@ cash and sandbox money. Neither passed "fun, understandable and defensible" as w
 | Advancement over a full season; every over/under settles on its record | same |
 | Public-information inputs only | same; `tests/federationService.test.ts` |
 | Forecasting League fairness, qualification, determinism; calibration grades | `tests/forecastLeague.test.ts` |
+
+## 10. Browser journeys (production build, `npm run build`)
+
+| Journey | Result | Log |
+|---|---|---|
+| `e2e/market-integrity.mjs` (new): exact ticket preview = committed cost, position P&L, Close Position with exact proceeds, watchlist across reload, over/under definition and VOID terms, Finance portfolio, Forecasting League, 390 px | 9/9 PASS | docs/evidence/market-integrity/journey-log.txt |
+| `e2e/m6-arena.mjs`: live Championship match with in-play trading, stale quote and duplicate step rejected, settlement (claim payouts now summed over each claim's states for the Decisive claim), analysis after settlement, restart, phone, offline | 9/9 PASS (+1b, 4b) | docs/evidence/market-integrity/m6-arena-log.txt |
+| `e2e/dashboard.mjs` (served by `node scripts/serve.mjs --dir dist --port 4412`) | 10/10 PASS | docs/evidence/market-integrity/dashboard-log.txt |
+
+## 11. Not done / limits
+
+- The over/under market is not traded in play (it closes when the match starts); an in-play length model would need its
+  own validation.
+- Public in-play moves of individual scheduled games do not suspend family markets (§3.3); only recorded results do.
+- Per-claim cost basis is not reconstructed for positions opened before v0.10 (shown as "not recorded").
+- The simulation covers match and over/under markets, not the season and tournament families.
+- An offline client cannot be made tamper-proof against its own owner (docs/M4_EXCHANGE.md §3).

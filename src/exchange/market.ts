@@ -1,4 +1,6 @@
 /**
+ * Screens that trade should use the trading API in ./api.ts (quote, buy, sell, close, positions, P&L).
+ *
  * Crown Exchange markets (crown-exchange-2). Pure functions: each returns the journal entry to post and
  * the updated market/position objects; the caller posts the journal and saves the objects in ONE
  * transaction. States: open → closed → settled | cancelled (terminal; never reopened).
