@@ -1,0 +1,10 @@
+[2026-11-04T14:14:04.974Z] PASS 1: Defaults: pool "Anyone", type "Rated"
+[2026-11-04T14:14:05.458Z] PASS 2: Card shows a real active competitor: Jomon Rookwell 2256 ±120 (roster: {"id":"c0279","rating":2256,"rd":120,"status":"active"})
+[2026-11-04T14:14:05.669Z] PASS 3: 5 rerolls gave 6 different opponents; rerolls and Cancel created no game (0 → 0)
+[2026-11-04T14:14:06.019Z] PASS 4: Rated game created vs Riella Thornton (snapshot rating 1822, own calibrated profile fed-L4)
+[2026-11-04T14:14:08.217Z] PASS 5: One rating event (1500 → 1432, games 0 → 1); still 1 after reload
+[2026-11-04T14:14:08.488Z] PASS 6: Casual quick match: rating unchanged (1431.8), still 1 rating event
+[2026-11-04T14:14:08.593Z] PASS 7: Elite filter drew a 2409 ±120 competitor
+[2026-11-04T14:14:09.168Z] PASS 8: Phone: card shown, horizontal overflow 0px
+[2026-11-04T14:14:09.168Z] PASS 9: No page errors (0)
+[2026-11-04T14:14:09.197Z] ALL CHECKS PASSED

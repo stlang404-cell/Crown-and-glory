@@ -1,0 +1,9 @@
+[2026-11-04T14:13:57.512Z] PASS A1: Promotion a5→a6=Q slid (["a6","f5"]), glinted (1), a6 now "a6, white queen"
+[2026-11-04T14:13:57.513Z] PASS A2: One promotion sound for the promoting move (promotion outranks check): ["promotion","move"]
+[2026-11-04T14:13:58.827Z] PASS A3: Check warning shown on f6 when the promotion gave check (["f6"]; the engine escaped within one frame) and while viewing that move again (f6)
+[2026-11-04T14:13:58.827Z] PASS A4: Engine reply slid (2 slides) and sounded: ["promotion","move"]
+[2026-11-04T14:14:02.994Z] PASS B1: Spectating: 6 published moves, 6 slides; extra pieces 0, missing 0
+[2026-11-04T14:14:02.994Z] PASS B2: Spectating: 6 move sounds for 6 moves: ["move","move","move","capture","capture","move"]
+[2026-11-04T14:14:02.994Z] PASS B3: No move grades while trading is open (0)
+[2026-11-04T14:14:02.994Z] PASS Z: No page errors (0)
+[2026-11-04T14:14:03.041Z] ALL CHECKS PASSED

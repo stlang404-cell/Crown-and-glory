@@ -60,7 +60,7 @@ slightly lower Brier score (0.138 vs 0.147); the prior carries little informatio
 
 ## 5. Release gates (clean checkout of the release commit)
 
-Run on a clean worktree of commit `249f451` (no untracked files; logs in `docs/evidence/v0.9-final/`):
+Run on a clean worktree of commit `249f451` (no untracked files; logs in `docs/evidence/v0.9-final/*.txt`):
 
 | Gate | Result |
 |---|---|
