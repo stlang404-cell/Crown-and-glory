@@ -138,14 +138,16 @@ await ctx.close();
 // 8. phone layout
 ({ ctx, page } = await open({ width: 390, height: 844 }));
 await page.goto(URL_ + '#/watch/' + encodeURIComponent(champ.id));
-await page.waitForSelector('[data-testid="arena-grade-summary"]', { timeout: 60000 });
+await page.waitForSelector('[data-testid="arena-grade-summary"]', { timeout: 60000, state: 'attached' }); // phones open on the Board tab (v0.10); the summary is in the Analysis tab
 const ph = [];
-for (const t of ['Moves & eval', 'Market', 'Portfolio']) {
+// v0.10 Live Match Center: the phone tabs are Board · Analysis · Trade (market and portfolio together), with the
+// match context strip (names, score, clocks, prices) above the tabs on every tab
+for (const t of ['Board', 'Analysis', 'Trade']) {
   await page.getByRole('tab', { name: t }).click(); await page.waitForTimeout(300);
-  ph.push(await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > window.innerWidth + 1, boardW: document.querySelector('.board')?.getBoundingClientRect().width, a: !!document.querySelector('[data-testid="arena-analysis"]')?.checkVisibility(), m: !!document.querySelector('[data-testid="arena-market"]')?.checkVisibility(), p: !!document.querySelector('[data-testid="arena-portfolio"]')?.checkVisibility() })));
-  await page.screenshot({ path: SHOTS + `10-mobile-arena-${t.split(' ')[0].toLowerCase()}.png`, fullPage: true });
+  ph.push(await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > window.innerWidth + 1, board: !!document.querySelector('.board')?.checkVisibility(), boardW: document.querySelector('.board')?.getBoundingClientRect().width, ctx: !!document.querySelector('[data-testid="arena-context"]')?.checkVisibility(), a: !!document.querySelector('[data-testid="arena-analysis"]')?.checkVisibility(), m: !!document.querySelector('[data-testid="arena-market"]')?.checkVisibility(), p: !!document.querySelector('[data-testid="arena-portfolio"]')?.checkVisibility() })));
+  await page.screenshot({ path: SHOTS + `10-mobile-arena-${t.toLowerCase()}.png`, fullPage: true });
 }
-check(8, ph.every(x => !x.overflow && x.boardW >= 330) && ph[0].a && !ph[0].m && ph[1].m && !ph[1].a && ph[2].p && !ph[2].m, `Phone 390 px: board ${Math.round(ph[0].boardW)} px wide stays on top; tabs switch Moves/Market/Portfolio; no horizontal overflow`);
+check(8, ph.every(x => !x.overflow && x.ctx) && ph[0].board && ph[0].boardW >= 330 && !ph[0].a && !ph[0].m && ph[1].a && !ph[1].m && !ph[1].board && ph[2].m && ph[2].p && !ph[2].a && !ph[2].board, `Phone 390 px: Board tab shows the ${Math.round(ph[0].boardW)} px board; tabs switch Board/Analysis/Trade; the match context strip is visible on every tab; no horizontal overflow`);
 
 // 9. offline replay
 await page.evaluate(() => navigator.serviceWorker.ready);
@@ -153,7 +155,7 @@ await page.reload(); await page.waitForFunction(() => !!navigator.serviceWorker.
 await ctx.setOffline(true);
 await page.reload(); await page.waitForSelector('.app');
 await page.goto(URL_ + '#/watch/' + encodeURIComponent(champ.id));
-await page.waitForSelector('[data-testid="arena-grade-summary"]', { timeout: 60000 });
+await page.waitForSelector('[data-testid="arena-grade-summary"]', { timeout: 60000, state: 'attached' });
 const offMoves = await page.locator('[data-testid="arena-move"]').count();
 check(9, offMoves === fin.plies, `Offline (phone): the replay, labels and market history load from the installed app and IndexedDB (${offMoves} moves)`);
 await ctx.close();

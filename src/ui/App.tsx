@@ -8,6 +8,7 @@ import { AnalysisScreen } from './AnalysisScreen';
 import { AnalysisPicker } from './AnalysisPicker';
 import { ScreenBoundary } from './ScreenBoundary';
 import { IdentityBanner } from './IdentityBanner';
+import { ReplayLibrary } from './ReplayLibrary';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
 import { LabScreen } from './LabScreen';
@@ -37,6 +38,7 @@ export type View =
   | { name: 'analysis'; gameId: string; ply?: number }
   | { name: 'analyses' }
   | { name: 'library' }
+  | { name: 'replays' }
   | { name: 'profile' }
   | { name: 'lab' }
   | { name: 'academy' }
@@ -79,7 +81,7 @@ function parseHash(): View {
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
+  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
   return { name: 'dashboard' };
 }
 function toHash(v: View): string {
@@ -111,7 +113,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 /** The phone tab bar keeps Dashboard, the four most-used sections and Settings; Finance and the rest live in the side rail,
  *  the Dashboard's Exchange snapshot and the Federation/Career screens. */
 const TABS: View['name'][] = ['dashboard', 'play', 'world', 'exchange', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -153,6 +155,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
             {view.name === 'analysis' && <AnalysisScreen key={view.gameId} gameId={view.gameId} initialPly={view.ply} />}
             {view.name === 'library' && <LibraryScreen />}
+            {view.name === 'replays' && <ReplayLibrary />}
             {view.name === 'analyses' && <AnalysisPicker />}
             {view.name === 'profile' && <ProfileScreen />}
             {view.name === 'lab' && <LabScreen />}

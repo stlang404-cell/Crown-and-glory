@@ -13,7 +13,7 @@ IndexedDB version **4** since v0.4.0) on the device. Nothing is sent anywhere.
 | `reports` | `id` = `report:<gameId>:<checksum12>:<engineBuild>:<settings>:<gradingId>` | Immutable analysis reports. A new engine, setting or methodology produces a new id; old reports are never overwritten. |
 | `analysisJobs` | `job:<gameId>:<settingsId>` | Job intent and status (queued/running/complete/partial/cancelled/failed). |
 | `meta` | `key` | Schema marker, last backup time. |
-| `attempts`, `trainingRuns`, `bookmarks` | `id` | v0.2.0 Academy attempts, training runs, position bookmarks. |
+| `attempts`, `trainingRuns`, `bookmarks` | `id` | v0.2.0 Academy attempts, training runs, position bookmarks. v0.10 adds two optional bookmark kinds (additive, no migration): `kind: 'favourite'` (`id` = `fav:<gameId or wg:fixture>`, `ply` = −1) for Replay Library favourites, and `kind: 'position'` (`id` = `pos:<gameId>:<ply>:<line>`, with `fen`, `line` and `sans`) for sandbox positions saved from a replay. Records without `kind` are the original ply bookmarks. Bookmarks are included in backups. |
 | `world` | `key` = `world` | Federation cursor: seed, season, round, player membership, titles, history (v0.3.0). |
 | `seasons` | `id` = `season:<n>` | Season plans: 128 league circuits, Swiss events, championship and Club Weekend brackets. |
 | `competitors` | `id` | 2,048+ competitor records (identity, hidden strength, public Glicko-2, career, titles). |

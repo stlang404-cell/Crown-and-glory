@@ -52,3 +52,29 @@ export function clearPractice(): void {
   pending = null;
   try { sessionStorage.removeItem(KEY); } catch { /* storage unavailable */ }
 }
+
+/* ---------- v0.10: practise a verified mistake from a game report ---------- */
+/**
+ * Game Review hands one of the player's own analysed mistakes to the Academy, which opens its Mistakes drill on that
+ * position. The puzzle itself is built by the Academy from the stored report (src/academy/academy.ts
+ * `mistakePuzzles`: the player's non-forced move with an expected-score loss of at least 0.12, solved by the engine's
+ * best move), so nothing here can create an exercise that the report does not support.
+ */
+const DRILL_KEY = 'crown:practice-drill';
+let pendingDrill: string | null = null;
+export const mistakePuzzleId = (gameId: string, ply: number) => `mk-${gameId}-${ply}`;
+const validDrill = (id: unknown): id is string => typeof id === 'string' && /^mk-.+-\d+$/.test(id) && id.length < 200;
+
+export function requestMistakeDrill(puzzleId: string): void {
+  pendingDrill = validDrill(puzzleId) ? puzzleId : null;
+  try { if (pendingDrill) sessionStorage.setItem(DRILL_KEY, pendingDrill); else sessionStorage.removeItem(DRILL_KEY); } catch { /* storage unavailable */ }
+}
+
+/** Read and clear the pending drill (the Academy calls this once when it opens). */
+export function takeMistakeDrill(): string | null {
+  let id = pendingDrill;
+  if (!id) { try { const s = sessionStorage.getItem(DRILL_KEY); id = validDrill(s) ? s : null; } catch { id = null; } }
+  pendingDrill = null;
+  try { sessionStorage.removeItem(DRILL_KEY); } catch { /* storage unavailable */ }
+  return id;
+}

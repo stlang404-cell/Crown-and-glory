@@ -45,6 +45,7 @@ export function AnalysisPicker() {
         <div className="kicker">Analysis</div>
         <h1>Review a Game</h1>
         <p className="muted">Choose a finished game to see every move graded, the evaluation graph and the engine's best lines.</p>
+        <button className="btn small" onClick={() => go({ name: 'replays' })} data-testid="open-replays">Replay Library: Your Games and Federation Games</button>
       </header>
       {error && <div className="notice warn" role="alert">Your games could not be loaded: {error}. Reload the page to try again.</div>}
       {!error && rows === null && <p className="muted" role="status">Loading your games…</p>}

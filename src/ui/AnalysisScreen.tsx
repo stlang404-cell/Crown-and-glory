@@ -4,7 +4,11 @@ import { useApp, useServices } from './App';
 import { Board } from './Board';
 import { EvalGraph, formatScore, whiteU } from './Charts';
 import { fmtClock, resultText } from './PlayScreen';
-import { Captured, Clock, GRADE_LABEL, GradeIcon, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar } from './MatchCenter';
+import { Captured, Clock, EvalBoard, GRADE_LABEL, GradeIcon, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar } from './MatchCenter';
+import { LessonLinks, SandboxPanel, TurningPointList, useSandbox } from './ReplayTools';
+import { favouriteId, turningPoints, type ReplayBookmark } from '../app/replay';
+import { mistakePuzzleId, requestMistakeDrill } from '../app/practice';
+import { expectedU, toPov } from '../analysis/methodology';
 import { Portrait } from './Portrait';
 import { PlayedLikeCard } from './PlayedLikeCard';
 import { Position } from '../rules/position';
@@ -12,7 +16,7 @@ import { parseLegalCcn } from '../rules/notation';
 import { squareName } from '../rules/types';
 import { TERMINATION_LABEL } from '../rules/adjudication';
 import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS } from '../analysis/analyzer';
-import type { AnalysisReport, Candidate, PlyAnalysis, SideSummary } from '../analysis/types';
+import type { AnalysisReport, Candidate, EngineScore, PlyAnalysis, SideSummary } from '../analysis/types';
 import { GRADES } from '../analysis/types';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
@@ -37,12 +41,21 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const [reportIdx, setReportIdx] = useState(-1);
   const [event, setEvent] = useState<RatingEvent | null>(null);
   const [ply, setPly] = useState(initialPly ?? 0);
-  const [variation, setVariation] = useState<{ origin: number; line: string[]; sans: string[]; idx: number; label: string } | null>(null);
+  const [variation, setVariation] = useState<{ origin: number; line: string[]; sans: string[]; idx: number; label: string; score?: EngineScore } | null>(null);
   const [preset, setPreset] = useState(DEFAULT_ANALYSIS.id);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
   const [flipped, setFlipped] = useState(false);
-  const [bookmarks, setBookmarks] = useState<{ id: string; gameId: string; ply: number; memorable: boolean; note: string; at: string }[]>([]);
-  useEffect(() => { void services.db.getAll<{ id: string; gameId: string; ply: number; memorable: boolean; note: string; at: string }>('bookmarks').then(b => setBookmarks(b.filter(x => x.gameId === gameId))); }, [gameId, services, services.revision]);
+  const [allMarks, setAllMarks] = useState<ReplayBookmark[]>([]);
+  useEffect(() => { void services.db.getAll<ReplayBookmark>('bookmarks').then(b => setAllMarks(b.filter(x => x.gameId === gameId))); }, [gameId, services, services.revision]);
+  // position bookmarks (star / crown) are the records without a kind; favourites and saved sandbox lines are listed separately
+  const bookmarks = allMarks.filter(b => !b.kind);
+  const savedLines = allMarks.filter(b => b.kind === 'position');
+  const favourite = allMarks.some(b => b.id === favouriteId(gameId));
+  const toggleFavourite = async () => {
+    if (favourite) await services.db.remove('bookmarks', favouriteId(gameId));
+    else await services.db.put('bookmarks', { id: favouriteId(gameId), gameId, ply: -1, memorable: false, note: '', at: new Date().toISOString(), kind: 'favourite' } satisfies ReplayBookmark);
+    services.notify();
+  };
   const toggleBookmark = async (memorable: boolean) => {
     const id = `${gameId}:${ply}:${memorable ? 'm' : 'b'}`;
     if (bookmarks.some(b => b.id === id)) await services.db.remove('bookmarks', id);
@@ -92,6 +105,10 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     return () => clearTimeout(t);
   }, [auto, ply, total, speedIdx, variation]);
 
+  // branching sandbox (never writes the saved game): declared before the loading returns to keep the hook order
+  const sandbox = useSandbox({ initialFen: game?.initialFen ?? 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', setupMoves: game?.setupMoves, mainline: game?.moves.map(m => m.ccn) ?? [] });
+  const [sandboxOrigin, setSandboxOrigin] = useState(0);
+
   if (loadState === 'error') return (
     <div className="panel" role="alert" data-testid="analysis-load-error"><h2 style={{ marginTop: 0 }}>This game could not be loaded</h2>
       <p>The saved game could not be read from this device's storage{loadError ? ` (${loadError})` : ''}. Reload the page to try again; your other games are not affected.</p>
@@ -114,7 +131,12 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   // board state (mainline or variation)
   let fen = fens[ply] ?? fens[0];
   let lastMove: string | null = ply > 0 ? game.moves[ply - 1].ccn : null;
-  if (variation) {
+  const inSandbox = !!sandbox.sandbox;
+  if (inSandbox) {
+    fen = sandbox.fen!;
+    const l = sandbox.sandbox!.line;
+    lastMove = l.length ? l[l.length - 1] : (sandboxOrigin > 0 ? game.moves[sandboxOrigin - 1].ccn : null);
+  } else if (variation) {
     const p = Position.fromFen(fens[variation.origin]);
     // replay with history for correctness of check display
     for (let i = 0; i <= variation.idx; i++) p.makeMove(parseLegalCcn(p, variation.line[i]));
@@ -123,12 +145,12 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   }
   const posNow = Position.fromFen(fen);
   const check = posNow.inCheck() ? squareName(posNow.kingSq[posNow.side]) : null;
-  const arrows = !variation && ply < n ? (() => {
+  const arrows = !variation && !inSandbox && ply < n ? (() => {
     const next = plies.find(p => p.ply === ply + 1);
     return next && next.best.ccn !== next.ccn ? [{ from: next.best.ccn.slice(0, 2), to: next.best.ccn.slice(2, 4) }] : [];
   })() : [];
 
-  const goPly = (k: number) => { setVariation(null); setPly(Math.max(0, Math.min(n, k))); };
+  const goPly = (k: number) => { setVariation(null); sandbox.exit(); setPly(Math.max(0, Math.min(n, k))); };
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); variation ? setVariation(v => v && (v.idx > 0 ? { ...v, idx: v.idx - 1 } : null)) : goPly(ply - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); variation ? setVariation(v => v && { ...v, idx: Math.min(v.line.length - 1, v.idx + 1) }) : goPly(ply + 1); }
@@ -136,7 +158,17 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
     if (e.key === 'End') goPly(n);
     if (e.key === 'Escape') setVariation(null);
   };
-  const explore = (origin: number, c: Candidate, label: string) => setVariation({ origin, line: c.pv, sans: c.pvSan, idx: 0, label });
+  const explore = (origin: number, c: Candidate, label: string) => { sandbox.exit(); setVariation({ origin, line: c.pv, sans: c.pvSan, idx: 0, label, score: c.score }); };
+  const startSandbox = () => { setAuto(false); setVariation(null); setSandboxOrigin(ply); sandbox.start(ply); };
+  // the bar: the report's evaluation of the shown position (before move 1: best play from the start); a line being
+  // explored shows its engine score; the sandbox shows its own engine evaluation
+  const accuracyId = report?.methodology.accuracyId;
+  const barScore: EngineScore | null = inSandbox ? sandbox.eval?.score ?? null : variation ? variation.score ?? null
+    : ply === 0 ? plies.find(p => p.ply === 1)?.evalBefore ?? null : cur ? cur.evalAfter : null;
+  const barSource = inSandbox ? 'sandbox engine evaluation' : variation ? 'engine line score' : report ? `analysis ${report.settings.label}` : live ? 'analysis in progress' : 'no analysis yet';
+  const curve = plies.slice().sort((a, b) => a.ply - b.ply).map(p => expectedU(toPov(p.evalAfter, 'white'), accuracyId));
+  const turns = plies.length === n && n > 0 ? turningPoints(curve, 3) : [];
+  const verifiedMistake = !!(cur && report?.status === 'complete' && cur.color === game.humanColor && !cur.forced && cur.loss !== null && cur.loss >= 0.12);
 
   const retry = async () => {
     if (!cur) return;
@@ -203,16 +235,24 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const board = (
     <>
       {bar(topColor)}
-      <Board sounds fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
+      <EvalBoard context={{ kind: 'analysis' }} score={barScore} orientation={orientation} accuracyId={variation || inSandbox ? undefined : accuracyId} source={barSource}>
+        <Board sounds={!inSandbox} fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows}
+          legal={inSandbox ? sandbox.legal : []} onMove={inSandbox ? sandbox.play : undefined} label={inSandbox ? 'Sandbox board' : 'Analysis board'} />
+      </EvalBoard>
       {bar(topColor === 'white' ? 'black' : 'white')}
       <MoveNav onFirst={() => goPly(0)} onPrev={stepBack} onNext={stepForward} onLast={() => goPly(n)} onFlip={() => setFlipped(f => !f)}
-        indicator={<span className="chip mono" data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>}
-        replay={{ playing: auto, onToggle: () => { if (ply >= n) setPly(0); setAuto(a => !a); }, testId: 'replay-play', speeds: REPLAY_SPEEDS, speed: speedIdx, onSpeed: setSpeedIdx }} />
+        indicator={<span className="chip mono" data-testid="ply-indicator">{inSandbox ? `sandbox ${sandbox.sandbox!.line.length}` : variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>}
+        replay={{ playing: auto, onToggle: () => { sandbox.exit(); if (ply >= n) setPly(0); setAuto(a => !a); }, testId: 'replay-play', speeds: REPLAY_SPEEDS, speed: speedIdx, onSpeed: setSpeedIdx }} />
       <div className="row" style={{ justifyContent: 'center' }}>
         <button className="btn small" disabled={!!variation} aria-pressed={bookmarks.some(b => b.ply === ply && !b.memorable)} onClick={() => void toggleBookmark(false)} data-testid="bookmark">{bookmarks.some(b => b.ply === ply && !b.memorable) ? '★ Bookmarked' : '☆ Bookmark Position'}</button>
         <button className="btn small" disabled={!!variation || ply === 0} onClick={() => void toggleBookmark(true)}>{bookmarks.some(b => b.ply === ply && b.memorable) ? '♛ Memorable Move' : '♔ Mark Memorable'}</button>
         {bookmarks.length > 0 && <span className="small muted">Saved: {[...new Set(bookmarks.map(b => b.ply))].sort((a, b) => a - b).map(k => <button key={k} className="btn ghost small" onClick={() => goPly(k)}>{k}</button>)}</span>}
       </div>
+      <div className="row" style={{ justifyContent: 'center', flexWrap: 'wrap', gap: 6 }}>
+        {!inSandbox && game.status === 'finalized' && <button className="btn small" onClick={startSandbox} data-testid="sandbox-start">Try a Move Here</button>}
+        {savedLines.length > 0 && !inSandbox && <span className="small muted" data-testid="saved-lines">Saved lines: {savedLines.map(b => <button key={b.id} className="btn ghost small" onClick={() => { setVariation(null); setPly(b.ply); setSandboxOrigin(b.ply); sandbox.load(b.ply, b.line ?? []); }}>move {Math.ceil(b.ply / 2)}{b.sans?.length ? `: ${b.sans.slice(0, 3).join(' ')}${b.sans.length > 3 ? '…' : ''}` : ''}</button>)}</span>}
+      </div>
+      {inSandbox && <SandboxPanel sb={sandbox} gameId={game.id} originPly={sandboxOrigin} onExit={sandbox.exit} />}
       {variation && (
         <div className="notice">
           Exploring {variation.label}: <span className="mono">{variation.sans.map((s, i) => <button key={i} className="btn ghost small" style={{ minHeight: 28, padding: '0 4px', fontWeight: i === variation.idx ? 800 : 400 }} onClick={() => setVariation({ ...variation, idx: i })}>{s}</button>)}</span>
@@ -225,18 +265,21 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const movesPanel = (
     <>
       <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
-      {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId} /> : (
+      {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId}
+        onPractise={verifiedMistake ? () => { requestMistakeDrill(mistakePuzzleId(game.id, cur.ply)); go({ name: 'academy' }); } : undefined} /> : (
         <div className="panel"><h3>{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h3><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
       )}
       <div className="panel">
         <h3>Moves</h3>
-        <NotationList label="Analysed move list" startsWithBlack={startsWithBlack} current={variation ? 0 : ply} onSelect={goPly}
+        <NotationList label="Analysed move list" startsWithBlack={startsWithBlack} current={variation || inSandbox ? 0 : ply} onSelect={goPly}
           moves={game.moves.map((m, i) => { const pa = plies.find(p => p.ply === i + 1); return { san: m.san, grade: pa?.grade ?? null, provisional: pa?.gradeProvisional }; })} />
       </div>
       <div className="panel">
         <div className="panel-title"><h3>Evaluation</h3><span className="small muted">Higher is better for White</span></div>
         {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet. The graph appears as the analysis finishes.</p>}
+        {turns.length > 0 && <div style={{ marginTop: 10 }}><TurningPointList points={turns} onSelect={goPly} current={ply} source="largest changes of White's expected score" /></div>}
       </div>
+      {report && <div className="panel"><LessonLinks topics={[...(cur?.notes.map(x => x.topic) ?? []), ...report.recommendations.map(r => r.topic), ...(turns.length ? ['turning-points'] : []), 'postgame-study']} /></div>}
     </>
   );
 
@@ -329,7 +372,10 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
           <span className="chip">{game.timeControl.label}</span>
           <span className={`chip ${game.rated ? 'pos' : ''}`}>{game.mode === 'training' ? 'Training' : game.rated ? 'Rated' : 'Casual'}</span>
         </>}
-        actions={<button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export Game</button>}
+        actions={<>
+          <button className="btn small" aria-pressed={favourite} data-testid="favourite" disabled={services.readOnly} onClick={() => void toggleFavourite()}>{favourite ? '★ Favourite' : '☆ Favourite'}</button>
+          <button className="btn small" onClick={() => download(`${game.id}.crown-game.json`, exportGame(game))}>Export Game</button>
+        </>}
         white={{ name: game.white.name, rating: rating(game.white) }}
         black={{ name: game.black.name, rating: rating(game.black) }}
         result={game.result ?? null} />
@@ -387,7 +433,7 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
   );
 }
 
-function MovePanel({ p, onExplore, onRetry, humanPov, accuracyId }: { p: PlyAnalysis; onExplore: (c: Candidate, label: string) => void; onRetry: () => void; humanPov: 'white' | 'black'; accuracyId?: string }) {
+function MovePanel({ p, onExplore, onRetry, onPractise, humanPov, accuracyId }: { p: PlyAnalysis; onExplore: (c: Candidate, label: string) => void; onRetry: () => void; onPractise?: () => void; humanPov: 'white' | 'black'; accuracyId?: string }) {
   const mover = p.color;
   return (
     <div className="panel stack" data-testid="move-panel">
@@ -424,6 +470,7 @@ function MovePanel({ p, onExplore, onRetry, humanPov, accuracyId }: { p: PlyAnal
         </div>
       </div>
       {p.color === humanPov && p.loss !== null && p.loss > 0.05 && <button className="btn" onClick={onRetry}>Retry from This Position (Unrated)</button>}
+      {onPractise && <button className="btn" onClick={onPractise} data-testid="practise-mistake">Practise This Mistake in the Academy</button>}
     </div>
   );
 }
