@@ -167,3 +167,12 @@ Two additive, optional fields (docs/PLAYED_LIKE.md):
   keeps the old one; statistics never mix model ids.
 * Tests: `tests/playedLikeRecords.test.ts` (record contents, reload, backup round trip, v0.9 backfill, version separation,
   low-confidence exclusion).
+
+## v0.11: trophies and legacy header (no schema change)
+Package I adds meta-store records only (additive, IndexedDB version unchanged): `trophy:<key>` (one per trophy, written
+put-if-absent; `{ key, defId, kind, tier, name, season, event, evidence, earnedAt, replay?, at, backfill, registry:
+"crown-trophies-1" }`), `trophyseen:<key>` (ceremony shown), `legacy:backfilled` (one-time back-fill marker) and
+`legacy:prefs` (`crown-legacy-prefs-1`: `{ v: 1, name, banner, featured[], insignia, accent, showcase[], honour }`).
+All four prefixes are carried in the backup `progress` array; restore into an empty career writes them put-if-absent,
+merging into another career does not import them (they belong to the career that earned them). Older builds ignore
+them. Tests: `tests/legacy.test.ts`. See docs/LEGACY.md.

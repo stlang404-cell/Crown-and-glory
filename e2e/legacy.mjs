@@ -110,6 +110,7 @@ const goldLocked = await page.locator('[data-testid="legacy-accents"]').getByRol
 check(6, refused && goldLocked, `Earned banner/accent equipped; an unearned accent is refused (${refused}) and its button disabled (${goldLocked})`);
 await page.goto(url + '#/dashboard');
 await page.waitForTimeout(1600);
+await page.evaluate(() => scrollTo(0, 0));
 await page.screenshot({ path: SHOTS + 'header-desktop.png', clip: { x: 0, y: 0, width: 1366, height: 260 } });
 
 // ---- reload: no duplicates, choices kept, no repeated ceremony
