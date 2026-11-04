@@ -17,8 +17,7 @@ import { divisionLabel, REGION_NAMES } from '../federation/model';
 import { CareerStanding } from './CareerStanding';
 import { PlayerAvatar, PassportBanner } from './Cosmetics';
 import { RATING_TITLES, collectedTitles, insigniaSpec, titleFor } from '../ratings/titles';
-import { PLAYED_LIKE_VALIDATED, playedLike, type PlayedLike } from '../analysis/playedLike';
-import { fmtPlayedLike } from './PlayedLikeCard';
+import { PlayedLikeCareerPanel } from './PlayedLikeCard';
 import { Trophy } from './Emblem';
 import { TROPHY_FOR } from '../heraldry/catalog';
 import { titleKind } from './HallScreen';
@@ -238,34 +237,10 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
   );
 }
 
-/** Passport: recent "Played Like" estimates (experimental; never replaces the Glicko-2 rating). */
-function PlayedLikeHistory({ games, reports }: { games: GameRecord[]; reports: AnalysisReport[] }) {
+/** Passport: permanent Played Like records (src/analysis/playedLikeRecords.ts). */
+function PlayedLikeHistory({ games }: { games: GameRecord[]; reports: AnalysisReport[] }) {
   const { go } = useApp();
-  const latest = new Map<string, AnalysisReport>();
-  for (const r of reports) if (r.status === 'complete') { const c = latest.get(r.gameId); if (!c || r.completedAt > c.completedAt) latest.set(r.gameId, r); }
-  const rows = games.map(g => ({ g, pl: playedLike(latest.get(g.id), g.humanColor) })).filter(x => x.pl.status !== 'pending').reverse();
-  const ok = rows.filter(x => x.pl.status === 'ok') as { g: GameRecord; pl: Extract<PlayedLike, { status: 'ok' }> }[];
-  const recent = ok.slice(0, 10);
-  const avg = recent.length >= 5 ? Math.round(recent.reduce((a, x) => a + x.pl.rating, 0) / recent.length / 10) * 10 : null;
-  const best = ok.reduce<typeof ok[number] | null>((b, x) => (!b || x.pl.rating > b.pl.rating ? x : b), null);
-  return (
-    <div className="panel" style={{ marginTop: 14 }} data-testid="passport-played-like">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Played Like</h3><span className="chip gold">Estimate · Experimental</span></div>
-      {!PLAYED_LIKE_VALIDATED ? <p className="small muted">The Played Like model is still being calibrated: on held-out games it does not yet predict strength better than accuracy alone, so no estimates are shown. They appear here once it passes validation.</p>
-        : !rows.length ? <p className="small muted">Estimates appear after your finished games are analysed.</p> : (<>
-        <div className="grid-3">
-          <div className="stat"><span className="k">Average (last {recent.length})</span><span className="v mono">{avg ?? '—'}</span><span className="small muted">{avg === null ? 'Needs 5 estimated games' : 'Not your rating; your rating comes from results'}</span></div>
-          <div className="stat"><span className="k">Best Supported</span><span className="v mono">{best ? best.pl.rating : '—'}</span>{best && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: best.g.id })}>Open Game</button>}</div>
-          <div className="stat"><span className="k">Estimated Games</span><span className="v mono">{ok.length}</span><span className="small muted">{rows.length - ok.length} without a number (too short or out of range)</span></div>
-        </div>
-        <table className="table small"><thead><tr><th>Date</th><th>Opponent</th><th>Played Like</th><th>Range</th></tr></thead>
-          <tbody>{rows.slice(0, 10).map(x => (
-            <tr key={x.g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: x.g.id })}>
-              <td>{new Date(x.g.startedAt).toLocaleDateString()}</td><td>{x.g.humanColor === 'white' ? x.g.black.name : x.g.white.name}</td>
-              <td className="mono">{fmtPlayedLike(x.pl)}</td><td className="mono small">{x.pl.status === 'ok' ? `${x.pl.low}–${x.pl.high}` : '—'}</td></tr>))}</tbody></table>
-      </>)}
-    </div>
-  );
+  return <PlayedLikeCareerPanel games={games} onOpenGame={gameId => go({ name: 'analysis', gameId })} />;
 }
 
 function FederationCareer({ peak }: { peak: number | null }) {

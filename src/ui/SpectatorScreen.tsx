@@ -41,6 +41,7 @@ import { divisionEmblem, titleEmblem } from '../heraldry/catalog';
 import { clubEmblem, clubOf } from '../heraldry/clubs';
 import { divisionLabel } from '../federation/model';
 import { claimModel } from '../exchange/api';
+import { PlayedLikePanel } from './PlayedLikeCard';
 import { CONTEMPORARY_DISCLOSURE, shownPersona } from '../federation/rosterPersonas';
 import { ENGINE_BUILD } from '../analysis/analyzer';
 import { GRADING_ID, expectedU, toPov } from '../analysis/methodology';
@@ -326,6 +327,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
       {postReady && (
         <div className="small" data-testid="arena-grade-summary">{(['brilliant', 'great', 'best', 'excellent', 'good', 'inaccuracy', 'mistake', 'blunder'] as const).map(gr => { const nW = report!.plies.filter((p, i) => i % 2 === 0 && p.grade === gr).length, nB = report!.plies.filter((p, i) => i % 2 === 1 && p.grade === gr).length; return nW + nB ? <span key={gr} className="chip" style={{ marginRight: 4 }}><GradeIcon grade={gr} /> {GRADE_LABEL[gr]} {nW}/{nB}</span> : null; })} <span className="muted">(White/Black)</span></div>
       )}
+      {postReady && <PlayedLikePanel report={report!} sides={{ white: { name: w?.name ?? 'White', career: w ? Math.round(w.rating) : null }, black: { name: b?.name ?? 'Black', career: b ? Math.round(b.rating) : null } }} testIds={{ white: 'arena-played-like-white', black: 'arena-played-like-black' }} />}
       <TurningPointList points={turns} onSelect={nav} current={ply} source={postCurve ? 'Match Analysis' : 'published evaluations'} />
       {forecast}
       <MatchEventList events={events} onSelect={nav} current={ply} />
