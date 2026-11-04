@@ -1,0 +1,24 @@
+{
+ "a": "singularT100",
+ "b": "v7maxT100",
+ "games": 640,
+ "wins": 213,
+ "draws": 229,
+ "losses": 198,
+ "score": 0.51171875,
+ "eloDiff": 8,
+ "eloCI": [
+  -11,
+  28
+ ],
+ "chunks": [
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o0.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o120.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o160.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o200.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o240.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o280.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o40.json",
+  "tools/bench/results/chunks/match-singularT100-vs-v7maxT100-v8c-o80.json"
+ ]
+}
