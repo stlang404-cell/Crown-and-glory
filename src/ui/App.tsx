@@ -23,6 +23,7 @@ import { HeraldryScreen } from './HeraldryScreen';
 import { CeremonyOverlay } from './Ceremony';
 import { APP_VERSION } from '../app/services';
 import { AcademyScreen } from './AcademyScreen';
+import { GrimoireScreen } from './GrimoireScreen';
 import { Icon } from './Icons';
 import { SettingsScreen } from './SettingsScreen';
 import { VaultScreen, VaultToast } from './VaultScreen';
@@ -36,6 +37,7 @@ export type View =
   | { name: 'profile' }
   | { name: 'lab' }
   | { name: 'academy' }
+  | { name: 'grimoire'; path?: string }
   | { name: 'world' }
   | { name: 'standings' }
   | { name: 'tournaments' }
@@ -72,6 +74,7 @@ function parseHash(): View {
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
+  if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
   return { name: 'play' };
 }
@@ -81,6 +84,7 @@ function toHash(v: View): string {
   if (v.name === 'analyses') return '#/analysis';
   if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
   if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
+  if (v.name === 'grimoire' && v.path) return `#/grimoire/${encodeURIComponent(v.path)}`;
   return `#/${v.name}`;
 }
 
@@ -101,7 +105,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 ];
 /** The phone tab bar keeps the five most-used sections plus Settings; the rest live in the Federation/Career screens and the side rail. */
 const TABS: View['name'][] = ['play', 'world', 'exchange', 'finance', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -148,6 +152,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'profile' && <ProfileScreen />}
             {view.name === 'lab' && <LabScreen />}
             {view.name === 'academy' && <AcademyScreen />}
+            {view.name === 'grimoire' && <GrimoireScreen path={view.path} />}
             {view.name === 'world' && <WorldScreen />}
             {view.name === 'standings' && <StandingsScreen />}
             {view.name === 'tournaments' && <TournamentsScreen />}

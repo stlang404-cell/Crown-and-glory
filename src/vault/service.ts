@@ -9,6 +9,7 @@ import type { FederationService } from '../app/federation';
 import type { GameRecord } from '../games/types';
 import { VAULT, type EvalResult } from './catalog';
 import { buildFacts, type Facts } from './facts';
+import { loadProgress } from '../academy/grimoire';
 import { BACKFILL_KEY, evaluateAll, loadToasted, loadUnlocks, markToasted, newUnlocks, saveUnlocks, type UnlockRecord } from './store';
 
 export interface VaultHost {
@@ -119,7 +120,9 @@ export class VaultService {
     const fed = this.host.fed.state;
     let netWorthNow: number | null = null;
     try { netWorthNow = fed ? this.host.fed.finance().netWorth : null; } catch { netWorthNow = null; }
-    return buildFacts({ games: games.filter((g: GameRecord) => g.status === 'finalized'), ratingEvents, reports, bookmarks, attempts, trainingRuns, fed, netWorthNow, owned: this.owned.keys() });
+    const grim = await loadProgress(db);
+    return buildFacts({ games: games.filter((g: GameRecord) => g.status === 'finalized'), ratingEvents, reports, bookmarks, attempts, trainingRuns, fed, netWorthNow, owned: this.owned.keys(),
+      grimoire: { attempts: grim.attempts, completions: [...grim.completions.values()] } });
   }
 
   /** The one-time notice was shown (or dismissed): never show it again, even after a reload. */

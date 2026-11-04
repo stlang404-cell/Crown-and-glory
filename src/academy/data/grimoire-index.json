@@ -1,0 +1,863 @@
+{
+ "id": "crown-grimoire-lessons-1",
+ "books": [
+  {
+   "number": 1,
+   "kind": "book",
+   "title": "Book I — The Apprentice",
+   "chapters": [
+    {
+     "id": "b1-1-the-board-and-its-coordinates",
+     "title": "Chapter 1 — The Board and Its Coordinates",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b1-2-the-pieces-i-rook-queen-and-king",
+     "title": "Chapter 2 — The Pieces I: Rook, Queen and King",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b1-3-the-pieces-ii-knight-and-pawn",
+     "title": "Chapter 3 — The Pieces II: Knight and Pawn",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b1-4-capturing-and-piece-safety",
+     "title": "Chapter 4 — Capturing and Piece Safety",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b1-4-capturing-and-piece-safety/guided",
+      "b1-4-capturing-and-piece-safety/ex-1",
+      "b1-4-capturing-and-piece-safety/ex-2",
+      "b1-4-capturing-and-piece-safety/ex-3"
+     ],
+     "puzzles": [
+      "pz-1u23ob3",
+      "pz-1xa5t37",
+      "pz-1c8fjp0",
+      "pz-ra3qk4"
+     ]
+    },
+    {
+     "id": "b1-5-check-and-escaping-check",
+     "title": "Chapter 5 — Check and Escaping Check",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b1-6-checkmate-king-and-queen-king-and-rook",
+     "title": "Chapter 6 — Checkmate: King and Queen, King and Rook",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b1-6-checkmate-king-and-queen-king-and-rook/guided",
+      "b1-6-checkmate-king-and-queen-king-and-rook/ex-1",
+      "b1-6-checkmate-king-and-queen-king-and-rook/ex-2",
+      "b1-6-checkmate-king-and-queen-king-and-rook/ex-3"
+     ],
+     "puzzles": []
+    },
+    {
+     "id": "b1-7-stalemate-and-the-other-draws",
+     "title": "Chapter 7 — Stalemate and the Other Draws",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b1-7-stalemate-and-the-other-draws/guided",
+      "b1-7-stalemate-and-the-other-draws/ex-1",
+      "b1-7-stalemate-and-the-other-draws/ex-2"
+     ],
+     "puzzles": []
+    },
+    {
+     "id": "b1-8-simple-winning-patterns",
+     "title": "Chapter 8 — Simple Winning Patterns",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b1-8-simple-winning-patterns/guided",
+      "b1-8-simple-winning-patterns/ex-1",
+      "b1-8-simple-winning-patterns/ex-2",
+      "b1-8-simple-winning-patterns/ex-3"
+     ],
+     "puzzles": [
+      "pz-1olai4r",
+      "pz-ewndyc",
+      "pz-1lq92r",
+      "pz-1muyn8j"
+     ]
+    },
+    {
+     "id": "b1-9-the-pawns-road-four-steps-to-the-crown",
+     "title": "Chapter 9 — The Pawn's Road: Four Steps to the Crown",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b1-9-the-pawns-road-four-steps-to-the-crown/guided",
+      "b1-9-the-pawns-road-four-steps-to-the-crown/ex-1",
+      "b1-9-the-pawns-road-four-steps-to-the-crown/ex-2",
+      "b1-9-the-pawns-road-four-steps-to-the-crown/ex-3"
+     ],
+     "puzzles": [
+      "pz-12j3cmu",
+      "pz-1cphbbp",
+      "pz-13ahfji",
+      "pz-1ftvz6i"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 2,
+   "kind": "book",
+   "title": "Book II — The Duelist",
+   "chapters": [
+    {
+     "id": "b2-1-double-attacks-and-forks",
+     "title": "Chapter 1 — Double Attacks and Forks",
+     "tags": [
+      "topic",
+      "fork"
+     ],
+     "topic": {
+      "id": "b2-1-double-attacks-and-forks",
+      "label": "Double Attacks and Forks",
+      "theme": "fork"
+     },
+     "exercises": [
+      "b2-1-double-attacks-and-forks/guided",
+      "b2-1-double-attacks-and-forks/ex-1",
+      "b2-1-double-attacks-and-forks/ex-2",
+      "b2-1-double-attacks-and-forks/ex-3"
+     ],
+     "puzzles": [
+      "pz-12a8lx9",
+      "pz-1tc3h8s",
+      "pz-vdu64q",
+      "pz-5popuw"
+     ]
+    },
+    {
+     "id": "b2-2-pins",
+     "title": "Chapter 2 — Pins",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-2-pins",
+      "label": "Pins",
+      "theme": "pin"
+     },
+     "exercises": [
+      "b2-2-pins/guided",
+      "b2-2-pins/ex-1",
+      "b2-2-pins/ex-2"
+     ],
+     "puzzles": [
+      "pz-rs9hk9",
+      "pz-1djzh9p"
+     ]
+    },
+    {
+     "id": "b2-3-skewers",
+     "title": "Chapter 3 — Skewers",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-3-skewers",
+      "label": "Skewers",
+      "theme": "skewer"
+     },
+     "exercises": [
+      "b2-3-skewers/guided",
+      "b2-3-skewers/ex-1",
+      "b2-3-skewers/ex-2",
+      "b2-3-skewers/ex-3"
+     ],
+     "puzzles": [
+      "pz-rgmywv",
+      "pz-w6ajb8"
+     ]
+    },
+    {
+     "id": "b2-4-discovered-attacks-and-discovered-check",
+     "title": "Chapter 4 — Discovered Attacks and Discovered Check",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-4-discovered-attacks-and-discovered-check",
+      "label": "Discovered Attacks and Discovered Check",
+      "theme": "discovered-attack"
+     },
+     "exercises": [
+      "b2-4-discovered-attacks-and-discovered-check/guided",
+      "b2-4-discovered-attacks-and-discovered-check/ex-1",
+      "b2-4-discovered-attacks-and-discovered-check/ex-2",
+      "b2-4-discovered-attacks-and-discovered-check/ex-3"
+     ],
+     "puzzles": [
+      "pz-p05pjm",
+      "pz-1gfzv5k",
+      "pz-1tmu932"
+     ]
+    },
+    {
+     "id": "b2-5-removing-the-defender-and-overloading",
+     "title": "Chapter 5 — Removing the Defender and Overloading",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-5-removing-the-defender-and-overloading",
+      "label": "Removing the Defender and Overloading",
+      "theme": "hanging-piece"
+     },
+     "exercises": [
+      "b2-5-removing-the-defender-and-overloading/guided",
+      "b2-5-removing-the-defender-and-overloading/ex-1",
+      "b2-5-removing-the-defender-and-overloading/ex-2",
+      "b2-5-removing-the-defender-and-overloading/ex-3"
+     ],
+     "puzzles": [
+      "pz-40ozeh",
+      "pz-11cihvv"
+     ]
+    },
+    {
+     "id": "b2-6-deflection-and-decoy",
+     "title": "Chapter 6 — Deflection and Decoy",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-6-deflection-and-decoy",
+      "label": "Deflection and Decoy",
+      "theme": "calculation"
+     },
+     "exercises": [
+      "b2-6-deflection-and-decoy/guided",
+      "b2-6-deflection-and-decoy/ex-1",
+      "b2-6-deflection-and-decoy/ex-2"
+     ],
+     "puzzles": [
+      "pz-m2gpo4",
+      "pz-1f5g8cf",
+      "pz-mmr0yt"
+     ]
+    },
+    {
+     "id": "b2-7-trapped-pieces",
+     "title": "Chapter 7 — Trapped Pieces",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-7-trapped-pieces",
+      "label": "Trapped Pieces",
+      "theme": "hanging-piece"
+     },
+     "exercises": [
+      "b2-7-trapped-pieces/ex-1",
+      "b2-7-trapped-pieces/ex-3"
+     ],
+     "puzzles": []
+    },
+    {
+     "id": "b2-8-the-zwischenzug-the-in-between-move",
+     "title": "Chapter 8 — The Zwischenzug (the In-Between Move)",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-8-the-zwischenzug-the-in-between-move",
+      "label": "The Zwischenzug (the In-Between Move)",
+      "theme": "calculation"
+     },
+     "exercises": [
+      "b2-8-the-zwischenzug-the-in-between-move/guided",
+      "b2-8-the-zwischenzug-the-in-between-move/ex-1",
+      "b2-8-the-zwischenzug-the-in-between-move/ex-2",
+      "b2-8-the-zwischenzug-the-in-between-move/ex-3"
+     ],
+     "puzzles": [
+      "pz-19zizr9"
+     ]
+    },
+    {
+     "id": "b2-9-mate-threats-and-sacrifices",
+     "title": "Chapter 9 — Mate Threats and Sacrifices",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-9-mate-threats-and-sacrifices",
+      "label": "Mate Threats and Sacrifices",
+      "theme": "mate-threat"
+     },
+     "exercises": [
+      "b2-9-mate-threats-and-sacrifices/guided",
+      "b2-9-mate-threats-and-sacrifices/ex-1",
+      "b2-9-mate-threats-and-sacrifices/ex-2",
+      "b2-9-mate-threats-and-sacrifices/ex-3"
+     ],
+     "puzzles": [
+      "pz-mxl0mu"
+     ]
+    },
+    {
+     "id": "b2-10-promotion-tactics",
+     "title": "Chapter 10 — Promotion Tactics",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-10-promotion-tactics",
+      "label": "Promotion Tactics",
+      "theme": "promotion"
+     },
+     "exercises": [
+      "b2-10-promotion-tactics/guided",
+      "b2-10-promotion-tactics/ex-1",
+      "b2-10-promotion-tactics/ex-2"
+     ],
+     "puzzles": [
+      "pz-1rz0zpd",
+      "pz-1td3for",
+      "pz-12s9mp"
+     ]
+    },
+    {
+     "id": "b2-11-forcing-move-calculation",
+     "title": "Chapter 11 — Forcing-Move Calculation",
+     "tags": [
+      "topic"
+     ],
+     "topic": {
+      "id": "b2-11-forcing-move-calculation",
+      "label": "Forcing-Move Calculation",
+      "theme": "calculation"
+     },
+     "exercises": [
+      "b2-11-forcing-move-calculation/guided",
+      "b2-11-forcing-move-calculation/ex-1",
+      "b2-11-forcing-move-calculation/ex-2",
+      "b2-11-forcing-move-calculation/ex-3"
+     ],
+     "puzzles": [
+      "pz-am6uu4",
+      "pz-1sicldm",
+      "pz-14bci3z",
+      "pz-uo80c3"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 3,
+   "kind": "book",
+   "title": "Book III — The Strategist",
+   "chapters": [
+    {
+     "id": "b3-the-strategists-ledger-where-the-numbers-come-from",
+     "title": "The Strategist's Ledger: where the numbers come from",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b3-iii-1-the-first-ten-doors-development-on-six-files",
+     "title": "Chapter III.1 — The First Ten Doors: Development on Six Files",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-1-the-first-ten-doors-development-on-six-files/ex-3",
+      "b3-iii-1-the-first-ten-doors-development-on-six-files/ex-4"
+     ],
+     "puzzles": [
+      "pz-llphgz",
+      "pz-1rhuqma"
+     ]
+    },
+    {
+     "id": "b3-iii-2-the-crown-without-a-castle-king-safety",
+     "title": "Chapter III.2 — The Crown Without a Castle: King Safety",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-2-the-crown-without-a-castle-king-safety/ex-2",
+      "b3-iii-2-the-crown-without-a-castle-king-safety/ex-3"
+     ],
+     "puzzles": [
+      "pz-1743ej5",
+      "pz-1xooynn"
+     ]
+    },
+    {
+     "id": "b3-iii-3-the-heart-of-the-board-centre-and-space",
+     "title": "Chapter III.3 — The Heart of the Board: Centre and Space",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-3-the-heart-of-the-board-centre-and-space/ex-2",
+      "b3-iii-3-the-heart-of-the-board-centre-and-space/ex-3",
+      "b3-iii-3-the-heart-of-the-board-centre-and-space/ex-4"
+     ],
+     "puzzles": [
+      "pz-1x6nwkp",
+      "pz-12d9mta",
+      "pz-7no048"
+     ]
+    },
+    {
+     "id": "b3-iii-4-the-double-edged-hourglass-tempo-initiative-and",
+     "title": "Chapter III.4 — The Double-Edged Hourglass: Tempo, Initiative and Coordination",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-4-the-double-edged-hourglass-tempo-initiative-and/guided",
+      "b3-iii-4-the-double-edged-hourglass-tempo-initiative-and/ex-2",
+      "b3-iii-4-the-double-edged-hourglass-tempo-initiative-and/ex-3"
+     ],
+     "puzzles": [
+      "pz-sxwkr",
+      "pz-72t10s",
+      "pz-5bgv1i"
+     ]
+    },
+    {
+     "id": "b3-iii-5-the-bones-of-the-position-pawn-structures",
+     "title": "Chapter III.5 — The Bones of the Position: Pawn Structures",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-5-the-bones-of-the-position-pawn-structures/ex-2",
+      "b3-iii-5-the-bones-of-the-position-pawn-structures/ex-3"
+     ],
+     "puzzles": [
+      "pz-9gpef8",
+      "pz-j9v9yp"
+     ]
+    },
+    {
+     "id": "b3-iii-6-open-roads-and-safe-harbours-files-weak-squares-and",
+     "title": "Chapter III.6 — Open Roads and Safe Harbours: Files, Weak Squares and Outposts",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-6-open-roads-and-safe-harbours-files-weak-squares-and/guided",
+      "b3-iii-6-open-roads-and-safe-harbours-files-weak-squares-and/ex-2",
+      "b3-iii-6-open-roads-and-safe-harbours-files-weak-squares-and/ex-3",
+      "b3-iii-6-open-roads-and-safe-harbours-files-weak-squares-and/ex-4"
+     ],
+     "puzzles": [
+      "pz-1alc6nh",
+      "pz-1kvvn1q",
+      "pz-54922z",
+      "pz-1m7xdw8"
+     ]
+    },
+    {
+     "id": "b3-iii-7-unequal-scales-material-imbalances-and-trading-decisions",
+     "title": "Chapter III.7 — Unequal Scales: Material Imbalances and Trading Decisions",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-7-unequal-scales-material-imbalances-and-trading-decisions/ex-2",
+      "b3-iii-7-unequal-scales-material-imbalances-and-trading-decisions/ex-3"
+     ],
+     "puzzles": [
+      "pz-1ieweog",
+      "pz-1pw6dp5"
+     ]
+    },
+    {
+     "id": "b3-iii-8-the-long-spell-planning-and-prophylaxis",
+     "title": "Chapter III.8 — The Long Spell: Planning and Prophylaxis",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-8-the-long-spell-planning-and-prophylaxis/guided",
+      "b3-iii-8-the-long-spell-planning-and-prophylaxis/ex-2",
+      "b3-iii-8-the-long-spell-planning-and-prophylaxis/ex-3"
+     ],
+     "puzzles": [
+      "pz-1hgyd7o",
+      "pz-1uj8f9i",
+      "pz-elm8pn"
+     ]
+    },
+    {
+     "id": "b3-iii-9-turning-gold-into-crowns-conversion-tactics-and-patience",
+     "title": "Chapter III.9 — Turning Gold into Crowns: Conversion, Tactics and Patience",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b3-iii-9-turning-gold-into-crowns-conversion-tactics-and-patience/ex-2"
+     ],
+     "puzzles": [
+      "pz-1elydfs"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 4,
+   "kind": "book",
+   "title": "Book IV — The Master",
+   "chapters": [
+    {
+     "id": "b4-iv-1-the-branching-path-candidate-moves-and-calculation",
+     "title": "Chapter IV.1 — The Branching Path: Candidate Moves and Calculation",
+     "tags": [
+      "calculation"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-1-the-branching-path-candidate-moves-and-calculation/guided",
+      "b4-iv-1-the-branching-path-candidate-moves-and-calculation/ex-1",
+      "b4-iv-1-the-branching-path-candidate-moves-and-calculation/ex-2",
+      "b4-iv-1-the-branching-path-candidate-moves-and-calculation/ex-3",
+      "b4-iv-1-the-branching-path-candidate-moves-and-calculation/ex-4"
+     ],
+     "puzzles": [
+      "pz-rz4qge",
+      "pz-1ojk9ut",
+      "pz-taj1mu",
+      "pz-1qqoidw"
+     ]
+    },
+    {
+     "id": "b4-iv-2-the-chain-of-compulsion-evaluating-forcing-lines",
+     "title": "Chapter IV.2 — The Chain of Compulsion: Evaluating Forcing Lines",
+     "tags": [
+      "calculation"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-2-the-chain-of-compulsion-evaluating-forcing-lines/guided",
+      "b4-iv-2-the-chain-of-compulsion-evaluating-forcing-lines/ex-1",
+      "b4-iv-2-the-chain-of-compulsion-evaluating-forcing-lines/ex-2",
+      "b4-iv-2-the-chain-of-compulsion-evaluating-forcing-lines/ex-3"
+     ],
+     "puzzles": [
+      "pz-t9swgq",
+      "pz-1xogykc"
+     ]
+    },
+    {
+     "id": "b4-iv-3-the-unbroken-ward-defensive-resources",
+     "title": "Chapter IV.3 — The Unbroken Ward: Defensive Resources",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b4-iv-3-the-unbroken-ward-defensive-resources/guided",
+      "b4-iv-3-the-unbroken-ward-defensive-resources/ex-1",
+      "b4-iv-3-the-unbroken-ward-defensive-resources/ex-2",
+      "b4-iv-3-the-unbroken-ward-defensive-resources/ex-3",
+      "b4-iv-3-the-unbroken-ward-defensive-resources/ex-4"
+     ],
+     "puzzles": [
+      "pz-1w5drbc",
+      "pz-1e3gsvq",
+      "pz-3rc51e",
+      "pz-gbfcab",
+      "pz-34jbi3"
+     ]
+    },
+    {
+     "id": "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings",
+     "title": "Chapter IV.4 — The Crown's March: King Activity and King-and-Pawn Endings",
+     "tags": [
+      "endgame"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings/guided",
+      "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings/ex-1",
+      "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings/ex-2",
+      "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings/ex-3",
+      "b4-iv-4-the-crowns-march-king-activity-and-king-and-pawn-endings/ex-4"
+     ],
+     "puzzles": [
+      "pz-1og62nt",
+      "pz-lw0zln",
+      "pz-58b8es",
+      "pz-fhy0fo",
+      "pz-c0qvzm"
+     ]
+    },
+    {
+     "id": "b4-iv-5-the-towers-patience-rook-endings",
+     "title": "Chapter IV.5 — The Tower's Patience: Rook Endings",
+     "tags": [
+      "endgame"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-5-the-towers-patience-rook-endings/guided",
+      "b4-iv-5-the-towers-patience-rook-endings/ex-1",
+      "b4-iv-5-the-towers-patience-rook-endings/ex-2",
+      "b4-iv-5-the-towers-patience-rook-endings/ex-3"
+     ],
+     "puzzles": [
+      "pz-1sosh8a",
+      "pz-qn6wq1",
+      "pz-1qt9loi"
+     ]
+    },
+    {
+     "id": "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen",
+     "title": "Chapter IV.6 — Knights in Moonlight, Queens at Dawn: Knight and Queen Endings",
+     "tags": [
+      "endgame"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/guided",
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/ex-1",
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/ex-2",
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/ex-3",
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/ex-4",
+      "b4-iv-6-knights-in-moonlight-queens-at-dawn-knight-and-queen/ex-5"
+     ],
+     "puzzles": [
+      "pz-10kdeu",
+      "pz-1kyexec",
+      "pz-1s6cykg",
+      "pz-1ftvz6i"
+     ]
+    },
+    {
+     "id": "b4-iv-7-the-law-of-the-realm-draws-fortresses-and-the-rules",
+     "title": "Chapter IV.7 — The Law of the Realm: Draws, Fortresses and the Rules",
+     "tags": [
+      "endgame"
+     ],
+     "topic": null,
+     "exercises": [
+      "b4-iv-7-the-law-of-the-realm-draws-fortresses-and-the-rules/guided"
+     ],
+     "puzzles": []
+    },
+    {
+     "id": "b4-iv-8-the-sovereigns-hourglass-conversion-time-and-practical",
+     "title": "Chapter IV.8 — The Sovereign's Hourglass: Conversion, Time and Practical Decisions",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b4-iv-8-the-sovereigns-hourglass-conversion-time-and-practical/guided",
+      "b4-iv-8-the-sovereigns-hourglass-conversion-time-and-practical/ex-1",
+      "b4-iv-8-the-sovereigns-hourglass-conversion-time-and-practical/ex-2"
+     ],
+     "puzzles": [
+      "pz-1cphbbp",
+      "pz-1td3for",
+      "pz-12j3cmu"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 5,
+   "kind": "book",
+   "title": "Book V — The Sovereign",
+   "chapters": [
+    {
+     "id": "b5-v-1-the-pruned-tree-calculation-and-candidate-discipline",
+     "title": "Chapter V.1 — The Pruned Tree: calculation and candidate discipline",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b5-v-1-the-pruned-tree-calculation-and-candidate-discipline/guided",
+      "b5-v-1-the-pruned-tree-calculation-and-candidate-discipline/ex-1",
+      "b5-v-1-the-pruned-tree-calculation-and-candidate-discipline/ex-2",
+      "b5-v-1-the-pruned-tree-calculation-and-candidate-discipline/ex-3"
+     ],
+     "puzzles": [
+      "pz-culn07"
+     ]
+    },
+    {
+     "id": "b5-v-2-complexity-imbalance-and-the-art-of-simplifying",
+     "title": "Chapter V.2 — Complexity, Imbalance and the Art of Simplifying",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b5-v-2-complexity-imbalance-and-the-art-of-simplifying/guided",
+      "b5-v-2-complexity-imbalance-and-the-art-of-simplifying/ex-1",
+      "b5-v-2-complexity-imbalance-and-the-art-of-simplifying/ex-2"
+     ],
+     "puzzles": [
+      "pz-19v5xks",
+      "pz-ifalpv",
+      "pz-12j3cmu"
+     ]
+    },
+    {
+     "id": "b5-v-3-reading-the-opponent-profiling-and-style-adaptation",
+     "title": "Chapter V.3 — Reading the Opponent: profiling and style adaptation",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b5-v-4-the-tournament-hall-swiss-leagues-and-knockouts",
+     "title": "Chapter V.4 — The Tournament Hall: Swiss, leagues and knockouts",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b5-v-5-critical-moments-stronger-opponents-and-predictable-mistakes",
+     "title": "Chapter V.5 — Critical Moments, Stronger Opponents and Predictable Mistakes",
+     "tags": [],
+     "topic": null,
+     "exercises": [
+      "b5-v-5-critical-moments-stronger-opponents-and-predictable-mistakes/guided",
+      "b5-v-5-critical-moments-stronger-opponents-and-predictable-mistakes/ex-1",
+      "b5-v-5-critical-moments-stronger-opponents-and-predictable-mistakes/ex-2"
+     ],
+     "puzzles": [
+      "pz-r2s0tz",
+      "pz-j2j4tm",
+      "pz-bus7cm"
+     ]
+    },
+    {
+     "id": "b5-v-6-the-engines-mirror-postgame-study-evaluations-and-losses",
+     "title": "Chapter V.6 — The Engine's Mirror: postgame study, evaluations and losses",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b5-v-7-the-sixty-four-gates-building-a-repertoire",
+     "title": "Chapter V.7 — The Sixty-Four Gates: building a repertoire",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b5-v-8-the-unbound-challenge-preparing-to-face-sovereign-unbound",
+     "title": "Chapter V.8 — The Unbound Challenge: preparing to face Sovereign Unbound",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    }
+   ]
+  },
+  {
+   "number": 6,
+   "kind": "book",
+   "title": "Book VI — The Oracle",
+   "chapters": [
+    {
+     "id": "b6-vi-1-the-language-of-chance-probability-prices-and-expected",
+     "title": "Chapter VI.1 — The Language of Chance: probability, prices and expected value",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-2-the-engine-of-prices-the-lmsr-market-maker-liquidity-and",
+     "title": "Chapter VI.2 — The Engine of Prices: the LMSR market maker, liquidity and slippage",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-3-measuring-the-oracle-calibration-and-the-brier-score",
+     "title": "Chapter VI.3 — Measuring the Oracle: calibration and the Brier score",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-4-sizing-the-stake-kelly-as-a-ceiling-risk-as-a-discipline",
+     "title": "Chapter VI.4 — Sizing the Stake: Kelly as a ceiling, risk as a discipline",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-5-tournament-forecasting-correlated-outcomes-and-hedging",
+     "title": "Chapter VI.5 — Tournament Forecasting: correlated outcomes and hedging",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-6-live-odds-and-the-uncertain-board",
+     "title": "Chapter VI.6 — Live Odds and the Uncertain Board",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    },
+    {
+     "id": "b6-vi-7-the-crowd-and-the-mirror-npc-traders-overconfidence-and-the",
+     "title": "Chapter VI.7 — The Crowd and the Mirror: NPC traders, overconfidence and the long run",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    }
+   ]
+  },
+  {
+   "number": 7,
+   "kind": "appendix",
+   "title": "The Twelve-Week Program — From Apprentice to Sovereign",
+   "chapters": [
+    {
+     "id": "b7-the-twelve-week-program-from-apprentice-to-sovereign",
+     "title": "The Twelve-Week Program — From Apprentice to Sovereign",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    }
+   ]
+  },
+  {
+   "number": 8,
+   "kind": "appendix",
+   "title": "Glossary of the Grimoire",
+   "chapters": [
+    {
+     "id": "b8-glossary-of-the-grimoire",
+     "title": "Glossary of the Grimoire",
+     "tags": [],
+     "topic": null,
+     "exercises": [],
+     "puzzles": []
+    }
+   ]
+  }
+ ]
+}

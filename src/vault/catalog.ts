@@ -13,6 +13,7 @@ import { FED_TITLES, type FedTitle } from '../heraldry/catalog';
 import { RATING_TITLES, insigniaSpec, type Era } from '../ratings/titles';
 import { GRADING_ID } from '../analysis/methodology';
 import { fmtMoney, MICRO } from '../exchange/ledger';
+import { chaptersOfBook, chaptersTagged, indexChapters } from '../academy/grimoire';
 import { comebackRun, exchangeStats, seasonPnl, unbeatenRun, type Facts, type OwnGame } from './facts';
 
 export const VAULT_ID = 'crown-vault-1';
@@ -74,6 +75,15 @@ const regionsBeaten = (games: OwnGame[]) => new Set(games.filter(g => g.score ==
 const seasonsOf = (titles: { season: number; title: string }[], re: RegExp) => titles.filter(t => re.test(t.title)).map(t => t.season);
 const CHAMP = /^(Joint )?Crown Champion S\d+/;
 const LEAGUE = / champion \(/;
+
+/** Grimoire chapters: earned when every listed chapter has a completion record; `when` is the last of them. */
+const chaptersDone = (f: Facts, ids: string[], evidence: string): EvalResult => {
+  const have = ids.filter(id => f.grimoire.completed.has(id));
+  const when = have.map(id => f.grimoire.completed.get(id)!).sort().pop();
+  return count(have.length, ids.length || Infinity, evidence, when);
+};
+const booksDone = (f: Facts, books: number[], evidence: string) => chaptersDone(f, books.flatMap(b => chaptersOfBook(b).map(c => c.id)), evidence);
+const chapterTitle = (id: string) => indexChapters().find(c => c.id === id)?.title ?? id;
 
 interface Spec { id: string; name: string; c: Collection; r: Rarity; charge: ChargeId; field: Tincture; d: string; rule: string; secret?: boolean; grading?: boolean; kind?: VaultDef['kind']; mono?: string; ev: (f: Facts) => EvalResult }
 const AWAIT = (): EvalResult => ({ earned: false });
@@ -273,6 +283,21 @@ const MORE: Spec[] = [
   ...([[100, 'Puzzle Adept', 'uncommon'], [500, 'Puzzle Sage', 'epic']] as [number, string, Rarity][]).map(([n, name, r]): Spec => ({
     id: `puzzles-${n}`, name, c: 'Legacy', r, charge: 'key', field: n > 100 ? 'purpure' : 'vert', d: `Solve ${n} puzzles cleanly.`, rule: `Solve ${n} different Academy puzzles on the first try without hints.`,
     ev: f => count(f.puzzlesClean, n, `${f.puzzlesClean} puzzles solved cleanly`) })),
+  // The Sovereign's Grimoire (Academy lessons): chapter completions are stored once per chapter, and exercises count
+  // once per exercise id, so re-reading or re-solving never adds anything.
+  { id: 'first-lesson', name: 'First Lesson', c: 'Legacy', r: 'common', charge: 'book', field: 'celeste', d: 'Complete a Grimoire chapter.', rule: "Complete any chapter of The Sovereign's Grimoire in the Academy (solve its exercises, or read a chapter without exercises to the end).",
+    ev: f => { const first = [...f.grimoire.completed].sort((a, b) => a[1].localeCompare(b[1]))[0]; return hit(!!first, first && `Completed ${chapterTitle(first[0])}`, first?.[1]); } },
+  { id: 'apprentice-graduate', name: 'Apprentice Graduate', c: 'Legacy', r: 'uncommon', charge: 'quill', field: 'vert', d: 'Complete Book I of the Grimoire.', rule: 'Complete every chapter of Book I — The Apprentice.', ev: f => booksDone(f, [1], 'Book I complete') },
+  { id: 'tactical-scholar', name: 'Tactical Scholar', c: 'Legacy', r: 'rare', charge: 'sword', field: 'gules', d: 'Complete Book II of the Grimoire.', rule: 'Complete every chapter of Book II — The Duelist.', ev: f => booksDone(f, [2], 'Book II complete') },
+  { id: 'fork-specialist', name: 'Fork Specialist', c: 'Legacy', r: 'rare', charge: 'knight', field: 'tenne', d: 'Master the fork exercises.', rule: 'Solve every exercise of the Grimoire fork chapter (Book II, Chapter 1) on the first try, without a hint, at least once each.',
+    ev: f => { const ids = chaptersTagged('fork').flatMap(c => c.exercises); const have = ids.filter(id => f.grimoire.firstTry.has(id)).length; return count(have, ids.length || Infinity, `All ${ids.length} fork exercises solved first try`); } },
+  { id: 'endgame-apprentice', name: 'Endgame Apprentice', c: 'Legacy', r: 'rare', charge: 'pawn', field: 'steel', d: 'Complete the endgame chapters of Book IV.', rule: 'Complete the Book IV endgame chapters (king and pawn, rook, knight and queen endings, and draws and fortresses).',
+    ev: f => chaptersDone(f, chaptersTagged('endgame').map(c => c.id), 'Book IV endgame chapters complete') },
+  { id: 'calculation-adept', name: 'Calculation Adept', c: 'Legacy', r: 'epic', charge: 'hourglass', field: 'azure', d: 'Calculate cleanly through Book IV.', rule: 'Complete the Book IV candidate-move and forcing-line chapters with at least 80% of their exercises solved first try on your first attempt.',
+    ev: f => { const chs = chaptersTagged('calculation'); const ids = chs.flatMap(c => c.exercises); const ft = ids.filter(id => f.grimoire.firstOutcome.get(id) === 'first-try').length;
+      const done = chaptersDone(f, chs.map(c => c.id), `${ft} of ${ids.length} solved first try`); return ids.length && done.earned && ft / ids.length >= 0.8 ? done : { earned: false, progress: done.progress }; } },
+  { id: 'academy-graduate', name: 'Academy Graduate', c: 'Legacy', r: 'epic', charge: 'laurel', field: 'or', d: 'Complete Books I–IV of the Grimoire.', rule: 'Complete every chapter of Books I, II, III and IV.', ev: f => booksDone(f, [1, 2, 3, 4], 'Books I–IV complete') },
+  { id: 'sovereign-trial', name: "The Sovereign's Trial", c: 'Legacy', r: 'legendary', charge: 'crown', field: 'purpure', d: 'Complete Book V of the Grimoire.', rule: 'Complete every chapter of Book V — The Sovereign.', ev: f => booksDone(f, [5], 'Book V complete') },
   { id: 'full-season', name: 'Full Season', c: 'Legacy', r: 'uncommon', charge: 'hourglass', field: 'steel', d: 'Play a whole season.', rule: 'Play every one of your own fixtures in a completed season over the board (no forfeits).',
     ev: f => { const s = f.fed?.fullSeasons[0]; return hit(s !== undefined, `Season ${s}`); } },
   { id: 'ten-seasons', name: 'Decade', c: 'Legacy', r: 'legendary', charge: 'hourglass', field: 'or', d: 'Ten seasons in the Federation.', rule: 'Complete 10 Federation seasons.', ev: f => count(f.fed?.seasonsCompleted ?? 0, 10, '10 seasons completed') },

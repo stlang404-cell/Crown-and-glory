@@ -17,6 +17,7 @@ import type { FedTitle } from '../heraldry/catalog';
 import { scoreAll, summary, type ForecastRecord } from '../app/forecasting';
 import { collectedTitles } from '../ratings/titles';
 import { isProvisional } from '../ratings/glicko2';
+import { grimoireFacts, type GrimAttempt, type GrimCompletion, type GrimoireFacts } from '../academy/grimoire';
 
 const PLAYER = 'player';
 
@@ -46,6 +47,8 @@ export interface VaultInput {
   netWorthNow?: number | null;
   /** Ids already owned (for meta achievements such as all-collections). */
   owned?: Iterable<string>;
+  /** Grimoire lesson records (meta store `grim:`): exercise sessions and chapter completions. */
+  grimoire?: { attempts: GrimAttempt[]; completions: GrimCompletion[] };
 }
 
 // ---------------------------------------------------------------- derived facts
@@ -100,6 +103,8 @@ export interface Facts {
   trainingSets: number;
   fed: FedFacts | null;
   owned: Set<string>;
+  /** Completed Grimoire chapters (id → when), exercises ever solved first try, and each exercise's first outcome. */
+  grimoire: GrimoireFacts;
 }
 
 const VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
@@ -281,7 +286,7 @@ export function buildFacts(input: VaultInput): Facts {
     bookmarks: marks.size, retryWins: retries.size,
     puzzlesClean: new Set((input.attempts ?? []).filter(a => a.solved && a.clean).map(a => a.puzzleId)).size,
     trainingSets: (input.trainingRuns ?? []).filter(r => r.endedAt && r.attempted > 0).length,
-    fed, owned: new Set(input.owned ?? []),
+    fed, owned: new Set(input.owned ?? []), grimoire: grimoireFacts(input.grimoire),
   };
 }
 

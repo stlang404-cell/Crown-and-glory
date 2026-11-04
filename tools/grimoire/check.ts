@@ -33,6 +33,7 @@ import { automaticOutcome } from '../../src/rules/adjudication';
 import { KING, PAWN, pieceType, pieceColor, type Move } from '../../src/rules/types';
 import { Searcher } from '../../src/engine/search';
 import { verifyPuzzle } from '../../src/academy/verify';
+import { matingFirstMoves } from '../../src/academy/mateProver';
 
 const ROOTS = ['docs/RULEBOOK.md', 'docs/grimoire'];
 const RENDER = process.argv.includes('--render');
@@ -72,44 +73,8 @@ function legalPosition(pos: Position, fen: string): string | null {
   return null;
 }
 
-/** Exact forced-mate proof: can the side to move force checkmate within n moves (2n-1 plies)? */
-function mates(pos: Position, n: number, budget: { nodes: number }): boolean {
-  for (const m of pos.legalMoves()) {
-    if (--budget.nodes < 0) throw new Error('mate proof exceeded node budget');
-    pos.makeMove(m);
-    let ok: boolean;
-    const replies = pos.legalMoves();
-    if (!replies.length) ok = pos.inCheck();
-    else if (n === 1) ok = false;
-    else {
-      ok = true;
-      for (const r of replies) {
-        pos.makeMove(r);
-        const sub = mates(pos, n - 1, budget);
-        pos.unmakeMove();
-        if (!sub) { ok = false; break; }
-      }
-    }
-    pos.unmakeMove();
-    if (ok) return true;
-  }
-  return false;
-}
-function matingFirstMoves(pos: Position, n: number): Move[] {
-  const out: Move[] = [];
-  const budget = { nodes: 60_000_000 };
-  for (const m of pos.legalMoves()) {
-    pos.makeMove(m);
-    const replies = pos.legalMoves();
-    let ok: boolean;
-    if (!replies.length) ok = pos.inCheck();
-    else if (n === 1) ok = false;
-    else { ok = true; for (const r of replies) { pos.makeMove(r); const sub = mates(pos, n - 1, budget); pos.unmakeMove(); if (!sub) { ok = false; break; } } }
-    pos.unmakeMove();
-    if (ok) out.push(m);
-  }
-  return out;
-}
+// The mate prover is shared with the lesson generator and the in-app Grimoire exercises (src/academy/mateProver.ts),
+// so the app accepts exactly the moves proven here.
 
 interface Block { file: string; start: number; end: number; fields: Record<string, string> }
 const blocks: Block[] = [];

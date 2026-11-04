@@ -154,9 +154,11 @@ export class CrownDB {
   /** Cheap change key for event-driven evaluation: record counts only (no values are read). */
   async recordCounts(): Promise<Record<string, number>> {
     const names = ['ratingEvents', 'reports', 'attempts', 'trainingRuns', 'bookmarks'];
-    const tx = this.db.transaction(['games', ...names], 'readonly');
-    const [finalized, ...rest] = await Promise.all([req(tx.objectStore('games').index('status').count('finalized')), ...names.map(n => req(tx.objectStore(n).count()))]);
-    return Object.fromEntries([['finalized', finalized], ...names.map((n, i) => [n, rest[i]])]);
+    const tx = this.db.transaction(['games', 'meta', ...names], 'readonly');
+    const [finalized, grimoire, ...rest] = await Promise.all([req(tx.objectStore('games').index('status').count('finalized')),
+      req(tx.objectStore('meta').count(IDBKeyRange.bound('grim:', 'grim:\uffff'))), ...names.map(n => req(tx.objectStore(n).count()))]);
+    // grimoire: Grimoire lesson records in the meta store (attempt sessions, completions, reads)
+    return Object.fromEntries([['finalized', finalized], ...names.map((n, i) => [n, rest[i]]), ['grimoire', grimoire]]);
   }
 
   /** Save an in-progress (or terminal-not-yet-finalized) game. Refuses to overwrite a finalized game. */
