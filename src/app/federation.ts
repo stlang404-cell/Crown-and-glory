@@ -79,7 +79,8 @@ export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid:
 export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
-const FEATURED_NODE_CAP = 30_000;
+/** Node cap of featured, scheduled and exhibition games (profileForStrength above the measured range plays this budget). */
+export const FEATURED_NODE_CAP = 30_000;
 const MARKET_B = 120;
 const NPC_FUND = 2_000 * MICRO;
 export const COMPETITOR_EXPENSE_SHARE = 0.75;

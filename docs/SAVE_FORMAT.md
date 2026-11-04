@@ -148,3 +148,39 @@ no competitor record is rewritten; only its future turnover entrants into divisi
 distribution. Game records against the new beginner opponents carry the exact engine profile (`engine.profile`, with an
 `error` model), calibration id `cal-2026-11-04-beginners-crown-error-1`, and per-move `selected` values
 `error-random` / `error-sample`; older builds ignore them. Tests: `tests/ratingSpectrum.test.ts`.
+
+## v0.10: Played Like records and report field (no schema change, IndexedDB v4)
+Two additive, optional fields (docs/PLAYED_LIKE.md):
+
+| Where | Field | Meaning |
+|---|---|---|
+| analysis report | `playedLike` | `{ modelId, white, black }` — the Played Like Performance Elo of both sides, computed when the report completed (`src/analysis/playedLike.ts`). Absent on older reports; the app computes the same value from the report's stored plies. Reports stay immutable. |
+| finalized game | `playedLike[]` | permanent records of the player's own estimate, one per model id (`crown-pl-record-1`, `src/analysis/playedLikeRecords.ts`): `gameId`, `at` (game end), `recordedAt`, `pov`, `opponent {id, name}`, `result` (1 / ½ / 0 for the player), `pool`, `career {before, after, rd}` from the game's rating event (null if unrated), `estimate` (value, 80 % / 95 % range, scale, informative moves, or the reason there is no number), `confidence` (`adequate` / `low` / `insufficient` / `unavailable`), `modelId`, `reportId`. |
+
+* The game checksum covers only rules-relevant content (`canonicalGame`), so adding records never changes it; moves,
+  result and rating events are never touched (`CrownDB.setPlayedLikeRecord` writes only this field).
+* Records are carried by `crown-backup-1` because games are; older backups import unchanged (no records) and get them
+  through the backfill below.
+* **Migration from v0.9 and earlier:** on boot (`AppServices.backfillPlayedLike`, off the boot path) every finalized game
+  that has a complete Standard analysis but no record for the current model gets one; games without analysis get theirs
+  when their analysis completes (the analysis queue writes it). A model update adds a record under the new model id and
+  keeps the old one; statistics never mix model ids.
+* Tests: `tests/playedLikeRecords.test.ts` (record contents, reload, backup round trip, v0.9 backfill, version separation,
+  low-confidence exclusion).
+
+## v0.11: Exhibition Arena archive (no schema change, IndexedDB v4)
+Unofficial exhibitions (any two Federation competitors, `src/app/exhibition.ts`, crown-exhibition-1) are kept in the
+`meta` store under their own prefixes, apart from every official record:
+
+| Key | Value |
+|---|---|
+| `exh:<timestamp>-<seed36>` | `ExhibitionGame` — `kind: "exhibition"`, `official: false`, `schema`, `createdAt`, `finishedAt`, `status` (`playing` / `finished`), `seed`, `nodeCap` (30,000, as featured games), `initialFen`, `white` / `black` sides (competitor id, name, career Elo and RD at the start, division, region, title, own and played style, persona id, the engine profile used), `moves` (CCN, SAN, FEN after, the moving engine's published score, depth, nodes, ms), `result`, `termination`, `checksum` (SHA-256 of id, moves and result once finished). Saved after every move, so an unfinished exhibition resumes on the same timeline. |
+| `exhrep:<exhibition id>` | The exhibition's Match Analysis report (standard settings and queue; job ids `job:exh:…` in `analysisJobs`), with its `playedLike` field. **Never** in the `reports` store, so no career statistic, Vault fact, Lab/Academy item or permanent Played Like record can read it. |
+
+* Exhibitions never write `games`, `reports`, `ratingEvents`, `ratingState` or any Federation store; bookmarks
+  (favourites, saved sandbox positions) on an exhibition use its `exh:` id and are ignored by the Vault.
+* Backups: `crown-backup-1` gains the optional `payload.exhibitions` (`{ key, value }[]` with both prefixes), validated
+  on import (prefixes, legal replay of every move, stored FENs, finished games terminal) and imported put-if-absent in
+  both restore and merge mode. Older backups have none; older builds reject a backup that carries the field.
+* Deleting an exhibition removes its two records, its analysis jobs and its bookmarks.
+* Tests: `tests/exhibition.test.ts` (archive reload, backup round trip and tamper rejection, deletion, isolation).

@@ -81,6 +81,26 @@ await page.screenshot({ path: SHOTS + 'analysis-02-running.png' });
 const done = await page.waitForFunction(() => document.querySelector('[data-testid="analysis-status"]')?.textContent === 'complete', null, { timeout: 300000 }).then(() => true).catch(() => false);
 check(4, done, 'The engine worker analysed the game and the report shows "complete" on screen');
 
+// 4b. Played Like Performance Elo for BOTH sides beside their career ratings, from this game's analysis
+await page.waitForSelector('[data-testid="played-like-you-value"]', { timeout: 15000 }).catch(() => {});
+const plYou = await page.locator('[data-testid="played-like-you-value"]').textContent().catch(() => '');
+const plOpp = await page.locator('[data-testid="played-like-opp-value"]').textContent().catch(() => '');
+const plOk = v => /^\d{1,3}(,\d{3})* ± \d/.test(v) || /Insufficient information|Calibrating/.test(v);
+check('4b', plOk(plYou) && plOk(plOpp) && (await page.locator('[data-testid="played-like"]').getByText('Career Elo').count()) === 2,
+  `Played Like card shows both sides next to Career Elo: you "${plYou}", opponent "${plOpp}"`);
+const firstGameId = await page.evaluate(() => decodeURIComponent(location.hash.split('/')[2]));
+async function profileRecords() {
+  await page.goto(url + '#/profile');
+  await page.waitForSelector('[data-testid="passport-played-like"]', { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector('[data-testid="pl-history-row"]', { timeout: 15000 }).catch(() => {});
+  return { rows: await page.locator('[data-testid="pl-history-row"]').count(), text: (await page.locator('[data-testid="pl-history"]').textContent().catch(() => '')) ?? '' };
+}
+const rec1 = await profileRecords();
+await page.locator('[data-testid="passport-played-like"]').screenshot({ path: ART + 'played-like-records.png' }).catch(() => {});
+check('4c', rec1.rows === 1 && /Mira Vell/.test(rec1.text), `Career Passport holds the permanent Played Like record of the analysed game (${rec1.rows} row: ${rec1.text.slice(0, 160)})`);
+await page.goto(url + `#/analysis/${encodeURIComponent(firstGameId)}`);
+await page.waitForSelector('[data-testid="analysis-status"]', { timeout: 20000 }).catch(() => {});
+
 // 4. grades, graph, candidates, variation
 const graded = await page.locator('main .mc-mv .grade-icon:not(.grade-none)').count();
 const graph = await page.locator('main svg.graph').count();
@@ -139,6 +159,8 @@ await page.reload();
 await page.waitForSelector('[data-testid="analysis-status"]', { timeout: 20000 }).catch(() => {});
 const st3 = await page.locator('[data-testid="analysis-status"]').textContent().catch(() => '');
 check(10, st3 === 'complete', `After reload, game ${gid} still shows its report (${st3})`);
+const rec2 = await profileRecords();
+check('10b', rec2.rows === 2, `After reload, the Career Passport still lists both analysed games' Played Like records (${rec2.rows})`);
 
 // 9. phone layout
 await ctx.close();

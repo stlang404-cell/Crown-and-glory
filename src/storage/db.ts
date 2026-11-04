@@ -133,6 +133,13 @@ export class CrownDB {
     await done(tx);
   }
 
+  /** Delete one meta record (v0.11: exhibition archive entries; absent keys are a no-op). */
+  async deleteMeta(key: string): Promise<void> {
+    const tx = this.db.transaction('meta', 'readwrite');
+    tx.objectStore('meta').delete(key);
+    await done(tx);
+  }
+
   /** Every meta record whose key starts with `prefix` (e.g. "ach:" for Vault unlocks). */
   async metaWithPrefix<T = unknown>(prefix: string): Promise<{ key: string; value: T }[]> {
     return (await req(this.store('meta').getAll(IDBKeyRange.bound(prefix, prefix + '￿')))) as { key: string; value: T }[];
@@ -194,6 +201,19 @@ export class CrownDB {
     g.bookmarks = [...new Set(bookmarks)].sort((a, b) => a - b);
     s.put(g);
     await done(tx);
+  }
+
+  /** Played Like records (v0.10, additive field `playedLike` on finalized games): insert or replace the record of the
+   *  same model id. Only this metadata field is touched; the game's moves, result and checksum never change. */
+  async setPlayedLikeRecord(id: string, rec: import('../analysis/playedLikeRecords').PlayedLikeGameRecord): Promise<boolean> {
+    const tx = this.db.transaction('games', 'readwrite');
+    const s = tx.objectStore('games');
+    const g = (await req(s.get(id))) as GameRecord | undefined;
+    if (!g || g.status !== 'finalized') { await done(tx); return false; }
+    g.playedLike = [...(g.playedLike ?? []).filter(r => r.modelId !== rec.modelId), rec];
+    s.put(g);
+    await done(tx);
+    return true;
   }
 
   /**
@@ -287,6 +307,11 @@ export class CrownDB {
   async putJob(job: AnalysisJob): Promise<void> {
     const tx = this.db.transaction('analysisJobs', 'readwrite');
     tx.objectStore('analysisJobs').put(job);
+    await done(tx);
+  }
+  async deleteJob(id: string): Promise<void> {
+    const tx = this.db.transaction('analysisJobs', 'readwrite');
+    tx.objectStore('analysisJobs').delete(id);
     await done(tx);
   }
   async getJob(id: string): Promise<AnalysisJob | undefined> {
