@@ -12,6 +12,7 @@ import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
+import { VaultService } from '../vault/service';
 
 export const APP_VERSION = '0.8.0';
 
@@ -32,6 +33,8 @@ export class AppServices {
   readonly assist = new EngineChannel(undefined, 'assist');
   readonly spectator = new EngineChannel(undefined, 'spectator');
   fed!: FederationService;
+  /** The Sovereign Vault (permanent collectibles), evaluated from saved records after boot. */
+  vault!: VaultService;
   private listeners = new Set<Listener>();
   progress: AnalysisProgress | null = null;
   matchActive = false;
@@ -59,6 +62,9 @@ export class AppServices {
     if (!s.readOnly) await s.fed.ensureEngineCommitment(CANON_BUILD).catch(e => console.error('engine commitment', e));
     // Jobs left "running" by a closed tab are re-queued (their partial work was never committed).
     for (const j of await db.allJobs()) if (j.status === 'running') await db.putJob({ ...j, status: 'queued', updatedAt: new Date().toISOString() });
+    // Vault: first evaluation (and one-time backfill) after the first screen has rendered, off the boot path
+    s.vault = new VaultService(s);
+    setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)); }, 800);
     return s;
   }
 

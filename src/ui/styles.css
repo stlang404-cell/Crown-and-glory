@@ -432,3 +432,41 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 @media (max-width: 700px) { .qm-card { grid-template-columns: auto minmax(0, 1fr); } .qm-actions { grid-column: 1 / -1; flex-wrap: wrap; } .qm-draw { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .qm-card { animation: none; } }
 :root[data-motion="reduce"] .qm-card { animation: none; }
+/* The Sovereign Vault (v0.9): collectibles grid, rarity chips, unlock notice */
+.chip.rarity { --rar: var(--ins-6); color: var(--rar); border-color: color-mix(in srgb, var(--rar) 45%, transparent); background: color-mix(in srgb, var(--rar) 9%, transparent); }
+.chip.rarity-uncommon { --rar: var(--positive); }
+.chip.rarity-rare { --rar: var(--ins-4); }
+.chip.rarity-epic { --rar: var(--ins-7); }
+.chip.rarity-legendary { --rar: var(--accent); }
+.chip.rarity-mythic { --rar: var(--ins-1); }
+.vault-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: var(--sp-4); }
+.vault-bar { height: 6px; border-radius: 3px; background: var(--line-soft); overflow: hidden; width: 100%; max-width: 240px; }
+.vault-bar > span { display: block; height: 100%; background: var(--accent); }
+.vault-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: var(--sp-2); }
+.vault-mini { display: flex; align-items: center; gap: var(--sp-2); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.vault-mini:hover, .vault-card:hover { border-color: var(--line-strong); background: var(--hover); }
+.vault-mini > span { min-width: 0; overflow-wrap: anywhere; }
+.vault-mini:not(.earned):is(.locked, .awaiting) .emblem { filter: grayscale(1) opacity(.35); }
+.vault-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr); gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.vault-filters > * { width: 100%; min-width: 0; }
+.vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: var(--sp-2); }
+.vault-card { display: flex; gap: var(--sp-3); align-items: flex-start; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; font: inherit; }
+.vault-card.earned { border-color: var(--accent-line); background: color-mix(in srgb, var(--panel) 90%, var(--accent) 10%); }
+.vault-card:not(.earned) .emblem, .vault-detail-art:not(.earned) .emblem { filter: grayscale(1) opacity(.35); }
+.vault-card .emblem { flex: none; }
+.vault-card-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.vault-card:not(.earned) .vault-name { color: var(--muted); }
+.vault-date { color: var(--accent); }
+.vault-detail { text-align: center; align-items: center; display: flex; flex-direction: column; }
+.vault-detail .vault-bar { margin: 0 auto; }
+.vault-toast { position: fixed; right: 20px; bottom: 20px; z-index: 55; display: flex; gap: var(--sp-3); align-items: flex-start; width: min(360px, calc(100vw - 32px)); padding: 12px 12px 12px 14px; background: var(--panel); border: 1px solid var(--accent-line); border-radius: var(--radius); box-shadow: var(--shadow); animation: vault-in 240ms var(--ease); }
+.vault-toast-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; align-items: flex-start; overflow-wrap: anywhere; }
+.vault-toast-close { min-height: 32px; padding: 2px 8px; font-size: 1.2rem; line-height: 1; }
+@keyframes vault-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .vault-toast { animation: none; } }
+:root[data-motion="reduce"] .vault-toast { animation: none; }
+@media (max-width: 760px) {
+  .vault-filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .vault-filters input[type="search"] { grid-column: 1 / -1; }
+  .vault-toast { left: 16px; right: 16px; width: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

@@ -133,6 +133,32 @@ export class CrownDB {
     await done(tx);
   }
 
+  /** Every meta record whose key starts with `prefix` (e.g. "ach:" for Vault unlocks). */
+  async metaWithPrefix<T = unknown>(prefix: string): Promise<{ key: string; value: T }[]> {
+    return (await req(this.store('meta').getAll(IDBKeyRange.bound(prefix, prefix + '￿')))) as { key: string; value: T }[];
+  }
+  /** Put-if-absent for meta records, in one transaction: existing keys are never overwritten. Returns the keys written. */
+  async putMetaIfAbsent(entries: { key: string; value: unknown }[]): Promise<string[]> {
+    if (!entries.length) return [];
+    const tx = this.db.transaction('meta', 'readwrite');
+    const s = tx.objectStore('meta');
+    const written: string[] = [];
+    for (const e of entries) {
+      if ((await req(s.getKey(e.key))) !== undefined) continue;
+      s.add({ key: e.key, value: e.value });
+      written.push(e.key);
+    }
+    await done(tx);
+    return written;
+  }
+  /** Cheap change key for event-driven evaluation: record counts only (no values are read). */
+  async recordCounts(): Promise<Record<string, number>> {
+    const names = ['ratingEvents', 'reports', 'attempts', 'trainingRuns', 'bookmarks'];
+    const tx = this.db.transaction(['games', ...names], 'readonly');
+    const [finalized, ...rest] = await Promise.all([req(tx.objectStore('games').index('status').count('finalized')), ...names.map(n => req(tx.objectStore(n).count()))]);
+    return Object.fromEntries([['finalized', finalized], ...names.map((n, i) => [n, rest[i]])]);
+  }
+
   /** Save an in-progress (or terminal-not-yet-finalized) game. Refuses to overwrite a finalized game. */
   async saveGame(g: GameRecord): Promise<void> {
     const tx = this.db.transaction('games', 'readwrite');

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
+import { Icon } from './Icons';
 import { RatingChart } from './Charts';
 import type { PoolId, GameRecord } from '../games/types';
 import type { PoolState, RatingEvent } from '../ratings/ledger';
@@ -79,7 +80,7 @@ export function ProfileScreen() {
   return (
     <div>
       <PassportBanner />
-      <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Career Passport</h1></div>
+      <div className="row" style={{ gap: 12, marginBottom: 8 }}><PlayerAvatar size={56} /><h1 style={{ margin: 0 }}>Career Passport</h1><span className="spacer" /><button className="btn small" data-testid="open-vault" onClick={() => go({ name: 'vault' })}><Icon name="vault" /> Open the Vault</button></div>
       <div className="seg" role="group" aria-label="Rating Pool" style={{ marginBottom: 12 }}>
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>

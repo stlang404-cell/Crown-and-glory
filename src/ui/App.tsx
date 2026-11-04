@@ -25,6 +25,7 @@ import { APP_VERSION } from '../app/services';
 import { AcademyScreen } from './AcademyScreen';
 import { Icon } from './Icons';
 import { SettingsScreen } from './SettingsScreen';
+import { VaultScreen, VaultToast } from './VaultScreen';
 
 export type View =
   | { name: 'play' }
@@ -48,6 +49,7 @@ export type View =
   | { name: 'rivals' }
   | { name: 'hall' }
   | { name: 'heraldry' }
+  | { name: 'vault' }
   | { name: 'settings' };
 
 const Ctx = createContext<{ services: AppServices; go: (v: View) => void } | null>(null);
@@ -70,7 +72,7 @@ function parseHash(): View {
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
-  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry'].includes(name)) return { name } as View;
+  if (['library', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault'].includes(name)) return { name } as View;
   return { name: 'play' };
 }
 function toHash(v: View): string {
@@ -93,6 +95,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
   { id: 'profile', label: 'Career', icon: 'profile' },
   { id: 'rivals', label: 'Rivals', icon: 'rivals' },
   { id: 'hall', label: 'Hall of Fame', icon: 'hall' },
+  { id: 'vault', label: 'Vault', icon: 'vault' },
   { id: 'lab', label: 'Lab', icon: 'lab' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
@@ -158,8 +161,10 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'rivals' && <RivalsScreen />}
             {view.name === 'hall' && <HallScreen />}
             {view.name === 'heraldry' && <HeraldryScreen />}
+            {view.name === 'vault' && <VaultScreen />}
           </ScreenBoundary>
           <CeremonyOverlay />
+          <ScreenBoundary key="vault-toast" screen="vault-toast" onHome={() => go({ name: 'play' })}><VaultToast hidden={['match', 'watch', 'vault'].includes(view.name)} /></ScreenBoundary>
           <ScreenBoundary key={'s' + toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>{view.name === 'settings' && <SettingsScreen />}</ScreenBoundary>
         </main>
         <nav className="tabbar" aria-label="Main">
