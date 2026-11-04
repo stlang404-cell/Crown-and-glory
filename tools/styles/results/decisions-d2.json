@@ -1,0 +1,42 @@
+{
+ "tactical": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.217,
+  "signature": "contact",
+  "styleRate": 0.78,
+  "universalRate": 0.777
+ },
+ "positional": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.173,
+  "signature": "quiet",
+  "styleRate": 0.21,
+  "universalRate": 0.223
+ },
+ "aggressive": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.21,
+  "signature": "kingPressure",
+  "styleRate": 0.38,
+  "universalRate": 0.357
+ },
+ "defensive": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.273,
+  "signature": "safety",
+  "styleRate": 0.29,
+  "universalRate": 0.28
+ },
+ "endgame": {
+  "positions": 300,
+  "nodes": 8000,
+  "disagreement": 0.16,
+  "signature": "simplify",
+  "styleRate": 0.067,
+  "universalRate": 0.063
+ }
+}

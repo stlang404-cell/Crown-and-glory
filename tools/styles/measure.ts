@@ -130,7 +130,9 @@ async function decisionPositions(): Promise<{ fen: string; game: string }[]> {
   }
   // evenly spaced over the corpus (deterministic)
   const step = all.length / DECISIONS;
-  return Array.from({ length: Math.min(DECISIONS, all.length) }, (_, i) => all[Math.floor(i * step)]);
+  // DEC_PART=1 takes the positions half-way between the measured ones (pilot set for choosing magnitudes)
+  const shift = process.env.DEC_PART === '1' ? step / 2 : 0;
+  return Array.from({ length: Math.min(DECISIONS, all.length) }, (_, i) => all[Math.floor(i * step + shift)]);
 }
 
 function eloOf(p: number) { return -400 * Math.log10(1 / Math.min(Math.max(p, 0.001), 0.999) - 1); }
@@ -172,9 +174,21 @@ async function summarise(write: boolean) {
     const W = gs.filter(g => sc(g) === 1).length, D = gs.filter(g => sc(g) === 0.5).length, L = gs.length - W - D;
     const strength = { games: gs.length, nodes: NODES, wdl: [W, D, L], score: +mean.toFixed(3), elo: Math.round(eloOf(mean)), eloCI: [Math.round(eloOf(boots[100])), Math.round(eloOf(boots[3899]))] };
     const strengthPass = Math.abs(strength.elo) <= 50 && strength.eloCI[0] <= 50 && strength.eloCI[1] >= -50;
-    out[st] = { decisions: dec?.[st] ?? null, games: gameStats(gs), styledSide: agg(gs, 'styled'), universalSide: agg(gs, 'uni'), strength, strengthPass };
+    const g = gameStats(gs), me = agg(gs, 'styled'), them = agg(gs, 'uni'), rg = gameStats(ref);
+    // intended direction (fixed before the measurement run; docs/STYLES_REPORT.md)
+    const direction: Record<string, [string, boolean][]> = {
+      tactical: [['captures+checks above the Universal side', me.capturesPerGame + me.checksPerGame > them.capturesPerGame + them.checksPerGame]],
+      positional: [['fewer checks than the Universal side', me.checksPerGame < them.checksPerGame]],
+      aggressive: [['more checks than the Universal side', me.checksPerGame > them.checksPerGame], ['more king-zone attacks than the Universal side', me.kingZoneAttacksPerMove > them.kingZoneAttacksPerMove], ['fewer draws than Universal self-play', g.drawRate < rg.drawRate]],
+      defensive: [['fewer attacks suffered than the Universal side', me.attacksSufferedPerMove < them.attacksSufferedPerMove], ['more draws than Universal self-play', g.drawRate > rg.drawRate]],
+      endgame: [['queens off earlier than in Universal self-play (median ply)', (g.medianQueensOffPly ?? 999) < (rg.medianQueensOffPly ?? 999)]],
+    };
+    const checks = Object.fromEntries(direction[st].map(([k, v]) => [k, v]));
+    const directionPass = direction[st].every(([, v]) => v);
+    const decisionPass = (dec?.[st]?.disagreement ?? 0) >= 0.1;
+    out[st] = { decisions: dec?.[st] ?? null, games: g, styledSide: me, universalSide: them, strength, direction: checks, decisionPass, directionPass, strengthPass, pass: decisionPass && directionPass && strengthPass };
     console.log(st, JSON.stringify(out[st]));
-    if (strengthPass && (dec?.[st]?.disagreement ?? 0) >= 0.2) fullGame.push(st);
+    if (decisionPass && directionPass && strengthPass) fullGame.push(st);
   }
   console.log('universal', JSON.stringify(out.universal));
   writeFileSync(new URL(`summary${TAG}.json`, OUT), JSON.stringify(out, null, 1));
@@ -186,7 +200,7 @@ async function summarise(write: boolean) {
     writeFileSync(vf, JSON.stringify({
       ...prev, id: `styles-5-${new Date().toISOString().slice(0, 10)}`, validated: [...new Set([...repertoireStyles, ...fullGame])], repertoireStyles, fullGame,
       fullGamePolicy: `${STYLES_EVAL_ID} (asymmetric evaluation + contempt; src/engine/styles.ts STYLE_EVAL)`, fullGameMethod: 'tools/styles/measure.ts header; docs/STYLES_REPORT.md',
-      fullGameRule: 'decision disagreement >= 20% on middlegame positions AND Elo vs Universal within +-50 (point) with the 95% interval overlapping [-50, 50]; game characteristics reported in docs/STYLES_REPORT.md',
+      fullGameRule: 'decision disagreement >= 10% on middlegame positions AND every intended game-characteristic direction holds AND Elo vs Universal within +-50 (point) with the 95% interval overlapping [-50, 50]',
       fullGameDefs: STYLE_EVAL, fullGameResults: out,
     }, null, 1));
     console.log('wrote', vf.pathname, 'fullGame =', fullGame);

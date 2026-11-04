@@ -6,7 +6,7 @@ import { prices } from '../exchange/lmsr';
 import { quote, liquidationValue, EXCHANGE_ID, claimsOf, statesOf, claimPrices, revisionOf } from '../exchange/market';
 import type { Market, Position } from '../exchange/market';
 import { fmtCrowns, fmtPrice, MICRO } from '../exchange/ledger';
-import { wdl, NU, RESULT_MODEL_ID } from '../federation/resultModel';
+import { pregameWdl, ODDS_MODEL_ID } from '../exchange/odds';
 import { REGION_NAMES, divisionLabel, PLAYER_ID } from '../federation/model';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
 import { MARKETS_ID } from '../exchange/families';
@@ -105,7 +105,7 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
             })}</tbody></table>
         </div>
       )}
-      <details className="small muted" style={{ marginTop: 8 }}><summary>Details</summary>Each event has one automated market maker (LMSR): prices move only when someone trades. Exchange {EXCHANGE_ID} · market families {MARKETS_ID} · match forecasts {RESULT_MODEL_ID} on public ratings.</details>
+      <details className="small muted" style={{ marginTop: 8 }}><summary>Details</summary>Each event has one automated market maker (LMSR): prices move only when someone trades. Exchange {EXCHANGE_ID} · market families {MARKETS_ID} · match forecasts {ODDS_MODEL_ID} on public ratings and rating deviations.</details>
     </div>
   );
 }
@@ -330,7 +330,7 @@ function MatchResearch({ m }: { m: Market }) {
   }, [st, m]);
   if (!w || !b) return null;
   const model = [m.forecast.w, m.forecast.d, m.forecast.l];
-  const lo = wdl(w.rating - w.rd, b.rating + b.rd), hi = wdl(w.rating + w.rd, b.rating - b.rd);
+  const lo = pregameWdl({ rating: w.rating - w.rd, rd: w.rd }, { rating: b.rating + b.rd, rd: b.rd }), hi = pregameWdl({ rating: w.rating + w.rd, rd: w.rd }, { rating: b.rating - b.rd, rd: b.rd });
   const fx = [...st.rounds.values()].flatMap(r => r.fixtures).find(f => f.id === m.fixtureId);
   return (
     <div className="panel stack">
@@ -350,7 +350,7 @@ function MatchResearch({ m }: { m: Market }) {
       <div className="small muted">Forecast from public ratings: White {pct(model[0])} · Draw {pct(model[1])} · Black {pct(model[2])}.</div>
       {analyst ? <div className="small" data-testid="analyst">Analyst Office: White's expected score {(model[0] + model[1] / 2).toFixed(3)} · rating gap {Math.round(w.rating - b.rating)} · White win chance across both ratings' uncertainty {pct(lo.w)}–{pct(hi.w)}.</div>
         : <div className="small muted">An Analyst Office adds a forecast breakdown, a rating-uncertainty range and price history.</div>}
-      <details className="small muted"><summary>Details</summary>Forecast model {RESULT_MODEL_ID}: Davidson draw model (ν = {NU}) on public ratings. The uncertainty range uses ±1 rating deviation; it is not a confidence interval of the model.</details>
+      <details className="small muted"><summary>Details</summary>Forecast model: {m.forecast.source}. {ODDS_MODEL_ID} is an ordered-logit W/D/L model fitted on engine games: public ratings and rating deviations, White's first-move edge and a draw rate that rises with the level of play (docs/ODDS_MODEL.md). The uncertainty range uses ±1 rating deviation; it is not a confidence interval of the model.</details>
     </div>
   );
 }

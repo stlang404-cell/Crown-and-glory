@@ -18,9 +18,9 @@
  "aggressive": {
   "positions": 300,
   "nodes": 8000,
-  "disagreement": 0.193,
+  "disagreement": 0.217,
   "signature": "kingPressure",
-  "styleRate": 0.323,
+  "styleRate": 0.357,
   "universalRate": 0.347
  },
  "defensive": {

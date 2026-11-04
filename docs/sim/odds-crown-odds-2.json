@@ -1,0 +1,1238 @@
+{
+ "id": "crown-odds-2",
+ "fit": {
+  "method": "Two-stage maximum likelihood (BFGS, numerical gradients): pre-game ordered logit on ply-0 results; then live knots on every training ply ≤ 240 with the pre-game part fixed. Eval clamp chosen from the grid by training likelihood.",
+  "data": "tools/odds/generate.ts federation-style engine games: 3200 games (0 censored by the 400-ply limit and excluded), worlds s1, s2, s3, s4",
+  "split": "by game: FNV-1a(game id) mod 4 = 0 held out",
+  "trainGames": 2400,
+  "testGames": 800,
+  "trainLivePoints": 109163,
+  "preGameStdErr": {
+   "beta": 0.0561,
+   "alpha": 0.0415,
+   "t0": 0.0487,
+   "t1": 0.0606
+  },
+  "freeGammaCheck": {
+   "gamma": 0,
+   "beta": 1.048,
+   "trainLogLoss": 0.9084,
+   "fixedGammaTrainLogLoss": 0.90897
+  },
+  "liveStdErr": [
+   0.0277,
+   0.0225,
+   0.0213,
+   0.0266,
+   0.0551,
+   0.0879,
+   0.0738,
+   0.0221,
+   0.0166,
+   0.014,
+   0.0254,
+   0.0552,
+   0.0262,
+   0.02,
+   0.0194,
+   0.0314,
+   0.0432,
+   0.0497,
+   0.0404
+  ],
+  "clampTrainLogLoss": {
+   "400": 0.60301,
+   "800": 0.60087,
+   "1600": 0.6008
+  },
+  "heldOutLogLoss": {
+   "ply0": {
+    "logLoss": 0.8999,
+    "brier": 0.5334
+   },
+   "allPlies": {
+    "logLoss": 0.4959,
+    "brier": 0.2815
+   }
+  }
+ },
+ "coefficients": {
+  "pre": {
+   "beta": 1.11477,
+   "gamma": 1,
+   "alpha": 0.31719,
+   "t0": -0.93271,
+   "t1": 0.39789,
+   "levelMin": -2.751,
+   "levelMax": 1.117
+  },
+  "live": {
+   "knots": [
+    0,
+    1,
+    10,
+    20,
+    40,
+    80,
+    160
+   ],
+   "a": [
+    1,
+    1.00827,
+    0.82953,
+    0.75681,
+    0.59134,
+    0.34936,
+    0.15023
+   ],
+   "b": [
+    0,
+    0.46381,
+    0.78379,
+    0.97688,
+    1.22514,
+    1.02293,
+    0.26839
+   ],
+   "d": [
+    0,
+    0.00245,
+    0.15865,
+    0.39061,
+    0.76972,
+    1.31573,
+    1.63103
+   ],
+   "m": 0.58035,
+   "clampCp": 1600
+  }
+ },
+ "evalOnlyCoefficients": {
+  "id": "eval-only",
+  "pre": {
+   "beta": 0,
+   "gamma": 0,
+   "alpha": 0.2377092156319484,
+   "t0": -1.0803881822095207,
+   "t1": 0,
+   "levelMin": 0,
+   "levelMax": 0
+  },
+  "live": {
+   "knots": [
+    0,
+    1,
+    10,
+    20,
+    40,
+    80,
+    160
+   ],
+   "a": [
+    1,
+    0.8582156180164302,
+    -0.6742330049543023,
+    -0.6905060524538081,
+    0.019188612235658493,
+    0.5952635144803619,
+    1.9612606777011725
+   ],
+   "b": [
+    0,
+    0.44813672556182604,
+    0.9107563993433232,
+    1.004770825288523,
+    1.2078959025692155,
+    1.0482771964934963,
+    0.4049790852897451
+   ],
+   "d": [
+    0,
+    -0.013265695859679242,
+    0.22781618917069096,
+    0.4916191184244561,
+    0.8743004950241692,
+    1.5203545592205163,
+    1.765515485066189
+   ],
+   "m": 0.6776323143227028,
+   "clampCp": 1600
+  }
+ },
+ "results": {
+  "ply0": {
+   "n": 800,
+   "observed": {
+    "w": 0.469,
+    "d": 0.158,
+    "l": 0.374
+   },
+   "old": {
+    "logLoss": 0.9681,
+    "brier": 0.5731
+   },
+   "new": {
+    "logLoss": 0.8999,
+    "brier": 0.5334
+   },
+   "ratingOnly": {
+    "logLoss": 0.8999,
+    "brier": 0.5334
+   },
+   "evalOnly": {
+    "logLoss": 1.0146,
+    "brier": 0.6161
+   },
+   "newMinusOldLogLossCI": [
+    -0.0899,
+    -0.0454
+   ]
+  },
+  "ply10": {
+   "n": 800,
+   "observed": {
+    "w": 0.469,
+    "d": 0.158,
+    "l": 0.374
+   },
+   "old": {
+    "logLoss": 0.8511,
+    "brier": 0.4896
+   },
+   "new": {
+    "logLoss": 0.7668,
+    "brier": 0.4383
+   },
+   "ratingOnly": {
+    "logLoss": 0.8999,
+    "brier": 0.5334
+   },
+   "evalOnly": {
+    "logLoss": 0.8364,
+    "brier": 0.4805
+   },
+   "newMinusOldLogLossCI": [
+    -0.1093,
+    -0.0594
+   ]
+  },
+  "ply20": {
+   "n": 781,
+   "observed": {
+    "w": 0.46,
+    "d": 0.161,
+    "l": 0.379
+   },
+   "old": {
+    "logLoss": 0.639,
+    "brier": 0.3537
+   },
+   "new": {
+    "logLoss": 0.5961,
+    "brier": 0.3319
+   },
+   "ratingOnly": {
+    "logLoss": 0.9062,
+    "brier": 0.5372
+   },
+   "evalOnly": {
+    "logLoss": 0.6282,
+    "brier": 0.349
+   },
+   "newMinusOldLogLossCI": [
+    -0.0641,
+    -0.0157
+   ]
+  },
+  "ply40": {
+   "n": 674,
+   "observed": {
+    "w": 0.467,
+    "d": 0.169,
+    "l": 0.364
+   },
+   "old": {
+    "logLoss": 0.4395,
+    "brier": 0.2462
+   },
+   "new": {
+    "logLoss": 0.3517,
+    "brier": 0.1996
+   },
+   "ratingOnly": {
+    "logLoss": 0.9206,
+    "brier": 0.5448
+   },
+   "evalOnly": {
+    "logLoss": 0.361,
+    "brier": 0.2112
+   },
+   "newMinusOldLogLossCI": [
+    -0.1213,
+    -0.0561
+   ]
+  },
+  "ply60": {
+   "n": 473,
+   "observed": {
+    "w": 0.438,
+    "d": 0.205,
+    "l": 0.357
+   },
+   "old": {
+    "logLoss": 0.4574,
+    "brier": 0.2525
+   },
+   "new": {
+    "logLoss": 0.2934,
+    "brier": 0.1741
+   },
+   "ratingOnly": {
+    "logLoss": 1.02,
+    "brier": 0.6122
+   },
+   "evalOnly": {
+    "logLoss": 0.3005,
+    "brier": 0.1773
+   },
+   "newMinusOldLogLossCI": [
+    -0.2145,
+    -0.1138
+   ]
+  },
+  "ply80": {
+   "n": 217,
+   "observed": {
+    "w": 0.336,
+    "d": 0.332,
+    "l": 0.332
+   },
+   "old": {
+    "logLoss": 0.6463,
+    "brier": 0.3625
+   },
+   "new": {
+    "logLoss": 0.2842,
+    "brier": 0.147
+   },
+   "ratingOnly": {
+    "logLoss": 1.1809,
+    "brier": 0.7173
+   },
+   "evalOnly": {
+    "logLoss": 0.2849,
+    "brier": 0.1377
+   },
+   "newMinusOldLogLossCI": [
+    -0.452,
+    -0.2644
+   ]
+  },
+  "allPlies": {
+   "n": 56923,
+   "old": {
+    "logLoss": 0.7002,
+    "brier": 0.3907
+   },
+   "new": {
+    "logLoss": 0.4959,
+    "brier": 0.2815
+   },
+   "ratingOnly": {
+    "logLoss": 1.0053,
+    "brier": 0.6006
+   },
+   "evalOnly": {
+    "logLoss": 0.5291,
+    "brier": 0.3026
+   },
+   "newMinusOldLogLossCI": [
+    -0.2584,
+    -0.1535
+   ]
+  }
+ },
+ "calibration": {
+  "ply0": {
+   "new": {
+    "white": {
+     "ece": 0.0229,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 80,
+       "predicted": 0.149,
+       "observed": 0.087
+      },
+      {
+       "bin": 2,
+       "n": 80,
+       "predicted": 0.255,
+       "observed": 0.287
+      },
+      {
+       "bin": 3,
+       "n": 80,
+       "predicted": 0.329,
+       "observed": 0.338
+      },
+      {
+       "bin": 4,
+       "n": 80,
+       "predicted": 0.39,
+       "observed": 0.375
+      },
+      {
+       "bin": 5,
+       "n": 80,
+       "predicted": 0.447,
+       "observed": 0.45
+      },
+      {
+       "bin": 6,
+       "n": 80,
+       "predicted": 0.506,
+       "observed": 0.475
+      },
+      {
+       "bin": 7,
+       "n": 80,
+       "predicted": 0.561,
+       "observed": 0.588
+      },
+      {
+       "bin": 8,
+       "n": 80,
+       "predicted": 0.617,
+       "observed": 0.6
+      },
+      {
+       "bin": 9,
+       "n": 80,
+       "predicted": 0.694,
+       "observed": 0.675
+      },
+      {
+       "bin": 10,
+       "n": 80,
+       "predicted": 0.827,
+       "observed": 0.813
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.0319,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 80,
+       "predicted": 0.059,
+       "observed": 0.075
+      },
+      {
+       "bin": 2,
+       "n": 80,
+       "predicted": 0.094,
+       "observed": 0.063
+      },
+      {
+       "bin": 3,
+       "n": 80,
+       "predicted": 0.125,
+       "observed": 0.125
+      },
+      {
+       "bin": 4,
+       "n": 80,
+       "predicted": 0.15,
+       "observed": 0.15
+      },
+      {
+       "bin": 5,
+       "n": 80,
+       "predicted": 0.171,
+       "observed": 0.212
+      },
+      {
+       "bin": 6,
+       "n": 80,
+       "predicted": 0.19,
+       "observed": 0.113
+      },
+      {
+       "bin": 7,
+       "n": 80,
+       "predicted": 0.211,
+       "observed": 0.138
+      },
+      {
+       "bin": 8,
+       "n": 80,
+       "predicted": 0.228,
+       "observed": 0.2
+      },
+      {
+       "bin": 9,
+       "n": 80,
+       "predicted": 0.247,
+       "observed": 0.212
+      },
+      {
+       "bin": 10,
+       "n": 80,
+       "predicted": 0.269,
+       "observed": 0.287
+      }
+     ]
+    }
+   },
+   "old": {
+    "white": {
+     "ece": 0.1225,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 80,
+       "predicted": 0.129,
+       "observed": 0.087
+      },
+      {
+       "bin": 2,
+       "n": 80,
+       "predicted": 0.205,
+       "observed": 0.313
+      },
+      {
+       "bin": 3,
+       "n": 80,
+       "predicted": 0.254,
+       "observed": 0.275
+      },
+      {
+       "bin": 4,
+       "n": 80,
+       "predicted": 0.291,
+       "observed": 0.388
+      },
+      {
+       "bin": 5,
+       "n": 80,
+       "predicted": 0.328,
+       "observed": 0.475
+      },
+      {
+       "bin": 6,
+       "n": 80,
+       "predicted": 0.366,
+       "observed": 0.375
+      },
+      {
+       "bin": 7,
+       "n": 80,
+       "predicted": 0.404,
+       "observed": 0.588
+      },
+      {
+       "bin": 8,
+       "n": 80,
+       "predicted": 0.445,
+       "observed": 0.675
+      },
+      {
+       "bin": 9,
+       "n": 80,
+       "predicted": 0.504,
+       "observed": 0.688
+      },
+      {
+       "bin": 10,
+       "n": 80,
+       "predicted": 0.622,
+       "observed": 0.825
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.1341,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 80,
+       "predicted": 0.232,
+       "observed": 0.063
+      },
+      {
+       "bin": 2,
+       "n": 80,
+       "predicted": 0.269,
+       "observed": 0.163
+      },
+      {
+       "bin": 3,
+       "n": 80,
+       "predicted": 0.285,
+       "observed": 0.138
+      },
+      {
+       "bin": 4,
+       "n": 80,
+       "predicted": 0.294,
+       "observed": 0.163
+      },
+      {
+       "bin": 5,
+       "n": 80,
+       "predicted": 0.3,
+       "observed": 0.237
+      },
+      {
+       "bin": 6,
+       "n": 80,
+       "predicted": 0.304,
+       "observed": 0.212
+      },
+      {
+       "bin": 7,
+       "n": 80,
+       "predicted": 0.306,
+       "observed": 0.163
+      },
+      {
+       "bin": 8,
+       "n": 80,
+       "predicted": 0.308,
+       "observed": 0.175
+      },
+      {
+       "bin": 9,
+       "n": 80,
+       "predicted": 0.31,
+       "observed": 0.163
+      },
+      {
+       "bin": 10,
+       "n": 80,
+       "predicted": 0.31,
+       "observed": 0.1
+      }
+     ]
+    }
+   }
+  },
+  "ply20": {
+   "new": {
+    "white": {
+     "ece": 0.0409,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 78,
+       "predicted": 0.01,
+       "observed": 0.013
+      },
+      {
+       "bin": 2,
+       "n": 78,
+       "predicted": 0.049,
+       "observed": 0.051
+      },
+      {
+       "bin": 3,
+       "n": 78,
+       "predicted": 0.113,
+       "observed": 0.064
+      },
+      {
+       "bin": 4,
+       "n": 78,
+       "predicted": 0.229,
+       "observed": 0.115
+      },
+      {
+       "bin": 5,
+       "n": 78,
+       "predicted": 0.406,
+       "observed": 0.333
+      },
+      {
+       "bin": 6,
+       "n": 78,
+       "predicted": 0.584,
+       "observed": 0.5
+      },
+      {
+       "bin": 7,
+       "n": 78,
+       "predicted": 0.744,
+       "observed": 0.756
+      },
+      {
+       "bin": 8,
+       "n": 78,
+       "predicted": 0.87,
+       "observed": 0.872
+      },
+      {
+       "bin": 9,
+       "n": 78,
+       "predicted": 0.938,
+       "observed": 0.885
+      },
+      {
+       "bin": 10,
+       "n": 79,
+       "predicted": 0.983,
+       "observed": 1
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.0362,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 78,
+       "predicted": 0.005,
+       "observed": 0
+      },
+      {
+       "bin": 2,
+       "n": 78,
+       "predicted": 0.021,
+       "observed": 0.013
+      },
+      {
+       "bin": 3,
+       "n": 78,
+       "predicted": 0.044,
+       "observed": 0.038
+      },
+      {
+       "bin": 4,
+       "n": 78,
+       "predicted": 0.075,
+       "observed": 0.09
+      },
+      {
+       "bin": 5,
+       "n": 78,
+       "predicted": 0.114,
+       "observed": 0.038
+      },
+      {
+       "bin": 6,
+       "n": 78,
+       "predicted": 0.167,
+       "observed": 0.154
+      },
+      {
+       "bin": 7,
+       "n": 78,
+       "predicted": 0.223,
+       "observed": 0.179
+      },
+      {
+       "bin": 8,
+       "n": 78,
+       "predicted": 0.279,
+       "observed": 0.256
+      },
+      {
+       "bin": 9,
+       "n": 78,
+       "predicted": 0.337,
+       "observed": 0.295
+      },
+      {
+       "bin": 10,
+       "n": 79,
+       "predicted": 0.415,
+       "observed": 0.544
+      }
+     ]
+    }
+   },
+   "old": {
+    "white": {
+     "ece": 0.0662,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 78,
+       "predicted": 0.015,
+       "observed": 0.038
+      },
+      {
+       "bin": 2,
+       "n": 78,
+       "predicted": 0.089,
+       "observed": 0.051
+      },
+      {
+       "bin": 3,
+       "n": 78,
+       "predicted": 0.206,
+       "observed": 0.064
+      },
+      {
+       "bin": 4,
+       "n": 78,
+       "predicted": 0.301,
+       "observed": 0.141
+      },
+      {
+       "bin": 5,
+       "n": 78,
+       "predicted": 0.383,
+       "observed": 0.282
+      },
+      {
+       "bin": 6,
+       "n": 78,
+       "predicted": 0.5,
+       "observed": 0.551
+      },
+      {
+       "bin": 7,
+       "n": 78,
+       "predicted": 0.681,
+       "observed": 0.756
+      },
+      {
+       "bin": 8,
+       "n": 78,
+       "predicted": 0.784,
+       "observed": 0.782
+      },
+      {
+       "bin": 9,
+       "n": 78,
+       "predicted": 0.906,
+       "observed": 0.962
+      },
+      {
+       "bin": 10,
+       "n": 79,
+       "predicted": 0.977,
+       "observed": 0.962
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.045,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 78,
+       "predicted": 0.01,
+       "observed": 0
+      },
+      {
+       "bin": 2,
+       "n": 78,
+       "predicted": 0.016,
+       "observed": 0.013
+      },
+      {
+       "bin": 3,
+       "n": 78,
+       "predicted": 0.041,
+       "observed": 0
+      },
+      {
+       "bin": 4,
+       "n": 78,
+       "predicted": 0.068,
+       "observed": 0.051
+      },
+      {
+       "bin": 5,
+       "n": 78,
+       "predicted": 0.104,
+       "observed": 0.128
+      },
+      {
+       "bin": 6,
+       "n": 78,
+       "predicted": 0.133,
+       "observed": 0.141
+      },
+      {
+       "bin": 7,
+       "n": 78,
+       "predicted": 0.175,
+       "observed": 0.192
+      },
+      {
+       "bin": 8,
+       "n": 78,
+       "predicted": 0.219,
+       "observed": 0.269
+      },
+      {
+       "bin": 9,
+       "n": 78,
+       "predicted": 0.251,
+       "observed": 0.397
+      },
+      {
+       "bin": 10,
+       "n": 79,
+       "predicted": 0.285,
+       "observed": 0.418
+      }
+     ]
+    }
+   }
+  },
+  "allPlies": {
+   "new": {
+    "white": {
+     "ece": 0.0348,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 5692,
+       "predicted": 0.005,
+       "observed": 0
+      },
+      {
+       "bin": 2,
+       "n": 5692,
+       "predicted": 0.007,
+       "observed": 0.002
+      },
+      {
+       "bin": 3,
+       "n": 5692,
+       "predicted": 0.039,
+       "observed": 0.024
+      },
+      {
+       "bin": 4,
+       "n": 5693,
+       "predicted": 0.127,
+       "observed": 0.073
+      },
+      {
+       "bin": 5,
+       "n": 5692,
+       "predicted": 0.286,
+       "observed": 0.201
+      },
+      {
+       "bin": 6,
+       "n": 5692,
+       "predicted": 0.484,
+       "observed": 0.428
+      },
+      {
+       "bin": 7,
+       "n": 5693,
+       "predicted": 0.688,
+       "observed": 0.664
+      },
+      {
+       "bin": 8,
+       "n": 5692,
+       "predicted": 0.877,
+       "observed": 0.831
+      },
+      {
+       "bin": 9,
+       "n": 5692,
+       "predicted": 0.979,
+       "observed": 0.931
+      },
+      {
+       "bin": 10,
+       "n": 5693,
+       "predicted": 0.99,
+       "observed": 1
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.0198,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 5692,
+       "predicted": 0.005,
+       "observed": 0.002
+      },
+      {
+       "bin": 2,
+       "n": 5692,
+       "predicted": 0.005,
+       "observed": 0.012
+      },
+      {
+       "bin": 3,
+       "n": 5692,
+       "predicted": 0.01,
+       "observed": 0.045
+      },
+      {
+       "bin": 4,
+       "n": 5693,
+       "predicted": 0.044,
+       "observed": 0.077
+      },
+      {
+       "bin": 5,
+       "n": 5692,
+       "predicted": 0.097,
+       "observed": 0.095
+      },
+      {
+       "bin": 6,
+       "n": 5692,
+       "predicted": 0.16,
+       "observed": 0.15
+      },
+      {
+       "bin": 7,
+       "n": 5693,
+       "predicted": 0.226,
+       "observed": 0.178
+      },
+      {
+       "bin": 8,
+       "n": 5692,
+       "predicted": 0.313,
+       "observed": 0.314
+      },
+      {
+       "bin": 9,
+       "n": 5692,
+       "predicted": 0.51,
+       "observed": 0.541
+      },
+      {
+       "bin": 10,
+       "n": 5693,
+       "predicted": 0.862,
+       "observed": 0.89
+      }
+     ]
+    }
+   },
+   "old": {
+    "white": {
+     "ece": 0.0739,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 5692,
+       "predicted": 0.005,
+       "observed": 0
+      },
+      {
+       "bin": 2,
+       "n": 5692,
+       "predicted": 0.029,
+       "observed": 0.013
+      },
+      {
+       "bin": 3,
+       "n": 5692,
+       "predicted": 0.179,
+       "observed": 0.096
+      },
+      {
+       "bin": 4,
+       "n": 5693,
+       "predicted": 0.299,
+       "observed": 0.14
+      },
+      {
+       "bin": 5,
+       "n": 5692,
+       "predicted": 0.39,
+       "observed": 0.257
+      },
+      {
+       "bin": 6,
+       "n": 5692,
+       "predicted": 0.484,
+       "observed": 0.368
+      },
+      {
+       "bin": 7,
+       "n": 5693,
+       "predicted": 0.663,
+       "observed": 0.61
+      },
+      {
+       "bin": 8,
+       "n": 5692,
+       "predicted": 0.875,
+       "observed": 0.839
+      },
+      {
+       "bin": 9,
+       "n": 5692,
+       "predicted": 0.984,
+       "observed": 0.867
+      },
+      {
+       "bin": 10,
+       "n": 5693,
+       "predicted": 0.985,
+       "observed": 0.964
+      }
+     ]
+    },
+    "draw": {
+     "ece": 0.1121,
+     "deciles": [
+      {
+       "bin": 1,
+       "n": 5692,
+       "predicted": 0.01,
+       "observed": 0.01
+      },
+      {
+       "bin": 2,
+       "n": 5692,
+       "predicted": 0.01,
+       "observed": 0.037
+      },
+      {
+       "bin": 3,
+       "n": 5692,
+       "predicted": 0.01,
+       "observed": 0.107
+      },
+      {
+       "bin": 4,
+       "n": 5693,
+       "predicted": 0.018,
+       "observed": 0.086
+      },
+      {
+       "bin": 5,
+       "n": 5692,
+       "predicted": 0.062,
+       "observed": 0.126
+      },
+      {
+       "bin": 6,
+       "n": 5692,
+       "predicted": 0.121,
+       "observed": 0.211
+      },
+      {
+       "bin": 7,
+       "n": 5693,
+       "predicted": 0.179,
+       "observed": 0.332
+      },
+      {
+       "bin": 8,
+       "n": 5692,
+       "predicted": 0.229,
+       "observed": 0.473
+      },
+      {
+       "bin": 9,
+       "n": 5692,
+       "predicted": 0.255,
+       "observed": 0.414
+      },
+      {
+       "bin": 10,
+       "n": 5693,
+       "predicted": 0.29,
+       "observed": 0.509
+      }
+     ]
+    }
+   }
+  }
+ },
+ "diagnostics": {
+  "equalRatingsPregame": [
+   {
+    "rating": 1400,
+    "w": 0.535,
+    "d": 0.086,
+    "l": 0.379
+   },
+   {
+    "rating": 1800,
+    "w": 0.513,
+    "d": 0.128,
+    "l": 0.359
+   },
+   {
+    "rating": 2200,
+    "w": 0.481,
+    "d": 0.19,
+    "l": 0.329
+   },
+   {
+    "rating": 2600,
+    "w": 0.433,
+    "d": 0.278,
+    "l": 0.288
+   }
+  ],
+  "equalEvalPly10": [
+   {
+    "gap": -300,
+    "w": 0.148,
+    "d": 0.177,
+    "l": 0.675
+   },
+   {
+    "gap": -150,
+    "w": 0.269,
+    "d": 0.236,
+    "l": 0.495
+   },
+   {
+    "gap": 0,
+    "w": 0.439,
+    "d": 0.245,
+    "l": 0.316
+   },
+   {
+    "gap": 150,
+    "w": 0.624,
+    "d": 0.197,
+    "l": 0.179
+   },
+   {
+    "gap": 300,
+    "w": 0.778,
+    "d": 0.128,
+    "l": 0.093
+   }
+  ],
+  "observedDrawRateByLevel": [
+   {
+    "meanRating": "0–1600",
+    "games": 211,
+    "drawRate": 0.076
+   },
+   {
+    "meanRating": "1600–2000",
+    "games": 330,
+    "drawRate": 0.124
+   },
+   {
+    "meanRating": "2000–2300",
+    "games": 484,
+    "drawRate": 0.161
+   },
+   {
+    "meanRating": "2300–9999",
+    "games": 1138,
+    "drawRate": 0.197
+   }
+  ],
+  "whiteScore": 0.555
+ }
+}

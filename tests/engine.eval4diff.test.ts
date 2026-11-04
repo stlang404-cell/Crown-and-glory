@@ -65,6 +65,7 @@ function expectIncrementalConsistent(pos: Position): void {
   fresh.setPsqTable(pos.psqTab);
   expect(Array.from(pos.pieceCnt)).toEqual(Array.from(fresh.pieceCnt));
   expect(Array.from(pos.pawnBits)).toEqual(Array.from(fresh.pawnBits));
+  expect(Array.from(pos.occ)).toEqual(Array.from(fresh.occ));
   expect(pos.psqMg).toBe(fresh.psqMg);
   expect(pos.psqEg).toBe(fresh.psqEg);
 }

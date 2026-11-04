@@ -6,6 +6,7 @@ import { PieceSvg } from './Pieces';
 import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS, ENGINE_BUILD } from '../analysis/analyzer';
 import SPEED from '../analysis/analysis-speed.json';
 import { EngineDiagnostics } from './EngineDiagnostics';
+import { LiveSchedulerSettings } from './LiveSchedulerSettings';
 import { PREMIUM_BOARDS } from './theme';
 import { useServices } from './App';
 import { BOARDS, MOTIONS, PIECE_SPEEDS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPieceSpeed, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
@@ -102,6 +103,8 @@ export function SettingsScreen() {
       </section>
 
       <SoundSettings />
+
+      <LiveSchedulerSettings />
 
       <section className="panel about" aria-labelledby="set-about">
         <div className="panel-title"><h2 id="set-about" style={{ margin: 0 }}>About</h2>

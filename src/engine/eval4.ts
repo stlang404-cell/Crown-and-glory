@@ -306,11 +306,16 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
     if (za) { zoneAtt[c] += za; zoneAttackers[c] += popcount(pb[c] & ZONE_PAWNS[c * 36 + enemyKing]); }
   }
 
-  // pass 2: pieces
-  for (let sq = 0; sq < 36; sq++) {
+  // pass 2: non-pawn pieces (White's then Black's, each in ascending square order, from the occupancy masks)
+  const occ = pos.occ;
+  let lo = (occ[0] & ~pb[0]) | 0, hi = occ[1];
+  for (let side = 0; side < 2; ) {
+    let sq: number;
+    if (lo) { sq = 31 - Math.clz32(lo & -lo); lo &= lo - 1; }
+    else if (hi) { sq = 61 - Math.clz32(hi & -hi); hi &= hi - 1; }
+    else { if (++side === 2) break; lo = occ[2] & ~pb[1]; hi = occ[3]; continue; }
     const p = b[sq];
     const t = p & 7;
-    if (!p || t === P_PAWN) continue;
     const c = p >> 3;
     const s = c === 0 ? 1 : -1;
     const Pc = c === sc ? Q : R;

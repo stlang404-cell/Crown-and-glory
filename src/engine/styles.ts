@@ -111,9 +111,9 @@ export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
   tactical: { own: { HANGING: [25, 10], THREAT_PAWN: [20, 5], THREAT_MINOR: [20, 5], THREAT_ROOK: [20, 5], KING_ATTACKERS: [8, 0] }, contempt: 15 },
   // structure and piece placement over immediate threats
   positional: { own: { THREAT_PAWN: 0.85, THREAT_MINOR: 0.85, THREAT_ROOK: 0.85, HANGING: 0.85, SUPPORTED: [8, 4], PHALANX: [8, 4], OUTPOST: [20, 10], MOB: 1.1 }, contempt: 0 },
-  // king hunt: king-zone attackers / attack weight / piece tropism up, keeps its queen (+25 cp own queen in the
-  // middlegame, so a queen trade costs it 25 cp), avoids draws
-  aggressive: { own: { KING_ATTACKERS: [15, 0], KING_ATTACK: [1, 0], TROPISM: [4, 0], 'MAT.4': [25, 0] }, contempt: 20 },
+  // king hunt: king-zone attackers ×4, attack weight ×2, tropism +8 cp per step closer for N/R/Q (middlegame
+  // only); strong draw avoidance
+  aggressive: { own: { KING_ATTACKERS: [25, 0], KING_ATTACK: [2, 0], TROPISM: [8, 0] }, contempt: 35 },
   // safety first: own shelter and open king files weigh more, the opponent's attack and threats look bigger,
   // the opponent's queen is feared (queens off is welcome), and a draw is acceptable when not better
   defensive: { own: { KING_SHIELD: [15, 0], KING_OPEN: [-15, 0] }, opp: { KING_ATTACKERS: [15, 0], KING_ATTACK: [2, 0], TROPISM: [5, 0], HANGING: [25, 10], 'MAT.4': [30, 0] }, contempt: -25 },
