@@ -21,7 +21,7 @@
 .arena-odds { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
 .arena-odd { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-3); min-width: 0; }
 .arena-odd-label { font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-odd-price { font-size: 1.6rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.arena-odd-price { font-size: clamp(1.15rem, 1.6vw, 1.6rem); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .arena-odd-chg { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .arena-odd-chg.up { color: var(--positive); }
 .arena-odd-chg.down { color: var(--negative); }
@@ -45,4 +45,32 @@
 
 @media (prefers-reduced-motion: reduce) {
   .arena-status.is-live::before { animation: none; }
+}
+
+/* ---------- v0.10 Live Match Center: context strip, history, tournament ---------- */
+.arena-ctx { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.arena-ctx-names { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); padding: 6px 8px; }
+.arena-ctx-side { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "pip name" "rating clock"; column-gap: 6px; align-items: center; min-width: 0; font-size: .82rem; }
+.arena-ctx-side.black { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name pip" "clock rating"; text-align: right; }
+.arena-ctx-side .mc-pip { grid-area: pip; }
+.arena-ctx-name { grid-area: name; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.arena-ctx-rating { grid-area: rating; color: var(--muted); font-size: .74rem; white-space: nowrap; }
+.arena-ctx-clock { grid-area: clock; color: var(--muted); font-size: .74rem; white-space: nowrap; }
+.arena-ctx-side.to-move .arena-ctx-clock { color: var(--accent); font-weight: 700; }
+.arena-ctx-mid { font-weight: 700; color: var(--muted); padding: 0 4px; white-space: nowrap; }
+.arena-ctx-strip { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; min-width: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel-3); font-size: .84rem; }
+.arena-ctx-price { white-space: nowrap; }
+.arena-ctx-price .k { color: var(--muted); font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.arena-ctx-eval { white-space: nowrap; font-weight: 700; }
+.arena-ctx-src { flex: none; }
+/* desktop: the header scoreboard names the players; phones: the context strip does */
+.arena-ctx-names { display: none; }
+.arena-trades { margin: 0; padding-left: 18px; }
+.arena-tournament { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 1180px) { .arena .mc-col-1 { order: -1; } }
+@media (max-width: 700px) {
+  .arena .mc-scoreboard { display: none; }
+  .arena-ctx-names { display: grid; }
+  .arena-ctx-strip { padding: 4px 8px; gap: 4px 8px; font-size: .8rem; }
+  .arena-ctx .arena-ctx-src { display: none; }
 }

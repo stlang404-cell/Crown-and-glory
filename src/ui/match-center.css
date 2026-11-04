@@ -101,9 +101,9 @@
   .mc-board-tabbed .mc-panel-board.is-off { display: none; }
   /* with the board in its own tab the move list needs no inner scroll box: the page scrolls */
   .mc-board-tabbed .mc-moves { max-height: none; overflow: visible; }
-  .mc-evalbar { width: 22px; }
-  .mc-evalbar-value { font-size: 9px; }
-  .mc-evalboard { gap: 6px; }
+  .mc-evalbar { width: 20px; border-radius: 5px; }
+  .mc-evalbar-value { font-size: 8.5px; letter-spacing: -.05em; padding: 0; }
+  .mc-evalboard { gap: 4px; }
   .mc-nav-row { gap: 4px; }
   .mc-nav-row > .btn { min-width: 44px; padding: 6px 8px; }
   .mc-moves { max-height: 200px; }
