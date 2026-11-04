@@ -53,6 +53,10 @@ Development mode with hot reload: `npm run dev`.
 
 ## iPhone (PWA)
 
+**Free HTTPS hosting with GitHub Pages:** see [docs/IPHONE_PAGES.md](docs/IPHONE_PAGES.md) — the workflow
+`.github/workflows/deploy-pages.yml` deploys every push to `main` to https://stlang404-cell.github.io/Crown-and-glory/
+(one-time setting: Settings → Pages → Source: GitHub Actions). Install from Safari with Share → Add to Home Screen.
+
 - **Same Wi-Fi testing** (`npm run dev` prints a network URL, or `node scripts/serve.mjs --host 0.0.0.0`):
   works in Safari, but a plain `http://192.168.x.x` address is *not* a secure context, so the service
   worker does not install and the game is **not** available offline.
