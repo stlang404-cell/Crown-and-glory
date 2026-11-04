@@ -34,7 +34,8 @@ export function topologyWithRegions(regions: number): Topology {
   return TOPOLOGIES.find(t => t.regions === regions) ?? { id: `crown-topology-custom-${regions}`, regions, divisions: DIVISIONS, divisionSize: DIVISION_SIZE };
 }
 
-export type StyleId = 'universal' | 'tactical' | 'positional' | 'defensive' | 'endgame' | 'aggressive';
+/** Playing styles. gambiteer, materialist and complicator were added in crown-styles-6 (src/engine/styles.ts). */
+export type StyleId = 'universal' | 'tactical' | 'positional' | 'defensive' | 'endgame' | 'aggressive' | 'gambiteer' | 'materialist' | 'complicator';
 
 export interface CompetitorSeason { season: number; region: number; division: number; rank: number; points: number; played: number; rating: number; earnings: number }
 

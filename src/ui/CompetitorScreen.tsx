@@ -7,7 +7,7 @@ import { REGION_NAMES, divisionLabel, PLAYER_ID, DIVISIONS, regionNamesOf } from
 import type { Competitor } from '../federation/model';
 import { ageOf } from '../federation/generator';
 import { eventName, WorldGame } from '../app/federation';
-import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
+import { STYLE_LABEL, isValidatedStyle, styleTendency } from '../engine/styles';
 import { fmtCrowns } from '../exchange/ledger';
 import { stipendFor, avgSeasonEarnings } from '../economy/economy';
 import type { GameRecord } from '../games/types';
@@ -64,7 +64,7 @@ export function CompetitorsScreen() {
   }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, services.revision]);
   if (!st) return <NeedsFederation />;
   const active = [...st.competitors.values()].filter(c => c.status === 'active').length;
-  const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const).filter(x => isValidatedStyle(x))];
+  const styles = ['universal', ...(['tactical', 'positional', 'defensive', 'endgame', 'aggressive', 'gambiteer', 'materialist', 'complicator'] as const).filter(x => isValidatedStyle(x))];
   return (
     <div>
       <div className="row" style={{ marginBottom: 12 }}>
@@ -175,6 +175,7 @@ export function CompetitorScreen({ id }: { id: string }) {
             <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career Earnings</span></div>
           </div>
           <div className="small" style={{ marginTop: 8 }}>Style: <strong>{styleShown}</strong>{!isValidatedStyle(c.style) && c.style !== 'universal' && <span className="muted"> (listed as {STYLE_LABEL[c.style]}, but they play the standard engine style)</span>}</div>
+          {styleTendency(c.style) && <div className="small muted" data-testid="style-tendency">Scouting: {styleTendency(c.style)}</div>}
           <div className="small muted">This is their public rating. Their true strength stays hidden, from forecasts and traders too.</div>
           <div className="small" style={{ marginTop: 6 }}><strong>Ambition:</strong> {ambitionOf(c)}{featuredTag ? <> · <span className="chip gold">{featuredTag === 'circle' ? 'Featured Rival · Your Circle' : 'Featured Legend'}</span></> : null}</div>
         </div>

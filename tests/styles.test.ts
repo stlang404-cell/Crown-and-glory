@@ -6,7 +6,8 @@ import { bookMoves, repertoireChoice, playStyle, isValidatedStyle } from '../src
 import validation from '../src/engine/styles-validation.json';
 import { evaluate, PLAY_WEIGHTS } from '../src/engine/evaluate';
 import type { EvalWeights } from '../src/engine/evaluate';
-import { styledWeights, STYLE_EVAL, usesStyleEval } from '../src/engine/styles';
+import { styledWeights, STYLE_EVAL, usesStyleEval, styleTendency, STYLE_LABEL } from '../src/engine/styles';
+import { STYLES } from '../src/federation/generator';
 import { chooseMove } from '../src/engine/levels';
 import { Searcher } from '../src/engine/search';
 import type { StyleId } from '../src/federation/model';
@@ -37,7 +38,7 @@ describe('opening repertoire styles (crown-styles-3)', () => {
   });
   it('only styles listed as validated are ever played', () => {
     const v = validation as { validated: string[] };
-    for (const s of ['tactical', 'positional', 'defensive', 'endgame', 'aggressive'] as const) {
+    for (const s of ['tactical', 'positional', 'defensive', 'endgame', 'aggressive', 'gambiteer', 'materialist', 'complicator'] as const) {
       expect(isValidatedStyle(s)).toBe(v.validated.includes(s));
       expect(playStyle(s)).toBe(v.validated.includes(s) ? s : 'universal');
     }
@@ -47,7 +48,7 @@ describe('opening repertoire styles (crown-styles-3)', () => {
 // ---------------------------------------------------------------------------------------------------------
 // crown-styles-5: full-game styled evaluation (src/engine/styles.ts STYLE_EVAL; docs/STYLES_REPORT.md)
 
-const ALL: StyleId[] = ['tactical', 'positional', 'aggressive', 'defensive', 'endgame'];
+const ALL: StyleId[] = ['tactical', 'positional', 'aggressive', 'defensive', 'endgame', 'gambiteer', 'materialist', 'complicator'];
 /** White-view evaluation with `style` playing White (universal = the unstyled play weights). */
 const ev = (style: StyleId, fen: string, color: 0 | 1 = 0) => {
   const p = Position.fromFen(fen);
@@ -95,10 +96,12 @@ describe('full-game styles (crown-styles-5)', () => {
   it('styled weights apply to the styled side only (colour symmetric)', () => {
     for (const s of ALL) for (const f of Object.values(FENS).flat()) expect(ev(s, f, 0)).toBe(-ev(s, flip(f), 1));
     // the unstyled side sees no change: a styled Black does not alter White's attack terms
-    expect(ev('aggressive', FENS.attack[0], 1) - ev('aggressive', FENS.attack[1], 1)).toBe(ev('universal', FENS.attack[0]) - ev('universal', FENS.attack[1]));
+    // (tactical has own-term changes only; crown-styles-6 aggressive also changes how it sees the opponent's attack)
+    expect(ev('tactical', FENS.attack[0], 1) - ev('tactical', FENS.attack[1], 1)).toBe(ev('universal', FENS.attack[0]) - ev('universal', FENS.attack[1]));
+    expect(pref('aggressive', ...FENS.underAttack)).toBeLessThan(0);
   });
   it('aggressive values its own king attack more and avoids draws', () => {
-    expect(pref('aggressive', ...FENS.attack)).toBeGreaterThan(20);
+    expect(pref('aggressive', ...FENS.attack)).toBeGreaterThan(10);
     expect(STYLE_EVAL.aggressive!.contempt).toBeGreaterThan(0);
   });
   it('defensive fears the opponent attack more, welcomes queen trades and accepts draws', () => {
@@ -122,5 +125,34 @@ describe('full-game styles (crown-styles-5)', () => {
       const p = Position.fromFen(f);
       expect(p.legalMoves()).toContain(chooseMove(new Searcher(14), p, prof, 3, undefined, undefined, s, true).move);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// crown-styles-6: Aggressive redesign, new styles, scouting tendencies (docs/STYLES_REPORT.md §8)
+describe('crown-styles-6', () => {
+  const V = validation as unknown as { fullGame: string[]; fullGameResults: Record<string, { games: { games: number } }> };
+  it('every style has a label and an evaluation profile', () => {
+    for (const s of ALL) { expect(STYLE_LABEL[s]).toBeTruthy(); expect(STYLE_EVAL[s]).toBeDefined(); }
+  });
+  it('scouting tendencies exist exactly for the styles that are played, and quote the measurement', () => {
+    expect(styleTendency('universal')).toBeNull();
+    for (const s of ALL) {
+      const t = styleTendency(s);
+      if (!V.fullGame.includes(s)) { expect(t).toBeNull(); continue; }
+      expect(t).toBeTruthy();
+      expect(t).toContain(`${V.fullGameResults[s].games.games} games`);
+      expect(t).not.toMatch(/NaN|undefined/);
+    }
+  });
+  it('the generator assigns a crown-styles-6 style only once it is validated', () => {
+    const legacy = ['universal', 'tactical', 'positional', 'defensive', 'endgame', 'aggressive'];
+    for (const s of STYLES) expect(legacy.includes(s) || V.fullGame.includes(s)).toBe(true);
+  });
+  it('the materialist and gambiteer judge material in opposite directions', () => {
+    // White a pawn down in the middlegame: the materialist minds it more than Universal, the gambiteer less
+    const fens = ['rnqknr/pppppp/6/6/PP1PPP/RNQKNR w - - 0 1', START] as const;
+    expect(pref('materialist', ...fens)).toBeLessThan(-3);
+    expect(pref('gambiteer', ...fens)).toBeGreaterThan(3);
   });
 });
