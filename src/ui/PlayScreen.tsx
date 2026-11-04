@@ -4,8 +4,10 @@ import { Board } from './Board';
 import { Captured, Clock, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar, moveKeys } from './MatchCenter';
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
-import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
-import { getLevel, MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
+import { ROSTER, CALIBRATION_ID } from '../federation/roster';
+import { BEGINNER_OPPONENTS, PLAY_OPPONENTS, PlayOpponent, findOpponent, opponentLevelLabel, opponentProfile, opponentRating, playOpponentSnapshot } from '../federation/opponents';
+import { BEGINNER_CALIBRATION_ID } from '../federation/profiles';
+import { MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
 import { CancelledError } from '../engine/client';
 import { GameSession, createGameRecord } from '../games/session';
 import { TIME_CONTROLS, TimeControlId, GameRecord, poolFor } from '../games/types';
@@ -48,7 +50,7 @@ export function PlayScreen() {
   // control, and Casual — a practice setup never starts a rated game by itself (src/app/practice.ts).
   const [practice] = useState(() => peekPractice());
   useEffect(() => { if (practice) clearPractice(); }, [practice]);
-  const [opp, setOpp] = useState<Opponent>(() => (practice && getOpponent(practice.opponentId)) || ROSTER[2]);
+  const [opp, setOpp] = useState<PlayOpponent>(() => (practice && findOpponent(practice.opponentId)) || ROSTER[2]);
   const [tc, setTc] = useState<TimeControlId>(practice?.timeControl ?? 'rapid');
   const [mode, setMode] = useState<'rated' | 'casual'>(practice ? 'casual' : 'rated');
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
@@ -58,7 +60,7 @@ export function PlayScreen() {
   const [budget, setBudget] = useState<number>(MAX_RATED_BUDGET_S);
   const isMax = opp.level === MAX_LEVEL;
   // Sovereign Unbound is calibrated only at its rated budget; other budgets are casual
-  const calibrated = levelRating(opp.level) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
+  const calibrated = opponentRating(opp) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
   const ratedAllowed = calibrated && tc !== 'untimed';
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export function PlayScreen() {
     const record = createGameRecord({
       id: newId(), mode: rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS[tc], humanColor,
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
-      engine: opponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
+      engine: playOpponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
     await services.saveGame(record);
     go({ name: 'match', gameId: record.id });
@@ -119,26 +121,29 @@ export function PlayScreen() {
         <div className="panel">
           <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span></div>
           <div className="stack" role="radiogroup" aria-label="Opponent">
-            {ROSTER.map(o => {
-              const cal = levelRating(o.level);
-              return (
-                <button key={o.id} className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)}>
+            {PLAY_OPPONENTS.map((o: PlayOpponent, i) => {
+              const cal = opponentRating(o);
+              const beginner = !!o.beginner;
+              return (<div key={o.id} style={{ display: 'contents' }}>
+                {i === 0 && <div className="small muted" data-testid="beginner-group" style={{ fontWeight: 700 }}>Beginners · under 800 · they miss threats and sometimes play random moves</div>}
+                {i === BEGINNER_OPPONENTS.length && <div className="small muted" style={{ fontWeight: 700, marginTop: 6 }}>Calibrated ladder · 800 and up</div>}
+                <button className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)} data-testid={beginner ? `opp-beginner-${o.beginner}` : undefined}>
                   <Portrait seed={o.portraitSeed} size={48} crown={o.level >= 8} />
                   <div style={{ flex: 1 }}>
-                    <div className="row" style={{ gap: 6 }}><strong>{o.name}</strong><span className="chip gold">L{o.level} {getLevel(o.level).name}</span></div>
-                    <div className="small muted">{o.club} · {getLevel(o.level).description}</div>
+                    <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}><strong>{o.name}</strong><span className={beginner ? 'chip info' : 'chip gold'}>{opponentLevelLabel(o)}</span>{beginner && <span className="chip">Beginner</span>}</div>
+                    <div className="small muted">{o.club} · {opponentProfile(o).description}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? Math.round(cal.rating) : '—'}</div>
                     <div className="small muted">{cal ? `±${Math.round(cal.rd)}` : 'not yet rated'}</div>
                   </div>
                 </button>
-              );
+              </div>);
             })}
           </div>
           <details className="small">
             <summary>Details</summary>
-            <p className="muted">Opponent ratings come from measured engine test games (calibration {CALIBRATION_ID}).</p>
+            <p className="muted">Opponent ratings come from measured engine test games (calibration {CALIBRATION_ID}; beginners {BEGINNER_CALIBRATION_ID}, measured by matches chained down from L1 = 800). Ratings are engine-vs-engine on the Crown scale, not FIDE or human ratings.</p>
           </details>
         </div>
         <div className="panel stack">
@@ -172,7 +177,7 @@ export function PlayScreen() {
               <button aria-pressed={mode === 'casual' || !ratedAllowed} onClick={() => setMode('casual')}>Casual</button>
             </div>
             <div className="small muted" style={{ marginTop: 4 }}>
-              {!calibrated ? (isMax && levelRating(opp.level) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
+              {!calibrated ? (isMax && opponentRating(opp) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
             </div>
           </div>
           <div>
@@ -401,7 +406,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const claims = session.claims();
   const humanToMove = session.sideToMove === humanColor && !session.isOver;
   const opp = rec.humanColor === 'white' ? rec.black : rec.white;
-  const oppMeta = getOpponent(opp.id);
+  const oppMeta = findOpponent(opp.id);
   const plies = rec.moves.length;
 
   // the shown position: the live game, or an earlier position while browsing (no moves can be made there)
@@ -424,7 +429,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     return (
       <PlayerBar color={color} active={session.sideToMove === c && !session.isOver} testId={isHuman ? 'human-bar' : 'engine-bar'}
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
-        name={<>{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</>}
+        name={<>{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? (p.engine.profileId.startsWith('L0') ? p.engine.profileId : 'Federation') : `L${p.engine?.level}`}</span>}</>}
         meta={<>
           {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
@@ -558,13 +563,13 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
     playOnce(`result:${g.id}`, outcome);
   }, [g.id]);  
   const rematch = async () => {
-    const o = getOpponent(opp.id);
+    const o = findOpponent(opp.id);
     if (!o) return go({ name: 'play' });
     const pool = g.pool ? await services.db.ratingState(g.pool) : null;
     const rec = createGameRecord({
       id: newId(), mode: g.rated ? 'rated' : 'casual', timeControl: g.timeControl, humanColor: g.humanColor === 'white' ? 'black' : 'white',
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
-      engine: opponentSnapshot(o), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
+      engine: playOpponentSnapshot(o), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
     await services.saveGame(rec);
     go({ name: 'match', gameId: rec.id });

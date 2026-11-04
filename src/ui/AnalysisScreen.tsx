@@ -18,7 +18,7 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { explainEvent } from '../ratings/ledger';
 import { createGameRecord } from '../games/session';
-import { getOpponent, opponentSnapshot } from '../federation/roster';
+import { findOpponent as getOpponent, playOpponentSnapshot as opponentSnapshot } from '../federation/opponents';
 import { TIME_CONTROLS } from '../games/types';
 import { exportGame } from '../storage/backup';
 
