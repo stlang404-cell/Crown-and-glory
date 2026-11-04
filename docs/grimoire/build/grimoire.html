@@ -8997,65 +8997,88 @@ move is computed only after the trading window closes, and a trade
 queued while a move is being computed is rejected once it is published.
 <strong>Move grades stay hidden until the market is settled or
 cancelled,</strong> and Match Analysis runs only then.</p>
-<p><strong>The live model</strong> is a forecast derived from the
-published evaluation. It is never the price. With u = the expected score
-of the evaluation for White (crown-outcome-map-v2) and d₀ = the pre-game
-draw probability:</p>
+<p><strong>The live model (crown-odds-2) [Demonstrated]</strong>
+src/exchange/odds.ts, docs/ODDS_MODEL.md. It is a forecast, never the
+price. It is an <em>ordered logit</em>: one latent number x measures
+White&#39;s advantage, a draw width θ ≥ 0 sits on both sides of it, and with
+σ(z) = 1/(1 + e^−z):</p>
 <blockquote>
-<p>d = max(0.01, d₀ · (1 − |2u − 1|)), W = max(0.005, u − d/2), B =
-max(0.005, 1 − u − d/2), then normalise.</p>
+<p>P(White) = σ(x − θ), P(Black) = σ(−x − θ), P(Draw) = 1 − P(White) −
+P(Black).</p>
 </blockquote>
-<p>The draw share shrinks as the evaluation becomes one-sided. Two NPC
-desks act in-play: <em>Kestrel Tactical Desk</em> trades on this
-evaluation-based model, and <em>Tidewater Momentum</em> buys whatever
-has risen since the last window (price history only).</p>
-<p><strong>A fact worth noticing. [Demonstrated]</strong> The live model
-uses <strong>only the evaluation</strong> of the current position, not
-the rating gap. At 0 cp it gives roughly <strong>0.35 / 0.30 /
-0.35</strong>, even if the pre-game forecast favoured one player.
-Whether the rating gap should still count once the game is under way is
-<em>your</em> judgement as a forecaster.</p>
+<p>Before the game, x comes from the <strong>public rating gap</strong>
+(deflated by both RDs, as in Glicko) plus a small fitted first-move edge
+for White, and θ from the players&#39; <strong>level</strong> (stronger
+pairs draw more). After each published move n, with the published
+evaluation e (White&#39;s view, in units of 100 cp, clamped at ±16):</p>
+<blockquote>
+<p>x = a(n)·x₀ + b(n)·e, θ = θ₀ · exp(d(n) + m·(material traded)).</p>
+</blockquote>
+<p>a, b and d were <em>fitted</em> on 3,200 Federation-style engine
+games (held-out validated; the report is in docs/ODDS_MODEL.md). The
+rating prior keeps a decaying weight: a = 0.83 at ply 10, 0.59 at ply
+40, 0.15 at ply 160. The evaluation&#39;s weight b rises to a peak near ply
+40. The draw width grows with the ply count and with traded material,
+because long, simplified games are drawish. At ply 0 the live model is
+exactly the pre-game forecast.</p>
+<p>Two NPC desks act in-play: <em>Kestrel Tactical Desk</em> trades on
+this model, and <em>Tidewater Momentum</em> buys whatever has risen
+since the last window (price history only).</p>
+<p><strong>A fact worth noticing. [Demonstrated]</strong> Up to v0.8 the
+live model used <em>only</em> the evaluation, so at 0 cp it gave about
+0.35 / 0.30 / 0.35 whatever the ratings (bug #21 in
+docs/BUG_REGISTER.md). crown-odds-2 fixed this: at an equal evaluation
+the favourite stays the favourite, by a margin that fades as the game
+goes on. How much the ratings should still count late in a game is where
+your own judgement as a forecaster comes in.</p>
 <h3 id="illustrated-example-49">Illustrated example</h3>
 <p>A featured game between public ratings <strong>1850 (White) and
-1750</strong>. Pre-game model: <strong>0.447 / 0.302 / 0.251</strong>
-(d₀ = 0.302). Live model after the engine&#39;s evaluation (computed with
-the game&#39;s formula and <code>mapV2</code>):</p>
+1750</strong>, both RD 70. Pre-game model: <strong>0.660 / 0.107 /
+0.233</strong>. Live model after ply 20 with all pieces still on the
+board, computed with the game&#39;s own <code>liveWdl</code>, next to an
+equal pairing (1800 v 1800) for comparison:</p>
 <table>
 <thead>
 <tr class="header">
 <th>Evaluation (White)</th>
-<th>u</th>
-<th>Live W / D / B</th>
+<th>1850 v 1750: W / D / B</th>
+<th>1800 v 1800: W / D / B</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>0 cp</td>
-<td>0.502</td>
-<td>0.352 / 0.300 / 0.347</td>
+<td>0.578 / 0.172 / 0.251</td>
+<td>0.462 / 0.190 / 0.347</td>
 </tr>
 <tr class="even">
 <td>+50 cp</td>
-<td>0.575</td>
-<td>0.447 / 0.256 / 0.297</td>
+<td>0.690 / 0.139 / 0.170</td>
+<td>0.584 / 0.170 / 0.246</td>
 </tr>
 <tr class="odd">
 <td>+150 cp</td>
-<td>0.769</td>
-<td>0.700 / 0.139 / 0.161</td>
+<td>0.855 / 0.073 / 0.072</td>
+<td>0.788 / 0.102 / 0.109</td>
 </tr>
 <tr class="even">
 <td>+300 cp</td>
-<td>0.932</td>
-<td>0.912 / 0.041 / 0.047</td>
+<td>0.962 / 0.020 / 0.018</td>
+<td>0.942 / 0.031 / 0.028</td>
 </tr>
 <tr class="odd">
 <td>−150 cp</td>
-<td>0.219</td>
-<td>0.153 / 0.132 / 0.715</td>
+<td>0.240 / 0.168 / 0.592</td>
+<td>0.166 / 0.137 / 0.697</td>
 </tr>
 </tbody>
 </table>
+<p>And the same 1850 v 1750 game at a level 0 cp as the ply count grows
+(all pieces on): ply 1 <strong>0.662 / 0.107 / 0.231</strong>, ply 10
+<strong>0.613 / 0.133 / 0.253</strong>, ply 40 <strong>0.495 / 0.259 /
+0.246</strong>, ply 80 <strong>0.341 / 0.447 / 0.212</strong>, ply 160
+<strong>0.230 / 0.587 / 0.184</strong>. A level position late in the
+game is mostly a draw.</p>
 <h3 id="step-by-step-reasoning-how-certain-is-this-board">Step-by-step
 reasoning: how certain is this board?</h3>
 <p>An evaluation is an estimate from a search of limited depth, and its
@@ -9074,7 +9097,8 @@ games, and a weaker or time-pressed player converts less reliably
 ([Counsel]).</li>
 <li><strong>A balanced position</strong> (the second board): the
 evaluation says little. The draw rate and the players&#39; strengths
-dominate, which is exactly the information the live model drops.</li>
+dominate, which is why the live model keeps a share of the rating prior
+and widens the draw band as the game goes on.</li>
 <li><strong>Volatile positions:</strong> if the evaluation has swung
 several times, the search is struggling. Widen your uncertainty rather
 than chasing each swing ([Counsel]).</li>
@@ -9091,34 +9115,37 @@ the new position first.</li>
 after settlement.</li>
 </ul>
 <h3 id="advanced-insight-50">Advanced insight</h3>
-<p>The map is steep near balance and flat near decisive positions (Book
-V, Chapter V.6). So a 100 cp swing around 0 moves the live model much
-more than a 100 cp swing around +500. When a featured game is balanced,
-small evaluation changes produce large live-model changes, and prices
-driven by the Tactical Desk can swing. That is where a forecaster who
-reads the position calmly can disagree most usefully ([Counsel]).</p>
+<p>The logistic σ is steep near balance and flat near decisive
+positions, like the map of Book V, Chapter V.6. So a 100 cp swing around
+0 moves the live model much more than a 100 cp swing around +500. When a
+featured game is balanced, small evaluation changes produce large
+live-model changes, and prices driven by the Tactical Desk can swing.
+That is where a forecaster who reads the position calmly can disagree
+most usefully ([Counsel]).</p>
 <h3 id="worked-example-50">Worked example</h3>
-<p>After move 18 the evaluation is <strong>+150 cp</strong> for White.
-The live model says <strong>0.700 / 0.139 / 0.161</strong>. The price of
-White is <strong>$0.62</strong>. You have watched the game: White&#39;s
-advantage is a protected passed pawn, and Black has no counterplay. You
-believe <strong>0.72</strong>.</p>
+<p>The 1850 v 1750 game above. After move 18 (ply 36) the evaluation is
+<strong>+150 cp</strong> for White, and one rook pair has been exchanged
+(material 40 of 50). The live model says <strong>0.852 / 0.098 /
+0.050</strong>. The price of White is <strong>$0.80</strong>. You have
+watched the game: White&#39;s advantage is a protected passed pawn, and
+Black has no counterplay. You believe <strong>0.88</strong>.</p>
 <ul>
-<li>Small-trade break-even: 1.01 × 0.62 = 0.626 &lt; 0.72, so the trade
+<li>Small-trade break-even: 1.01 × 0.80 = 0.808 &lt; 0.88, so the trade
 is in your favour.</li>
-<li>Size it with Chapter VI.4: a match market has b = 120, so at $0.62
-each share moves the price about 0.62 × 0.38/120 ≈ 0.002. Stop well
-before the price reaches about 0.71.</li>
+<li>Size it with Chapter VI.4: a match market has b = 120, so at $0.80
+each share moves the price about 0.80 × 0.20/120 ≈ 0.0013. Stop well
+before the price reaches about 0.87.</li>
 <li>Write the paper forecast as well. It is scored even if you do not
 trade.</li>
 </ul>
 <h3 id="guided-exercise-50">Guided exercise</h3>
-<p>Pre-game draw probability d₀ = 0.31. The evaluation gives u = 0.676
-(about +100 cp). Compute d, W and B (before normalising), and check that
-they add up to 1.</p>
+<p>The model&#39;s latent advantage is x = 0.8 and the draw width θ = 0.5.
+Compute W, D and B, and check that they add up to 1 (σ(0.3) ≈ 0.574,
+σ(−1.3) ≈ 0.214).</p>
 <h3 id="independent-exercises-50">Independent exercises</h3>
 <ol type="1">
-<li>At u = 0.5, what is d in terms of d₀? At u = 1?</li>
+<li>With x = 0 and θ = 0.26, what are W, D and B? What happens to D when
+θ grows?</li>
 <li>Why does the game reject a trade that you queued while the next move
 was being computed?</li>
 <li>Name the two NPC traders that act in-play and the information each
@@ -9128,15 +9155,15 @@ cancelled rather than settled as a draw?</li>
 </ol>
 <h3 id="answers-13">Answers</h3>
 <ul>
-<li><strong>Guided:</strong> |2u − 1| = 0.352, so d = 0.31 × 0.648 =
-<strong>0.201</strong>. W = 0.676 − 0.100 = <strong>0.576</strong>, B =
-1 − 0.676 − 0.100 = <strong>0.224</strong>. The three add up to exactly
-1 by construction ((u − d/2) + d + (1 − u − d/2) = 1). The rounded
-figures give 1.001. The floors and the normalisation matter only when u
-is near 0 or 1.</li>
-<li><strong>1:</strong> d = <strong>d₀</strong> at u = 0.5 (the draw
-share is at its maximum). At u = 1, d₀ × 0 = 0, so the floor
-<strong>0.01</strong> applies.</li>
+<li><strong>Guided:</strong> W = σ(0.8 − 0.5) = σ(0.3) ≈
+<strong>0.574</strong>, B = σ(−0.8 − 0.5) = σ(−1.3) ≈
+<strong>0.214</strong>, D = 1 − 0.574 − 0.214 = <strong>0.211</strong>
+(rounded figures; the three add up to 1 by construction). The published
+vector also floors each state at 0.005 and renormalises, which matters
+only near certainty.</li>
+<li><strong>1:</strong> W = B = σ(−0.26) ≈ <strong>0.435</strong>, D ≈
+<strong>0.129</strong>. A larger θ pushes both σ terms down, so
+<strong>D grows</strong>: θ is the width of the draw band.</li>
 <li><strong>2:</strong> the market&#39;s <strong>revision</strong> changes
 when a move is published. A quote taken before new public information
 can never execute after it.</li>
@@ -9152,10 +9179,11 @@ such.</li>
 </ul>
 <h3 id="summary-50">Summary</h3>
 <p>Live trading happens between published moves, on public information
-only. Grades stay hidden until settlement. The live model turns the
-evaluation into W/D/B, with a draw share that shrinks as the position
-becomes one-sided, and it ignores the rating gap. Judge how certain the
-board really is: proven mate, large edge, balanced, volatile.</p>
+only. Grades stay hidden until settlement. The live model (crown-odds-2)
+combines a fading share of the rating gap with the evaluation through an
+ordered logit, with a draw band that widens in long and simplified
+games. Judge how certain the board really is: proven mate, large edge,
+balanced, volatile.</p>
 <h3 id="next-lesson-50">Next lesson</h3>
 <p>Chapter VI.7: the other traders, your own biases, and the long
 run.</p>

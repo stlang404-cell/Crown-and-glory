@@ -617,30 +617,47 @@ history. **Future moves do not exist while you can trade.** Each move is compute
 closes, and a trade queued while a move is being computed is rejected once it is published. **Move grades stay
 hidden until the market is settled or cancelled,** and Match Analysis runs only then.
 
-**The live model** is a forecast derived from the published evaluation. It is never the price. With u = the
-expected score of the evaluation for White (crown-outcome-map-v2) and d₀ = the pre-game draw probability:
+**The live model (crown-odds-2) [Demonstrated]** src/exchange/odds.ts, docs/ODDS_MODEL.md. It is a forecast,
+never the price. It is an *ordered logit*: one latent number x measures White's advantage, a draw width θ ≥ 0 sits
+on both sides of it, and with σ(z) = 1/(1 + e^−z):
 
-> d = max(0.01, d₀ · (1 − |2u − 1|)), W = max(0.005, u − d/2), B = max(0.005, 1 − u − d/2), then normalise.
+> P(White) = σ(x − θ), P(Black) = σ(−x − θ), P(Draw) = 1 − P(White) − P(Black).
 
-The draw share shrinks as the evaluation becomes one-sided. Two NPC desks act in-play: *Kestrel Tactical Desk*
-trades on this evaluation-based model, and *Tidewater Momentum* buys whatever has risen since the last window
-(price history only).
+Before the game, x comes from the **public rating gap** (deflated by both RDs, as in Glicko) plus a small fitted
+first-move edge for White, and θ from the players' **level** (stronger pairs draw more). After each published move
+n, with the published evaluation e (White's view, in units of 100 cp, clamped at ±16):
 
-**A fact worth noticing. [Demonstrated]** The live model uses **only the evaluation** of the current position, not
-the rating gap. At 0 cp it gives roughly **0.35 / 0.30 / 0.35**, even if the pre-game forecast favoured one player.
-Whether the rating gap should still count once the game is under way is *your* judgement as a forecaster.
+> x = a(n)·x₀ + b(n)·e,  θ = θ₀ · exp(d(n) + m·(material traded)).
+
+a, b and d were *fitted* on 3,200 Federation-style engine games (held-out validated; the report is in
+docs/ODDS_MODEL.md). The rating prior keeps a decaying weight: a = 0.83 at ply 10, 0.59 at ply 40, 0.15 at ply 160.
+The evaluation's weight b rises to a peak near ply 40. The draw width grows with the ply count and with traded
+material, because long, simplified games are drawish. At ply 0 the live model is exactly the pre-game forecast.
+
+Two NPC desks act in-play: *Kestrel Tactical Desk* trades on this model, and *Tidewater Momentum* buys whatever
+has risen since the last window (price history only).
+
+**A fact worth noticing. [Demonstrated]** Up to v0.8 the live model used *only* the evaluation, so at 0 cp it gave
+about 0.35 / 0.30 / 0.35 whatever the ratings (bug #21 in docs/BUG_REGISTER.md). crown-odds-2 fixed this: at an
+equal evaluation the favourite stays the favourite, by a margin that fades as the game goes on. How much the
+ratings should still count late in a game is where your own judgement as a forecaster comes in.
 
 ### Illustrated example
-A featured game between public ratings **1850 (White) and 1750**. Pre-game model: **0.447 / 0.302 / 0.251**
-(d₀ = 0.302). Live model after the engine's evaluation (computed with the game's formula and `mapV2`):
+A featured game between public ratings **1850 (White) and 1750**, both RD 70. Pre-game model:
+**0.660 / 0.107 / 0.233**. Live model after ply 20 with all pieces still on the board, computed with the game's own
+`liveWdl`, next to an equal pairing (1800 v 1800) for comparison:
 
-| Evaluation (White) | u | Live W / D / B |
+| Evaluation (White) | 1850 v 1750: W / D / B | 1800 v 1800: W / D / B |
 |---|---|---|
-| 0 cp | 0.502 | 0.352 / 0.300 / 0.347 |
-| +50 cp | 0.575 | 0.447 / 0.256 / 0.297 |
-| +150 cp | 0.769 | 0.700 / 0.139 / 0.161 |
-| +300 cp | 0.932 | 0.912 / 0.041 / 0.047 |
-| −150 cp | 0.219 | 0.153 / 0.132 / 0.715 |
+| 0 cp | 0.578 / 0.172 / 0.251 | 0.462 / 0.190 / 0.347 |
+| +50 cp | 0.690 / 0.139 / 0.170 | 0.584 / 0.170 / 0.246 |
+| +150 cp | 0.855 / 0.073 / 0.072 | 0.788 / 0.102 / 0.109 |
+| +300 cp | 0.962 / 0.020 / 0.018 | 0.942 / 0.031 / 0.028 |
+| −150 cp | 0.240 / 0.168 / 0.592 | 0.166 / 0.137 / 0.697 |
+
+And the same 1850 v 1750 game at a level 0 cp as the ply count grows (all pieces on): ply 1 **0.662 / 0.107 /
+0.231**, ply 10 **0.613 / 0.133 / 0.253**, ply 40 **0.495 / 0.259 / 0.246**, ply 80 **0.341 / 0.447 / 0.212**,
+ply 160 **0.230 / 0.587 / 0.184**. A level position late in the game is mostly a draw.
 
 ### Step-by-step reasoning: how certain is this board?
 An evaluation is an estimate from a search of limited depth, and its certainty varies a lot.
@@ -692,7 +709,8 @@ caption: After 1.a3 f4, one of the book's dead-level openings (0 cp at Fairy-Sto
 2. **A large but unforced edge** (+300 cp): the map says about 0.93 in engine games. But the map was fitted on
    *engine* games, and a weaker or time-pressed player converts less reliably ([Counsel]).
 3. **A balanced position** (the second board): the evaluation says little. The draw rate and the players'
-   strengths dominate, which is exactly the information the live model drops.
+   strengths dominate, which is why the live model keeps a share of the rating prior and widens the draw band as
+   the game goes on.
 4. **Volatile positions:** if the evaluation has swung several times, the search is struggling. Widen your
    uncertainty rather than chasing each swing ([Counsel]).
 
@@ -703,37 +721,38 @@ caption: After 1.a3 f4, one of the book's dead-level openings (0 cp at Fairy-Sto
 * **Expecting grades during the game.** They appear only after settlement.
 
 ### Advanced insight
-The map is steep near balance and flat near decisive positions (Book V, Chapter V.6). So a 100 cp swing around 0
-moves the live model much more than a 100 cp swing around +500. When a featured game is balanced, small evaluation
+The logistic σ is steep near balance and flat near decisive positions, like the map of Book V, Chapter V.6. So a
+100 cp swing around 0 moves the live model much more than a 100 cp swing around +500. When a featured game is balanced, small evaluation
 changes produce large live-model changes, and prices driven by the Tactical Desk can swing. That is where a
 forecaster who reads the position calmly can disagree most usefully ([Counsel]).
 
 ### Worked example
-After move 18 the evaluation is **+150 cp** for White. The live model says **0.700 / 0.139 / 0.161**. The price of
-White is **$0.62**. You have watched the game: White's advantage is a protected passed pawn, and Black has no
-counterplay. You believe **0.72**.
+The 1850 v 1750 game above. After move 18 (ply 36) the evaluation is **+150 cp** for White, and one rook pair has
+been exchanged (material 40 of 50). The live model says **0.852 / 0.098 / 0.050**. The price of White is
+**$0.80**. You have watched the game: White's advantage is a protected passed pawn, and Black has no counterplay.
+You believe **0.88**.
 
-* Small-trade break-even: 1.01 × 0.62 = 0.626 < 0.72, so the trade is in your favour.
-* Size it with Chapter VI.4: a match market has b = 120, so at $0.62 each share moves the price about
-  0.62 × 0.38/120 ≈ 0.002. Stop well before the price reaches about 0.71.
+* Small-trade break-even: 1.01 × 0.80 = 0.808 < 0.88, so the trade is in your favour.
+* Size it with Chapter VI.4: a match market has b = 120, so at $0.80 each share moves the price about
+  0.80 × 0.20/120 ≈ 0.0013. Stop well before the price reaches about 0.87.
 * Write the paper forecast as well. It is scored even if you do not trade.
 
 ### Guided exercise
-Pre-game draw probability d₀ = 0.31. The evaluation gives u = 0.676 (about +100 cp). Compute d, W and B (before
-normalising), and check that they add up to 1.
+The model's latent advantage is x = 0.8 and the draw width θ = 0.5. Compute W, D and B, and check that they add
+up to 1 (σ(0.3) ≈ 0.574, σ(−1.3) ≈ 0.214).
 
 ### Independent exercises
-1. At u = 0.5, what is d in terms of d₀? At u = 1?
+1. With x = 0 and θ = 0.26, what are W, D and B? What happens to D when θ grows?
 2. Why does the game reject a trade that you queued while the next move was being computed?
 3. Name the two NPC traders that act in-play and the information each one uses.
 4. Why is a featured game that is stopped by the playing-length limit cancelled rather than settled as a draw?
 
 ### Answers
-* **Guided:** |2u − 1| = 0.352, so d = 0.31 × 0.648 = **0.201**. W = 0.676 − 0.100 = **0.576**, B = 1 − 0.676 −
-  0.100 = **0.224**. The three add up to exactly 1 by construction ((u − d/2) + d + (1 − u − d/2) = 1). The rounded
-  figures give 1.001. The floors and the normalisation matter only when u is near 0 or 1.
-* **1:** d = **d₀** at u = 0.5 (the draw share is at its maximum). At u = 1, d₀ × 0 = 0, so the floor **0.01**
-  applies.
+* **Guided:** W = σ(0.8 − 0.5) = σ(0.3) ≈ **0.574**, B = σ(−0.8 − 0.5) = σ(−1.3) ≈ **0.214**, D = 1 − 0.574 −
+  0.214 = **0.211** (rounded figures; the three add up to 1 by construction). The published vector also floors each
+  state at 0.005 and renormalises, which matters only near certainty.
+* **1:** W = B = σ(−0.26) ≈ **0.435**, D ≈ **0.129**. A larger θ pushes both σ terms down, so **D grows**: θ is the
+  width of the draw band.
 * **2:** the market's **revision** changes when a move is published. A quote taken before new public information can
   never execute after it.
 * **3:** **Kestrel Tactical Desk** (the public engine evaluation of the current position, through the live model)
@@ -744,8 +763,8 @@ normalising), and check that they add up to 1.
 
 ### Summary
 Live trading happens between published moves, on public information only. Grades stay hidden until settlement. The
-live model turns the evaluation into W/D/B, with a draw share that shrinks as the position becomes one-sided, and
-it ignores the rating gap. Judge how certain the board really is: proven mate, large edge, balanced, volatile.
+live model (crown-odds-2) combines a fading share of the rating gap with the evaluation through an ordered logit,
+with a draw band that widens in long and simplified games. Judge how certain the board really is: proven mate, large edge, balanced, volatile.
 
 ### Next lesson
 Chapter VI.7: the other traders, your own biases, and the long run.

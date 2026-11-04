@@ -86,8 +86,9 @@ Counsel** (advice, not proven).
 ## 5. Issues found in the game (logged in docs/BUG_REGISTER.md)
 * Opponent style labels "Defensive", "Endgame" and "Aggressive" currently play as Universal; only Tactical and
   Positional change anything, and only the first six plies of the opening.
-* The live in-play odds model ignores the rating gap: at an equal evaluation it returns about 0.35 / 0.30 / 0.35 for
-  any pairing.
+* The live in-play odds model ignored the rating gap (about 0.35 / 0.30 / 0.35 at an equal evaluation for any
+  pairing). **Fixed** by crown-odds-2 (docs/ODDS_MODEL.md); Book VI §VI.6 now describes the new model, and its
+  tables were computed with the game's own `liveWdl`.
 * Rules without any test (RULES_TRACEABILITY): claims only by the side to move; engine draw claims/offers; engine-vs-
   engine auto-claims and the 400-halfmove limit; rated play needing a calibrated opponent; Random Match defaults;
   whole-share trades; market cancellation at the playing limit; paper-forecast revision; and others listed there.
