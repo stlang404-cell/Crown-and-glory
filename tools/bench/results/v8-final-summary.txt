@@ -1,0 +1,2 @@
+fb-match-fullbudgetT200-vs-v7maxT200-v8c: 640 games +228 =227 -185 score 0.534 elo 23 [6, 41] depth {fullbudgetT200: 10.9, v7maxT200: 10.4} illegal 0
+fairy-v8shipT100-vs-fairy-100ms: 128 games +5 =16 -107 score 0.102 elo -379 [-482, -309] depth {v8shipT100: 8.9, fairy-100ms: 38.8} illegal 0

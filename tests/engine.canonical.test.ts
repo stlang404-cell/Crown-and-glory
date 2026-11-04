@@ -72,7 +72,7 @@ describe('canonical engine: tactics and terminal positions', () => {
 
 describe('Sovereign Max', () => {
   it('is the last level, plays the best move only, uses a 2^20 table and the rated budget by default', () => {
-    expect(LEVELS_ID).toBe('crown-levels-5');
+    expect(LEVELS_ID).toBe('crown-levels-6');
     expect(LEVELS[LEVELS.length - 1].level).toBe(MAX_LEVEL);
     const m = getLevel(MAX_LEVEL);
     expect(m.selection).toBeNull();
