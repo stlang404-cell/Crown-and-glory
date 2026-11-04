@@ -1,0 +1,10 @@
+[2026-11-04T16:59:41.862Z] PASS 1: Match market lists 4 claims (with Decisive); the ticket previews "You pay $9.69" and "After this trade 10 held · avg $0.969 · worst case -$9.69 · best +$0.31"
+[2026-11-04T16:59:41.926Z] PASS 2: Bought 10 shares: cash fell by $9.69, the previewed amount on the button ("Confirm: Pay $9.69")
+[2026-11-04T16:59:41.933Z] PASS 3: Your Position shows cost basis, realised and unrealised P&L, the amount at risk and a Close Position button
+[2026-11-04T16:59:42.041Z] PASS 4: Closed the position: received $9.50 as confirmed ("Confirm: Receive $9.50"); realised -0.19 = received − paid (fees and spread)
+[2026-11-04T16:59:42.259Z] PASS 5: After a reload the Exchange shows a Watchlist with the watched market (1 row)
+[2026-11-04T16:59:42.292Z] PASS 6: Over/under market "Lemon Mossbury – Romar Mossshaw: over/under 56.5 plies": rules state "official game record of this fixture; Over pays $1 if it is X + 1 or more, Under if it is X or fewer."; settlement and VOID terms listed
+[2026-11-04T16:59:42.344Z] PASS 7: Finance shows the portfolio panel; Forecasting shows the Forecasting League and the Calibration Challenge
+[2026-11-04T16:59:45.214Z] PASS 8: No horizontal overflow at 390 px (market, finance, forecasting: 0, 0, 0 px)
+[2026-11-04T16:59:45.214Z] PASS 9: No page or console errors (0)
+[2026-11-04T16:59:45.239Z] ALL CHECKS PASSED
