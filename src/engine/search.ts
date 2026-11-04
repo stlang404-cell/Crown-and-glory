@@ -79,6 +79,9 @@ export interface SearchFeatures {
   singular: boolean;
   /** v0.7: when time runs out mid-iteration, play a root move that already fully beat the previous best. */
   partialRoot: boolean;
+  /** v0.8 candidate: with partialRoot, keep starting iterations until 62.5 % of the time budget (default 40 %),
+   *  since an unfinished iteration's fully searched better root move is kept. Requires partialRoot. */
+  fullBudget: boolean;
 }
 
 export const DEFAULT_FEATURES: SearchFeatures = {
@@ -109,6 +112,7 @@ export const DEFAULT_FEATURES: SearchFeatures = {
   rfpDeep: false,
   singular: false,
   partialRoot: false,
+  fullBudget: false,
 };
 
 /** The crown-search-1 feature set (all M4 additions off): reproduces the M3 engine node for node. */
@@ -361,7 +365,7 @@ export class Searcher {
       if (this.nodes + this.qnodes >= this.nodeLimit) { stopReason = 'nodes'; break; }
       const elapsed = this.now() - start;
       // Do not start an iteration we very likely cannot finish (branching factor heuristic).
-      if (this.deadline !== Infinity && start + elapsed * 2.5 > this.deadline) { stopReason = 'time'; break; }
+      if (this.deadline !== Infinity && start + elapsed * (this.features.fullBudget && this.features.partialRoot ? 1.6 : 2.5) > this.deadline) { stopReason = 'time'; break; }
     }
     if (!best) {
       // Depth 1 could not complete (extremely small budget): fall back to the first ordered legal move.
