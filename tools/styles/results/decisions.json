@@ -26,9 +26,9 @@
  "defensive": {
   "positions": 300,
   "nodes": 8000,
-  "disagreement": 0.253,
+  "disagreement": 0.21,
   "signature": "safety",
-  "styleRate": 0.27,
+  "styleRate": 0.257,
   "universalRate": 0.253
  },
  "endgame": {

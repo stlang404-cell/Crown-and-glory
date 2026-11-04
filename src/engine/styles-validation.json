@@ -223,37 +223,37 @@
   "defensive": {
    "own": {
     "KING_SHIELD": [
-     15,
+     10,
      0
     ],
     "KING_OPEN": [
-     -15,
+     -10,
      0
     ]
    },
    "opp": {
     "KING_ATTACKERS": [
-     15,
+     10,
      0
     ],
     "KING_ATTACK": [
-     2,
+     1,
      0
     ],
     "TROPISM": [
-     5,
+     3,
      0
     ],
     "HANGING": [
-     25,
-     10
+     15,
+     5
     ],
     "MAT.4": [
-     30,
+     20,
      0
     ]
    },
-   "contempt": -25
+   "contempt": -20
   },
   "endgame": {
    "own": {
@@ -478,45 +478,45 @@
    "decisions": {
     "positions": 300,
     "nodes": 8000,
-    "disagreement": 0.253,
+    "disagreement": 0.21,
     "signature": "safety",
-    "styleRate": 0.27,
+    "styleRate": 0.257,
     "universalRate": 0.253
    },
    "games": {
     "games": 200,
-    "avgPlies": 74.2,
-    "drawRate": 0.375,
-    "queensOffRate": 0.865,
-    "medianQueensOffPly": 26
+    "avgPlies": 79.1,
+    "drawRate": 0.355,
+    "queensOffRate": 0.85,
+    "medianQueensOffPly": 29
    },
    "styledSide": {
-    "capturesPerGame": 8.44,
-    "checksPerGame": 4.67,
-    "promosPerGame": 0.28,
-    "kingZoneAttacksPerMove": 2.677,
-    "attacksSufferedPerMove": 2.292
+    "capturesPerGame": 8.74,
+    "checksPerGame": 5.14,
+    "promosPerGame": 0.35,
+    "kingZoneAttacksPerMove": 2.874,
+    "attacksSufferedPerMove": 2.376
    },
    "universalSide": {
-    "capturesPerGame": 8.6,
-    "checksPerGame": 4.87,
-    "promosPerGame": 0.36,
-    "kingZoneAttacksPerMove": 2.561,
-    "attacksSufferedPerMove": 2.425
+    "capturesPerGame": 8.7,
+    "checksPerGame": 5.25,
+    "promosPerGame": 0.32,
+    "kingZoneAttacksPerMove": 2.625,
+    "attacksSufferedPerMove": 2.64
    },
    "strength": {
     "games": 200,
     "nodes": 8000,
     "wdl": [
-     54,
-     75,
-     71
+     63,
+     71,
+     66
     ],
-    "score": 0.458,
-    "elo": -30,
+    "score": 0.492,
+    "elo": -5,
     "eloCI": [
-     -67,
-     9
+     -38,
+     30
     ]
    },
    "direction": {

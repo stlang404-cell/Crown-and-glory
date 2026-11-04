@@ -116,7 +116,7 @@ export const STYLE_EVAL: Partial<Record<StyleId, StyleEval>> = {
   aggressive: { own: { KING_ATTACKERS: [25, 0], KING_ATTACK: [2, 0], TROPISM: [8, 0] }, contempt: 35 },
   // safety first: own shelter and open king files weigh more, the opponent's attack and threats look bigger,
   // the opponent's queen is feared (queens off is welcome), and a draw is acceptable when not better
-  defensive: { own: { KING_SHIELD: [15, 0], KING_OPEN: [-15, 0] }, opp: { KING_ATTACKERS: [15, 0], KING_ATTACK: [2, 0], TROPISM: [5, 0], HANGING: [25, 10], 'MAT.4': [30, 0] }, contempt: -25 },
+  defensive: { own: { KING_SHIELD: [10, 0], KING_OPEN: [-10, 0] }, opp: { KING_ATTACKERS: [10, 0], KING_ATTACK: [1, 0], TROPISM: [3, 0], HANGING: [15, 5], 'MAT.4': [20, 0] }, contempt: -20 },
   // conversion: trades when ahead (simplify), passed pawns and an active king weigh more in the endgame,
   // queens off is welcome
   endgame: { own: { PASSED: { x: [1, 1.5] }, PASSED_FREE: { x: [1, 1.5] }, PASSED_OWNK: { x: [1, 1.5] }, UNSTOPPABLE: [0, 60], 'PST.5': { x: [1, 1.5] } }, opp: { 'MAT.4': [25, 0] }, contempt: 15, simplify: 100 },
