@@ -88,7 +88,7 @@ fully (swipe it away), reopen it online, wait a few seconds; leave any game you 
 ## What was verified, and what was not
 Verified automatically with `e2e/pages-check.mjs` (Chromium with an iPhone-sized touch viewport, 13/13 checks)
 against two real builds served exactly like GitHub Pages under `/Crown-and-glory/` — build A (package version,
-current commit) and build B (`CROWN_VERSION=0.8.1 CROWN_COMMIT=bbbbbbb`):
+current commit) and build B (`CROWN_VERSION=0.9.1 CROWN_COMMIT=bbbbbbb`):
 manifest, icons and Apple meta tags resolve under the subpath; the service worker's scope is the subpath and all
 precache entries are cached (`version.json` is not); the build identity matches in the app, `version.json` and
 Settings → About; the engine worker plays; the Federation founds and simulates; offline reload with saved games, AI
@@ -104,7 +104,7 @@ once the file is back; no horizontal overflow at 390 px; no page errors or faile
 To re-run:
 ```
 npx vite build --outDir /tmp/crown-a
-CROWN_VERSION=0.8.1 CROWN_COMMIT=bbbbbbb npx vite build --outDir /tmp/crown-b
+CROWN_VERSION=0.9.1 CROWN_COMMIT=bbbbbbb npx vite build --outDir /tmp/crown-b
 node e2e/pages-check.mjs /tmp/crown-a /tmp/crown-b
 ```
 
