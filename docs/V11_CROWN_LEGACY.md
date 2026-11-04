@@ -1,6 +1,6 @@
 # v0.11.0 "The Crown Legacy" — release report (includes the v0.10.0 "Living Arena" checkpoint)
 
-Release: `release/crown-and-calculation-v0.11.0.zip` (source + prebuilt `dist`; checksum in `release/SHA256SUMS.txt`).
+Release: `release/crown-and-calculation-v0.11.0.zip` (about 7.3 MB, 609 files: source at cc9725d + its verified prebuilt `dist`; checksum in `release/SHA256SUMS.txt`).
 All browser checks ran in Chromium (Playwright) on a shared 4-core Linux VM at desktop and 390 px phone sizes.
 **Not tested on a physical iPhone, in Safari/WebKit, or on Windows.** Phone performance figures are Chromium with
 4× CPU throttling (a proxy). Everything below is measured or marked as not done. Engine search/eval/level files were
