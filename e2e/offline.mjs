@@ -11,7 +11,7 @@ const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await ctx.newPage();
 const log = [];
-await p.goto(url);
+await p.goto(url + '#/play'); // v0.9: the landing page is the Federation Dashboard
 await p.evaluate(() => navigator.serviceWorker.ready);
 await p.reload();
 await p.waitForFunction(() => !!navigator.serviceWorker.controller);
