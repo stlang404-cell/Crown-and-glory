@@ -28,6 +28,16 @@ export const CHALLENGER_POOL = C(600);
 export const CHAMP_POOL = C(8_000);
 export const SWISS_SPLIT = [0.3, 0.2, 0.12, 0.12, 0.065, 0.065, 0.065, 0.065];
 export const CHAMP_SPLIT: Record<string, number> = { champion: 0.4, final: 0.2, semi: 0.1, quarter: 0.05 };
+/** v0.11 crown-competition-2 knockouts (src/federation/competitions.ts), escrowed at season start like every pool.
+ *  Zonal Championship (16 players, one per zone): $1,000, split as the Crown Championship. Regional Cup (8 players,
+ *  one per region): $150 — champion 50%, finalist 25%, semifinalists 12.5% each. Issuance per season: 8 × $1,000 +
+ *  regions × $150 ($10,400 at 16 regions, $20,000 at 80; the league pools are $92,800 / $464,000). */
+export const ZONAL_POOL = C(1_000);
+export const CUP_POOL = C(150);
+export const ZONAL_SPLIT: Record<string, number> = CHAMP_SPLIT;
+export const CUP_SPLIT: Record<string, number> = { champion: 0.5, final: 0.25, semi: 0.125 };
+/** Pool of a crown-competition-2 knockout by event id (`zonal-<z>` or `cup-<r>`). */
+export const cupPool = (event: string) => (event.startsWith('zonal-') ? ZONAL_POOL : CUP_POOL);
 
 /** Player-only sponsor milestones, each paid at most once per season from the season's sponsor budget. */
 export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number }> = {
@@ -65,20 +75,25 @@ export function genesisJournals(at: string, npcIds: string[], npcFund: number): 
   return out;
 }
 
-export interface PrizePools { league: Record<string, number>; open: number; challenger: number; champ: number; sponsor: number }
-export function prizePools(circuits: { region: number; division: number }[]): PrizePools {
-  return {
+export interface PrizePools { league: Record<string, number>; open: number; challenger: number; champ: number; sponsor: number;
+  /** v0.11 crown-competition-2 knockouts by event id; absent under crown-competition-1 (the journal is then unchanged). */
+  cups?: Record<string, number> }
+export function prizePools(circuits: { region: number; division: number }[], cupEvents: string[] = []): PrizePools {
+  const pools: PrizePools = {
     league: Object.fromEntries(circuits.map(c => [`${c.region}:${c.division}`, leaguePool(c.division)])),
     open: OPEN_POOL, challenger: CHALLENGER_POOL, champ: CHAMP_POOL, sponsor: SPONSOR_BUDGET,
   };
+  if (cupEvents.length) pools.cups = Object.fromEntries(cupEvents.map(e => [e, cupPool(e)]));
+  return pools;
 }
 
 /** Season issuance: mint exactly the season's prize pools and sponsor budget, escrowed immediately. */
 export function seasonStartJournals(season: number, pools: PrizePools, at: string): Journal[] {
-  const total = Object.values(pools.league).reduce((a, b) => a + b, 0) + pools.open + pools.challenger + pools.champ + pools.sponsor;
+  const total = Object.values(pools.league).reduce((a, b) => a + b, 0) + pools.open + pools.challenger + pools.champ + pools.sponsor + Object.values(pools.cups ?? {}).reduce((a, b) => a + b, 0);
   const lines = [{ account: 'mint', amount: -total }];
   for (const [k, v] of Object.entries(pools.league)) lines.push({ account: `prize:${season}:league:${k}`, amount: v });
   lines.push({ account: `prize:${season}:open`, amount: pools.open }, { account: `prize:${season}:challenger`, amount: pools.challenger }, { account: `prize:${season}:champ`, amount: pools.champ }, { account: `sponsor:${season}`, amount: pools.sponsor });
+  for (const [k, v] of Object.entries(pools.cups ?? {})) lines.push({ account: `prize:${season}:${k}`, amount: v });
   return [j(`mint:season:${season}`, 'mint', `Season ${season} issuance: prize pools and sponsor budget (escrowed)`, lines, season, 0, at)];
 }
 
