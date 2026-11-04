@@ -7,16 +7,18 @@
 import type { CrownDB } from '../storage/db';
 import type { FederationService } from '../app/federation';
 import type { GameRecord } from '../games/types';
-import { VAULT, type EvalResult } from './catalog';
+import { VAULT, vaultDef, type EvalResult } from './catalog';
 import { buildFacts, type Facts } from './facts';
 import { loadProgress } from '../academy/grimoire';
-import { BACKFILL_KEY, evaluateAll, loadToasted, loadUnlocks, markToasted, newUnlocks, saveUnlocks, type UnlockRecord } from './store';
+import { BACKFILL_KEY, BACKFILL_V2_KEY, evaluateAll, loadToasted, loadUnlocks, markToasted, newUnlocks, saveUnlocks, type UnlockRecord } from './store';
 
 export interface VaultHost {
   db: CrownDB;
   fed: FederationService;
   readonly readOnly: boolean;
   matchActive: boolean;
+  /** Bumped when a Played Like record is written onto a game (those writes do not change record counts). */
+  playedLikeVersion?: number;
   subscribe(l: () => void): () => void;
 }
 const THROTTLE_MS = 1500;
@@ -78,7 +80,7 @@ export class VaultService {
       fed = [st.world.season, st.world.round, p.division, p.swissRegistered ? 1 : 0, st.balances.get('player:cash') ?? 0, p.history.length, p.titles.length, p.norms?.length ?? 0, p.fedTitle ?? '', settled, st.positions.size,
         st.extra.forecasts.length, st.assets.size, [...st.assets.values()].map(a => a.level ?? 1).join('.'), st.finance.points.length, Math.round(st.finance.peak)].join(':');
     }
-    return `${Object.values(c).join(':')}|${fed}`;
+    return `${Object.values(c).join(':')}|${this.host.playedLikeVersion ?? 0}|${fed}`;
   }
 
   /** Evaluate every collectible from saved records and record new unlocks (put-if-absent). */
@@ -93,10 +95,15 @@ export class VaultService {
           const results = evaluateAll(VAULT, facts);
           this.facts = facts; this.results = results; this.evaluations++;
           if (!this.host.readOnly) {
-            const backfill = firstRun && (await this.host.db.getMeta(BACKFILL_KEY)) === undefined;
-            const fresh = await saveUnlocks(this.host.db, newUnlocks(results, this.owned, this.now(), backfill));
+            // First run ever: everything earned from history is a back-fill (no notices). First run of crown-vault-2 on
+            // an older save: only the expansion's collectibles are back-filled; crown-vault-1 behaves as before.
+            const v1 = firstRun && (await this.host.db.getMeta(BACKFILL_KEY)) === undefined;
+            const v2 = firstRun && (await this.host.db.getMeta(BACKFILL_V2_KEY)) === undefined;
+            const isBackfill = (id: string) => v1 || (v2 && vaultDef(id)?.since === 'crown-vault-2');
+            const fresh = await saveUnlocks(this.host.db, newUnlocks(results, this.owned, this.now(), isBackfill));
             for (const u of fresh) this.owned.set(u.id, u);
-            if (backfill) await this.host.db.putMetaIfAbsent([{ key: BACKFILL_KEY, value: { at: this.now(), unlocks: fresh.length } }]);
+            if (v1) await this.host.db.putMetaIfAbsent([{ key: BACKFILL_KEY, value: { at: this.now(), unlocks: fresh.length } }]);
+            if (v2) await this.host.db.putMetaIfAbsent([{ key: BACKFILL_V2_KEY, value: { at: this.now(), unlocks: fresh.filter(u => vaultDef(u.id)?.since === 'crown-vault-2').length } }]);
             this.pending.push(...fresh.filter(u => !u.backfill && !this.toasted.has(u.id)));
           }
           this.lastKey = key;

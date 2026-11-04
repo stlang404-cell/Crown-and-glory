@@ -58,17 +58,19 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
 
 export interface RatingPoint { at: string; rating: number; rd: number; label: string }
 
-export function RatingChart({ points, height = 220, caption = 'Shaded band: how uncertain your rating is', empty = 'Your rating chart appears after your first rated game at this time control.', label = 'Rating history' }: { points: RatingPoint[]; height?: number; caption?: string; empty?: string; label?: string }) {
+export function RatingChart({ points: raw, height = 220, caption = 'Shaded band: how uncertain your rating is', empty = 'Your rating chart appears after your first rated game at this time control.', label = 'Rating history' }: { points: RatingPoint[]; height?: number; caption?: string; empty?: string; label?: string }) {
+  // Crown-scale ratings are displayed with a floor of 0 (docs/CAREER_RATING.md); a stored career rating may be below it
+  const points = raw.map(p => ({ ...p, rating: Math.max(0, p.rating) }));
   if (points.length < 2) return <p className="muted">{empty}</p>;
   const W = 640, H = height, pad = 36;
-  const lo = Math.min(...points.map(p => p.rating - p.rd));
+  const lo = Math.max(0, Math.min(...points.map(p => p.rating - p.rd)));
   const hi = Math.max(...points.map(p => p.rating + p.rd));
   const min = Math.floor((lo - 20) / 50) * 50, max = Math.ceil((hi + 20) / 50) * 50;
   const x = (i: number) => pad + (i / (points.length - 1)) * (W - pad - 10);
   const y = (r: number) => 10 + (1 - (r - min) / (max - min)) * (H - 40);
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.rating)}`).join(' ');
   const band = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.rating + p.rd)}`).join(' ') + ' ' +
-    [...points].reverse().map((p, j) => `L${x(points.length - 1 - j)},${y(p.rating - p.rd)}`).join(' ') + ' Z';
+    [...points].reverse().map((p, j) => `L${x(points.length - 1 - j)},${y(Math.max(min, p.rating - p.rd))}`).join(' ') + ' Z';
   const ticks: number[] = [];
   const step = Math.max(50, Math.ceil((max - min) / 5 / 50) * 50);
   for (let t = min; t <= max; t += step) ticks.push(t);

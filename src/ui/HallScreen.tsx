@@ -10,6 +10,9 @@ import { achievementsOf } from '../app/achievements';
 import { rivalriesOf } from '../app/rivalries';
 import type { WorldGame } from '../app/federation';
 import { usePlayerGames } from './RivalsScreen';
+import { TrophyHall } from './TrophyHall';
+import { RankBadge, TitleBadge, HonourFrame, HonourTag, FED_TITLE_TOOLTIP } from './RankBadge';
+import { currentRank } from '../federation/ranks';
 
 /** Which tournament a recorded title belongs to (titles are recorded strings from the season engine). */
 export function titleKind(title: string): TournamentId {
@@ -43,7 +46,7 @@ export function HallScreen() {
     const titled = [...st.competitors.values()].filter(c => c.fedTitle && FED_TITLES.indexOf(c.fedTitle) >= 2).sort((a, b) => FED_TITLES.indexOf(b.fedTitle!) - FED_TITLES.indexOf(a.fedTitle!) || b.rating - a.rating).slice(0, 24);
     return { champs: [...champs].sort((a, b) => b[0] - a[0]), events: events.sort((a, b) => b.season - a.season), titled };
   }, [st, services.revision]);
-  if (!st || !data) return <NeedsFederation title="Hall of Fame" />;
+  if (!st || !data) return <div><h1>Hall of Fame</h1><TrophyHall /><div style={{ marginTop: 14 }}><NeedsFederation detail="The champions, event winners and titled competitors of the Federation appear here once you found it. Your own trophies above come from your recorded results." /></div></div>;
   const p = st.world.player;
   const progress = nextTitleProgress({ norms: p.norms ?? [], peakRating: p.peakRating ?? 0, establishedPeak: p.establishedPeak ?? 0, honours: p.titles.map(t => t.title), current: p.fedTitle ?? null });
   const ach = achievementsOf(st, rivalriesOf(st, PLAYER_ID, games));
@@ -51,10 +54,12 @@ export function HallScreen() {
   return (
     <div>
       <h1>Hall of Fame</h1>
+      <TrophyHall />
+      <div style={{ marginTop: 14 }} />
       <section className="panel stack" data-testid="trophy-room">
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Your Trophy Room</h3>{p.fedTitle && <span className="chip gold">{p.fedTitle}</span>}</div>
+        <div className="panel-title"><h3 style={{ margin: 0 }}>Your Trophy Room</h3><span className="honour-areas" data-testid="hall-honours"><RankBadge rank={currentRank(st)} labelled plain testId="hall-rank" /><TitleBadge title={p.fedTitle} labelled plain testId="hall-fedtitle" /></span></div>
         <div className="emblem-row">
-          {p.fedTitle && <div className="emblem-cell"><Emblem spec={titleEmblem(p.fedTitle)} size="lg" title={`Federation title ${p.fedTitle}`} /><span className="small"><strong>{p.fedTitle}</strong><br /><span className="muted">Federation Title</span></span></div>}
+          {p.fedTitle && <div className="emblem-cell" title={FED_TITLE_TOOLTIP} data-testid="hall-fedtitle-emblem"><HonourFrame kind="title" spec={titleEmblem(p.fedTitle)} size="lg" title={`Federation Title ${p.fedTitle} emblem`} /><span className="small"><strong>{p.fedTitle}</strong><br /><span className="muted">Federation Title</span> <HonourTag kind="title" /></span></div>}
           {p.titles.map((t, i) => <div key={i} className="emblem-cell" data-testid="player-trophy"><Trophy kind={TROPHY_FOR[titleKind(t.title)]} size="lg" title={t.title} /><span className="small"><strong>{t.title.replace(/ S\d+$/, '')}</strong><br /><span className="muted">Season {t.season}</span></span></div>)}
           {!p.fedTitle && p.titles.length === 0 && <p className="small muted">No trophies yet. Win an event to fill your trophy room.</p>}
         </div>
@@ -81,14 +86,14 @@ export function HallScreen() {
       <div className="grid-2" style={{ marginTop: 14 }}>
         <section className="panel" data-testid="hall-events">
           <h3>Event Champions</h3>
-          <ul className="small" style={{ maxHeight: 360, overflow: 'auto', paddingLeft: 0, listStyle: 'none' }}>
+          <ul className="small" style={{ paddingLeft: 0, listStyle: 'none' }}>
             {data.events.slice(0, 60).map((e, i) => <li key={i} className="row" style={{ gap: 6 }}><Trophy kind={TROPHY_FOR[titleKind(e.title)]} size="sm" title={e.title} /> S{e.season} · {e.title.replace(/ S\d+$/, '')}: <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => e.id !== PLAYER_ID && go({ name: 'competitor', id: e.id })}>{e.name}</button></li>)}
           </ul>
         </section>
         <section className="panel" data-testid="hall-titled">
           <h3>Paladins and Sovereigns</h3>
           {data.titled.length === 0 ? <p className="small muted">No one has earned Paladin or Sovereign yet. Both need three high norms, a proven peak rating and major honours.</p> : (
-            <ul className="small" style={{ paddingLeft: 0, listStyle: 'none' }}>{data.titled.map(c => <li key={c.id} className="row" style={{ gap: 6 }}><Emblem spec={titleEmblem(c.fedTitle!)} size="sm" title={c.fedTitle!} /> <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.id })}>{c.name}</button> <span className="muted">{c.fedTitle} · {c.norms?.length ?? 0} norms · Peak {c.establishedPeak ?? '—'}</span></li>)}</ul>
+            <ul className="small" style={{ paddingLeft: 0, listStyle: 'none' }}>{data.titled.map(c => <li key={c.id} className="row" style={{ gap: 6 }}><HonourFrame kind="title" spec={titleEmblem(c.fedTitle!)} size="sm" title={`Federation Title ${c.fedTitle!} emblem`} /> <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.id })}>{c.name}</button> <TitleBadge title={c.fedTitle} plain /> <span className="muted">{c.norms?.length ?? 0} norms · Peak {c.establishedPeak ?? '—'}</span></li>)}</ul>
           )}
         </section>
       </div>

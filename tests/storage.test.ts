@@ -35,7 +35,7 @@ describe('storage', () => {
     expect(events).toHaveLength(1);
     const state = await db.ratingState('rapid');
     expect(state.games).toBe(1);
-    expect(state.rating).toBeGreaterThan(1500);
+    expect(state.rating).toBeGreaterThan(0); // a fresh profile is a new career: it starts at 0 (docs/CAREER_RATING.md)
     expect(replayLedger('rapid', events).rating).toBe(state.rating);
     expect((await db.getGame('g1'))?.status).toBe('finalized');
     expect((await db.allJobs()).map(j => j.id)).toEqual(['job:g1:std-d7']);

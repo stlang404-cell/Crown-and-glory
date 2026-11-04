@@ -168,7 +168,10 @@ catch-up is bounded and labelled (§2). The founding screen tells phone users th
   chunks are no longer rewritten, but they are not compacted, and they are kept in memory.
 * Old seasons' rounds stay in memory after load (packed only on disk); the heap grows with seasons (§0.3).
 * Competition balance at 80 regions is unchanged by rule: 8 of 80 Crown Division winners qualify for the
-  Championship by points, so qualifying through the league is much harder than in a 16-region world. The economy's
+  Championship by points, so qualifying through the league is much harder than in a 16-region world. **v0.11:** crown-competition-2
+  (docs/V3_COMPETITION_RULES.md) adds zone places (8 zones of 10 regions at 10,240: Zonal Championships in rounds
+  16–19 qualify for next season's Championship) and Regional Cups whose best winners are invited to the Open;
+  measured qualification rates by player strength are in that document. The economy's
   issuance is per circuit (5× the 16-region total, almost all paid to AI competitors and expensed at season end); the
   economy simulator (`tools/sim/economy.ts`) was not re-run at 80 regions.
 * The featured engine games of a round (up to three, played in full before the round closes) are engine time, not

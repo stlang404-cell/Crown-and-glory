@@ -81,7 +81,9 @@ Portfolio; live status dot pulses only when motion is allowed.
 
 ## Known visual limitations
 
-* "Sixteen Circuit Grades" do not exist in the game (see the report); their insignia were not designed.
+* v0.11: the sixteen Circuit Grades now exist as a **proposed** feudal list (docs/FEUDAL_RANKS.md); their 48 insignia
+  (16 grades × sublevel chevrons III/II/I) are built from the heraldry grammar in `src/heraldry/ranks.ts`. Before v0.11
+  they did not exist.
 * Alternative piece sets are not available (one original set).
 * The handshake icon is the least legible at 16 px.
 * On the Slate board the last-move origin tint can look slightly muddy.

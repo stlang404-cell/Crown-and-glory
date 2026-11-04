@@ -12,7 +12,7 @@ import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { applyFoundingPersonas, applyNameMode } from '../federation/rosterPersonas';
 import { showContemporaryNames } from './namePrefs';
 import { NEW_FEDERATION_POPULATION } from '../federation/population';
-import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable, gamesByEvent } from '../federation/world';
+import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, swissEventsOpenTo, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable, gamesByEvent } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
 import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } from '../exchange/odds';
@@ -31,7 +31,7 @@ import { ensureFeatured, trackPeaks, awardNorms, eventGames, NORM_EVENTS, clubFi
 import { validateIdentity, type ClubIdentity } from '../heraldry/clubs';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, SPONSOR_BUDGET, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, CUP_SPLIT, ZONAL_SPLIT, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, SPONSOR_BUDGET, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
 } from '../economy/economy';
 import {
   type WealthState, type FacilityId, type SponsorTier, type EventSponsorship, SPONSOR, SPONSOR_TIERS, ADMIN, LOAN, HARDSHIP, ATTENDANCE_FEE, GALLERY_ATTENDANCE_FEE, GALLERY_SPONSOR_BONUS,
@@ -46,6 +46,10 @@ import { accountWrites, competitorWrites, decodeAccounts, decodeCompetitors, dec
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
+import { ensureRanks, migrateRanks } from '../federation/ranks';
+import { rankCeremonies } from './ranks';
+import { RULES_V2, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
+import { regionName } from '../federation/model';
 
 export interface WorldGame {
   id: string; fixtureId: string; season: number; round: number; event: string; stage?: string;
@@ -81,10 +85,11 @@ export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid:
   cosmetics?: CosmeticState;
   /** v0.11: facilities, estates, event sponsorships, administration and recovery (crown-wealth-1; absent = defaults). */
   wealth?: WealthState }
-export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
+export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship' | 'rank'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
-const FEATURED_NODE_CAP = 30_000;
+/** Node cap of featured, scheduled and exhibition games (profileForStrength above the measured range plays this budget). */
+export const FEATURED_NODE_CAP = 30_000;
 const MARKET_B = 120;
 const NPC_FUND = 2_000 * MICRO;
 export const COMPETITOR_EXPENSE_SHARE = 0.75;
@@ -121,6 +126,10 @@ export class FederationService {
   runSelfplay: (req: { initialFen: string; white: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; black: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; seed: number; maxPlies: number }, onMove: (m: SelfplayMove) => void) => Promise<{ moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string }>
     = async (req, onMove) => playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, m => onMove(m));
 
+  /** v0.11: competition rules of new federations, adopted by older ones at their next season start
+   *  (src/federation/competitions.ts). Tools set 1 to reproduce crown-competition-1 exactly (determinism_check). */
+  competitionRules = RULES_V2;
+
   constructor(readonly db: CrownDB, readonly playerRating: () => Promise<{ rating: number; rd: number }>, readonly now: () => string = () => new Date().toISOString()) {}
 
   get ready(): boolean { return this.state !== null; }
@@ -150,6 +159,9 @@ export class FederationService {
       liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
     applyNameMode(this.state.competitors.values(), this.showNames, { texts: true });
+    // v0.11 Circuit Grades: records of older saves get their rank from stored data (deterministic; docs/FEUDAL_RANKS.md §7)
+    const missing = !world.player.rank && world.player.joined || dc.competitors.some(c => !c.rank);
+    if (missing) migrateRanks(this.state, gamesOf([...this.state.rounds.values()].filter(r => r.season === world.season)), (await this.playerRating()).rating);
   }
 
   /** Settings → "Show contemporary famous names" (display only; docs/ROSTER.md). */
@@ -293,7 +305,9 @@ export class FederationService {
   private ctxOf(st: FedState, player: { rating: number; rd: number }): Ctx {
     const seasonRounds = [...st.rounds.values()].filter(r => r.season === st.world.season);
     const swissHistory = gamesOf(seasonRounds).filter(g => g.event === 'open' || g.event === 'challenger');
-    return { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
+    const ctx: Ctx = { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
+    if (this.competitionRules > rulesOf(st.world)) ctx.targetRules = this.competitionRules;
+    return ctx;
   }
 
   /**
@@ -302,12 +316,21 @@ export class FederationService {
    * behind anything (docs/FEDERATION_SCALE.md).
    */
   private busyKind: 'user' | 'scheduler' = 'user';
+  /** Start New Career (docs/CAREER_RATING.md): set by closeForNewCareer; every later command is refused until reload. */
+  private closed = false;
+  /** Run `fn` (the career wipe) as this service's LAST command, after any running command or scheduled commit, so no
+   *  Federation write can land in the new career's database. */
+  async closeForNewCareer<T>(fn: () => Promise<T>): Promise<T> {
+    while (this.busy) await this.idle;
+    return this.run(async () => { this.closed = true; return fn(); });
+  }
   private idle: Promise<void> = Promise.resolve();
   private async run<T>(fn: () => Promise<T>, kind: 'user' | 'scheduler' = 'user'): Promise<T> {
     while (this.busy) {
       if (kind === 'user' && this.busyKind === 'user') throw new Error('Another federation action is still running. Wait a moment and try again.');
       await this.idle;
     }
+    if (this.closed) throw new Error('A new career is starting. Reload the app.');
     this.busy = true;
     this.busyKind = kind;
     let release!: () => void;
@@ -380,7 +403,7 @@ export class FederationService {
       // v0.10: new federations use the full rating spectrum (crown-population-2); existing worlds keep theirs
       const comps = generateFederation(seed, topology, NEW_FEDERATION_POPULATION);
       applyFoundingPersonas(seed, comps, this.showNames); // v0.10 persona roster: names only, for newly founded federations
-      const { world, plan } = createWorld(seed, comps, this.now(), topology, NEW_FEDERATION_POPULATION);
+      const { world, plan } = createWorld(seed, comps, this.now(), topology, NEW_FEDERATION_POPULATION, this.competitionRules);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
@@ -390,10 +413,11 @@ export class FederationService {
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       joinPlayer(ctx, region);
+      ensureRanks(st, player.rating, { newCareer: true }); // v0.11: every competitor's Circuit Grade; the player starts at Commoner III
       ensureFeatured(st);
       const posted: Journal[] = [];
       this.post(st, genesisJournals(this.now(), NPC_TRADERS.map(t => t.id), NPC_FUND), posted);
-      this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits), this.now()), posted);
+      this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits, cupEventsOf(rulesOf(st.plan), topology.regions)), this.now()), posted);
       const opened = this.openRoundWithMarkets(st, ctx, posted);
       st.rounds.set(opened.rec.id, opened.rec);
       const ops = this.opsOf(st, posted);
@@ -464,7 +488,26 @@ export class FederationService {
   // ------------------------------------------------------------------ queries
   currentRound(): RoundRecord | null { const s = this.state; return s ? s.rounds.get(`${s.world.season}:${s.world.round}`) ?? null : null; }
   seasonRounds(season?: number): RoundRecord[] { const s = this.state!; const n = season ?? s.world.season; return [...s.rounds.values()].filter(r => r.season === n).sort((a, b) => a.round - b.round); }
-  playerFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
+  /** The player's unplayed fixtures: this round's, then postponed league games (v0.11). */
+  playerFixtures(): Fixture[] { return [...this.roundFixtures(), ...this.postponedFixtures()]; }
+  /** The player's unplayed fixtures of the current round. */
+  roundFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
+  /** v0.11: league games the player postponed (due by the end of league round 15, docs/V3_COMPETITION_RULES.md). */
+  postponedFixtures(): Fixture[] { return this.state?.world.player.postponed ?? []; }
+  /** Fixtures that must be played or forfeited before the world can advance: this round's, and postponed games once
+   *  the postponement deadline (league round 15) is the open round. */
+  blockingFixtures(): Fixture[] { const s = this.state; if (!s) return []; return [...this.roundFixtures(), ...(s.world.round >= POSTPONE_DEADLINE ? this.postponedFixtures() : [])]; }
+  /** Why a fixture cannot be postponed (null = it can). */
+  postponeBlocker(fixtureId: string): string | null {
+    const s = this.state;
+    if (!s) return 'No federation yet.';
+    const f = this.roundFixtures().find(x => x.id === fixtureId);
+    if (!f) return 'Only this round’s unplayed games can be postponed.';
+    if (!f.event.startsWith('league:')) return 'Only league games can be postponed: Swiss and knockout pairings depend on this round’s result.';
+    if (s.world.round >= POSTPONE_DEADLINE) return `League round ${POSTPONE_DEADLINE} is the deadline for every league game.`;
+    if (this.postponedFixtures().length >= POSTPONE_LIMIT) return `You already have ${POSTPONE_LIMIT} postponed games. Play one first.`;
+    return null;
+  }
   featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2 && !f.slate) ?? []; }
   /** v0.9: fixtures of the current round promoted to scheduled live games (src/app/scheduler.ts). */
   slateFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.slate) ?? []; }
@@ -477,7 +520,7 @@ export class FederationService {
   // ------------------------------------------------------------------ player league games
   /** Create (or return) the rated game record for a player fixture. Opponent strength comes from hidden latent via the calibrated profile map. */
   async playerGameFor(fixtureId: string, human: { rating: number | null; rd: number | null }): Promise<GameRecord> {
-    const f = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
+    const f = this.currentRound()!.fixtures.find(x => x.id === fixtureId) ?? this.postponedFixtures().find(x => x.id === fixtureId);
     if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const existing = (await this.db.allGames()).find(g => g.context.fixtureId === fixtureId);
     if (existing) return existing;
@@ -504,7 +547,7 @@ export class FederationService {
   /** Training Hall: an unrated practice game against a fixture opponent's exact profile (never a federation result). */
   async sparringGameFor(fixtureId: string, humanColor: 'white' | 'black'): Promise<GameRecord> {
     if (!this.ownsAsset('training')) throw new Error('Sparring needs a Training Hall. Buy one in Finance first.');
-    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
+    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId) ?? this.postponedFixtures().find(x => x.id === fixtureId);
     if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const c = this.state!.competitors.get(f.white === PLAYER_ID ? f.black : f.white)!;
     const profile = profileForStrength(c.latent);
@@ -528,7 +571,7 @@ export class FederationService {
    *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
    *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
    *  Not a league fixture: standings, prize pools and markets are untouched. */
-  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number }): Promise<GameRecord> {
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean }): Promise<GameRecord> {
     const c = this.state?.competitors.get(competitorId);
     if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
     const profile = profileForStrength(c.latent);
@@ -544,7 +587,8 @@ export class FederationService {
       human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
       engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
-      context: { kind: 'quick-match', eventName: `Quick Match vs ${c.name}` },
+      // v0.11 rivalry challenges / rematches are ordinary Quick Matches with their own label (src/app/rivalries.ts)
+      context: { kind: 'quick-match', eventName: opts.challenge ? `Rivalry Challenge vs ${c.name}` : `Quick Match vs ${c.name}` },
     });
   }
 
@@ -555,7 +599,7 @@ export class FederationService {
       if (!fixtureId || !game.result) return;
       const st = this.clone();
       const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
-      const f = rec.fixtures.find(x => x.id === fixtureId);
+      const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
       if (!f || f.result !== null) return; // already recorded (idempotent) or stale
       f.result = game.result === '1-0' ? 1 : game.result === '0-1' ? 0 : 0.5;
       f.gameId = game.id;
@@ -599,7 +643,7 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
-      const f = rec.fixtures.find(x => x.id === fixtureId);
+      const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
       if (!f || f.tier !== 1 || f.result !== null) throw new Error('There is no unplayed match to forfeit.');
       f.result = f.white === PLAYER_ID ? 0 : 1;
       f.forfeit = true;
@@ -609,20 +653,55 @@ export class FederationService {
     });
   }
 
-  async registerChallenger(useVoucher: boolean): Promise<void> {
+  /** Register for a Swiss event: the player's division-band event (fee or recovery voucher), or — with a v0.11
+   *  Federation Open invitation (Regional Cup winner) — the Federation Open, free. */
+  /**
+   * v0.11 deadline rule: postpone one of this round's league games. It leaves the round (the world can advance) and
+   * stays playable at any time; it must be played or forfeited before league round 15 can be advanced
+   * (POSTPONE_DEADLINE). At most POSTPONE_LIMIT postponed games at once. Swiss and knockout games cannot be postponed.
+   * Nothing is ever played for the player: an unplayed game only becomes a forfeit when the player confirms it.
+   */
+  async postpone(fixtureId: string): Promise<void> {
+    const why = this.postponeBlocker(fixtureId);
+    if (why) throw new Error(why);
+    return this.run(async () => {
+      const st = this.clone();
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const i = rec.fixtures.findIndex(x => x.id === fixtureId && x.tier === 1 && x.result === null);
+      if (i < 0) throw new Error('There is no unplayed match to postpone.');
+      const [f] = rec.fixtures.splice(i, 1);
+      st.world = { ...st.world, player: { ...st.world.player, postponed: [...(st.world.player.postponed ?? []), { ...f, postponedFrom: f.round }] } };
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Forfeit every fixture that blocks the round (after the player confirmed the list), then advance. Knockout
+   *  follow-up games created by a forfeit are forfeited too (a forfeited match is lost); bounded. */
+  async forfeitAndAdvance(): Promise<ProcessedRound> {
+    for (let guard = 0; guard < 12 && this.blockingFixtures().length; guard++) for (const f of this.blockingFixtures()) await this.forfeit(f.id);
+    return this.advanceRound();
+  }
+
+  async registerChallenger(useVoucher: boolean, event?: 'open' | 'challenger'): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
       if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closed before round 4. You can enter next season.');
+      const target = event ?? swissEventFor(st.world.player.division);
+      if (!target || !swissEventsOpenTo(st.world).includes(target)) throw new Error(target === 'open' ? 'The Federation Open is for divisions 2–4 and invited Regional Cup winners.' : 'Crown Division players qualify for the Championship through their league.');
+      const invitation = target === 'open' && st.world.player.invite?.season === st.world.season;
       // v0.10 (bug #31): entering the Open cancels its champion market at 1/n per share; a holder who could trigger that
       // cancellation could buy entrants below 1/n and register to collect the difference. You must hold no shares in it.
-      if (swissEventFor(st.world.player.division) === 'open') {
+      if (target === 'open') {
         const own = st.positions.get(`mk:open-winner:${st.world.season}|player:cash`);
         const m = st.markets.get(`mk:open-winner:${st.world.season}`);
         if (own && m && (m.status === 'open' || m.status === 'closed') && own.shares.some(x => x > 0)) throw new Error('You hold shares in the Federation Open champion market. Entering the Open cancels that market, so sell your shares first.');
       }
       const posted: Journal[] = [];
       const cash = st.balances.get('player:cash') ?? 0;
-      if (useVoucher) {
+      if (invitation) {
+        // invited: free entry, no journal
+      } else if (useVoucher) {
         if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than $100.');
         if (st.extra.vouchers.includes(st.world.season)) throw new Error('You have already used this season’s recovery voucher.');
         this.post(st, [voucherJournal(st.world.season, this.now())], posted);
@@ -633,7 +712,7 @@ export class FederationService {
       }
       // conflict procedure: entering an event cancels its open market on the published 1/n vector first
       const cancelled: Market[] = [], cancelledPos: Position[] = [];
-      if (swissEventFor(st.world.player.division) === 'open') {
+      if (target === 'open') {
         const m = st.markets.get(`mk:open-winner:${st.world.season}`);
         if (m && (m.status === 'open' || m.status === 'closed')) {
           const c = cancelMarket(m, [...st.positions.values()].filter(p => p.marketId === m.id), this.now(), st.balances.get(acct(m, 'collateral')) ?? 0);
@@ -642,7 +721,7 @@ export class FederationService {
           for (const p of c.positions) { st.positions.set(p.id, p); cancelledPos.push(p); }
         }
       }
-      registerChallengerPure(this.ctxOf(st, await this.playerRating()));
+      registerChallengerPure(this.ctxOf(st, await this.playerRating()), target);
       await this.commit(st, posted, { plans: [st.plan], markets: cancelled, positions: cancelledPos }, { season: st.world.season, round: st.world.round });
     });
   }
@@ -1125,10 +1204,10 @@ export class FederationService {
   /** Advance the world by one round. Player fixtures must be played or forfeited; featured games are played in the background first. */
   async advanceRound(): Promise<ProcessedRound> {
     if (!this.state) throw new Error('No federation yet. Found the federation first.');
-    if (this.playerFixtures().length) throw new Error('Play or forfeit your remaining fixtures first.');
+    if (this.blockingFixtures().length) throw new Error(this.state.world.round >= POSTPONE_DEADLINE && this.postponedFixtures().length ? `League round ${POSTPONE_DEADLINE} is the deadline: play or forfeit your postponed games first.` : 'Play, postpone or forfeit your remaining fixtures first.');
     await this.closeDueMarkets();
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
-    if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
+    if (this.blockingFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
     return this.run(async () => {
       const st = this.clone({ competitors: true });
       const expect = { season: st.world.season, round: st.world.round };
@@ -1142,6 +1221,7 @@ export class FederationService {
       const plansChanged: SeasonPlan[] = [];
       const oldPlan = ctx.plan;
       const titlesBefore = st.world.player.titles.length, divisionBefore = st.world.player.division;
+      const rankBefore = st.world.player.rank ? copyData(st.world.player.rank) : undefined;
       const res = processRound(ctx, rec, seasonRounds, this.now());
       const expensesPaid = new Map<string, number>();
       let wealthEnd: { contracts: Contract[]; assets: OwnedAsset[]; delAssets: string[] } = { contracts: [], assets: [], delAssets: [] };
@@ -1190,6 +1270,14 @@ export class FederationService {
           const pool = `prize:${season}:champ`;
           this.post(st, [payPool(`prize-pay:${season}:champ`, pool, st.balances.get(pool) ?? 0, recips, 'Crown Championship prizes', season, round, this.now())], posted);
           this.settleSponsorship(st, season, 'champ', recips, posted);
+        }
+        // crown-competition-2 knockouts: prizes by stage reached (pools escrowed at season start)
+        for (const ko of oldPlan.cups ?? []) {
+          if (!ko.champions.length) continue;
+          const split = ko.kind === 'zonal' ? ZONAL_SPLIT : CUP_SPLIT;
+          const recips = koPlacings(ko).filter(p => split[p.place] !== undefined).map(p => ({ id: p.id, share: split[p.place] }));
+          const pool = `prize:${season}:${ko.name}`;
+          this.post(st, [payPool(`prize-pay:${season}:${ko.name}`, pool, st.balances.get(pool) ?? 0, recips, `${koTitle(ko)} prizes`, season, round, this.now())], posted);
         }
         // any sponsorship whose event paid no prizes this season settles with no winners (purse to the treasury)
         for (const sp of wealthOf(st.extra).sponsorships.filter(x => x.season === season && x.status === 'active')) this.settleSponsorship(st, season, sp.event, [], posted);
@@ -1253,7 +1341,7 @@ export class FederationService {
         // to the sink, so idle federation money cannot accumulate season after season (docs/ECONOMY_V11.md §2)
         { const tr = st.balances.get('treasury') ?? 0; if (tr > TREASURY_CEILING) this.post(st, [treasurySweepJournal(season, tr - TREASURY_CEILING, this.now())], posted); }
         // new season issuance
-        this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits), this.now()), posted);
+        this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits, cupEventsOf(rulesOf(ctx.plan), topologyOf(ctx.world).regions)), this.now()), posted);
         plansChanged.push(copyData(oldPlan));
       }
       // career earnings accumulate every credit to the competitor's account (expenses are not subtracted)
@@ -1274,6 +1362,7 @@ export class FederationService {
           awardNorms(st, season, round, `Crown Championship S${season}`, eventGames(games, 'champ'), player.rating, ceremonies, fin ? [fin.a, fin.b] : []);
         }
         if (res.seasonEnd) seasonCeremonies(st, season, round, oldPlan.champ, titlesBefore, divisionBefore, ceremonies);
+        rankCeremonies(rankBefore, ctx.world.player.rank, season, round, ceremonies);
         if (ceremonies.length) st.extra.ceremonies = [...(st.extra.ceremonies ?? []).filter(c => !ceremonies.some(n => n.id === c.id)), ...ceremonies].slice(-60);
       }
       // sponsorship contracts: share of prizes paid this round; next season's stipends at season end
@@ -1906,9 +1995,24 @@ export class FederationService {
 
 function settleNothing(rec: RoundRecord): void { void rec; }
 const fmtWhole = (micro: number) => `$${Math.round(micro / MICRO).toLocaleString('en')}`;
+/** v0.11: postponement limits (docs/V3_COMPETITION_RULES.md). */
+export const POSTPONE_LIMIT = 2;
+export const POSTPONE_DEADLINE = LEAGUE_ROUNDS;
+/** Move a postponed fixture (if it is one) into the open round so it is rated and counted in this round. */
+function takePostponed(st: FedState, rec: RoundRecord, fixtureId: string): Fixture | undefined {
+  const list = st.world.player.postponed ?? [];
+  const f = list.find(x => x.id === fixtureId);
+  if (!f) return undefined;
+  const moved: Fixture = { ...f, round: rec.round };
+  st.world = { ...st.world, player: { ...st.world.player, postponed: list.filter(x => x.id !== fixtureId) } };
+  rec.fixtures.push(moved);
+  return moved;
+}
 function ratingOfC(st: FedState, id: string): number { return st.competitors.get(id)?.rating ?? 0; }
 export function eventName(event: string): string {
   if (event.startsWith('league:')) { const [, r, d] = event.split(':'); return `League · Region ${+r + 1} · Division ${d}`; }
+  if (isZonalEvent(event)) return `${zoneShort(+event.slice(6))} Zonal Championship`;
+  if (isCupEvent(event)) return `${regionName(+event.slice(4))} Regional Cup`;
   return { open: 'Federation Open', challenger: 'Challenger Open', champ: 'Crown Championship', club: 'Club Weekend' }[event] ?? event;
 }
 export { CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON };

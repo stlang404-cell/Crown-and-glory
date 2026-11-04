@@ -18,6 +18,7 @@
  * rejected if a move or trade happened in between.
  */
 import { Position } from '../rules/position';
+import { fmtCareerElo } from '../ratings/display';
 import { squareName } from '../rules/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { NeedsFederation } from './NeedsFederation';
@@ -36,7 +37,9 @@ import { fmtCrowns, fmtPrice, fmtPriceDelta } from '../exchange/ledger';
 import { TradeTicket, PriceChart, statusLabel } from './ExchangeScreen';
 import './arena.css';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
-import { divisionEmblem, titleEmblem } from '../heraldry/catalog';
+import { divisionEmblem } from '../heraldry/catalog';
+import { RankBadge, TitleBadge } from './RankBadge';
+import { competitorRank } from '../federation/ranks';
 import { clubEmblem, clubOf } from '../heraldry/clubs';
 import { divisionLabel } from '../federation/model';
 import { claimModel } from '../exchange/api';
@@ -53,7 +56,7 @@ const WINDOWS = [{ label: '6 s', ms: 6000 }, { label: '3 s', ms: 3000 }, { label
 const ODDS_ID = 'crown-odds-2';
 
 /** White's expected score by ply: the published engine evaluation (always) and the post-game curve (when allowed). */
-function EvalGraph({ moves, shown, post, onSelect, ply, turns }: { moves: SelfplayMove[]; shown: number; post: number[] | null; onSelect: (ply: number) => void; ply: number; turns: number[] }) {
+export function EvalGraph({ moves, shown, post, onSelect, ply, turns }: { moves: SelfplayMove[]; shown: number; post: number[] | null; onSelect: (ply: number) => void; ply: number; turns: number[] }) {
   const W = 600, H = 110;
   const n = Math.max(moves.length, 20);
   const x = (i: number) => (i / n) * W;
@@ -229,9 +232,10 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
         avatar={<Portrait seed={c.portraitSeed} size={34} crown={c.titles.some(t => /Crown Champion/.test(t.title))} />}
         name={<button className="btn ghost small arena-player-name" onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button>}
         meta={<>
-          <span className="mono">{Math.round(c.rating)} ±{Math.round(c.rd)}</span>
+          <span className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</span>
           <Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} />
-          {c.fedTitle && <Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={`Federation Title: ${c.fedTitle}`} />}
+          <RankBadge rank={competitorRank(c)} compact testId={`arena-rank-${side ? 'black' : 'white'}`} />
+          <TitleBadge title={c.fedTitle} compact testId={`arena-fedtitle-${side ? 'black' : 'white'}`} />
           {sp && <span className="chip" data-testid={`arena-persona-${side ? 'black' : 'white'}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE}>Persona</span>}
           <span>{isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'} · {side ? 'Black' : 'White'}</span>
         </>}
@@ -249,7 +253,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     <div className={`arena-ctx-side ${side ? 'black' : 'white'}${sideToMove === side && isLive && ply === revealed ? ' to-move' : ''}`}>
       <span className={`mc-pip ${side ? 'black' : 'white'}`} aria-hidden />
       <span className="arena-ctx-name">{c?.name ?? '—'}</span>
-      <span className="arena-ctx-rating mono">{c ? Math.round(c.rating) : ''}{c?.fedTitle ? ` ${c.fedTitle}` : ''}</span>
+      <span className="arena-ctx-rating mono">{c ? fmtCareerElo(c.rating) : ''}{c?.fedTitle ? <> <TitleBadge title={c.fedTitle} abbr plain /></> : null}</span>
       <span className="arena-ctx-clock mono" aria-label={`${side ? 'Black' : 'White'} thinking time`}>{fmtT(think[side])}</span>
     </div>
   );
@@ -532,8 +536,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           <span className={`chip arena-status ${status.startsWith('LIVE') ? 'neg is-live' : status.startsWith('REPLAY') ? 'info' : ''}`} data-testid="spectator-status">{status}</span>
           {postAllowed && !postReady && <span className="chip">Match Analysis {services.progress?.gameId === `wg:${fixtureId}` ? `${services.progress.done}/${services.progress.total}` : 'Queued'}</span>}
         </>}
-        white={{ name: w?.name ?? '—', rating: w ? String(Math.round(w.rating)) : null }}
-        black={{ name: b?.name ?? '—', rating: b ? String(Math.round(b.rating)) : null }}
+        white={{ name: w?.name ?? '—', rating: w ? fmtCareerElo(w.rating) : null }}
+        black={{ name: b?.name ?? '—', rating: b ? fmtCareerElo(b.rating) : null }}
         result={finalShown} />
       {err && <div className="notice warn" role="alert">{err}</div>}
       <MatchLayout className="arena-layout" columns={2} board={board} active={tab} onActive={t => setTab(t as typeof tab)} tabsLabel="Arena Panels"

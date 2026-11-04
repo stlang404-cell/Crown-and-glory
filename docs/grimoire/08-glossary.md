@@ -70,6 +70,11 @@ Cancelled markets are not scored as forecasts. → VI.1; RB §20.
 **Checkmate.** The side to move is in check and has no legal move. It takes precedence over every draw rule. → RB §8;
 I.6.
 
+**Circuit Grade.** A rank of the 16-grade feudal ladder (crown-circuit-grades-1, names proposed), each with sublevels
+III → II → I: 48 steps from Commoner III to High Sovereign I, two grades per division. Set by your division and by
+the standing score at two checkpoints a season (after round 8 and at season end), with hysteresis. Your highest
+rank ever is permanent. Not a rating, not a Federation title. → V.4.
+
 **Claim (draw).** A request by a player for a draw that is not automatic: threefold repetition or the 100-halfmove
 rule. → RB §10.
 
@@ -134,6 +139,9 @@ Good ≤ 0.05, Inaccuracy ≤ 0.12, Mistake ≤ 0.25, Blunder above. The bins ar
 
 **Hedging.** Reducing the spread of possible outcomes, in this game by selling shares you hold (no short selling).
 It costs fees and slippage. → VI.5.
+
+**Highest rank ever achieved.** The best Circuit Grade (with sublevel) you have held, with the season it was first
+reached. Only a genuine step up raises it; demotion, relegation and rating losses never lower it. → V.4.
 
 **Implied probability.** The probability a price expresses: a $0.40 share implies 40 %. → VI.1.
 
@@ -234,9 +242,15 @@ drew. → V.4.
 
 **Stalemate.** The side to move is not in check and has no legal move: a draw. → RB §9; I.7.
 
+**Standing score.** 0–100 at a Circuit Grade checkpoint: 45 % league position, 25 % score in sanctioned rated games,
+30 % rating percentile in your division. → V.4.
+
 **Style.** A competitor's label (Universal, Tactical, Positional, Defensive, Endgame, Aggressive). Only validated
 styles change play: Tactical, Positional, Defensive and Endgame, through a whole-game styled evaluation (Tactical and
 Positional also through an opening repertoire). Aggressive is not validated and plays as Universal. → V.3.
+
+**Sublevel.** The III / II / I part of a Circuit Grade (III lowest). Shown by one, two or three chevrons under the
+grade's insignia. → V.4.
 
 **Subsidy.** The maker's worst-case loss b·ln n, funded before a market opens (match market: $131.83). → VI.2.
 

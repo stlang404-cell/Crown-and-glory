@@ -13,7 +13,7 @@ export function Emblem({ spec, size = 'md', title, className }: { spec: EmblemSp
   const px = EMBLEM_PX[size];
   const small = size === 'sm';
   const top = spec.crest ? -16 : -2;
-  const bottom = !small && spec.pips ? 84 : 74;
+  const bottom = spec.marks ? (small ? 92 : 88) : !small && spec.pips ? 84 : 74;
   const left = spec.wreath && !small ? -10 : -2, right = spec.wreath && !small ? 74 : 66;
   const vb = `${left} ${top} ${right - left} ${bottom - top}`;
   const h = Math.round(px * ((bottom - top) / (right - left)));
@@ -21,7 +21,7 @@ export function Emblem({ spec, size = 'md', title, className }: { spec: EmblemSp
   const shape = SHAPES[spec.shape];
   const metal = spec.prestige >= 4 ? TINCTURES.or : 'var(--her-line, #f2ede3)';
   return (
-    <svg className={`emblem ${className ?? ''}`} width={(px * (right - left)) / 68} height={h} viewBox={vb} role="img" aria-label={title} data-emblem={spec.shape}>
+    <svg className={`emblem ${className ?? ''}`} width={(px * (right - left)) / 68} height={h} viewBox={vb} role="img" aria-label={title || 'Heraldic emblem'} data-emblem={spec.shape}>
       <title>{title}</title>
       <defs><clipPath id={`c${uid}`}><path d={shape} /></clipPath></defs>
       {spec.prestige >= 4 && !small && <path d={shape} fill="none" stroke={TINCTURES.or} strokeOpacity={0.35} strokeWidth={stroke * 4} />}
@@ -45,8 +45,21 @@ export function Emblem({ spec, size = 'md', title, className }: { spec: EmblemSp
       {spec.border === 'pixel' && [[4, 4], [56, 4], [4, 58], [56, 58]].map(([x, y]) => <rect key={`${x}${y}`} x={x} y={y} width={small ? 6 : 4} height={small ? 6 : 4} fill={metal} />)}
       {spec.crest && <path d={CRESTS[spec.crest]} transform="translate(0 -16)" fill={spec.prestige >= 3 ? TINCTURES.or : 'var(--her-line, #f2ede3)'} stroke="var(--her-outline, #111318)" strokeWidth={0.8} />}
       {spec.monogram && size === 'lg' && <text x={32} y={66} textAnchor="middle" fontSize={9} fontWeight={700} fill={metal} fontFamily="var(--mono, monospace)">{spec.monogram}</text>}
+      {spec.marks && <RankMarks count={spec.marks} small={small} />}
       {!small && spec.pips > 0 && Array.from({ length: spec.pips }, (_, i) => <rect key={i} x={32 - spec.pips * 4 + i * 8 + 1} y={76} width={6} height={6} fill={spec.prestige >= 3 ? TINCTURES.or : 'var(--her-line, #f2ede3)'} />)}
     </svg>
+  );
+}
+
+/** Circuit Grade sublevel chevrons (III = one, II = two, I = three) under the shield; thicker at the small size.
+ *  Drawn in the theme's text colour (not gold) so they keep full contrast on light and dark themes. */
+function RankMarks({ count, small }: { count: 1 | 2 | 3; small: boolean }) {
+  const w = small ? 18 : 16, gap = small ? 3 : 4, total = count * w + (count - 1) * gap;
+  const y = small ? 76 : 75, h = small ? 13 : 10;
+  return (
+    <g data-marks={count} fill="none" stroke="var(--her-line, #f2ede3)" strokeWidth={small ? 5 : 3.2} strokeLinejoin="miter" strokeLinecap="square">
+      {Array.from({ length: count }, (_, i) => { const x = 32 - total / 2 + i * (w + gap); return <path key={i} d={`M${x} ${y + h}L${x + w / 2} ${y}L${x + w} ${y + h}`} />; })}
+    </g>
   );
 }
 
@@ -61,7 +74,7 @@ const TROPHY: Record<string, string> = {
 export function Trophy({ kind, size = 'md', title, metal = 'or' }: { kind: keyof typeof TROPHY | string; size?: EmblemSize; title: string; metal?: 'or' | 'argent' | 'bronze' }) {
   const px = EMBLEM_PX[size];
   return (
-    <svg className="trophy" width={px} height={px} viewBox="0 0 64 64" role="img" aria-label={title}>
+    <svg className="trophy" width={px} height={px} viewBox="0 0 64 64" role="img" aria-label={title || 'Trophy'}>
       <title>{title}</title>
       <path d={TROPHY[kind] ?? TROPHY.cup} fill={TINCTURES[metal]} stroke="var(--her-outline, #111318)" strokeWidth={size === 'sm' ? 2 : 1.4} strokeLinejoin="round" />
       {size !== 'sm' && <rect x={30} y={13} width={4} height={4} fill="var(--her-shine, #fff8e6)" opacity={0.8} />}

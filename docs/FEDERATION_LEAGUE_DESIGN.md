@@ -136,6 +136,9 @@ division guideline, and repeat-opponent rewards capped per season.
 
 ## 4. "Circuit Grades" (only if wanted — new system, v0.9 or later)
 
+**v0.11: implemented as a rank tied to division and checkpoint standing — see docs/FEUDAL_RANKS.md** (the text
+below is the earlier v0.9 note, kept for history).
+
 A 16-step career ladder would be a new progression system. To avoid a redundant ladder it should measure
 something divisions and titles do not — e.g. **career milestones** (games completed, events entered, norms
 attempted) — two per division band, purely additive, earned once and never revoked. It needs its own design

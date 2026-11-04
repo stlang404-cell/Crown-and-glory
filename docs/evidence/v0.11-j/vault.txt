@@ -1,0 +1,14 @@
+[2026-11-04T17:38:21.663Z] PASS 1: Fresh career: "0 of 203" earned, 214 items (203 locked, 11 awaiting grading), insignias "0 of 31", 0 unlock records
+[2026-11-04T17:38:21.866Z] PASS 1b: Dashboard: 20 family cards (all 0/n), 6 rarity counts, 4 tier labels on cards, 0 next goals on a fresh career
+[2026-11-04T17:38:22.038Z] PASS 1c: Clicking Defensive Resilience filters the grid: 6 collectibles (comeback, defence-critical, fortress, hold-the-line, against-odds, miracle)
+[2026-11-04T17:38:22.906Z] PASS 2: Filters: Insignias → 31 collectibles; Awaiting → 11 collectibles (incl. brilliant-1); Mythic → 20 all Mythic; search "giant" → giant-slayer, endgame-giant; secret condition search → 0 collectibles
+[2026-11-04T17:38:23.411Z] PASS 3: Detail shows rule and state, Escape closes; secret card masked ("Secret Collectible (not earned)Secret CollectibleBronzeUncom…")
+[2026-11-04T17:38:28.313Z] PASS 4b: Next Goals after one rated game: [networth-5k, days-7, analyses-10, lessons-defeat, long-rivalry, networth-25k] (days-7 at 1/7, nothing awarded)
+[2026-11-04T17:38:28.314Z] PASS 4: After a resigned rated Quick Match the Vault re-evaluated (1 → 3; 1 game, 1 rating event); owned: [] — no win/draw/Quick Match award, every unlock backed by its rule
+[2026-11-04T17:38:30.570Z] PASS 5: After a resigned casual Quick Match: still no win/draw award (owned: [])
+[2026-11-04T17:38:32.781Z] PASS 6: Registering for the Challenger Open unlocked "First Entry" (backfill false); notice: "First EntryUnlockedFirst EntryView in Vault×" role=status
+[2026-11-04T17:38:37.400Z] PASS 7: Dismissed (0 left); after reload + forced re-evaluation: notice shown again 0×, unlock records 1 → 1 (unique 1)
+[2026-11-04T17:38:37.537Z] PASS 8: Insignias follow the rating state: 1 rated game (RD 345, provisional) → 0 collected, UI "0 of 31"; First Entry shown as earned; totals "1 of 203"
+[2026-11-04T17:38:45.146Z] PASS 9b: Phone page scroll works (scrollY 42219 of 43063); family cards past the edge: 0
+[2026-11-04T17:38:45.146Z] PASS 9: Phone (390 px, reached from Career Passport): horizontal overflow 0px, 0 elements past the edge, detail overflow 0px
+[2026-11-04T17:38:45.146Z] PASS 10: No page errors (0)
