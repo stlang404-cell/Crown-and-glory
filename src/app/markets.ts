@@ -214,7 +214,9 @@ export function openSeasonMarkets(ops: MarketOps): void {
   const pc = sub.promo.circuit;
   const promo = openFamily(ops, { id: `mk:promo:${S}`, kind: 'promotion', title: `Will ${nm(sub.promo.id)} be promoted from the ${divisionLabel(pc.division)} (${REGION_NAMES[pc.region]})?`, outcomes: ['Yes', 'No'], model: [0.5, 0.5], closeRound: LEAGUE_ROUNDS, ref: { season: S, subject: sub.promo.id, region: pc.region, division: pc.division } });
   void promo;
-  const qual = openFamily(ops, { id: `mk:qual:${S}`, kind: 'qualification', title: `Will ${nm(sub.qual.id)} (${REGION_NAMES[sub.qual.circuit.region]}) qualify for the Crown Championship?`, outcomes: ['Yes', 'No'], model: [0.5, 0.5], closeRound: LEAGUE_ROUNDS, ref: { season: S, subject: sub.qual.id, region: sub.qual.circuit.region } });
+  // v0.10 (bug #32): the qualification cut ranks all 16 Crown Division winners, so a player in a Crown Division plays
+  // in this event (their own league decides one of the 16 winners and its points): the market is not listed then
+  const qual = st.world.player.division === 1 ? null : openFamily(ops, { id: `mk:qual:${S}`, kind: 'qualification', title: `Will ${nm(sub.qual.id)} (${REGION_NAMES[sub.qual.circuit.region]}) qualify for the Crown Championship?`, outcomes: ['Yes', 'No'], model: [0.5, 0.5], closeRound: LEAGUE_ROUNDS, ref: { season: S, subject: sub.qual.id, region: sub.qual.circuit.region } });
   void qual;
   const sc = sub.season.circuit;
   const season = openFamily(ops, { id: `mk:season:${S}`, kind: 'season', title: `${REGION_NAMES[sc.region]} Crown Division title S${S}`, outcomes: sc.members.map(nm), model: sc.members.map(() => 1 / 16), closeRound: LEAGUE_ROUNDS, ref: { season: S, region: sc.region, division: 1, ids: sc.members.join(',') } });

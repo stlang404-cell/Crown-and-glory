@@ -64,7 +64,7 @@ export interface Contract { id: string; competitorId: string; signedSeason: numb
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
   /** v0.10: markets the player follows on the Exchange (ids; persisted). */
   marketWatch?: string[];
-  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[];
+  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[]; ply?: number }[];
   /** v0.5: ceremonies to present (titles, promotions, championships); `seen` once dismissed. */
   ceremonies?: Ceremony[]; favorites?: string[];
   /** v0.5: owned and equipped cosmetics (crown-cosmetics-1). */
@@ -556,6 +556,13 @@ export class FederationService {
     return this.run(async () => {
       const st = this.clone();
       if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closed before round 4. You can enter next season.');
+      // v0.10 (bug #31): entering the Open cancels its champion market at 1/n per share; a holder who could trigger that
+      // cancellation could buy entrants below 1/n and register to collect the difference. You must hold no shares in it.
+      if (swissEventFor(st.world.player.division) === 'open') {
+        const own = st.positions.get(`mk:open-winner:${st.world.season}|player:cash`);
+        const m = st.markets.get(`mk:open-winner:${st.world.season}`);
+        if (own && m && (m.status === 'open' || m.status === 'closed') && own.shares.some(x => x > 0)) throw new Error('You hold shares in the Federation Open champion market. Entering the Open cancels that market, so sell your shares first.');
+      }
       const posted: Journal[] = [];
       const cash = st.balances.get('player:cash') ?? 0;
       if (useVoucher) {
@@ -1453,8 +1460,15 @@ export class FederationService {
       const s = probs.reduce((a, b) => a + b, 0);
       if (s <= 0) throw new Error('That forecast is not valid. Enter a stake above zero.');
       if (probs.length !== m.q.length) throw new Error('A forecast needs one probability for each outcome.');
-      // snapshot of the public market price and model at forecast time (for honest comparisons later)
-      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l] }];
+      if (probs.some(p => !Number.isFinite(p) || p < 0)) throw new Error('A forecast needs probabilities of zero or more.');
+      // v0.10: no forecast while the market is suspended (recorded results the published model has not seen yet)
+      const sus = suspensionOf(st, m);
+      if (sus) throw new Error(sus.text.replace('Trading reopens', 'Forecasts reopen'));
+      // snapshot of the public market price and model at forecast time (for honest comparisons later). v0.10 (bug #30):
+      // in play, the public model at that moment is the LIVE model of the last published move, not the pre-game one
+      const lg = m.live ? [...st.liveGames.values()].find(g => g.marketId === m.id) : undefined;
+      const liveModel = lg && lg.moves.length > 0 && lg.points.length ? lg.points[lg.points.length - 1].model : null;
+      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: liveModel ?? m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l], ...(liveModel ? { ply: lg!.moves.length } : {}) }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }
