@@ -219,7 +219,7 @@ export function CompetitorScreen({ id }: { id: string }) {
             <div className="stat"><span className="v">{Math.round(c.rating)}</span><span className="k">Rating ±{Math.round(c.rd)}</span></div>
             <div className="stat"><span className="v mono">{c.form || '—'}</span><span className="k">Form (last 5)</span></div>
             <div className="stat"><span className="v">{c.stats.w}–{c.stats.d}–{c.stats.l}</span><span className="k">Career W–D–L</span></div>
-            <div className="stat" data-testid="competitor-rank"><span className="v"><RankBadge rank={competitorRank(c)} size="sm" /></span><span className="k">Circuit Grade{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` · highest ${competitorHighestRank(c)!.label} (S${competitorHighestRank(c)!.season})` : ' · their highest so far'} · <a href="#/ranks">guide</a></span></div>
+            <div className="stat" data-testid="competitor-rank"><span className="v" style={{ fontSize: '1.15rem' }}><RankBadge rank={competitorRank(c)} size="sm" /></span><span className="k">Circuit Grade{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` · highest ${competitorHighestRank(c)!.label} (S${competitorHighestRank(c)!.season})` : ' · their highest so far'} · <a href="#/ranks">guide</a></span></div>
             <div className="stat"><span className="v">{c.reputation}</span><span className="k">Reputation</span></div>
             <div className="stat"><span className="v">{fmtCrowns(c.earnings, 0)}</span><span className="k">Career Earnings</span></div>
           </div>

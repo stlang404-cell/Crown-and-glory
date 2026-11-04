@@ -51,7 +51,7 @@ export function RankScreen() {
           <h2 id="rank-current-h" style={{ margin: 0 }}>{joined ? 'Your Circuit Grade' : 'Where a career starts'}</h2>
           <div className="row" style={{ gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
             <Emblem spec={pr.current.insignia} size="lg" title={pr.current.ariaLabel} />
-            <div className="stack" style={{ gap: 2, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: '1 1 200px' }}>
               <strong style={{ fontSize: '1.4rem' }} data-testid="rank-current-label">{pr.current.label}</strong>
               <span className="small muted">Grade {pr.current.grade} of 16 ({pr.current.gradeId}) · step {currentStep + 1} of 48 · {divisionLabel(pr.current.division)}</span>
               {pr.highest && <span className="small" data-testid="rank-highest">Highest ever: <strong>{pr.highest.label}</strong> <span className="muted">({pr.highest.via === 'start' ? `starting rank, season ${pr.highest.season}` : `first reached season ${pr.highest.season}, round ${pr.highest.round}${pr.highest.via === 'replay' ? ', from your stored season records' : ''}`})</span></span>}
@@ -67,7 +67,7 @@ export function RankScreen() {
           </div>
           <ul className="small" style={{ margin: 0 }} data-testid="rank-requirements">
             {pr.next
-              ? <li><strong>Next attainable rank: {pr.next.label}.</strong> Reach a standing score of {pr.promoteAt} or more at the next checkpoint (season {pr.nextCheckpoint.season}, {pr.nextCheckpoint.kind === 'mid' ? `after round ${MID_ROUND}` : 'season end'}). One step per checkpoint at most.</li>
+              ? <li><strong>Next attainable rank: {pr.next.label}.</strong> Reach a standing score of {pr.promoteAt} or more at the next checkpoint (season {pr.nextCheckpoint.season}, {pr.nextCheckpoint.kind === 'mid' ? `after round ${MID_ROUND}` : 'season end'}) while outside the bottom two of your league. One step per checkpoint at most.{live?.bottom && <> <em>You are in the bottom two right now, so a checkpoint today would not raise you.</em></>}</li>
               : <li><strong>You hold the top step of your division.</strong> The next rank comes only with promotion to a higher division.</li>}
             {pr.divisionUp
               ? <li>Finish 1st or 2nd in your league at season end: promotion to the {divisionLabel(pr.current.division - 1)} at <strong>{pr.divisionUp.label}</strong>.</li>
