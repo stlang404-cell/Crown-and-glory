@@ -139,7 +139,8 @@
 .replay-open:hover { background: var(--hover); }
 .replay-players { overflow-wrap: anywhere; }
 .replay-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.replay-fav { flex: none; font-size: 1.1rem; min-width: 44px; }
+.replay-fav { flex: none; font-size: 1.1rem; min-width: 44px; color: var(--muted); }
+.replay-fav[aria-pressed="true"] { color: var(--accent); }
 
 /* Phones: the context strip and the tabs stay at the top while the page scrolls. The page itself scrolls (no inner
    scroll box); `.main` normally hides horizontal overflow with overflow-x: hidden, which would stop sticky

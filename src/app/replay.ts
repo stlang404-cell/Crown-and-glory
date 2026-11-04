@@ -376,7 +376,8 @@ export function personalEntry(g: GameRecord, report: AnalysisReport | null, riva
     id: g.id, kind: 'personal', white: g.white.name, black: g.black.name, whiteRating: g.white.rating, blackRating: g.black.rating, score, result: resultLabel(g.result),
     event: g.context.eventName ?? (g.mode === 'training' ? 'Training' : g.rated ? 'Rated game' : 'Casual game'), stage: null, season: null, round: null,
     at: g.endedAt ?? g.startedAt, plies: g.moves.length, swing: us ? maxSwing(us) : null, priceMove: null, hasMarket: false, championshipFinal: false,
-    rivalry: rivals.has(opp.id), upsetGap: upsetGapOf(g.white.rating, g.black.rating, score),
+    // only rated games carry ratings that mean something for an upset
+    rivalry: rivals.has(opp.id), upsetGap: g.rated ? upsetGapOf(g.white.rating, g.black.rating, score) : 0,
   };
 }
 
