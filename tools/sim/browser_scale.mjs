@@ -3,7 +3,8 @@
  * advances rounds (featured games stubbed, as in scale_probe.mts, so the world simulation is what is measured) and
  * records create/advance times, JS heap and IndexedDB usage; then runs the live scheduler at fixed N for a while and
  * records committed moves, measured engine time per move and main-thread long tasks.
- *   npx vite build --outDir <dir> && node tools/sim/browser_scale.mjs <dir> [rounds=19] [liveN=12,24] [liveSeconds=60] [port=4231]
+ *   npx vite build --outDir <dir> && node tools/sim/browser_scale.mjs <dir> [rounds=19] [liveN=12,24] [liveSeconds=60] [port=4231] [regions=16]
+ * liveN = 0 skips the live-scheduler part. regions ≠ 16 founds a world of that many regions (v0.9+ builds).
  */
 import { createRequire } from 'node:module';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -18,6 +19,7 @@ const ROUNDS = +(process.argv[3] ?? 19);
 const LIVE_N = (process.argv[4] ?? '12,24').split(',').map(Number).filter(Boolean);
 const LIVE_S = +(process.argv[5] ?? 60);
 const PORT = +(process.argv[6] ?? 4231);
+const REGIONS = +(process.argv[7] ?? 16);
 if (!DIR) { console.error('usage: node tools/sim/browser_scale.mjs <built dist dir> [rounds] [liveN] [liveSeconds] [port]'); process.exit(2); }
 
 const server = spawn(process.execPath, ['scripts/serve.mjs', '--dir', DIR, '--port', String(PORT)], { stdio: ['ignore', 'pipe', 'inherit'] });
@@ -30,25 +32,31 @@ page.on('pageerror', e => errors.push(String(e)));
 await page.goto(`http://127.0.0.1:${PORT}/#/world`);
 await page.waitForFunction(() => !!window.__crown?.fed);
 
-const world = await page.evaluate(async (rounds) => {
+const world = await page.evaluate(async ({ rounds, regions }) => {
   const s = window.__crown;
   s.setLiveSettings({ ...s.liveSettings, mode: 'off' });
   s.fed.runSelfplay = async () => ({ moves: [], result: '1/2-1/2', termination: 'simulated' });
   const heap = () => (performance.memory ? +(performance.memory.usedJSHeapSize / 1048576).toFixed(1) : null);
   let t = performance.now();
-  await s.fed.create(3, 4242);
+  if (regions === 16) await s.fed.create(3, 4242);
+  else await s.fed.create(3, 4242, { id: `crown-topology-custom-${regions}`, regions, divisions: 8, divisionSize: 16 });
   const createMs = performance.now() - t;
-  const roundMs = [];
+  const roundMs = [], commitMs = [];
+  // time spent inside IndexedDB commits during each advance (serialisation + transaction), the rest is simulation
+  const db = s.fed.db, origCommit = db.commit.bind(db);
+  let inCommit = 0;
+  db.commit = async (...a) => { const t1 = performance.now(); try { return await origCommit(...a); } finally { inCommit += performance.now() - t1; } };
   for (let r = 0; r < rounds; r++) {
     for (const f of s.fed.playerFixtures()) await s.fed.forfeit(f.id);
-    t = performance.now();
+    t = performance.now(); inCommit = 0;
     await s.fed.advanceRound();
-    roundMs.push(Math.round(performance.now() - t));
+    roundMs.push(Math.round(performance.now() - t)); commitMs.push(Math.round(inCommit));
   }
+  db.commit = origCommit;
   const est = await navigator.storage.estimate();
   const sorted = [...roundMs].sort((a, b) => a - b);
-  return { competitors: s.fed.state.competitors.size, createMs: Math.round(createMs), roundMs, roundMedianMs: sorted[sorted.length >> 1], roundMaxMs: sorted.at(-1), heapMB: heap(), storageMB: +((est.usage ?? 0) / 1048576).toFixed(2), cores: navigator.hardwareConcurrency, pool: s.livePool.length };
-}, ROUNDS);
+  return { regions, competitors: s.fed.state.competitors.size, createMs: Math.round(createMs), roundMs, roundMedianMs: sorted[sorted.length >> 1], roundP95Ms: sorted[Math.min(sorted.length - 1, Math.floor(0.95 * sorted.length))], roundMaxMs: sorted.at(-1), commitMs, commitMedianMs: [...commitMs].sort((a, b) => a - b)[commitMs.length >> 1], heapMB: heap(), storageMB: +((est.usage ?? 0) / 1048576).toFixed(2), cores: navigator.hardwareConcurrency, pool: s.livePool.length };
+}, { rounds: ROUNDS, regions: REGIONS });
 console.log(JSON.stringify({ world }));
 
 for (const n of LIVE_N) {

@@ -9,7 +9,7 @@
  */
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
-import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
+import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable, gamesByEvent } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
 import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } from '../exchange/odds';
@@ -33,6 +33,8 @@ import {
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import { liveTerminal, plySeed } from './schedulerEngine';
 import { sampleResult } from '../federation/resultModel';
+import { copyData } from '../federation/copy';
+import { accountWrites, competitorWrites, decodeAccounts, decodeCompetitors, decodeRound, encodeRound } from '../federation/persist';
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
@@ -96,6 +98,8 @@ type Writes = { store: FederationStore | 'games'; put?: unknown[]; del?: string[
 
 export class FederationService {
   state: FedState | null = null;
+  /** Records of an older save still stored individually (replaced by chunk records on their next write). */
+  private legacy = { competitors: new Set<string>(), accounts: new Set<string>() };
   private busy = false;
   live = new Map<string, SelfplayMove[]>();
   onChange: (() => void) | null = null;
@@ -111,19 +115,23 @@ export class FederationService {
 
   async load(): Promise<void> {
     const [worlds, seasons, comps, rounds, markets, positions, accounts, journal, assets, finance, liveGames, contracts] = await Promise.all([
-      this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<Competitor>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
-      this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<{ account: string; balance: number }>('accounts'),
+      this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<unknown>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
+      this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<unknown>('accounts'),
       this.db.loadAll<Journal>('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
       this.db.loadAll<LiveGame>('liveGames'), this.db.loadAll<Contract>('contracts'),
     ]);
     const world = worlds.find(w => w.key === 'world');
     if (!world) { this.state = null; return; }
+    // compact persistence (src/federation/persist.ts): chunks expanded; individual records of older saves noted so
+    // they are replaced by their chunk on the next write
+    const dc = decodeCompetitors(comps), da = decodeAccounts(accounts);
+    this.legacy = { competitors: new Set(dc.legacyIds), accounts: new Set(da.legacyIds) };
     const plans = new Map(seasons.map(p => [p.id, p]));
     this.state = {
       world, plan: plans.get(`season:${world.season}`)!, plans,
-      competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(rounds.map(r => [r.id, r])),
+      competitors: new Map(dc.competitors.map(c => [c.id, c])), rounds: new Map(rounds.map(r => [r.id, decodeRound(r)])),
       markets: new Map(markets.map(m => [m.id, m])), positions: new Map(positions.map(p => [p.id, p])),
-      balances: new Map(accounts.map(a => [a.account, a.balance])), journalIds: new Set(journal.map(j => j.id)),
+      balances: new Map(da.accounts.map(a => [a.account, a.balance])), journalIds: new Set(journal.map(j => j.id)),
       assets: new Map(assets.map(a => [a.id, a])),
       finance: (finance.find(f => f.key === 'history') as FinanceHistory) ?? { key: 'history', points: [], peak: 0 },
       extra: (finance.find(f => f.key === 'player') as PlayerExtra) ?? { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
@@ -141,11 +149,11 @@ export class FederationService {
   private clone(opts: { competitors?: boolean } = {}): FedState {
     const s = this.state!;
     return {
-      world: structuredClone(s.world), plan: structuredClone(s.plan), plans: new Map(s.plans),
-      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])) : new Map(s.competitors),
+      world: copyData(s.world), plan: copyData(s.plan), plans: new Map(s.plans),
+      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, copyData(v)])) : new Map(s.competitors),
       rounds: new Map(s.rounds), markets: new Map(s.markets), positions: new Map(s.positions),
       balances: new Map(s.balances), journalIds: new Set(s.journalIds), assets: new Map(s.assets),
-      finance: structuredClone(s.finance), extra: structuredClone(s.extra),
+      finance: copyData(s.finance), extra: copyData(s.extra),
       liveGames: new Map(s.liveGames), contracts: new Map(s.contracts),
     };
   }
@@ -189,7 +197,7 @@ export class FederationService {
     if (!this.state || this.state.world.featured?.length) return false;
     return this.run(async () => {
       const st = this.clone();
-      st.world = structuredClone(st.world);
+      st.world = copyData(st.world);
       if (!ensureFeatured(st)) return false;
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
       return true;
@@ -207,7 +215,7 @@ export class FederationService {
     if (!this.state || last?.build === build) return false;
     return this.run(async () => {
       const st = this.clone();
-      st.world = structuredClone(st.world);
+      st.world = copyData(st.world);
       const live = [...st.liveGames.values()].filter(g => g.status === 'live').length;
       st.world.engineCommitments = [...(st.world.engineCommitments ?? []), { season: st.world.season, round: st.world.round, build, at: this.now(), liveGamesInProgress: live }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
@@ -287,15 +295,18 @@ export class FederationService {
 
   private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[]; liveGames?: LiveGame[]; contracts?: Contract[] }, expect: { season: number; round: number } | null): Promise<void> {
     const accounts = new Set(posted.flatMap(j => j.lines.map(l => l.account)));
+    const acctW = accountWrites(accounts, next.balances, this.legacy.accounts);
     const writes: Writes = [
       { store: 'world', put: [next.world] },
       { store: 'seasons', put: changed.plans ?? [next.plan] },
       { store: 'finance', put: [next.finance, next.extra] },
       { store: 'journal', put: posted },
-      { store: 'accounts', put: [...accounts].map(a => ({ account: a, balance: next.balances.get(a) ?? 0 })) },
+      { store: 'accounts', put: acctW.put, del: acctW.del },
     ];
-    if (changed.competitors) writes.push({ store: 'competitors', put: [...next.competitors.values()] });
-    if (changed.rounds?.length) writes.push({ store: 'rounds', put: changed.rounds });
+    // compact persistence (src/federation/persist.ts): competitors in chunks of 512, only changed chunks rewritten
+    const compW = changed.competitors ? competitorWrites(next.competitors, this.state?.competitors ?? null, this.legacy.competitors) : null;
+    if (compW) writes.push({ store: 'competitors', put: compW.put, del: compW.del });
+    if (changed.rounds?.length) writes.push({ store: 'rounds', put: changed.rounds.map(encodeRound) });
     if (changed.markets?.length) writes.push({ store: 'markets', put: changed.markets });
     if (changed.positions?.length) writes.push({ store: 'positions', put: changed.positions });
     if (changed.assets?.length || changed.delAssets?.length) writes.push({ store: 'assets', put: changed.assets ?? [], del: changed.delAssets ?? [] });
@@ -308,6 +319,8 @@ export class FederationService {
       if (!expect && w) throw new Error('A federation already exists. Reload to see it.');
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
+    for (const id of compW?.del ?? []) this.legacy.competitors.delete(id);
+    for (const a of acctW.del) this.legacy.accounts.delete(a);
     this.state = next;
     if (this.busyKind === 'scheduler' && this.onLiveChange) this.onLiveChange(); else this.onChange?.();
   }
@@ -500,7 +513,7 @@ export class FederationService {
       const fixtureId = game.context.fixtureId;
       if (!fixtureId || !game.result) return;
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const f = rec.fixtures.find(x => x.id === fixtureId);
       if (!f || f.result !== null) return; // already recorded (idempotent) or stale
       f.result = game.result === '1-0' ? 1 : game.result === '0-1' ? 0 : 0.5;
@@ -535,7 +548,7 @@ export class FederationService {
   async forfeit(fixtureId: string): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const f = rec.fixtures.find(x => x.id === fixtureId);
       if (!f || f.tier !== 1 || f.result !== null) throw new Error('There is no unplayed match to forfeit.');
       f.result = f.white === PLAYER_ID ? 0 : 1;
@@ -638,7 +651,7 @@ export class FederationService {
   /** Record a finished featured game in a working state: game record, fixture result, market settlement
    *  (or cancellation when the playing-length limit censored the game). */
   private async finishFeaturedIn(st: FedState, posted: Journal[], fixtureId: string, moves: SelfplayMove[], result: '1-0' | '0-1' | '1/2-1/2', termination: string, mode: WorldGame['mode'], seed: number, profiles: string[]) {
-    const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+    const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
     const f = rec.fixtures.find(x => x.id === fixtureId)!;
     if (f.result !== null) throw new Error('This result is already recorded.');
     const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
@@ -934,7 +947,7 @@ export class FederationService {
       if (n <= 0) return [];
       const cands = this.slateCandidates().slice(0, n);
       if (!cands.length) return [];
-      const rec = structuredClone(rec0);
+      const rec = copyData(rec0);
       const out: LiveGame[] = [];
       const at = this.now();
       for (const [event, white, black] of cands) {
@@ -1013,7 +1026,7 @@ export class FederationService {
     if (!this.state || !fixtureIds.length) return 0;
     return this.run(async () => {
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const lgs = this.abstractSlate(st, rec, fixtureIds, note);
       if (!lgs.length) return 0;
       settleRound(this.ctxOf(st, await this.playerRating()), rec);
@@ -1052,7 +1065,7 @@ export class FederationService {
       const expect = { season: st.world.season, round: st.world.round };
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
-      const rec = structuredClone(st.rounds.get(`${expect.season}:${expect.round}`)!);
+      const rec = copyData(st.rounds.get(`${expect.season}:${expect.round}`)!);
       // scheduled live games still in progress when the round closes take their tier-3 draw (labelled abstract)
       const slateClosed = this.abstractSlate(st, rec, null, 'The round closed before this game finished.');
       const seasonRounds = [...st.rounds.values()].filter(r => r.season === expect.season && r.id !== rec.id);
@@ -1076,8 +1089,9 @@ export class FederationService {
       }
       // League prizes when the league ends
       if (round === LEAGUE_ROUNDS) {
+        const byEvent = gamesByEvent(games);
         for (const c of oldPlan.circuits) {
-          const order = leagueTable(c, games).map(r => r.id);
+          const order = leagueTable(c, games, undefined, byEvent).map(r => r.id);
           const pool = `prize:${season}:league:${c.region}:${c.division}`;
           this.post(st, [payPool(`prize-pay:${season}:league:${c.region}:${c.division}`, pool, st.balances.get(pool) ?? 0, order.slice(0, 3).map((id, i) => ({ id, share: LEAGUE_SPLIT[i] })), `League prizes R${c.region + 1} D${c.division}`, season, round, this.now())], posted);
           const pi = order.indexOf(PLAYER_ID);
@@ -1167,7 +1181,7 @@ export class FederationService {
         }
         // new season issuance
         this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits), this.now()), posted);
-        plansChanged.push(structuredClone(oldPlan));
+        plansChanged.push(copyData(oldPlan));
       }
       // career earnings accumulate every credit to the competitor's account (expenses are not subtracted)
       for (const c of st.competitors.values()) {

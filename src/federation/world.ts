@@ -288,10 +288,20 @@ export function applyRound(ctx: Ctx, rec: RoundRecord, allSeasonGames: { event: 
   return { events, seasonComplete };
 }
 
-/** League table for a circuit from a season's games. */
-export function leagueTable(circuit: Circuit, games: { event: string; white: string; black: string; result: number | null }[], seeds?: Map<string, number>): StandingRow[] {
+type EventGame = { event: string; white: string; black: string; result: number | null };
+/** A season's games grouped by event, each group in the original order (so a table built from a group is identical to
+ *  one built by filtering the whole list). Callers that build many tables pass it to `leagueTable` (one pass instead of
+ *  one pass per circuit: O(games) instead of O(games × circuits), docs/FEDERATION_SCALE.md §1.5). */
+export function gamesByEvent<T extends EventGame>(games: T[]): Map<string, T[]> {
+  const out = new Map<string, T[]>();
+  for (const g of games) { const l = out.get(g.event); if (l) l.push(g); else out.set(g.event, [g]); }
+  return out;
+}
+
+/** League table for a circuit from a season's games (or their `gamesByEvent` index). */
+export function leagueTable(circuit: Circuit, games: EventGame[], seeds?: Map<string, number>, byEvent?: Map<string, EventGame[]>): StandingRow[] {
   const ev = LEAGUE_EVENT(circuit.region, circuit.division);
-  const gs = games.filter(g => g.event === ev);
+  const gs = byEvent ? byEvent.get(ev) ?? [] : games.filter(g => g.event === ev);
   const sd = seeds ?? new Map(circuit.members.map((m, i) => [m, i + 1]));
   return leagueOrder(standings(circuit.members, gs, sd), gs);
 }
@@ -302,7 +312,8 @@ export function swissTable(sw: SwissState, games: { event: string; white: string
 
 /** After the league and Swiss finish (end of round 15): build the 16-player championship. */
 export function buildChampionship(ctx: Ctx, games: { event: string; white: string; black: string; result: number | null }[]): KoState {
-  const winners = ctx.plan.circuits.filter(c => c.division === 1).map(c => leagueTable(c, games)[0])
+  const byEvent = gamesByEvent(games);
+  const winners = ctx.plan.circuits.filter(c => c.division === 1).map(c => leagueTable(c, games, undefined, byEvent)[0])
     .sort((a, b) => b.points - a.points || (ratingOf(ctx, b.id) - ratingOf(ctx, a.id)) || a.id.localeCompare(b.id)).slice(0, 8).map(r => r.id);
   const swiss = swissTable(ctx.plan.swiss.find(x => x.event === 'open')!, games).map(r => r.id).filter(id => !winners.includes(id)).slice(0, 8);
   const qualifiers = [...winners, ...swiss];
@@ -356,8 +367,9 @@ export function endSeason(ctx: Ctx, games: { event: string; white: string; black
   const season = world.season;
   const res: SeasonEndResult = { promotions: [], relegations: [], titles: [], standings: [], retirements: [], entrants: [] };
   const tables = new Map<string, StandingRow[]>();
+  const byEvent = gamesByEvent(games);
   for (const c of plan.circuits) {
-    const t = leagueTable(c, games);
+    const t = leagueTable(c, games, undefined, byEvent);
     tables.set(`${c.region}:${c.division}`, t);
     res.standings.push({ region: c.region, division: c.division, order: t.map(r => r.id), points: Object.fromEntries(t.map(r => [r.id, r.points])) });
     t.forEach((r, i) => {

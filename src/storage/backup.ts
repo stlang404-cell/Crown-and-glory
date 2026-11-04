@@ -11,6 +11,7 @@ import { replayLedger } from '../ratings/ledger';
 import type { AnalysisReport } from '../analysis/types';
 import { CrownDB, APP_SCHEMA } from './db';
 import { canonicalGame, gameChecksum, sha256Hex } from './checksum';
+import { decodeAccounts } from '../federation/persist';
 
 export const BACKUP_FORMAT = 'crown-backup-1';
 
@@ -121,7 +122,10 @@ export function validateFederation(fed: Record<string, unknown[]>): void {
     if (s !== 0) throw new ImportError(`Journal ${jr.id} does not balance.`);
     total += s;
   }
-  for (const a of (fed.accounts ?? []) as { account: string; balance: number }[]) {
+  // v0.10 compact persistence: competitors' accounts are stored in chunk records (src/federation/persist.ts)
+  let accounts: { account: string; balance: number }[];
+  try { accounts = decodeAccounts(fed.accounts ?? []).accounts; } catch (e) { throw new ImportError(`Federation accounts are damaged: ${(e as Error).message}`); }
+  for (const a of accounts) {
     if ((bal.get(a.account) ?? 0) !== a.balance) throw new ImportError(`Account ${a.account} does not match its journal history.`);
   }
   if (total !== 0) throw new ImportError('Ledger does not conserve money.');
