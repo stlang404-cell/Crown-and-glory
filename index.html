@@ -9,7 +9,7 @@
       (function () {
         var p = {}, d = document.documentElement;
         try { p = JSON.parse(localStorage.getItem('crown.display.v1') || '{}') || {}; } catch (e) { p = {}; }
-        var themes = { obsidian: '#111318', midnight: '#10151e', ivory: '#f2efe8' };
+        var themes = { obsidian: '#111318', midnight: '#10151e', emerald: '#0d1512', ivory: '#f2efe8' };
         var t = themes[p.theme] ? p.theme : 'obsidian';
         d.setAttribute('data-theme', t);
         d.setAttribute('data-board', /^(theme|walnut|slate|green|mono|marble|crimson)$/.test(p.board) ? p.board : 'theme');

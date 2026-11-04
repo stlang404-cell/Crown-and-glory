@@ -68,9 +68,56 @@ export const CRESTS = {
 } as const;
 export type CrestId = keyof typeof CRESTS;
 
-/** Heraldic tinctures (fixed across themes like real arms; outlines use theme variables for contrast). */
+/** Heraldic tinctures (fixed across themes like real arms; outlines use theme variables for contrast).
+ *  v1.0: tuned to the royal palette — azure is royal blue, vert emerald, purpure amethyst, sanguine burgundy,
+ *  or gold and argent silver — so crests, insignia and the interface read as one family. */
 export const TINCTURES = {
-  or: '#d6ac4f', argent: '#d9dde3', gules: '#b8323f', azure: '#2f5d93', vert: '#2f7a55', sable: '#23262e',
-  purpure: '#6b4a8c', tenne: '#b8682c', sanguine: '#7a2430', celeste: '#7fa9d4', bronze: '#9a6b3c', steel: '#6c7686',
+  or: '#d8ae4c', argent: '#dde1e7', gules: '#b8323f', azure: '#2c55a0', vert: '#1f7a50', sable: '#23262e',
+  purpure: '#6a4596', tenne: '#b8682c', sanguine: '#7a2234', celeste: '#7fa9d4', bronze: '#9a6b3c', steel: '#6c7686',
 } as const;
 export type Tincture = keyof typeof TINCTURES;
+
+/**
+ * v1.0 lines of partition: the edge between the two tinctures of a fess, chief or pale may be drawn straight, wavy,
+ * embattled, indented or engrailed (as in real heraldry; the geometry is original). Other divisions stay straight.
+ * Lines are rendering detail only: they are not part of an emblem's silhouette signature.
+ */
+export const LINES = ['straight', 'wavy', 'embattled', 'indented', 'engrailed'] as const;
+export type LineId = typeof LINES[number];
+
+/** An axis-aligned partition edge from (x0,y0) to (x1,y1) as path commands (the start point is already current). */
+function edge(kind: LineId, x0: number, y0: number, x1: number, y1: number, side: 1 | -1): string {
+  const len = Math.hypot(x1 - x0, y1 - y0);
+  const n = Math.max(2, Math.round(len / 8));
+  const dx = (x1 - x0) / n, dy = (y1 - y0) / n;
+  // unit normal (pointing to `side`)
+  const nx = (-dy / Math.hypot(dx, dy)) * side, ny = (dx / Math.hypot(dx, dy)) * side;
+  const a = 2.6, f = (v: number) => Math.round(v * 100) / 100;
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const px = x0 + dx * i, py = y0 + dy * i, qx = px + dx, qy = py + dy, mx = px + dx / 2, my = py + dy / 2;
+    if (kind === 'indented') d += `L${f(mx + nx * a)} ${f(my + ny * a)}L${f(qx)} ${f(qy)}`;
+    else if (kind === 'wavy') { const s = i % 2 ? 1 : -1; d += `Q${f(mx + nx * a * 2 * s)} ${f(my + ny * a * 2 * s)} ${f(qx)} ${f(qy)}`; }
+    else if (kind === 'embattled') d += i % 2 ? `L${f(qx)} ${f(qy)}` : `L${f(px + nx * a)} ${f(py + ny * a)}L${f(qx + nx * a)} ${f(qy + ny * a)}L${f(qx)} ${f(qy)}`;
+    else if (kind === 'engrailed') d += `A${f(len / n / 1.6)} ${f(len / n / 1.6)} 0 0 ${side === 1 ? 1 : 0} ${f(qx)} ${f(qy)}`;
+    else d += `L${f(qx)} ${f(qy)}`;
+  }
+  return d;
+}
+/** The second-tincture region of a division, with its line of partition (straight lines reuse DIVISIONS). */
+export function divisionPath(division: DivisionId, line: LineId = 'straight'): string {
+  if (line === 'straight') return DIVISIONS[division];
+  if (division === 'fess') return `M0 72L0 38${edge(line, 0, 38, 64, 38, -1)}L64 72Z`;
+  if (division === 'chief') return `M0 0H64V22${edge(line, 64, 22, 0, 22, -1)}Z`;
+  if (division === 'pale') return `M32 0H64V72H32${edge(line, 32, 72, 32, 0, -1)}Z`;
+  return DIVISIONS[division];
+}
+
+/**
+ * v1.0 event motifs drawn behind (or around) a tournament crest at medium and large sizes, so every event kind has
+ * its own emblem language: the league's compony bordure, the Swiss Open's compass rose, the Challenger's crossed
+ * swords, the Club Weekend's pennants, the Crown Championship's sunburst, the Zonal Championship's battlement and the
+ * Regional Cup's ribbon. Federation titles use the `order` star instead (src/ui/Emblem.tsx).
+ */
+export const MOTIFS = ['compony', 'compass', 'swords', 'pennants', 'rays', 'battlement', 'ribbon'] as const;
+export type MotifId = typeof MOTIFS[number];

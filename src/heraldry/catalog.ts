@@ -7,7 +7,7 @@
  * Higher rungs of a ladder gain crests, wreaths, gold borders and pixel pips — more prestige, same clarity.
  */
 import { REGION_NAMES } from '../federation/model';
-import type { ChargeId, DivisionId, ShapeId, Tincture } from './charges';
+import { LINES, type ChargeId, type DivisionId, type LineId, type ShapeId, type Tincture } from './charges';
 import type { EmblemSpec } from './spec';
 
 const base = (o: Partial<EmblemSpec> & Pick<EmblemSpec, 'shape' | 'field' | 'charge'>): EmblemSpec =>
@@ -46,7 +46,7 @@ export function titleEmblem(t: FedTitle): EmblemSpec {
   const i = FED_TITLES.indexOf(t);
   const shape: ShapeId[] = ['pennant', 'heater', 'kite', 'cartouche'];
   const charge: ChargeId[] = ['pawn', 'knight', 'sword', 'crown'];
-  return base({ shape: shape[i], field: [['azure', 'sanguine', 'purpure', 'sable'][i], 'or'], division: i >= 2 ? 'chief' : 'plain', charge: charge[i], chargeColor: i >= 2 ? 'or' : 'argent', border: i === 3 ? 'pixel' : i >= 1 ? 'double' : 'single', crest: i === 3 ? 'crown' : i === 2 ? 'helm' : null, wreath: i === 3, pips: i + 1, monogram: FED_TITLE_ABBR[t], prestige: [1, 2, 4, 5][i] });
+  return base({ shape: shape[i], field: [['azure', 'sanguine', 'purpure', 'sable'][i], 'or'], division: i >= 2 ? 'chief' : 'plain', charge: charge[i], chargeColor: i >= 2 ? 'or' : 'argent', border: i === 3 ? 'pixel' : i >= 1 ? 'double' : 'single', crest: i === 3 ? 'crown' : i === 2 ? 'helm' : null, wreath: i === 3, pips: i + 1, monogram: FED_TITLE_ABBR[t], prestige: [1, 2, 4, 5][i], order: true });
 }
 
 // ---------------------------------------------------------------- regional federations (distinct arms for 128 regions)
@@ -67,12 +67,14 @@ export function regionEmblem(r: number): EmblemSpec {
     const [a, b] = REGION_FIELD[(r * 5 + Math.floor(r / 16)) % 16];
     const light = a === 'argent' || a === 'or' || a === 'celeste';
     // a double border keeps these silhouettes apart from the (single-bordered) club and federation emblems
-    return base({ shape: 'heater', field: [a, b], division: REGION_DIV[d], charge: REGION_CHARGE[c], chargeColor: light ? 'sable' : 'argent', border: 'double', prestige: 1 });
+    return base({ shape: 'heater', field: [a, b], division: REGION_DIV[d], line: regionLine(r), charge: REGION_CHARGE[c], chargeColor: light ? 'sable' : 'argent', border: 'double', prestige: 1 });
   }
   const [a, b] = REGION_FIELD[r % 16];
   const light = a === 'argent' || a === 'or' || a === 'celeste';
-  return base({ shape: 'heater', field: [a, b], division: REGION_DIV[r % 8], charge: REGION_CHARGE[r % 16], chargeColor: light ? 'sable' : 'argent', border: 'single', prestige: 1 });
+  return base({ shape: 'heater', field: [a, b], division: REGION_DIV[r % 8], line: regionLine(r), charge: REGION_CHARGE[r % 16], chargeColor: light ? 'sable' : 'argent', border: 'single', prestige: 1 });
 }
+/** v1.0: a fixed line of partition per region (used where the division is a fess, chief or pale). */
+function regionLine(r: number): LineId { return LINES[(r * 7 + Math.floor(r / 5)) % LINES.length]; }
 export const regionTitle = (r: number) => `Arms of ${REGION_NAMES[r]}`;
 
 // ---------------------------------------------------------------- major tournaments
@@ -81,14 +83,15 @@ export type TournamentId = typeof TOURNAMENTS[number];
 export const TOURNAMENT_NAME: Record<TournamentId, string> = { league: 'Division League', challenger: 'Challenger Open', open: 'Federation Open', champ: 'Crown Championship', club: 'Club Weekend', zonal: 'Zonal Championship', cup: 'Regional Cup' };
 export function tournamentCrest(t: TournamentId): EmblemSpec {
   switch (t) {
-    case 'league': return base({ shape: 'roundel', field: ['sable', 'steel'], division: 'fess', charge: 'rook', border: 'double', prestige: 1 });
-    case 'challenger': return base({ shape: 'lozenge', field: ['vert', 'sable'], division: 'plain', charge: 'flame', chargeColor: 'or', border: 'single', pips: 1, prestige: 2 });
-    case 'open': return base({ shape: 'octagon', field: ['azure', 'sable'], division: 'saltire', charge: 'knight', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 3 });
-    case 'champ': return base({ shape: 'cartouche', field: ['sanguine', 'sable'], division: 'chief', charge: 'crown', chargeColor: 'or', border: 'pixel', crest: 'crown', wreath: true, pips: 3, prestige: 5 });
-    case 'club': return base({ shape: 'banner', field: ['tenne', 'sable'], division: 'chevron', charge: 'gate', border: 'single', prestige: 1 });
+    // v1.0: each event kind also carries its own motif (src/heraldry/charges.ts MOTIFS) drawn around the shield
+    case 'league': return base({ shape: 'roundel', field: ['sable', 'steel'], division: 'fess', charge: 'rook', border: 'double', prestige: 1, motif: 'compony' });
+    case 'challenger': return base({ shape: 'lozenge', field: ['vert', 'sable'], division: 'plain', charge: 'flame', chargeColor: 'or', border: 'single', pips: 1, prestige: 2, motif: 'swords' });
+    case 'open': return base({ shape: 'octagon', field: ['azure', 'sable'], division: 'saltire', charge: 'knight', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 3, motif: 'compass' });
+    case 'champ': return base({ shape: 'cartouche', field: ['sanguine', 'sable'], division: 'chief', line: 'embattled', charge: 'crown', chargeColor: 'or', border: 'pixel', crest: 'crown', wreath: true, pips: 3, prestige: 5, motif: 'rays' });
+    case 'club': return base({ shape: 'banner', field: ['tenne', 'sable'], division: 'chevron', charge: 'gate', border: 'single', prestige: 1, motif: 'pennants' });
     // v0.11 crown-competition-2 knockouts
-    case 'zonal': return base({ shape: 'heater', field: ['purpure', 'sable'], division: 'pale', charge: 'tower', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 4 });
-    case 'cup': return base({ shape: 'roundel', field: ['vert', 'or'], division: 'bend', charge: 'sword', chargeColor: 'argent', border: 'single', pips: 1, prestige: 2 });
+    case 'zonal': return base({ shape: 'heater', field: ['purpure', 'sable'], division: 'pale', line: 'indented', charge: 'tower', chargeColor: 'or', border: 'double', crest: 'star', pips: 2, prestige: 4, motif: 'battlement' });
+    case 'cup': return base({ shape: 'roundel', field: ['vert', 'or'], division: 'bend', charge: 'sword', chargeColor: 'argent', border: 'single', pips: 1, prestige: 2, motif: 'ribbon' });
   }
 }
 /** Trophy silhouette per event (rendered by <Trophy/>). */
