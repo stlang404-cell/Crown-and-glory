@@ -63,8 +63,11 @@ function legalPosition(pos: Position, fen: string): string | null {
   if (/[pP]/.test(rows[0]) || /[pP]/.test(rows[5])) return 'no pawn may stand on the first or last rank';
   if (/[bB]/.test(b)) return 'there are no bishops in crown-la6-v1';
   // the side NOT to move may not be in check
-  const other = Position.fromFen(fen.replace(/ ([wb]) /, (_, s) => ` ${s === 'w' ? 'b' : 'w'} `));
-  if (other.inCheck()) return 'the side not to move is in check (illegal position)';
+  // Flip the side to move: if that position is in check, the original side NOT to move was in check (illegal).
+  // Building the flipped copy may itself be refused when the ORIGINAL side to move is in check — that is legal.
+  let other: Position | null = null;
+  try { other = Position.fromFen(fen.replace(/ ([wb]) /, (_, s) => ` ${s === 'w' ? 'b' : 'w'} `)); } catch { other = null; }
+  if (other && other.inCheck()) return 'the side not to move is in check (illegal position)';
   void pos; void KING; void PAWN; void pieceType; void pieceColor;
   return null;
 }
