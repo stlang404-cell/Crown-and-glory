@@ -108,6 +108,8 @@ export function App({ services }: { services: AppServices }) {
   }, []);
   const go = (v: View) => { const h = toHash(v); if (location.hash !== h) location.hash = h; else setView(v); window.scrollTo(0, 0); };
   const section = SECTION[view.name] ?? view.name;
+  const [updateReady, setUpdateReady] = useState(false);
+  useEffect(() => { const on = () => setUpdateReady(true); window.addEventListener('crown-update-ready', on); return () => window.removeEventListener('crown-update-ready', on); }, []);
   return (
     <Ctx.Provider value={{ services, go }}>
       <PieceDefs />
@@ -130,6 +132,7 @@ export function App({ services }: { services: AppServices }) {
           </div>
         </nav>
         <main className="main" id="main">
+          {updateReady && <div className="notice info row" role="status" data-testid="update-ready" style={{ marginBottom: 12, gap: 8 }}>A new version of Crown &amp; Calculation is ready. Your games are saved.<span className="spacer" /><button className="btn small primary" onClick={() => location.reload()}>Reload Now</button></div>}
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
           <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
             {view.name === 'play' && <PlayScreen />}

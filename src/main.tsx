@@ -29,4 +29,7 @@ AppServices.boot().then(services => {
 
 if ('serviceWorker' in navigator && import.meta.env.PROD && window.isSecureContext) {
   window.addEventListener('load', () => { void navigator.serviceWorker.register('./sw.js'); });
+  // A new release took over while this page runs the previous one: offer a reload so fixes take effect now.
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) window.dispatchEvent(new Event('crown-update-ready')); });
 }
