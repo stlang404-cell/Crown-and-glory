@@ -305,7 +305,8 @@ export function lessonsFor(topics: string[], known: Set<string>): string[] {
 export interface ReplayEntry {
   /** Stable id: the game id for the player's games, `wg:<fixture>` for federation games. */
   id: string;
-  kind: 'personal' | 'federation';
+  /** v0.11 'exhibition': an unofficial Exhibition Arena game (id `exh:…`). */
+  kind: 'personal' | 'federation' | 'exhibition';
   white: string; black: string;
   whiteRating: number | null; blackRating: number | null;
   /** 1 white won, 0.5 draw, 0 black won, null unfinished. */
@@ -327,9 +328,9 @@ export interface ReplayEntry {
   upsetGap: number;
 }
 
-export type ReplayFilter = 'all' | 'personal' | 'federation' | 'finals' | 'rivalries' | 'upsets' | 'swings' | 'market' | 'favourites';
+export type ReplayFilter = 'all' | 'personal' | 'federation' | 'exhibitions' | 'finals' | 'rivalries' | 'upsets' | 'swings' | 'market' | 'favourites';
 export const REPLAY_FILTERS: { id: ReplayFilter; label: string }[] = [
-  { id: 'all', label: 'All' }, { id: 'personal', label: 'My Games' }, { id: 'federation', label: 'Federation' },
+  { id: 'all', label: 'All' }, { id: 'personal', label: 'My Games' }, { id: 'federation', label: 'Federation' }, { id: 'exhibitions', label: 'Exhibitions' },
   { id: 'finals', label: 'Championship Finals' }, { id: 'rivalries', label: 'Rivalries' }, { id: 'upsets', label: 'Upsets' },
   { id: 'swings', label: 'Dramatic Swings' }, { id: 'market', label: 'Market Moments' }, { id: 'favourites', label: 'Favourites' },
 ];
@@ -350,6 +351,7 @@ export function filterReplays(rows: ReplayEntry[], f: ReplayFilter, favourites: 
     switch (f) {
       case 'personal': return r.kind === 'personal';
       case 'federation': return r.kind === 'federation';
+      case 'exhibitions': return r.kind === 'exhibition';
       case 'finals': return r.championshipFinal;
       case 'rivalries': return r.rivalry;
       case 'upsets': return r.upsetGap >= UPSET_GAP;
@@ -394,6 +396,16 @@ export function federationEntry(wg: { id: string; event: string; stage?: string;
     swing: us.length ? maxSwing(us) : null, priceMove: pm ? Math.abs(pm.delta) : null, hasMarket: !!points && points.length > 0,
     championshipFinal: (wg.event === 'champ' || wg.event === 'club') && wg.stage === 'Final',
     rivalry: rivalPairs.has(pair) || rivals.has(wg.white) || rivals.has(wg.black), upsetGap: upsetGapOf(wg.whiteRating, wg.blackRating, score),
+  };
+}
+
+/** Library row for an archived exhibition (unofficial: never a final, a rivalry game or an upset). */
+export function exhibitionEntry(g: { id: string; white: { name: string; rating: number }; black: { name: string; rating: number }; moves: { score: EngineScore }[]; result: string | null; status: string; createdAt: string; finishedAt: string | null }): ReplayEntry {
+  const us = g.moves.map(m => expectedU(toPov(m.score, 'white')));
+  return {
+    id: g.id, kind: 'exhibition', white: g.white.name, black: g.black.name, whiteRating: g.white.rating, blackRating: g.black.rating, score: scoreOf(g.result), result: g.status === 'finished' ? resultLabel(g.result) : '*',
+    event: g.status === 'finished' ? 'Exhibition (unofficial)' : 'Exhibition (unfinished)', stage: null, season: null, round: null, at: g.finishedAt ?? g.createdAt, plies: g.moves.length,
+    swing: us.length ? maxSwing(us) : null, priceMove: null, hasMarket: false, championshipFinal: false, rivalry: false, upsetGap: 0,
   };
 }
 

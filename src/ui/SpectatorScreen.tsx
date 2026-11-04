@@ -52,7 +52,7 @@ const WINDOWS = [{ label: '6 s', ms: 6000 }, { label: '3 s', ms: 3000 }, { label
 const ODDS_ID = 'crown-odds-2';
 
 /** White's expected score by ply: the published engine evaluation (always) and the post-game curve (when allowed). */
-function EvalGraph({ moves, shown, post, onSelect, ply, turns }: { moves: SelfplayMove[]; shown: number; post: number[] | null; onSelect: (ply: number) => void; ply: number; turns: number[] }) {
+export function EvalGraph({ moves, shown, post, onSelect, ply, turns }: { moves: SelfplayMove[]; shown: number; post: number[] | null; onSelect: (ply: number) => void; ply: number; turns: number[] }) {
   const W = 600, H = 110;
   const n = Math.max(moves.length, 20);
   const x = (i: number) => (i / n) * W;
