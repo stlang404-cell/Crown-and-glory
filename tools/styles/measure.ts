@@ -16,7 +16,8 @@
  *   npx tsx tools/styles/measure.ts games [style ...]    # (b)+(c), writes tools/styles/results/games-<style>.json
  *   npx tsx tools/styles/measure.ts summary [--write]    # tables; --write updates src/engine/styles-validation.json
  * Env: NODES (8000), PAIRS (100), DECISIONS (300), THREADS (2), DEFS (JSON STYLE_EVAL overrides, pilot only),
- *      TAG (suffix for result files, pilot only).
+ *      TAG (suffix for result files, pilot only), OFFSET (first opening line; pilots used 200+ so the measured
+ *      openings 0–99 were never used for choosing magnitudes).
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -24,6 +25,8 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 const STYLES = ['tactical', 'positional', 'aggressive', 'defensive', 'endgame'] as const;
 const NODES = +(process.env.NODES ?? 8000), PAIRS = +(process.env.PAIRS ?? 100), DECISIONS = +(process.env.DECISIONS ?? 300);
 const THREADS = +(process.env.THREADS ?? 2);
+/** First opening line used (pilot runs use lines 200+, the measurement uses lines 0 … PAIRS−1). */
+const OFFSET = +(process.env.OFFSET ?? 0);
 const TAG = process.env.TAG ? `-${process.env.TAG}` : '';
 const OUT = new URL('./results/', import.meta.url);
 const START = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
@@ -205,7 +208,7 @@ if (isMainThread) {
     }
     writeFileSync(new URL(`decisions${TAG}.json`, OUT), JSON.stringify(res, null, 1));
   } else if (cmd === 'games') {
-    const openings = (JSON.parse(readFileSync(new URL('../bench/openings-4ply.json', import.meta.url), 'utf8')).openings as string[][]).slice(0, PAIRS);
+    const openings = (JSON.parse(readFileSync(new URL('../bench/openings-4ply.json', import.meta.url), 'utf8')).openings as string[][]).slice(OFFSET, OFFSET + PAIRS);
     const styles = process.argv.slice(3).length ? process.argv.slice(3) : [...STYLES, 'universal'];
     for (const st of styles) {
       const jobs: { style: string; white: boolean; i: number; opening: string[] }[] = [];

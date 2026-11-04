@@ -78,7 +78,13 @@ export interface Eval4Weights {
 }
 
 // scratch buffers (single-threaded use)
-const attacks = new Int8Array(72); // attack counts per colour per square
+// Shared attack map (v0.9), built once per call in the piece pass and reused by the threat / hanging terms:
+// attStamp[c * 36 + sq] === stamp ⇔ a non-pawn piece of colour c attacks sq (pawn attacks come from the pawn
+// cache); knStamp / rkStamp record knight and rook attacks separately (minor / rook threats). Stamping avoids
+// clearing the maps on every call.
+const attStamp = new Int32Array(72), knStamp = new Int32Array(72), rkStamp = new Int32Array(72);
+let stamp = 0;
+const victims = new Int8Array(36);
 const zoneAtt = new Int32Array(2);
 const zoneAttackers = new Int32Array(2);
 
@@ -242,7 +248,9 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
   const pe = pawnEntry(pb[0], pb[1]);
   const pfo = pe * 12, pao = pe * 72;
   const pawnFiles = pcFiles, pawnAtt = pcAtt;
-  for (let i = 0; i < 72; i++) attacks[i] = pawnAtt[pao + i];
+  if (++stamp > 0x3fffffff) { stamp = 1; attStamp.fill(0); knStamp.fill(0); rkStamp.fill(0); }
+  const st = stamp;
+  let nv = 0;
   for (let c = 0; c < 2; c++) {
     const s = c === 0 ? 1 : -1;
     const Pc = c === sc ? Q : R;
@@ -315,28 +323,31 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
       for (let df = -1; df <= 1; df++) { const nf = f + df; if (nf >= 0 && nf <= 5 && !pawnFiles[pfo + c * 6 + nf]) open++; }
       if (open) { k = O_KING_OPEN; mg += s * Pc[2 * k] * open; eg += s * Pc[2 * k + 1] * open; if (T) T[k] += s * open; }
       const tg = KGT[sq];
-      for (let i = 0; i < tg.length; i++) attacks[own + tg[i]]++;
+      for (let i = 0; i < tg.length; i++) attStamp[own + tg[i]] = st;
       continue;
     }
+    victims[nv++] = sq;
     let mob = 0;
     let zoneHits = 0;
     if (t === P_KNIGHT) {
       const tg = KNT[sq];
       for (let i = 0; i < tg.length; i++) {
         const to = tg[i];
-        attacks[own + to]++;
+        attStamp[own + to] = st; knStamp[own + to] = st;
         const q = b[to];
         if ((!q || (q >> 3) !== c) && !pawnAtt[pao + opp + to]) mob++;
         if (ZONE[zb + to]) zoneHits++;
       }
     } else {
       const rays = RAY[sq];
-      const dEnd = t === P_ROOK ? 4 : 8;
+      const isRook = t === P_ROOK;
+      const dEnd = isRook ? 4 : 8;
       for (let d = 0; d < dEnd; d++) {
         const ray = rays[d];
         for (let i = 0; i < ray.length; i++) {
           const to = ray[i];
-          attacks[own + to]++;
+          attStamp[own + to] = st;
+          if (isRook) rkStamp[own + to] = st;
           const q = b[to];
           if ((!q || (q >> 3) !== c) && !pawnAtt[pao + opp + to]) mob++;
           if (ZONE[zb + to]) zoneHits++;
@@ -376,23 +387,23 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
   }
 
   // threats against non-pawn, non-king pieces
-  for (let sq = 0; sq < 36; sq++) {
-    const p = b[sq];
-    const t = p & 7;
-    if (!p || t === P_PAWN || t === P_KING) continue;
-    const c = p >> 3; // victim colour
+  for (let v = 0; v < nv; v++) {
+    const sq = victims[v];
+    const t = b[sq] & 7;
+    const c = b[sq] >> 3; // victim colour
     const att = c ^ 1; // attacker colour
     const s = att === 0 ? 1 : -1;
     const Pc = att === sc ? Q : R;
-    const ao = att * 36;
-    if (!attacks[ao + sq]) continue;
+    const ao = att * 36 + sq, vo = c * 36 + sq;
+    const byPawn = pawnAtt[pao + ao];
+    if (!byPawn && attStamp[ao] !== st) continue;
     let k: number;
-    if (pawnAtt[pao + ao + sq]) { k = O_THREAT_PAWN; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
+    if (byPawn) { k = O_THREAT_PAWN; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
     if (t === P_ROOK || t === P_QUEEN) {
-      if (knightAttacks(b, sq, att)) { k = O_THREAT_MINOR; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
-      if (t === P_QUEEN && rookAttacks(b, sq, att)) { k = O_THREAT_ROOK; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
+      if (knStamp[ao] === st) { k = O_THREAT_MINOR; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
+      if (t === P_QUEEN && rkStamp[ao] === st) { k = O_THREAT_ROOK; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
     }
-    if (!attacks[c * 36 + sq]) { k = O_HANGING; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
+    if (attStamp[vo] !== st && !pawnAtt[pao + vo]) { k = O_HANGING; mg += s * Pc[2 * k]; eg += s * Pc[2 * k + 1]; if (T) T[k] += s; }
   }
 
   const ph = phase > MAX_PHASE4 ? MAX_PHASE4 : phase;
@@ -411,21 +422,6 @@ export function evaluate4(pos: Position, w: Eval4Weights): number {
   const k = O_TEMPO;
   if (T) T[k] += pos.side === 0 ? 1 : -1; // tempo is reported in White's view for tracing
   return stm + ((P[2 * k] * ph + P[2 * k + 1] * (MAX_PHASE4 - ph)) / MAX_PHASE4 | 0);
-}
-
-function knightAttacks(b: Int8Array, sq: number, c: number): boolean {
-  const tg = KNT[sq], kn = P_KNIGHT | (c << 3);
-  for (let i = 0; i < tg.length; i++) if (b[tg[i]] === kn) return true;
-  return false;
-}
-function rookAttacks(b: Int8Array, sq: number, c: number): boolean {
-  const rk = P_ROOK | (c << 3);
-  const rays = RAY[sq];
-  for (let d = 0; d < 4; d++) {
-    const ray = rays[d];
-    for (let i = 0; i < ray.length; i++) { const q = b[ray[i]]; if (q) { if (q === rk) return true; break; } }
-  }
-  return false;
 }
 
 /** Drive a bare enemy king to the edge and bring our king closer when clearly winning. */

@@ -8,7 +8,7 @@
  * The UI reads from this service and never mutates money, ratings or results directly.
  */
 import { CrownDB, FederationStore } from '../storage/db';
-import { generateFederation, hashSeed } from '../federation/generator';
+import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
@@ -31,6 +31,8 @@ import {
   CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
 } from '../economy/economy';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
+import { liveTerminal, plySeed } from './schedulerEngine';
+import { sampleResult } from '../federation/resultModel';
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
@@ -881,6 +883,150 @@ export class FederationService {
     });
   }
 
+  // ------------------------------------------------------------------ v0.9 live scheduler (scheduled slate games)
+  /** Scheduled live games of the current round that are still being played. */
+  activeScheduled(): LiveGame[] {
+    const s = this.state;
+    if (!s) return [];
+    return [...s.liveGames.values()].filter(g => g.kind === 'scheduled' && g.status === 'live' && g.season === s.world.season && g.round === s.world.round);
+  }
+
+  /** Background fixtures of the current round in the order the scheduler promotes them (deterministic for a round:
+   *  your own circuit, then the Swiss events, then the leagues from the Crown Division down; higher public rating
+   *  sum first; ties by event and ids). */
+  slateCandidates(): [string, string, string][] {
+    const s = this.state, rec = this.currentRound();
+    if (!s || !rec || rec.status !== 'open') return [];
+    const home = `league:${s.world.player.region}:${s.world.player.division}`;
+    const rating = (id: string) => s.competitors.get(id)?.rating ?? 0;
+    const pri = (e: string) => (e === home ? 0 : e === 'open' || e === 'challenger' ? 1 : 2 + Number(e.split(':')[2] ?? 9));
+    return rec.abstract.filter(a => a[3] === null).map(a => [a[0], a[1], a[2]] as [string, string, string])
+      .sort((a, b) => pri(a[0]) - pri(b[0]) || (rating(b[1]) + rating(b[2])) - (rating(a[1]) + rating(a[2])) || a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[2].localeCompare(b[2]));
+  }
+
+  /**
+   * Promote up to `count` background fixtures of the open round to scheduled live games (one commit). A promoted
+   * fixture keeps its pairing; its result will come from the engine game, or — if the round closes first — from
+   * exactly the tier-3 draw it would have had anyway. Never touches the player's games, featured games or markets.
+   * `maxPerRound` bounds how many fixtures of one round are ever promoted.
+   */
+  async startSlate(count: number, maxPerRound = 64): Promise<LiveGame[]> {
+    if (!this.state || count <= 0) return [];
+    return this.run(async () => {
+      const st = this.clone();
+      const key = `${st.world.season}:${st.world.round}`;
+      const rec0 = st.rounds.get(key);
+      if (!rec0 || rec0.status !== 'open') return [];
+      const promoted = rec0.fixtures.filter(f => f.slate).length;
+      const n = Math.min(count, maxPerRound - promoted);
+      if (n <= 0) return [];
+      const cands = this.slateCandidates().slice(0, n);
+      if (!cands.length) return [];
+      const rec = structuredClone(rec0);
+      const out: LiveGame[] = [];
+      const at = this.now();
+      for (const [event, white, black] of cands) {
+        const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black && a[3] === null);
+        if (idx < 0) continue;
+        rec.abstract.splice(idx, 1);
+        const id = `${rec.season}:${rec.round}:${event}:s-${white}-${black}`;
+        rec.fixtures.push({ id, season: rec.season, round: rec.round, event, white, black, result: null, tier: 2, gameId: null, slate: true });
+        const lg: LiveGame = { id, fixtureId: id, season: rec.season, round: rec.round, seed: hashSeed(st.world.seed, 'featured', id), moves: [], status: 'live', startedAt: at, marketId: null, points: [], kind: 'scheduled', lastMoveAt: at };
+        st.liveGames.set(id, lg);
+        out.push(lg);
+      }
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec], liveGames: out }, { season: st.world.season, round: st.world.round });
+      return out;
+    }, 'scheduler');
+  }
+
+  /** Everything an engine needs to compute the next move of a scheduled game (read from committed state). */
+  scheduledRequest(fixtureId: string): { moves: string[]; ply: number; profile: ReturnType<typeof profileForStrength>; style: StyleId; seed: number } | null {
+    const s = this.state;
+    const lg = s?.liveGames.get(fixtureId);
+    if (!s || !lg || lg.kind !== 'scheduled' || lg.status !== 'live') return null;
+    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
+    if (!f || f.result !== null) return null;
+    const side = s.competitors.get(lg.moves.length % 2 === 0 ? f.white : f.black)!;
+    return { moves: lg.moves.map(m => m.ccn), ply: lg.moves.length, profile: profileForStrength(side.latent, FEATURED_NODE_CAP), style: side.style, seed: plySeed(lg.seed, lg.moves.length) };
+  }
+
+  /**
+   * Commit one engine move of a scheduled game, computed outside the command lock by a scheduler worker for ply
+   * `expectPly`. Stale results (the game moved on, ended, or the round closed) are discarded, never applied twice.
+   * At the end of the game the result, game record and fixture are committed with the move (settlement path of
+   * featured games; there is no market). `fastForward` marks moves computed during reopen catch-up.
+   */
+  async scheduledStep(fixtureId: string, expectPly: number, mv: { ccn: string; score: SelfplayMove['score']; depth: number; nodes: number; ms: number }, fastForward = false): Promise<{ applied: boolean; done: boolean; game?: WorldGame }> {
+    if (!this.state) return { applied: false, done: false };
+    return this.run(async () => {
+      const st = this.clone();
+      const lg0 = st.liveGames.get(fixtureId);
+      const rec0 = st.rounds.get(`${st.world.season}:${st.world.round}`);
+      const f0 = rec0?.fixtures.find(x => x.id === fixtureId);
+      if (!lg0 || lg0.kind !== 'scheduled' || lg0.status !== 'live' || !f0 || f0.result !== null || lg0.moves.length !== expectPly) return { applied: false, done: false };
+      const [{ Position }, { parseLegalCcn, moveToCcn, moveToSan }] = await Promise.all([import('../rules/position'), import('../rules/notation')]);
+      const pos = Position.fromFen(START_FEN);
+      for (const m of lg0.moves) pos.makeMove(parseLegalCcn(pos, m.ccn));
+      const m = parseLegalCcn(pos, mv.ccn);
+      if (m < 0 || !pos.legalMoves().includes(m)) throw new Error('Engine produced an illegal move');
+      const lg: LiveGame = structuredClone(lg0);
+      const san = moveToSan(pos, m);
+      pos.makeMove(m);
+      lg.moves.push({ ccn: moveToCcn(m), san, fen: pos.toFen(), score: mv.score, depth: mv.depth, nodes: mv.nodes, ms: mv.ms });
+      lg.lastMoveAt = this.now();
+      if (fastForward) lg.resolution = 'fast-forwarded';
+      const end = liveTerminal(pos, lg.moves.length);
+      if (!end) {
+        st.liveGames.set(fixtureId, lg);
+        await this.commit(st, [], { liveGames: [lg] }, { season: st.world.season, round: st.world.round });
+        return { applied: true, done: false };
+      }
+      lg.status = 'done';
+      lg.resolution = lg.resolution ?? 'simulated';
+      const w = st.competitors.get(f0.white)!, b = st.competitors.get(f0.black)!;
+      const posted: Journal[] = [];
+      const fin = await this.finishFeaturedIn(st, posted, fixtureId, lg.moves, end.result, end.termination, lg.resolution === 'fast-forwarded' ? 'fast-forwarded' : 'scheduled-live', lg.seed, [profileForStrength(w.latent, FEATURED_NODE_CAP).id, profileForStrength(b.latent, FEATURED_NODE_CAP).id]);
+      const ff = fin.rec.fixtures.find(x => x.id === fixtureId)!;
+      ff.resolution = lg.resolution;
+      st.liveGames.set(fixtureId, lg);
+      await this.commit(st, posted, { liveGames: [lg], rounds: [fin.rec], worldGames: [fin.game], markets: fin.markets, positions: fin.positions, plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      return { applied: true, done: true, game: fin.game };
+    }, 'scheduler');
+  }
+
+  /** Resolve scheduled games abstractly (labelled; no game record). Used by reopen catch-up beyond its bound. */
+  async resolveScheduledAbstract(fixtureIds: string[], note: string): Promise<number> {
+    if (!this.state || !fixtureIds.length) return 0;
+    return this.run(async () => {
+      const st = this.clone();
+      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const lgs = this.abstractSlate(st, rec, fixtureIds, note);
+      if (!lgs.length) return 0;
+      settleRound(this.ctxOf(st, await this.playerRating()), rec);
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec], liveGames: lgs, plans: [st.plan] }, { season: st.world.season, round: st.world.round });
+      return lgs.length;
+    }, 'scheduler');
+  }
+
+  /** Abstract resolution of unfinished slate fixtures in a working round record: the exact tier-3 draw of the
+   *  pairing (same seed and formula as resolveAbstract), so a promoted fixture never changes the result it would
+   *  otherwise have had. Partial moves stay in the live-game record but no replay (WorldGame) is created. */
+  private abstractSlate(st: FedState, rec: RoundRecord, fixtureIds: string[] | null, note: string): LiveGame[] {
+    const out: LiveGame[] = [];
+    for (const f of rec.fixtures) {
+      if (!f.slate || f.result !== null || (fixtureIds && !fixtureIds.includes(f.id))) continue;
+      const u = rng01(hashSeed(st.world.seed, 'result', rec.season, rec.round, f.event, f.white, f.black))();
+      f.result = sampleResult(st.competitors.get(f.white)!.latent, st.competitors.get(f.black)!.latent, u);
+      f.resolution = 'abstract';
+      const lg0 = st.liveGames.get(f.id);
+      if (lg0) { const lg = { ...lg0, status: 'done' as const, resolution: 'abstract' as const, note }; st.liveGames.set(f.id, lg); out.push(lg); }
+    }
+    return out;
+  }
+
   // ------------------------------------------------------------------ round advance
   /** Advance the world by one round. Player fixtures must be played or forfeited; featured games are played in the background first. */
   async advanceRound(): Promise<ProcessedRound> {
@@ -895,6 +1041,8 @@ export class FederationService {
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       const rec = structuredClone(st.rounds.get(`${expect.season}:${expect.round}`)!);
+      // scheduled live games still in progress when the round closes take their tier-3 draw (labelled abstract)
+      const slateClosed = this.abstractSlate(st, rec, null, 'The round closed before this game finished.');
       const seasonRounds = [...st.rounds.values()].filter(r => r.season === expect.season && r.id !== rec.id);
       const posted: Journal[] = [];
       const plansChanged: SeasonPlan[] = [];
@@ -1055,7 +1203,7 @@ export class FederationService {
       st.rounds.set(opened.rec.id, opened.rec);
       openSeasonMarkets(ops); // new season: lists all families; otherwise only fills gaps within their windows
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts, liveGames: slateClosed }, expect);
       return res;
     });
   }
