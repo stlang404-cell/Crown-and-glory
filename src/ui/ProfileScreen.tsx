@@ -22,6 +22,9 @@ import { fmtPlayedLike } from './PlayedLikeCard';
 import { Trophy } from './Emblem';
 import { TROPHY_FOR } from '../heraldry/catalog';
 import { titleKind } from './HallScreen';
+import { Elo, RatingChangeLine } from './CareerElo';
+import { LegacyCustomise } from './TrophyHall';
+import { CAREER_ELO_NOTE, displayCareerElo, fmtCareerElo, fmtInt, ratingChange } from '../ratings/display';
 
 const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
 
@@ -58,8 +61,8 @@ export function ProfileScreen() {
   const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
   const win = window_ === 'all' ? ev : ev.slice(-+window_);
   const points = [
-    ...(win.length && win[0].sequence === 1 ? [{ at: win[0].at, rating: win[0].before.rating, rd: win[0].before.rd, label: 'Initial rating' }] : []),
-    ...win.map(e => ({ at: e.at, rating: e.after.rating, rd: e.after.rd, label: `#${e.sequence} ${e.score === 1 ? 'W' : e.score === 0 ? 'L' : 'D'} vs ${e.opponent.name}: ${Math.round(e.after.rating)}` })),
+    ...(win.length && win[0].sequence === 1 ? [{ at: win[0].at, rating: displayCareerElo(win[0].before.rating), rd: win[0].before.rd, label: 'Initial career Elo' }] : []),
+    ...win.map(e => ({ at: e.at, rating: displayCareerElo(e.after.rating), rd: e.after.rd, label: `#${e.sequence} ${e.score === 1 ? 'W' : e.score === 0 ? 'L' : 'D'} vs ${e.opponent.name}: ${fmtInt(displayCareerElo(e.after.rating))}` })),
   ];
   const rankChanges = ev.filter(e => e.rankBefore !== e.rankAfter);
   const finished = games.filter(g => g.status === 'finalized');
@@ -85,20 +88,21 @@ export function ProfileScreen() {
         {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
-        <div className="panel stat"><span className="k">Rating ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v" data-testid="current-rating">{Math.round(s.rating)}</span><span className="small muted">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span></div>
+        <div className="panel stat" title={CAREER_ELO_NOTE}><span className="k">Career Elo ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v mono" data-testid="current-rating">{fmtInt(displayCareerElo(s.rating))}</span><span className="small muted">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span>{ev.length > 0 && <RatingChangeLine before={ev[ev.length - 1].before.rating} after={ev[ev.length - 1].after.rating} className="small" />}</div>
         <div className="panel stat" data-testid="passport-rating-title"><span className="k">Rating Title</span><span className="v row" style={{ fontSize: '1.15rem', gap: 8 }}><Emblem spec={insigniaSpec(titleFor(s.rating))} size="md" title={`${titleFor(s.rating).name} insignia`} />{titleFor(s.rating).name}</span><span className="small muted">{prov ? 'Provisional rating · ' : ''}Changes with your rating; one title every 100 points. Federation titles are earned separately and kept for good.</span></div>
         <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
-        <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v" style={{ fontSize: '1.3rem' }}>{s.peak === null ? 'Not yet' : `${Math.round(s.peak)} / ${Math.round(s.lowest ?? s.peak)}`}</span><span className="small muted">{s.peak === null ? `Counts once your rating is established (20 rated games, ±100); ${Math.max(0, 20 - s.games)} games to go` : 'Established ratings only'}</span></div>
+        <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v mono" style={{ fontSize: '1.3rem' }} data-testid="career-peak">{s.peak === null ? 'Not yet' : `${fmtInt(displayCareerElo(s.peak))} / ${fmtInt(displayCareerElo(s.lowest ?? s.peak))}`}</span><span className="small muted">{s.peak === null ? `Counts once your rating is established (20 rated games, ±100); ${Math.max(0, 20 - s.games)} games to go` : 'Established ratings only'}</span></div>
       </div>
       <div className="panel">
-        <div className="panel-title"><h2>Rating History</h2>
+        <div className="panel-title"><h2>Career Elo History</h2>
           <div className="seg" role="group" aria-label="Window">{(['10', '30', '100', 'all'] as const).map(w => <button key={w} aria-pressed={window_ === w} onClick={() => setWindow(w)}>{w === 'all' ? 'All' : `Last ${w}`}</button>)}</div>
         </div>
         <RatingChart points={points} />
-        <p className="small muted">Game ratings, not FIDE ratings. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
+        <p className="small muted">Career Elo is your Glicko-2 rating on the Crown scale (engine level L1 = 800), not a FIDE rating. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
         <details className="small muted"><summary>Details</summary>Glicko-2: start 1500 ±350, τ = 0.5, one rated game per rating period. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.</details>
       </div>
       <InsigniaCollection events={events.filter(e => e.pool === 'rapid')} />
+      <LegacyCustomise />
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
           <h3>By Time Control</h3>
@@ -121,10 +125,10 @@ export function ProfileScreen() {
               <tbody>
                 {[...ev].reverse().map(e => (
                   <tr key={e.id} className="clickable" title={explainEvent(e)} onClick={() => go({ name: 'analysis', gameId: e.gameId })} data-testid="rating-event">
-                    <td>{e.sequence}</td><td>{new Date(e.at).toLocaleDateString()}</td><td>{e.opponent.name} ({Math.round(e.opponent.rating)})</td>
+                    <td>{e.sequence}</td><td>{new Date(e.at).toLocaleDateString()}</td><td>{e.opponent.name} (<Elo rating={e.opponent.rating} rd={e.opponent.rd} />)</td>
                     <td>{e.score}</td><td>{(e.expected * 100).toFixed(0)}%</td>
-                    <td>{Math.round(e.before.rating)} ±{Math.round(e.before.rd)}</td><td>{Math.round(e.after.rating)} ±{Math.round(e.after.rd)}</td>
-                    <td style={{ color: e.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>{e.delta >= 0 ? '+' : ''}{e.delta.toFixed(1)}</td>
+                    <td className="mono">{fmtCareerElo(e.before.rating, { rd: e.before.rd })}</td><td className="mono">{fmtCareerElo(e.after.rating, { rd: e.after.rd })}</td>
+                    <td className="mono" style={{ color: e.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>{ratingChange(e.before.rating, e.after.rating).deltaText}</td>
                     <td className="hide-sm small">{e.rankBefore === e.rankAfter ? e.rankAfter : `${e.rankBefore} → ${e.rankAfter}`}</td>
                   </tr>
                 ))}
@@ -183,9 +187,9 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
     <>
       <div className="grid-3" style={{ marginTop: 14 }}>
         <div className="panel stat"><span className="k">Best Accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>Open Game</button>}</div>
-        <div className="panel stat"><span className="k">Strongest Win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${Math.round(rec.strongestWin.rating)})` : '—'}</span></div>
+        <div className="panel stat"><span className="k">Strongest Win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${fmtInt(displayCareerElo(rec.strongestWin.rating))})` : '—'}</span></div>
         <div className="panel stat"><span className="k">Longest Win Streak</span><span className="v">{rec.longestWinStreak}</span></div>
-        <div className="panel stat"><span className="k">Peak Rating</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${Math.round(rec.peakRating.rating)} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
+        <div className="panel stat"><span className="k">Peak Rating</span><span className="v mono" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${fmtInt(displayCareerElo(rec.peakRating.rating))} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
@@ -199,7 +203,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
           <h3>Memorable Moves &amp; Greatest Wins</h3>
           {rec.memorable.length === 0 && greatest.length === 0 ? <p className="muted small">Your Great and Brilliant moves and your best wins appear here once you play and analyse games.</p> : null}
           {rec.memorable.slice(0, 6).map(m => <div key={`${m.gameId}-${m.ply}`} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: m.gameId, ply: m.ply })}>{m.grade === 'brilliant' ? '!!' : '!'} {m.san} (move {Math.ceil(m.ply / 2)})</button></div>)}
-          {greatest.map(({ g, r }) => <div key={g.id} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: g.id })}>Win vs {oppName(g)} ({Math.round(r)}) · {new Date(g.startedAt).toLocaleDateString()}</button></div>)}
+          {greatest.map(({ g, r }) => <div key={g.id} className="small"><button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: g.id })}>Win vs {oppName(g)} ({fmtInt(displayCareerElo(r))}) · {new Date(g.startedAt).toLocaleDateString()}</button></div>)}
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
@@ -220,10 +224,16 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
         </div>
         <table><thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th className="hide-sm">Time Control</th><th>Rating</th></tr></thead>
           <tbody>{list.slice(0, 50).map(g => { const e = evBy.get(g.id); return (
-            <tr key={g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: g.id })}><td>{new Date(g.startedAt).toLocaleDateString()}</td><td>{oppName(g)}</td><td>{resultText(g)}</td><td className="hide-sm">{g.timeControl.label}</td><td>{e ? `${Math.round(e.after.rating)} (${e.delta >= 0 ? '+' : ''}${e.delta.toFixed(1)})` : 'Unrated'}</td></tr>); })}</tbody></table>
+            <tr key={g.id} className="clickable" onClick={() => go({ name: 'analysis', gameId: g.id })}><td>{new Date(g.startedAt).toLocaleDateString()}</td><td>{oppName(g)}</td><td>{resultText(g)}</td><td className="hide-sm">{g.timeControl.label}</td><td className="mono">{e ? `${fmtInt(displayCareerElo(e.after.rating))} (${ratingChange(e.before.rating, e.after.rating).deltaText})` : 'Unrated'}</td></tr>); })}</tbody></table>
         {list.length > 50 && <p className="small muted">Showing 50 of {list.length}. Open the Library to see them all.</p>}
       </div>
-      <PlayedLikeHistory games={finished} reports={reports} />
+      {/* ===== PACKAGE H SLOT — Played Like Performance Elo =====
+          Package H (Played Like Performance Elo) owns this section: its per-game records and summary replace the
+          contents of this slot. Package I (legacy header / career Elo) deliberately does not build it. */}
+      <section data-testid="played-like-slot" aria-label="Played Like Performance Elo">
+        <PlayedLikeHistory games={finished} reports={reports} />
+      </section>
+      {/* ===== END PACKAGE H SLOT ===== */}
     </>
   );
 }

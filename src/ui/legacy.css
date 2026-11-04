@@ -1,0 +1,41 @@
+/* v0.11 legacy header, Trophy Hall and career Elo (package I). The header is in the page flow: no fixed position,
+   no fixed height, no inner scroller — page scrolling on iPhone is untouched. */
+.legacy-header { position: relative; overflow: hidden; border-color: color-mix(in srgb, var(--legacy-accent, var(--accent)) 35%, var(--line-soft));
+  background: color-mix(in srgb, var(--panel) 90%, var(--legacy-accent, var(--accent)) 10%); }
+.legacy-banner-strip { position: absolute; left: 0; right: 0; top: 0; height: 5px; background: repeating-linear-gradient(135deg, var(--legacy-banner-a) 0 16px, var(--legacy-banner-b) 16px 20px); }
+.legacy-header .id-name { font-size: var(--fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.legacy-header .id-rating .elo { color: var(--text); font-weight: 600; }
+.legacy-header .id-elo-k { font-size: var(--fs-xs); color: var(--muted); }
+.legacy-trophy-row { display: flex; gap: 4px; align-items: center; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; min-height: 28px; }
+.legacy-trophy-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-xs); }
+.rating-change { font-size: var(--fs-md); }
+.rating-change .pos, .trophy-hall .pos { color: var(--positive); }
+.rating-change .neg { color: var(--negative); }
+/* Trophy Hall */
+.trophy-hall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--sp-2); }
+.trophy-card { display: flex; gap: var(--sp-3); align-items: flex-start; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); min-width: 0; }
+.trophy-card.held { border-color: var(--accent-line, var(--line)); background: color-mix(in srgb, var(--panel) 90%, var(--accent) 10%); }
+.trophy-card.locked .trophy-art { filter: grayscale(1) opacity(.35); }
+.trophy-card-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.trophy-art { flex: none; }
+.trophy-ceremony { display: flex; gap: var(--sp-4); align-items: center; flex-wrap: wrap; margin: 0 0 var(--sp-4); padding: 12px 14px; border: 1px solid var(--accent-line, var(--line)); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow-sm); animation: trophy-in 260ms var(--ease); }
+.trophy-ceremony .trophy-art { animation: trophy-rise 420ms var(--ease); }
+.trophy-ceremony-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+@keyframes trophy-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes trophy-rise { from { transform: translateY(6px); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .trophy-ceremony, :root:not([data-motion="full"]) .trophy-ceremony .trophy-art { animation: none; } }
+:root[data-motion="reduce"] .trophy-ceremony, :root[data-motion="reduce"] .trophy-ceremony .trophy-art { animation: none; }
+.legacy-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.legacy-choice { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: var(--fs-sm); max-width: 100%; text-align: left; }
+.legacy-choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, var(--hover)); }
+.legacy-choice:disabled { opacity: .45; cursor: not-allowed; }
+.legacy-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
+.legacy-slot { border-style: dashed; }
+@media (max-width: 760px) {
+  /* safe areas: the app is drawn under a translucent status bar on iPhone (viewport-fit=cover) */
+  .main { padding-top: max(14px, calc(env(safe-area-inset-top) + 8px)); padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+}
+@media (max-width: 700px) {
+  .legacy-header { padding-top: 10px; }
+  .legacy-header .id-stats.open .legacy-trophies, .legacy-header .id-stats.open .legacy-showcase { flex-basis: 100%; }
+}

@@ -8,6 +8,7 @@ import { AnalysisScreen } from './AnalysisScreen';
 import { AnalysisPicker } from './AnalysisPicker';
 import { ScreenBoundary } from './ScreenBoundary';
 import { IdentityBanner } from './IdentityBanner';
+import { TrophyCeremony } from './TrophyHall';
 import { ReplayLibrary } from './ReplayLibrary';
 import { LibraryScreen } from './LibraryScreen';
 import { ProfileScreen } from './ProfileScreen';
@@ -151,6 +152,7 @@ export function App({ services }: { services: AppServices }) {
           <UpdateNotice />
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
           {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="banner" screen="banner" onHome={() => go({ name: 'play' })}><IdentityBanner /></ScreenBoundary>}
+          {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="trophy-ceremony" screen="trophy-ceremony" onHome={() => go({ name: 'play' })}><TrophyCeremony /></ScreenBoundary>}
           <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
             {view.name === 'dashboard' && <DashboardScreen />}
             {view.name === 'play' && <PlayScreen />}

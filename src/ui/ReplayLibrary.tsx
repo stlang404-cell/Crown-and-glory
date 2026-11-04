@@ -4,6 +4,7 @@
  * market moves and favourites (bookmark records, backed up with the career). Opening a row goes to the Replay &
  * Analysis Center for that game: Game Review for the player's games, the Arena replay for federation games.
  */
+import { fmtCareerElo } from '../ratings/display';
 import { useEffect, useMemo, useState } from 'react';
 import { useApp, useServices } from './App';
 import { eventName } from '../app/federation';
@@ -92,7 +93,7 @@ export function ReplayLibrary() {
             {shown.map(r => (
               <li key={r.id} className="replay-row" data-testid="replay-row" data-kind={r.kind} data-id={r.id}>
                 <button className="replay-open" onClick={() => open(r)}>
-                  <span className="replay-players"><strong>{r.white}</strong>{r.whiteRating !== null ? <span className="mono muted"> {Math.round(r.whiteRating)}</span> : null} – <strong>{r.black}</strong>{r.blackRating !== null ? <span className="mono muted"> {Math.round(r.blackRating)}</span> : null}</span>
+                  <span className="replay-players"><strong>{r.white}</strong>{r.whiteRating !== null ? <span className="mono muted"> {fmtCareerElo(r.whiteRating)}</span> : null} – <strong>{r.black}</strong>{r.blackRating !== null ? <span className="mono muted"> {fmtCareerElo(r.blackRating)}</span> : null}</span>
                   <span className="replay-meta small muted">{r.event}{r.stage ? ` · ${r.stage}` : ''}{r.season ? ` · S${r.season} R${r.round}` : ''} · {Math.ceil(r.plies / 2)} moves · {r.at.slice(0, 10)}</span>
                   <span className="replay-tags">
                     <span className="chip mono">{r.result}</span>

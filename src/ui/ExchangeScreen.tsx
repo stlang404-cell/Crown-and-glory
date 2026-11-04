@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { eventName } from '../app/federation';
@@ -415,7 +416,7 @@ function MatchResearch({ m }: { m: Market }) {
           <Portrait seed={c.portraitSeed} size={44} />
           <div style={{ flex: 1 }}>
             <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button> <span className="muted small">({i === 0 ? 'White' : 'Black'})</span>
-            <div className="small">{Math.round(c.rating)} ±{Math.round(c.rd)} · form <span className="mono">{c.form || '—'}</span> · {c.stats.w}–{c.stats.d}–{c.stats.l} · {divisionLabel(c.division)}, {REGION_NAMES[c.region]}</div>
+            <div className="small">{fmtCareerElo(c.rating, { rd: c.rd })} · form <span className="mono">{c.form || '—'}</span> · {c.stats.w}–{c.stats.d}–{c.stats.l} · {divisionLabel(c.division)}, {REGION_NAMES[c.region]}</div>
             <div className="small muted">Style: {isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'}{c.titles.length ? ` · ${c.titles.length} ${c.titles.length === 1 ? 'title' : 'titles'}` : ''}</div>
           </div>
         </div>

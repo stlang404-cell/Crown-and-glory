@@ -1,4 +1,5 @@
 import { CONTEMPORARY_DISCLOSURE, isContemporaryId, shownPersona } from '../federation/rosterPersonas';
+import { fmtCareerElo } from '../ratings/display';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
@@ -17,6 +18,8 @@ import { Position } from '../rules/position';
 import { squareName } from '../rules/types';
 import type { RatingEvent, PoolState } from '../ratings/ledger';
 import { explainEvent } from '../ratings/ledger';
+import { ratingChange } from '../ratings/display';
+import { RatingChangeLine } from './CareerElo';
 import type { EngineScore } from '../analysis/types';
 import { formatScore } from './Charts';
 import type { AssistCandidate } from '../engine/protocol';
@@ -135,7 +138,7 @@ export function PlayScreen() {
                     <div className="small muted">{o.club} · {opponentProfile(o).description}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? Math.round(cal.rating) : '—'}</div>
+                    <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? fmtCareerElo(cal.rating) : '—'}</div>
                     <div className="small muted">{cal ? `±${Math.round(cal.rd)}` : 'not yet rated'}</div>
                   </div>
                 </button>
@@ -189,7 +192,7 @@ export function PlayScreen() {
           </div>
           {pool && mode === 'rated' && ratedAllowed && (
             <div className="notice">
-              Your {poolFor(tc)} rating: <strong>{Math.round(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). It becomes more certain as you play more rated games.
+              Your {poolFor(tc)} rating: <strong>{fmtCareerElo(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). It becomes more certain as you play more rated games.
             </div>
           )}
           <button className="btn primary" style={{ width: '100%', fontSize: '1.05rem' }} onClick={start} disabled={services.readOnly}>
@@ -436,7 +439,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
         name={<>{shownName} {!isHuman && <span className="chip gold">{p.engine?.profile ? (p.engine.profileId.startsWith('L0') ? p.engine.profileId : 'Federation') : `L${p.engine?.level}`}</span>}{sp && <> <span className="chip" data-testid="opponent-persona" title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Fictional persona. ${CONTEMPORARY_DISCLOSURE}`}>Fictional Persona</span></>}</>}
         meta={<>
-          {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+          {p.rating !== null ? `${fmtCareerElo(p.rating, { rd: p.rd })}` : isHuman ? 'Unrated' : 'Not yet rated'}
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
           {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
         </>}
@@ -447,7 +450,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   };
 
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
-  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? fmtCareerElo(p.rating) : null);
   const budgetMs = opp.engine?.config?.maxTimeMs;
   const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
     : thinking && opp.engine?.level === MAX_LEVEL && budgetMs ? `Thinking · up to ${budgetMs / 1000} s` : thinking ? 'Thinking…' : 'Opponent to Move';
@@ -586,8 +589,9 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         <div className="muted">{g.result} · {g.termination ? TERMINATION_LABEL[g.termination] : ''} · vs {opp.name}</div>
         {e ? (
           <div>
-            <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{e.delta >= 0 ? '+' : ''}{e.delta.toFixed(1)}</div>
-            <div>{e.pool[0].toUpperCase() + e.pool.slice(1)} rating {Math.round(e.before.rating)} → <strong>{Math.round(e.after.rating)}</strong> (±{Math.round(e.after.rd)}){e.provisionalAfter ? ' · provisional' : ''}</div>
+            <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{ratingChange(e.before.rating, e.after.rating).deltaText}</div>
+            <div className="small muted">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo{e.provisionalAfter ? ' · provisional' : ''} · ±{Math.round(e.after.rd)}</div>
+            <RatingChangeLine before={e.before.rating} after={e.after.rating} />
             <p className="small muted">{explainEvent(e)}</p>
           </div>
         ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game: saved to your Library, no rating change.'}</p>}

@@ -24,13 +24,16 @@ export interface BackupBundle {
   counts: { games: number; ratingEvents: number; reports: number };
   payloadSha256: string;
   payload: { games: GameRecord[]; ratingEvents: RatingEvent[]; ratingState: PoolState[]; reports: AnalysisReport[]; attempts?: { id: string }[]; trainingRuns?: { id: string }[]; bookmarks?: { id: string }[]; federation?: Record<string, unknown[]>;
-    /** v0.9: Vault unlocks/notices (ach:, achtoast:, vault:) and Grimoire progress (grim:) from the meta store. Optional: older backups have none. */
+    /** v0.9: Vault unlocks/notices (ach:, achtoast:, vault:) and Grimoire progress (grim:) from the meta store; v0.11 adds trophies
+     *  and legacy customisation (trophy:, trophyseen:, legacy:). Optional: older backups have none. */
     progress?: { key: string; value: unknown }[] };
 }
 
 /** Meta-store prefixes carried in backups. */
-export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:'] as const;
-const CAREER_ONLY = ['ach:', 'achtoast:', 'vault:'];
+export const PROGRESS_PREFIXES = ['ach:', 'achtoast:', 'vault:', 'grim:', 'trophy:', 'trophyseen:', 'legacy:'] as const;
+/** v0.11 (package I): trophies (`trophy:`), ceremony markers (`trophyseen:`) and the header customisation and back-fill
+ *  marker (`legacy:`) belong to the career that earned them, like Vault unlocks. */
+const CAREER_ONLY = ['ach:', 'achtoast:', 'vault:', 'trophy:', 'trophyseen:', 'legacy:'];
 
 export async function exportBundle(db: CrownDB, appVersion: string): Promise<BackupBundle> {
   const d = await db.dump();

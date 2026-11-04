@@ -10,6 +10,7 @@ import { achievementsOf } from '../app/achievements';
 import { rivalriesOf } from '../app/rivalries';
 import type { WorldGame } from '../app/federation';
 import { usePlayerGames } from './RivalsScreen';
+import { TrophyHall } from './TrophyHall';
 
 /** Which tournament a recorded title belongs to (titles are recorded strings from the season engine). */
 export function titleKind(title: string): TournamentId {
@@ -43,7 +44,7 @@ export function HallScreen() {
     const titled = [...st.competitors.values()].filter(c => c.fedTitle && FED_TITLES.indexOf(c.fedTitle) >= 2).sort((a, b) => FED_TITLES.indexOf(b.fedTitle!) - FED_TITLES.indexOf(a.fedTitle!) || b.rating - a.rating).slice(0, 24);
     return { champs: [...champs].sort((a, b) => b[0] - a[0]), events: events.sort((a, b) => b.season - a.season), titled };
   }, [st, services.revision]);
-  if (!st || !data) return <NeedsFederation title="Hall of Fame" />;
+  if (!st || !data) return <div><h1>Hall of Fame</h1><TrophyHall /><div style={{ marginTop: 14 }}><NeedsFederation detail="The champions, event winners and titled competitors of the Federation appear here once you found it. Your own trophies above come from your recorded results." /></div></div>;
   const p = st.world.player;
   const progress = nextTitleProgress({ norms: p.norms ?? [], peakRating: p.peakRating ?? 0, establishedPeak: p.establishedPeak ?? 0, honours: p.titles.map(t => t.title), current: p.fedTitle ?? null });
   const ach = achievementsOf(st, rivalriesOf(st, PLAYER_ID, games));
@@ -51,6 +52,8 @@ export function HallScreen() {
   return (
     <div>
       <h1>Hall of Fame</h1>
+      <TrophyHall />
+      <div style={{ marginTop: 14 }} />
       <section className="panel stack" data-testid="trophy-room">
         <div className="panel-title"><h3 style={{ margin: 0 }}>Your Trophy Room</h3>{p.fedTitle && <span className="chip gold">{p.fedTitle}</span>}</div>
         <div className="emblem-row">

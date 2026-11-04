@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { QuickMatch } from './QuickMatch';
 import { Emblem } from './Emblem';
@@ -78,7 +79,7 @@ function Player({ s }: { s: DashSide }) {
       <Emblem spec={insigniaSpec(t)} size="sm" title={`${t.name} insignia`} />
       <span className="dash-player-text">
         <strong className="dash-name">{s.name}</strong>
-        <span className="small muted"><span className="mono">{Math.round(s.rating)}</span> · {t.name}</span>
+        <span className="small muted"><span className="mono">{fmtCareerElo(s.rating)}</span> · {t.name}</span>
       </span>
     </span>
   );

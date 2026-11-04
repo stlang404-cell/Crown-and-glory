@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
@@ -58,7 +59,7 @@ export function RivalsScreen() {
                 <div className="stack" style={{ alignItems: 'center', gap: 4 }}><Portrait seed={c.portraitSeed} size={56} crown={c.titles.some(t => /Crown Champion/.test(t.title))} /><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="md" title={`${c.name}'s insignia`} /></div>
                 <div className="stack" style={{ gap: 4 }}>
                   <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}><strong>{c.name}</strong>{c.fedTitle && <span className="chip gold"><Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={c.fedTitle} /> {c.fedTitle}</span>}{f.tag === 'circle' && <span className="chip info">Your Circle</span>}{favs.has(c.id) && <span className="chip">★ Followed</span>}{c.status === 'retired' && <span className="chip">Retired</span>}</div>
-                  <div className="small"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /> {divisionLabel(c.division)} · {REGION_NAMES[c.region]} · {Math.round(c.rating)} ±{Math.round(c.rd)} · Form <span className="mono">{c.form || '—'}</span></div>
+                  <div className="small"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /> {divisionLabel(c.division)} · {REGION_NAMES[c.region]} · {fmtCareerElo(c.rating, { rd: c.rd })} · Form <span className="mono">{c.form || '—'}</span></div>
                   <div className="small"><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} /> {club.identity.name} · {c.titles.length} {c.titles.length === 1 ? 'title' : 'titles'} · Reputation {c.reputation}</div>
                   <div className="small muted">{ambitionOf(c)}</div>
                   {r ? <IntensityBar r={r} /> : <span className="small muted">You have not met yet.</span>}

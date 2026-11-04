@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { Emblem } from './Emblem';
 import { Portrait } from './Portrait';
@@ -82,7 +83,7 @@ export function QuickMatch() {
           <div className="stack" style={{ gap: 2, minWidth: 0 }}>
             <strong data-testid="qm-name">{pick.name}</strong>
             <span className="row small" style={{ gap: 6 }}><Emblem spec={insigniaSpec(t)} size="sm" title={`${t.name} insignia`} />{t.name}</span>
-            <span className="small"><span className="mono" data-testid="qm-rating">{Math.round(pick.rating)} ±{Math.round(pick.rd)}</span><span className="muted"> · {divisionLabel(pick.division)} · {REGION_NAMES[pick.region]}{rec ? ` · career ${rec.w}–${rec.d}–${rec.l}` : ''}{pick.titles.length ? ` · ${pick.titles.length} title${pick.titles.length === 1 ? '' : 's'}` : ''}</span></span>
+            <span className="small"><span className="mono" data-testid="qm-rating">{fmtCareerElo(pick.rating, { rd: pick.rd })}</span><span className="muted"> · {divisionLabel(pick.division)} · {REGION_NAMES[pick.region]}{rec ? ` · career ${rec.w}–${rec.d}–${rec.l}` : ''}{pick.titles.length ? ` · ${pick.titles.length} title${pick.titles.length === 1 ? '' : 's'}` : ''}</span></span>
           </div>
           <div className="row qm-actions" style={{ gap: 6 }}>
             <button className="btn primary" data-testid="qm-start" disabled={busy || services.readOnly} onClick={() => void start()}>{rated ? 'Start Rated Match' : 'Start Casual Match'}</button>

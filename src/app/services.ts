@@ -14,6 +14,7 @@ import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 import { VaultService } from '../vault/service';
+import { LegacyService } from '../legacy/service';
 import { LiveScheduler, detectDevice, loadLiveSettings, poolSizeFor, saveLiveSettings, type LiveSettings } from './scheduler';
 import { START_FEN } from './schedulerEngine';
 
@@ -44,6 +45,8 @@ export class AppServices {
   live!: LiveScheduler;
   /** The Sovereign Vault (permanent collectibles), evaluated from saved records after boot. */
   vault!: VaultService;
+  /** v0.11 legacy: trophies from recorded results and the identity-header customisation (src/legacy). */
+  legacy!: LegacyService;
   private listeners = new Set<Listener>();
   progress: AnalysisProgress | null = null;
   matchActive = false;
@@ -89,7 +92,8 @@ export class AppServices {
     }
     // Vault: first evaluation (and one-time backfill) after the first screen has rendered, off the boot path
     s.vault = new VaultService(s);
-    setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)); }, 800);
+    s.legacy = new LegacyService(s);
+    setTimeout(() => { void s.vault.start().catch(e => console.error('vault', e)).finally(() => s.legacy.start().catch(e => console.error('legacy', e))); }, 800);
     return s;
   }
 
