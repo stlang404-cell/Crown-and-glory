@@ -492,12 +492,12 @@ export class FederationService {
       const posted: Journal[] = [];
       const cash = st.balances.get('player:cash') ?? 0;
       if (useVoucher) {
-        if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than 100 ₵.');
+        if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than $100.');
         if (st.extra.vouchers.includes(st.world.season)) throw new Error('You have already used this season’s recovery voucher.');
         this.post(st, [voucherJournal(st.world.season, this.now())], posted);
         st.extra.vouchers.push(st.world.season);
       } else {
-        if (cash < CHALLENGER_FEE) throw new Error('You do not have enough cash for the entry fee. If you have less than 100 ₵, use a recovery voucher.');
+        if (cash < CHALLENGER_FEE) throw new Error('You do not have enough cash for the entry fee. If you have less than $100, use a recovery voucher.');
         this.post(st, [entryFeeJournal(st.world.season, this.now())], posted);
       }
       // conflict procedure: entering an event cancels its open market on the published 1/n vector first
@@ -891,7 +891,7 @@ export class FederationService {
         }
         if (res.seasonEnd.promotions.some(p => p.id === PLAYER_ID)) this.sponsor(st, 'promotion', posted, season);
         // v0.8 club sponsorship (crown-club-appeal-1): local sponsors back a well-run player club from the season's
-        // existing sponsor budget, in proportion to the club's appeal share (max 45% of 600 ₵). No new money: it is
+        // existing sponsor budget, in proportion to the club's appeal share (max 45% of $600). No new money: it is
         // paid from a pool that otherwise returns to the treasury.
         {
           const { share } = playerClubAppeal(st, season);
@@ -1035,7 +1035,7 @@ export class FederationService {
     const C = (x: number) => x * MICRO;
     const host = L.weekendSize === 8 ? C(40) : C(20), escrow = L.weekendSize === 8 ? C(80) : C(40);
     if (cash >= host + escrow) this.post(st, [{ id: `club-host:${season}`, at: this.now(), kind: 'club-hosting', memo: `Club Weekend (${L.weekendSize} players): hosting cost and prize escrow`, lines: [{ account: 'player:cash', amount: -(host + escrow) }, { account: 'sink', amount: host }, { account: `prize:${season}:club`, amount: escrow }], season }], posted);
-    // attendance revenue: each guest pays 5 ₵ if they can
+    // attendance revenue: each guest pays $5 if they can
     for (const g of guests) if ((st.balances.get(`comp:${g}`) ?? 0) >= C(5)) this.post(st, [{ id: `club-attend:${season}:${g}`, at: this.now(), kind: 'club-attendance', memo: `Club Weekend attendance (${this.name(g)})`, lines: [{ account: `comp:${g}`, amount: -C(5) }, { account: 'player:cash', amount: C(5) }], season }], posted);
   }
 

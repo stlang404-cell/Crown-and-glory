@@ -81,7 +81,7 @@ export function FinanceScreen() {
   return (
     <div>
       <h1>Finance</h1>
-      <div className="small muted" style={{ marginBottom: 12 }}>All money is fictional crowns (₵) with no real-world value.</div>
+      <div className="small muted" style={{ marginBottom: 12 }}>All money is fictional dollars ($) with no real-world value.</div>
       {msg && <div className={`notice ${msg.kind === 'warn' ? 'warn' : ''}`} role="status" style={{ marginBottom: 12 }}>{msg.text}</div>}
       <div className="panel" data-testid="networth">
         <div className="row" style={{ gap: 28, flexWrap: 'wrap' }}>
@@ -147,7 +147,7 @@ export function FinanceScreen() {
             <tbody>{journal.slice(0, 200).map(j => { const amt = j.lines.filter(l => l.account === 'player:cash').reduce((s, l) => s + l.amount, 0); return <tr key={j.id}><td className="mono">{j.season ? `S${j.season}${j.round ? ` R${j.round}` : ''}` : j.at.slice(0, 10)}</td><td>{j.memo}</td><td className={`mono ${amt >= 0 ? 'pos' : 'neg'}`}>{amt >= 0 ? '+' : ''}{fmtCrowns(amt)}</td></tr>; })}</tbody>
           </table>
         </div>
-        <details className="small muted"><summary>Details</summary>Each entry is a balanced double-entry journal in whole microcrowns ({MICRO.toLocaleString('en')} µ = 1 ₵); entries are idempotent and never edited.</details>
+        <details className="small muted"><summary>Details</summary>Each entry is a balanced double-entry journal in whole micro-dollars ({MICRO.toLocaleString('en')} µ = $1); entries are idempotent and never edited.</details>
       </div>
     </div>
   );
@@ -197,7 +197,7 @@ function Institutions() {
             <tbody>{contracts.map(c => <tr key={c.id}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: c.competitorId })}>{fed.name(c.competitorId)}</button><div className="muted">since season {c.signedSeason}{c.status === 'ended' ? ` · ended season ${c.endedSeason}` : ''}</div></td><td className="mono">{fmtCrowns(c.stipend, 0)}/season</td><td className="mono">{fmtCrowns(c.paid, 0)}</td><td className={`mono ${c.earned - c.paid >= 0 ? 'pos' : 'neg'}`}>{fmtCrowns(c.earned, 0)}</td><td>{c.status === 'active' && <button className="btn ghost small" onClick={() => act('Contract released.', () => fed.releaseContract(c.id))}>Release</button>}</td></tr>)}</tbody></table>
         )}
         <h3>Sandbox Money</h3>
-        <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox ₵ for practice markets on your own casual games. Sandbox money is separate: it never counts toward cash, net worth, profit, prestige, ratings or standings.</div>
+        <div className="small">Balance <strong className="mono" data-testid="sandbox-balance">{fmtCrowns(fed.sandboxBalance(), 2)}</strong> sandbox dollars for practice markets on your own casual games. Sandbox money is separate: it never counts toward cash, net worth, profit, prestige, ratings or standings.</div>
       </div>
     </div>
   );

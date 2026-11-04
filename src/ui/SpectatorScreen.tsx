@@ -25,7 +25,7 @@ import { GradeIcon, GRADE_LABEL, MatchHeader, MatchLayout, MoveNav, NotationList
 import { eventName, WorldGame } from '../app/federation';
 import type { SelfplayMove } from '../engine/selfplay';
 import { OUTCOMES, claimPrices, claimsOf, liquidationValue, revisionOf } from '../exchange/market';
-import { fmtCrowns } from '../exchange/ledger';
+import { fmtCrowns, fmtPrice, fmtPriceDelta } from '../exchange/ledger';
 import { TradeTicket, PriceChart, statusLabel } from './ExchangeScreen';
 import './arena.css';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
@@ -234,10 +234,10 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           return (
             <div key={i} className="arena-odd">
               <span className="arena-odd-label">{claims[i]?.label}</span>
-              <span className="arena-odd-price mono" data-testid={`live-price-${i}`}>{(x * 100).toFixed(1)}¢</span>
+              <span className="arena-odd-price mono" data-testid={`live-price-${i}`}>{fmtPrice(x)}</span>
               {d !== undefined && (
                 <span className={`arena-odd-chg mono ${dir}`}>
-                  <span aria-hidden>{dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} </span>{dir === 'flat' ? '0.0¢' : `${d > 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(1)}¢`}<span className="sr-only"> since the previous move</span>
+                  <span aria-hidden>{dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} </span>{dir === 'flat' ? '$0.000' : fmtPriceDelta(d)}<span className="sr-only"> since the previous move</span>
                 </span>
               )}
             </div>
@@ -280,7 +280,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
         </>
       ) : <p className="small muted" style={{ margin: 0 }}>You have no position in this match.</p>}
       <div className="small arena-wallet"><span>Cash <strong className="mono">{fmtCrowns(fin.cash)}</strong></span><span>Open positions <strong className="mono">{fmtCrowns(fin.positions)}</strong></span><span>Net worth <strong className="mono">{fmtCrowns(fin.netWorth)}</strong></span><span>Trading profit <strong className="mono">{fmtCrowns(fin.realized)}</strong></span></div>
-      <div className="small muted">Fictional crowns only. Official markets never list your own games, and sandbox money is separate.</div>
+      <div className="small muted">Fictional dollars only. Official markets never list your own games, and sandbox money is separate.</div>
     </div>
   );
 

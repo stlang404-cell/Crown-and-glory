@@ -21,7 +21,7 @@ export const TREASURY_TARGET = C(25_000);
 export const TREASURY_REPLENISH_CAP = C(8_000);
 export const CHALLENGER_FEE = C(25);
 export const LEAGUE_SPLIT = [0.5, 0.3, 0.2];
-/** League prize pool per circuit: 2,000 ₵ in the Crown Division down to 120 ₵ in the Open Division (geometric). */
+/** League prize pool per circuit: $2,000 in the Crown Division down to $120 in the Open Division (geometric). */
 export const leaguePool = (division: number) => C(Math.round(2000 * Math.pow(120 / 2000, (division - 1) / (DIVISIONS - 1))));
 export const OPEN_POOL = C(1_500);
 export const CHALLENGER_POOL = C(600);
@@ -42,7 +42,7 @@ export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number 
 export interface AssetType { id: string; name: string; kind: 'club' | 'analyst' | 'scouting' | 'training' | 'trophy'; price: number; bond: number; resale: number; upkeep: number; effect: string; unique: boolean }
 export const ASSETS: AssetType[] = [
   { id: 'club', name: 'Starter Chess Club', kind: 'club', price: C(500), bond: C(300), resale: 0, upkeep: C(40), unique: true,
-    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost 20 ₵, prize escrow 40 ₵, attendance 5 ₵ per guest, sponsor 30 ₵ when completed). The 300 ₵ bond is refundable when you close the club. Income comes from membership dues and local sponsors: your club attracts a share of your region\'s players and sponsorship, larger when you upgrade it, complete the Club Weekend, sponsor players and win titles. Members pay 5% of what they hold at season end, so income rises and falls with their prize money. An idle club loses money.' },
+    effect: 'Club identity and prestige; hosts the Club Weekend, a four-player knockout each season (hosting cost $20, prize escrow $40, attendance $5 per guest, sponsor $30 when completed). The $300 bond is refundable when you close the club. Income comes from membership dues and local sponsors: your club attracts a share of your region\'s players and sponsorship, larger when you upgrade it, complete the Club Weekend, sponsor players and win titles. Members pay 5% of what they hold at season end, so income rises and falls with their prize money. An idle club loses money.' },
   { id: 'analyst', name: 'Analyst Office', kind: 'analyst', price: C(300), bond: 0, resale: C(150), upkeep: C(20), unique: true,
     effect: 'Exchange research desk: full forecast breakdown (expected score, rating uncertainty, draw model), price history charts and your forecast track record. Uses public information only.' },
   { id: 'scouting', name: 'Scouting Department', kind: 'scouting', price: C(200), bond: 0, resale: C(100), upkeep: C(15), unique: true,
@@ -85,7 +85,7 @@ export function seasonStartJournals(season: number, pools: PrizePools, at: strin
 export function treasuryReplenishJournal(season: number, treasury: number, at: string): Journal | null {
   const amt = Math.min(TREASURY_REPLENISH_CAP, TREASURY_TARGET - treasury);
   if (amt <= 0) return null;
-  return j(`mint:treasury:${season}`, 'mint', `Season ${season} treasury replenishment (capped at ${TREASURY_REPLENISH_CAP / MICRO} ₵)`, [{ account: 'mint', amount: -amt }, { account: 'treasury', amount: amt }], season, 0, at);
+  return j(`mint:treasury:${season}`, 'mint', `Season ${season} treasury replenishment (capped at $${TREASURY_REPLENISH_CAP / MICRO})`, [{ account: 'mint', amount: -amt }, { account: 'treasury', amount: amt }], season, 0, at);
 }
 
 export const holderAccount = (id: string) => (id === 'player' ? 'player:cash' : `comp:${id}`);
@@ -131,7 +131,7 @@ export function upkeepJournal(a: AssetType, season: number, at: string): Journal
 /** Book value of an owned asset for net worth: refundable bond + disclosed buy-back value (if not suspended). */
 export const assetValue = (a: AssetType) => a.bond + a.resale;
 
-/** Recovery (research doc 10): when cash is below 100 ₵ the player may take one non-cash entry voucher per season. */
+/** Recovery (research doc 10): when cash is below $100 the player may take one non-cash entry voucher per season. */
 export const RECOVERY_THRESHOLD = C(100);
 export function voucherJournal(season: number, at: string): Journal {
   return j(`voucher:${season}`, 'recovery-voucher', 'Recovery voucher: Challenger Open entry paid by the federation', [{ account: 'treasury', amount: -CHALLENGER_FEE }, { account: 'sink', amount: CHALLENGER_FEE }], season, undefined, at);
@@ -161,8 +161,8 @@ export function prestige(p: { titles: { title: string }[]; promotions: number; b
   if (p.bestRating) { const r = Math.max(0, Math.round((p.bestRating - 1400) / 10)); chess += r; chessBasis.push(`Established peak rating ${Math.round(p.bestRating)} +${r}`); }
   const financialBasis: string[] = [];
   const fin = Math.max(0, Math.round(f.peakNetWorth / MICRO / 20)) + Math.max(0, Math.round(f.realizedTrading / MICRO / 10)) + 20 * f.assets;
-  financialBasis.push(`Peak net worth ${Math.round(f.peakNetWorth / MICRO)} ₵ → +${Math.round(f.peakNetWorth / MICRO / 20)}`);
-  if (f.realizedTrading > 0) financialBasis.push(`Realized trading profit ${Math.round(f.realizedTrading / MICRO)} ₵ → +${Math.round(f.realizedTrading / MICRO / 10)}`);
+  financialBasis.push(`Peak net worth $${Math.round(f.peakNetWorth / MICRO)} → +${Math.round(f.peakNetWorth / MICRO / 20)}`);
+  if (f.realizedTrading > 0) financialBasis.push(`Realized trading profit $${Math.round(f.realizedTrading / MICRO)} → +${Math.round(f.realizedTrading / MICRO / 10)}`);
   if (f.assets) financialBasis.push(`${f.assets} asset(s) owned → +${20 * f.assets}`);
   return {
     chess, chessTier: tier(chess, [[0, 'Unranked'], [50, 'Contender'], [200, 'Titled'], [500, 'Laureate'], [1000, 'Grandee']]), chessBasis,

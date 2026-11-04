@@ -111,7 +111,7 @@ export function SettingsScreen() {
           <dt>Game</dt><dd>Crown &amp; Calculation: The Six-Square Federation</dd>
           <dt>Version</dt><dd className="mono">v{APP_VERSION}</dd>
           <dt>Saves</dt><dd>Stored on this device only.</dd>
-          <dt>Money</dt><dd>Crowns are fictional and have no cash value.</dd>
+          <dt>Money</dt><dd>Federation dollars ($) are fictional and have no cash value.</dd>
           <dt>Network</dt><dd>Works fully offline. The engine, Match Analysis and the federation all run on this device. No accounts, ads or tracking.</dd>
           <dt>Artwork</dt><dd>Original pieces, pixel portraits and icons, with system fonts.</dd>
         </dl>

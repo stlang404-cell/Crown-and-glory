@@ -15,7 +15,17 @@ export class LedgerError extends Error {}
 export const isIssuance = (account: string) => account === 'mint' || account === 'sandbox:mint';
 export const crowns = (micro: number) => micro / MICRO;
 export const toMicro = (c: number) => Math.round(c * MICRO);
-export const fmtCrowns = (micro: number, digits = 2) => `${(micro / MICRO).toLocaleString('en', { minimumFractionDigits: digits, maximumFractionDigits: digits })} ₵`;
+/** Fictional money for display: integer micro-units (1,000,000 = $1) shown as dollars, sign first ("-$19.20").
+ *  v0.8 changed only the symbol (₵ → $): one unit was always one whole currency unit, so no amount is rescaled. */
+export const fmtMoney = (micro: number, digits = 2) => `${micro < 0 ? '-' : ''}$${(Math.abs(micro) / MICRO).toLocaleString('en', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+/** Signed money for changes and P&L ("+$38.75", "-$19.20"). */
+export const fmtMoneyDelta = (micro: number, digits = 2) => `${micro > 0 ? '+' : ''}${fmtMoney(micro, digits)}`;
+/** Name kept for existing call sites; identical to fmtMoney. */
+export const fmtCrowns = fmtMoney;
+/** Price of one share that pays $1 if its outcome happens (0–1): "$0.485". A price, not a probability. */
+export const fmtPrice = (p: number) => `$${p.toFixed(3)}`;
+/** Change of a share price: "+$0.006", "−$0.012". */
+export const fmtPriceDelta = (d: number) => `${d > 0 ? '+' : d < 0 ? '−' : '±'}$${Math.abs(d).toFixed(3)}`;
 
 /** Validate an entry against current balances (pure). */
 export function validateJournal(j: Journal, balance: (account: string) => number): void {

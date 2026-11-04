@@ -60,7 +60,7 @@ function openFamily(ops: MarketOps, spec: { id: string; kind: MarketKind; title:
   // so listing during the closing round itself — before any of its games — is still a valid window)
   if (st.world.round > spec.closeRound) return null;
   const b = FAMILY_B[spec.kind];
-  if ((st.balances.get('treasury') ?? 0) < subsidyMicro(b, spec.outcomes.length) + 5_000_000_000) return null; // keep a 5,000 ₵ floor for match markets
+  if ((st.balances.get('treasury') ?? 0) < subsidyMicro(b, spec.outcomes.length) + 5_000_000_000) return null; // keep a $5,000 floor for match markets
   const { market, journal } = openGenericMarket({
     id: spec.id, kind: spec.kind, sandbox: false, title: spec.title, outcomes: spec.outcomes, claims: spec.claims, model: normaliseModel(spec.model, 0.001),
     rules: RULES[spec.kind], season: st.world.season, round: st.world.round, b, at: ops.now(), ref: { ...spec.ref, closeRound: spec.closeRound },

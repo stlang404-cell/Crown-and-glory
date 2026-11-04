@@ -5,7 +5,7 @@ import { eventName } from '../app/federation';
 import { prices } from '../exchange/lmsr';
 import { quote, liquidationValue, EXCHANGE_ID, claimsOf, statesOf, claimPrices, revisionOf } from '../exchange/market';
 import type { Market, Position } from '../exchange/market';
-import { fmtCrowns, MICRO } from '../exchange/ledger';
+import { fmtCrowns, fmtPrice, MICRO } from '../exchange/ledger';
 import { wdl, NU, RESULT_MODEL_ID } from '../federation/resultModel';
 import { REGION_NAMES, divisionLabel, PLAYER_ID } from '../federation/model';
 import { STYLE_LABEL, isValidatedStyle } from '../engine/styles';
@@ -70,7 +70,7 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
           {(['markets', 'forecasts', 'traders'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{t === 'markets' ? 'Markets' : t === 'forecasts' ? 'Forecasts' : 'Traders'}</button>)}
         </div>
       </div>
-      <div className="notice" style={{ marginBottom: 12 }}>Trade on federation events you can't influence. Each share pays 1 ₵ if its outcome happens, and every market shows its rules before you trade. All crowns are fictional and can't be redeemed.</div>
+      <div className="notice" style={{ marginBottom: 12 }}>Trade on federation events you can't influence. Each share pays $1 if its outcome happens, and every market shows its rules before you trade. All money is fictional and can't be redeemed.</div>
       {tab === 'markets' && (
         <>
           <div className="grid-2">
@@ -119,7 +119,7 @@ function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) =
         <tbody>{markets.map(m => {
           const claims = claimsOf(m);
           const pr = claimPrices(m);
-          const lead = m.status === 'settled' ? (m.result !== null && m.result >= 0 ? statesOf(m)[m.result] : 'Split') : (() => { const i = pr.indexOf(Math.max(...pr)); return `${claims[i].label} ${(pr[i] * 100).toFixed(0)}¢`; })();
+          const lead = m.status === 'settled' ? (m.result !== null && m.result >= 0 ? statesOf(m)[m.result] : 'Split') : (() => { const i = pr.indexOf(Math.max(...pr)); return `${claims[i].label} ${fmtPrice(pr[i])}`; })();
           const pos = mine(m);
           return (
             <tr key={m.id} className="clickable" data-testid="market-row" data-kind={m.kind ?? 'match'} onClick={() => go({ name: 'exchange', id: m.id })}>
@@ -168,15 +168,15 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
       <div className="seg" role="group" aria-label="Side"><button aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy</button><button aria-pressed={side === 'sell'} onClick={() => setSide('sell')}>Sell</button></div>
       {claims.length <= 3
         ? <div className="seg" role="group" aria-label="Outcome">{claims.map((c, i) => <button key={c.id} aria-pressed={claim === i} onClick={() => setClaim(i)}>{c.label}</button>)}</div>
-        : <label className="small">Outcome <select value={claim} onChange={e => setClaim(+e.target.value)} aria-label="Outcome" data-testid="claim-select">{claims.map((c, i) => <option key={c.id} value={i}>{c.label} — {(claimPrices(m)[i] * 100).toFixed(1)}¢</option>)}</select></label>}
+        : <label className="small">Outcome <select value={claim} onChange={e => setClaim(+e.target.value)} aria-label="Outcome" data-testid="claim-select">{claims.map((c, i) => <option key={c.id} value={i}>{c.label} — {fmtPrice(claimPrices(m)[i])}</option>)}</select></label>}
       <label className="small">Shares <input type="number" min={1} step={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 90 }} aria-label="Shares" /></label>
       {q.ok ? (
         <table className="small"><tbody>
           <tr><td>{side === 'buy' ? 'Cost' : 'Proceeds'}</td><td className="mono">{fmtCrowns(q.ok.amount)}</td></tr>
           <tr><td>Fee (1%)</td><td className="mono">{fmtCrowns(q.ok.fee)}</td></tr>
           <tr><td><strong>{side === 'buy' ? 'You pay' : 'You receive'}</strong></td><td className="mono"><strong>{fmtCrowns(q.ok.total)}</strong></td></tr>
-          {!compact && <tr><td>Average price</td><td className="mono">{(q.ok.avgPrice * 100).toFixed(2)}¢</td></tr>}
-          <tr><td>Price moves</td><td className="mono">{(q.ok.priceBefore * 100).toFixed(1)}¢ → {(q.ok.priceAfter * 100).toFixed(1)}¢</td></tr>
+          {!compact && <tr><td>Average price</td><td className="mono">{fmtPrice(q.ok.avgPrice)}</td></tr>}
+          <tr><td>Price moves</td><td className="mono">{fmtPrice(q.ok.priceBefore)} → {fmtPrice(q.ok.priceAfter)}</td></tr>
           {side === 'buy' && <><tr><td>Max payout</td><td className="mono">{fmtCrowns(q.ok.maxPayout)}</td></tr><tr><td>Max loss</td><td className="mono">{fmtCrowns(q.ok.maxLoss)}</td></tr></>}
         </tbody></table>
       ) : <div className="small notice warn">{q.err}</div>}
@@ -267,7 +267,7 @@ function MarketScreen({ m }: { m: Market }) {
               <table className="small">
                 <thead><tr><th>Outcome</th><th>Forecast</th><th>Price</th><th>Difference</th></tr></thead>
                 <tbody>{claims.map((c, i) => ({ c, i })).sort((a, b) => (kind === 'bracket' ? 0 : cp[b.i] - cp[a.i])).map(({ c, i }) => (
-                  <tr key={c.id}><td>{c.label}{kind === 'bracket' && <div className="muted">pays 1 ₵ in paths {c.states.map(s => s + 1).join(', ')}</div>}</td><td className="mono">{pct(claimModel[i])}</td><td className="mono">{(cp[i] * 100).toFixed(1)}¢</td><td className={`mono ${claimModel[i] - cp[i] > 0.02 ? 'pos' : ''}`}>{((claimModel[i] - cp[i]) * 100).toFixed(1)}</td></tr>
+                  <tr key={c.id}><td>{c.label}{kind === 'bracket' && <div className="muted">pays $1 in paths {c.states.map(s => s + 1).join(', ')}</div>}</td><td className="mono">{pct(claimModel[i])}</td><td className="mono">{fmtPrice(cp[i])}</td><td className={`mono ${claimModel[i] - cp[i] > 0.02 ? 'pos' : ''}`}>{((claimModel[i] - cp[i]) * 100).toFixed(1)}</td></tr>
                 ))}</tbody>
               </table>
             </div>
@@ -275,9 +275,9 @@ function MarketScreen({ m }: { m: Market }) {
             <div className="small muted">Forecast: each outcome's chance from public ratings, for information only. Price: what a share costs now; it moves only when someone trades.</div>
           </div>
           <div className="panel small stack" style={{ gap: 6 }}>
-            <div><strong>Rules.</strong> {m.rules ?? 'Outcomes: White wins, draw or Black wins. Trading: until the match starts. Settlement: each winning share pays 1 ₵. Cancellation: 1/3 ₵ per share.'}</div>
+            <div><strong>Rules.</strong> {m.rules ?? 'Outcomes: White wins, draw or Black wins. Trading: until the match starts. Settlement: each winning share pays $1. Cancellation: 1/$3 per share.'}</div>
             <div>Fee: 1% on every buy and sell. You can never lose more than you pay.</div>
-            <details className="small muted"><summary>Details</summary>Priced by an automated market maker (LMSR) over {states.length} outcomes · liquidity b = {m.b} · market maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · prices from the {prices(m.q, m.b).length}-state inventory · {MICRO.toLocaleString('en')} µ = 1 ₵ · market revision {revisionOf(m)}.</details>
+            <details className="small muted"><summary>Details</summary>Priced by an automated market maker (LMSR) over {states.length} outcomes · liquidity b = {m.b} · market maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · prices from the {prices(m.q, m.b).length}-state inventory · {MICRO.toLocaleString('en')} µ = $1 · market revision {revisionOf(m)}.</details>
           </div>
           {(analyst || kind !== 'match') && <div className="panel"><h3>Price History</h3><PriceChart m={m} /></div>}
         </div>
@@ -307,7 +307,7 @@ function ConditionalTable({ m }: { m: Market }) {
   return (
     <details className="small"><summary>Implied Final Odds</summary>
       <table><thead><tr><th>Final</th><th>Combined Price</th><th>Win Chance If Both Reach the Final</th></tr></thead>
-        <tbody>{rows.map(r => <tr key={r.label}><td>{r.label}</td><td className="mono">{(r.joint * 100).toFixed(1)}¢</td><td className="mono">{r.cond === null ? '—' : pct(r.cond)}</td></tr>)}</tbody></table>
+        <tbody>{rows.map(r => <tr key={r.label}><td>{r.label}</td><td className="mono">{fmtPrice(r.joint)}</td><td className="mono">{r.cond === null ? '—' : pct(r.cond)}</td></tr>)}</tbody></table>
       <div className="muted">This is a ratio of two prices, not a price you can trade. You trade the combined outcome, which pays nothing if the two players don't meet in the final.</div>
     </details>
   );

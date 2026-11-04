@@ -21,7 +21,7 @@ import { motifsForLine, threatsAgainst, MOTIF_LABEL } from '../academy/motifs';
 import { parseLegalCcn } from '../rules/notation';
 import { FederationService } from '../app/federation';
 import { claimsOf, claimPrices, statesOf } from '../exchange/market';
-import { fmtCrowns } from '../exchange/ledger';
+import { fmtCrowns, fmtPrice } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
 import { playOnce, playSound } from './sound';
 
@@ -616,13 +616,13 @@ function SandboxPanel({ rec }: { rec: GameRecord }) {
     <div className="panel stack" data-testid="sandbox-panel" style={{ padding: 10 }}>
       <div className="row small"><strong>Sandbox Exchange</strong><span className="chip">Practice Money · {fmtCrowns(fed.sandboxBalance(), 0)}</span>{m && <span className={`chip ${m.status === 'open' ? 'pos' : 'info'}`}>{({ open: 'Trading Open', closed: 'Trading Closed', settled: 'Market Settled', cancelled: 'Market Cancelled' } as Record<string, string>)[m.status] ?? m.status}</span>}</div>
       {!m ? (
-        <><div className="small muted">Back yourself on this casual game with practice crowns, not your real balance. Prices start from your rapid rating vs your opponent, and trading closes at the first move. If you use the assistant or the game ends before move 10, the market is cancelled at the opening prices.</div>
+        <><div className="small muted">Back yourself on this casual game with practice dollars, not your real balance. Prices start from your rapid rating vs your opponent, and trading closes at the first move. If you use the assistant or the game ends before move 10, the market is cancelled at the opening prices.</div>
           <button className="btn small" data-testid="open-sandbox" onClick={open} disabled={services.readOnly}>Open a Sandbox Market</button></>
       ) : (
         <>
-          <div className="small">{claimsOf(m).map((c, i) => <span key={c.id} style={{ marginRight: 10 }}>{c.label}: <strong className="mono">{(cp[i] * 100).toFixed(0)}¢</strong>{pos?.shares[i] ? ` · you hold ${pos.shares[i]}` : ''}</span>)}</div>
+          <div className="small">{claimsOf(m).map((c, i) => <span key={c.id} style={{ marginRight: 10 }}>{c.label}: <strong className="mono">{fmtPrice(cp[i])}</strong>{pos?.shares[i] ? ` · you hold ${pos.shares[i]}` : ''}</span>)}</div>
           {m.status === 'open' && <div className="row"><input type="number" min={1} value={shares} onChange={e => setShares(Math.max(1, Math.floor(+e.target.value || 1)))} style={{ width: 70 }} aria-label="Sandbox shares" />{claimsOf(m).map((c, i) => <button key={c.id} className="btn small" data-testid={`sandbox-buy-${c.id}`} onClick={() => buy(i)}>Buy {c.label}</button>)}</div>}
-          {m.status === 'settled' && <div className="small">Market settled: {statesOf(m)[m.result!]}. You received {fmtCrowns(pos?.received ?? 0)} practice ₵.</div>}
+          {m.status === 'settled' && <div className="small">Market settled: {statesOf(m)[m.result!]}. You received {fmtCrowns(pos?.received ?? 0)} practice dollars.</div>}
           {m.status === 'cancelled' && <div className="small">Market cancelled at the opening prices (assistant used, game abandoned or under 10 moves).</div>}
         </>
       )}

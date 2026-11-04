@@ -43,7 +43,7 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found a federation of <strong>2,048 AI competitors</strong> across 16 regions and 8 divisions. You start in the Open Division of your home region with 1,000 ₵ (fictional money).</p>
+          <p>Found a federation of <strong>2,048 AI competitors</strong> across 16 regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
           <details className="small"><summary>Details</summary>
             <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
@@ -152,7 +152,7 @@ export function WorldScreen() {
           <h3>Season Calendar</h3>
           <div className="small">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]} · At season end, the top two are promoted and the bottom two relegated.</div>
           <div className="panel" style={{ background: 'transparent' }}>
-            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'Divisions 2–4, 32 players, five Swiss rounds, 1,500 ₵ in prizes. The top 8 qualify for the Crown Championship' : 'Divisions 5–8, 32 players, five Swiss rounds, 600 ₵ in prizes'}.
+            <strong>{mySwiss.name}</strong> — {myEvent === 'open' ? 'Divisions 2–4, 32 players, five Swiss rounds, $1,500 in prizes. The top 8 qualify for the Crown Championship' : 'Divisions 5–8, 32 players, five Swiss rounds, $600 in prizes'}.
             <div className="small muted">Entry {fmtCrowns(CHALLENGER_FEE, 0)}{cash < RECOVERY_THRESHOLD ? ' · Recovery voucher available (one per season)' : ''}. Registration closes before round {SWISS_ROUNDS[0]}.{myEvent === 'open' ? ' Entering cancels the Open champion market; each share pays out 1/32.' : ''}</div>
             {registered ? <span className="chip pos">Registered</span> : w.round < SWISS_ROUNDS[0] && myEvent ? (
               <div className="row" style={{ marginTop: 6 }}>
@@ -246,7 +246,7 @@ export function TournamentsScreen() {
           return (
             <div key={sw.event} className="panel" data-testid={`swiss-${sw.event}`}>
               <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 Rounds</span></div>
-              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · Top 8 qualify for the Crown Championship · 1,500 ₵ in prizes' : 'Divisions 5–8, plus you if registered · 600 ₵ in prizes'}</div>
+              <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? 'Divisions 2–4 · Top 8 qualify for the Crown Championship · $1,500 in prizes' : 'Divisions 5–8, plus you if registered · $600 in prizes'}</div>
               <details className="small" style={{ marginBottom: 6 }}><summary>Details</summary>Swiss pairing with no rematches; a bye goes to the lowest-placed player who hasn't had one. BH-1: Buchholz Cut-1. Tiebreak order: points, Buchholz Cut-1, Buchholz, Sonneborn–Berger, seed.</details>
               <div style={{ maxHeight: 340, overflow: 'auto' }}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th></tr></thead>
@@ -258,7 +258,7 @@ export function TournamentsScreen() {
         })}
       </div>
       <div className="panel" style={{ marginTop: 14 }} data-testid="championship">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">8,000 ₵ Prize Fund</span></div>
+        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">$8,000 Prize Fund</span></div>
         {!champ ? <div className="small muted"><p>The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: the 8 best regional Crown Division winners and the top 8 of the Federation Open.</p><details><summary>Details</summary>Matches are two games. If level, a rapid pair is played, then a blitz pair, then the higher seed advances. A level final produces joint champions.</details></div> : (
           <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }}>
             {champ.stages.map(sg => (
