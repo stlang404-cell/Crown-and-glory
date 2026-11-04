@@ -1,0 +1,20 @@
+[2026-11-04T21:45:45.192Z] before: {"comps":"356087caa1e3d890","balances":"81bc57a0994e1098","rounds":"f67f0d44d94899b6","world":"[1,1]","markets":8,"games":0,"reports":0,"ratingEvents":0,"rapid":"{\"pool\":\"rapid\",\"rating\":0,\"rd\":350,\"sigma\":0.06,\"games\":0,\"wins\":0,\"draws\":0,\"losses\":0,\"peak\":null,\"lowest\":null,\"lastEventId\":null,\"updatedAt\":null}","worldGames":0,"vault":0}
+[2026-11-04T21:45:45.261Z] PASS 1: Exhibition Arena opens from the Federation screen with the unofficial notice
+[2026-11-04T21:45:45.762Z] PASS 2: Picked c3318 (399) vs Eora Brackton (4143) from 10239 competitors
+[2026-11-04T21:45:45.765Z] PASS 3: The legend shows the "strongest measured engine" note
+[2026-11-04T21:45:48.353Z] PASS 4: Board with the evaluation bar while the exhibition plays
+[2026-11-04T21:45:50.901Z] PASS 5: Paused: 3 plies before and 3 after 2.5 s
+[2026-11-04T21:45:51.136Z] PASS 6: Step back shows 2/3; step forward at the newest move computed move 4
+[2026-11-04T21:45:51.533Z] PASS 7: Skip to result: 0-1
+[2026-11-04T21:46:21.549Z] PASS 8: Match Analysis: grades, mistakes, Elo comparison and Played Like for both sides
+[2026-11-04T21:46:21.800Z] PASS 9: Practise This Position opens the sandbox before the mistake
+[2026-11-04T21:46:22.049Z] PASS 10: Exhibition history after reload: [["exh:20261104214545953-cnpcrn","finished"]]
+[2026-11-04T21:46:22.094Z] PASS 11: Replay Library · Exhibitions: [["exh:20261104214545953-cnpcrn","exhibition"]]
+[2026-11-04T21:46:22.177Z] PASS 12: Opening the library row reopens the exhibition replay
+[2026-11-04T21:46:22.229Z] after: {"comps":"356087caa1e3d890","balances":"81bc57a0994e1098","rounds":"f67f0d44d94899b6","world":"[1,1]","markets":8,"games":0,"reports":0,"ratingEvents":0,"rapid":"{\"pool\":\"rapid\",\"rating\":0,\"rd\":350,\"sigma\":0.06,\"games\":0,\"wins\":0,\"draws\":0,\"losses\":0,\"peak\":null,\"lowest\":null,\"lastEventId\":null,\"updatedAt\":null}","worldGames":0,"vault":0}
+[2026-11-04T21:46:22.230Z] PASS 13: Ratings/RD, records, titles, earnings, balances, standings, markets, world cursor, official games, reports, rating events and Vault unchanged
+[2026-11-04T21:46:26.836Z] PASS 14: 390 px: overflow picker 0, playing 0, finished 0; page scrolls (400)
+[2026-11-04T21:46:27.449Z] PASS 15: Deleting an exhibition removes only that entry
+[2026-11-04T21:46:27.508Z] PASS 16: Official state still unchanged after the phone exhibition and the deletion
+[2026-11-04T21:46:27.509Z] PASS 17: No page errors (0)
+[2026-11-04T21:46:27.555Z] ALL PASS
