@@ -2,7 +2,7 @@
 # Keeps CPU-heavy, timing-insensitive jobs (economy sweep, Played Like analysis) paused while timed engine matches run,
 # so match timings are not contaminated; resumes them when no timed match is running.
 pat_timed='tools/bench/run.ts match'
-pat_bg='tools/sim/economy.ts|tools/perf/analyze_calibration.ts'
+pat_bg='tools/sim/economy.ts'
 while true; do
   if pgrep -f "$pat_timed" >/dev/null; then sig=STOP; else sig=CONT; fi
   for p in $(pgrep -f "$pat_bg"); do kill -$sig $p 2>/dev/null; done
