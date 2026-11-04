@@ -9,7 +9,8 @@
  */
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
-import { applyFoundingPersonas } from '../federation/rosterPersonas';
+import { applyFoundingPersonas, applyNameMode } from '../federation/rosterPersonas';
+import { showContemporaryNames } from './namePrefs';
 import { NEW_FEDERATION_POPULATION } from '../federation/population';
 import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
@@ -133,6 +134,16 @@ export class FederationService {
       extra: (finance.find(f => f.key === 'player') as PlayerExtra) ?? { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
       liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
+    applyNameMode(this.state.competitors.values(), this.showNames, { texts: true });
+  }
+
+  /** Settings → "Show contemporary famous names" (display only; docs/ROSTER.md). */
+  showNames = showContemporaryNames();
+  /** Switch the contemporary-names display. Names only, in memory: ids, records and history are untouched. */
+  setContemporaryNames(show: boolean): void {
+    if (show === this.showNames) return;
+    this.showNames = show;
+    if (this.state && applyNameMode(this.state.competitors.values(), show, { texts: true }) > 0) this.onChange?.();
   }
 
   // ------------------------------------------------------------------ helpers
@@ -313,6 +324,7 @@ export class FederationService {
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
     this.state = next;
+    if (changed.competitors) applyNameMode(next.competitors.values(), this.showNames); // new entrants under the current setting
     if (this.busyKind === 'scheduler' && this.onLiveChange) this.onLiveChange(); else this.onChange?.();
   }
 
@@ -335,7 +347,7 @@ export class FederationService {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
       // v0.10: new federations use the full rating spectrum (crown-population-2); existing worlds keep theirs
       const comps = generateFederation(seed, topology, NEW_FEDERATION_POPULATION);
-      applyFoundingPersonas(seed, comps); // v0.10 historical roster: names only, for newly founded federations
+      applyFoundingPersonas(seed, comps, this.showNames); // v0.10 persona roster: names only, for newly founded federations
       const { world, plan } = createWorld(seed, comps, this.now(), topology, NEW_FEDERATION_POPULATION);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),

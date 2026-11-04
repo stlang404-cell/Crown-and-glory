@@ -15,6 +15,8 @@
   {"id":"hist-giuseppe-garibaldi","name":"Giuseppe Garibaldi","born":1807,"died":1882,"category":"statesman","region":"Europe","descriptor":"Italian unification leader","reference":"Giuseppe Garibaldi"},
   {"id":"hist-otto-von-bismarck","name":"Otto von Bismarck","born":1815,"died":1898,"category":"statesman","region":"Europe","descriptor":"First Chancellor of the German Empire","reference":"Otto von Bismarck"},
   {"id":"hist-william-wilberforce","name":"William Wilberforce","born":1759,"died":1833,"category":"statesman","region":"Europe","descriptor":"British parliamentarian against the slave trade","reference":"William Wilberforce"},
+  {"id":"hist-julius-caesar","name":"Julius Caesar","born":-100,"died":-44,"category":"statesman","region":"Europe","descriptor":"Roman general and statesman","reference":"Julius Caesar","circa":true},
+  {"id":"hist-napoleon-bonaparte","name":"Napoleon Bonaparte","born":1769,"died":1821,"category":"statesman","region":"Europe","descriptor":"French military leader and Emperor of the French","reference":"Napoleon"},
   {"id":"hist-elizabeth-i","name":"Elizabeth I","born":1533,"died":1603,"category":"statesman","region":"Europe","descriptor":"Queen of England and Ireland","reference":"Elizabeth I"},
   {"id":"hist-queen-victoria","name":"Queen Victoria","born":1819,"died":1901,"category":"statesman","region":"Europe","descriptor":"Queen of the United Kingdom","reference":"Queen Victoria"},
   {"id":"hist-tadeusz-kosciuszko","name":"Tadeusz Kościuszko","born":1746,"died":1817,"category":"statesman","region":"Europe","descriptor":"Polish-Lithuanian military engineer and national leader","reference":"Tadeusz Kościuszko"},

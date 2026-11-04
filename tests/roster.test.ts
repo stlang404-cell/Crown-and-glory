@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   ROSTER_IDENTITIES, ROSTER_CATEGORIES, ROSTER_REGIONS, MAX_DEATH_YEAR, FOUNDING_PERSONA_SHARE, applyFoundingPersonas, assignEntrantPersonas, rosterIdentity, lifespan,
+  CONTEMPORARY_IDENTITIES, CONTEMPORARY_FOUNDING_SHARE, contemporaryIdentity,
 } from '../src/federation/rosterPersonas';
-import { rosterDocSection, DOC_BEGIN, DOC_END } from '../src/federation/rosterDoc';
+import { rosterDocSection, contemporaryDocSection, DOC_BEGIN, DOC_END, PUB_BEGIN, PUB_END } from '../src/federation/rosterDoc';
 import { generateFederation } from '../src/federation/generator';
 import { createWorld, Ctx, RoundRecord } from '../src/federation/world';
 import { runRoundHeadless } from '../src/federation/driver';
@@ -14,13 +15,14 @@ import type { Competitor } from '../src/federation/model';
 import { CrownDB } from '../src/storage/db';
 import { FederationService } from '../src/app/federation';
 
-/** Names the policy explicitly rules out (docs/ROSTER.md): living people, people who died after 1925, atrocity
- *  figures, conquerors, religious founders and figures of worship, and the conservatively omitted. */
+/** Names the historical set rules out (docs/ROSTER.md): living people and people who died after 1925 (they belong to
+ *  the contemporary set or are excluded there), atrocity figures, Alexander the Great, religious founders and figures
+ *  of worship, and the conservatively omitted. Julius Caesar and Napoleon Bonaparte are included: the owner named them. */
 const EXCLUDED = [
   'Taylor Swift', 'Beyoncé', 'Beyonce', 'Serena Williams', 'Magnus Carlsen', 'Lionel Messi', 'LeBron James', 'Donald Trump', 'Joe Biden', 'Barack Obama', 'Vladimir Putin', 'Xi Jinping', 'Narendra Modi', 'Emmanuel Macron', 'Keir Starmer',
   'Albert Einstein', 'Marie Curie', 'Claude Monet', 'Harry Houdini', 'Annie Oakley', 'Antoni Gaudí', 'Rudolph Valentino', 'Rainer Maria Rilke', 'Mary Cassatt', 'Gertrude Bell', 'Bessie Coleman', 'Fred Spofforth', 'Camillo Golgi', 'Thomas Edison', 'Nikola Tesla', 'Mahatma Gandhi', 'Emanuel Lasker', 'Siegbert Tarrasch', 'Arthur Conan Doyle', 'Sigmund Freud', 'Winston Churchill',
   'Adolf Hitler', 'Joseph Stalin', 'Pol Pot', 'Genghis Khan', 'Timur', 'Attila', 'Vlad the Impaler', 'Ivan the Terrible', 'Caligula', 'Nero', 'Leopold II of Belgium', 'Ranavalona I', 'Christopher Columbus', 'Hernán Cortés', 'Francisco Pizarro', 'Vasco da Gama', 'Henry Morton Stanley', 'Cecil Rhodes', 'Andrew Jackson',
-  'Alexander the Great', 'Julius Caesar', 'Napoleon', 'Napoleon Bonaparte',
+  'Alexander the Great',
   'Jesus', 'Muhammad', 'Gautama Buddha', 'Moses', 'Zoroaster', 'Confucius', 'Laozi', 'Guru Nanak', 'Martin Luther', 'Pythagoras', 'Joan of Arc', 'Francis of Assisi', 'Hildegard of Bingen', 'Thomas Aquinas', 'Mary MacKillop', 'Rumi', 'Kabir', 'Emperor Meiji', 'Chulalongkorn', 'Augustus', 'Akbar', 'Auguste Comte', 'Ram Mohan Roy', 'Miguel Hidalgo', 'Sor Juana Inés de la Cruz',
   'Juan Luna', 'Max Linder', 'Caravaggio', 'Paul Gauguin', 'Egon Schiele', 'Richard Wagner', 'P. T. Barnum', 'Cap Anson', 'Ned Kelly', 'Mata Hari', 'Jean-Jacques Dessalines', 'Tipu Sultan',
 ];
@@ -85,11 +87,16 @@ describe('historical roster data (crown-roster-1)', () => {
     const a = doc.indexOf(DOC_BEGIN), b = doc.indexOf(DOC_END);
     expect(a).toBeGreaterThan(0);
     expect(doc.slice(a, b + DOC_END.length)).toBe(rosterDocSection());
+    const pa = doc.indexOf(PUB_BEGIN), pb = doc.indexOf(PUB_END);
+    expect(pa).toBeGreaterThan(b);
+    expect(doc.slice(pa, pb + PUB_END.length)).toBe(contemporaryDocSection());
     for (const x of ['Taylor Swift', 'Beyoncé', 'Serena Williams', 'Albert Einstein', 'Marie Curie']) expect(doc.slice(0, a)).toContain(x);
   });
 });
 
-const strip = (c: Competitor) => { const { name: _n, persona: _p, ...rest } = c; void _n; void _p; return JSON.stringify(rest); };
+const strip = (c: Competitor) => { const { name: _n, persona: _p, altName: _a, ...rest } = c; void _n; void _p; void _a; return JSON.stringify(rest); };
+const identityName = (id: string | undefined) => (rosterIdentity(id) ?? contemporaryIdentity(id))!.name;
+const FOUNDING_2048 = Math.round(2048 * FOUNDING_PERSONA_SHARE) + Math.round(2048 * CONTEMPORARY_FOUNDING_SHARE);
 
 describe('persona integration', () => {
   it('a new federation: a seeded share carries personas, no duplicates, attributes untouched, deterministic', () => {
@@ -97,13 +104,14 @@ describe('persona integration', () => {
     const a = generateFederation(11), b = generateFederation(11);
     const n = applyFoundingPersonas(11, a);
     applyFoundingPersonas(11, b);
-    expect(n).toBe(Math.round(2048 * FOUNDING_PERSONA_SHARE));
+    expect(n).toBe(FOUNDING_2048);
+    expect(n).toBe(164 + 123);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
     const personas = a.filter(c => c.persona);
     expect(personas).toHaveLength(n);
     expect(new Set(personas.map(c => c.persona)).size).toBe(n);
     expect(new Set(a.map(c => c.name)).size).toBe(a.length);
-    for (const c of personas) expect(c.name).toBe(rosterIdentity(c.persona)!.name);
+    for (const c of personas) expect(c.name).toBe(identityName(c.persona));
     // only the name changes: ids, strength, rating, style, region, division, age are those of the plain generation
     a.forEach((c, i) => { expect(c.id).toBe(plain[i].id); expect(strip(c)).toBe(strip(plain[i])); });
     for (const c of a.filter(x => !x.persona)) expect(c.name).toBe(plain[a.indexOf(c)].name);
@@ -127,7 +135,7 @@ describe('persona integration', () => {
   it('caps founding personas for very large federations so later entrants still bring new identities', () => {
     const big = generateFederation(3, topologyWithRegions(64)); // 8,192 competitors
     const n = applyFoundingPersonas(3, big);
-    expect(n).toBe(Math.floor(ROSTER_IDENTITIES.length * 0.6));
+    expect(n).toBe(Math.floor(ROSTER_IDENTITIES.length * 0.6) + Math.floor(CONTEMPORARY_IDENTITIES.length * 0.6));
     expect(new Set(big.map(c => c.name)).size).toBe(big.length);
   });
 
@@ -152,7 +160,9 @@ describe('persona integration', () => {
     expect(p.length).toBeLessThan(entrants.length);
     expect(new Set(p.map(e => e.persona)).size).toBe(p.length);
     expect(new Set([...ctx.competitors.values()].map(c => c.name)).size).toBe(ctx.competitors.size);
-    for (const e of p) expect(e.name).toBe(rosterIdentity(e.persona)!.name);
+    for (const e of p) expect(e.name).toBe(identityName(e.persona));
+    expect(p.some(e => e.persona!.startsWith('pub-'))).toBe(true);
+    expect(p.some(e => e.persona!.startsWith('hist-'))).toBe(true);
     // deterministic
     const again = run();
     expect(again.entrants.map(e => `${e.id}:${e.name}:${e.persona ?? ''}`).join()).toBe(entrants.map(e => `${e.id}:${e.name}:${e.persona ?? ''}`).join());
@@ -176,7 +186,7 @@ describe('persona integration', () => {
     const svc = new FederationService(await CrownDB.open(f), async () => ({ rating: 1500, rd: 200 }), now);
     await svc.create(2, 777);
     const personas = [...svc.state!.competitors.values()].filter(c => c.persona);
-    expect(personas.length).toBe(Math.round(2048 * FOUNDING_PERSONA_SHARE));
+    expect(personas.length).toBe(FOUNDING_2048);
     const svc2 = new FederationService(await CrownDB.open(f), async () => ({ rating: 1500, rd: 200 }), now);
     await svc2.load();
     for (const c of personas) { const d = svc2.state!.competitors.get(c.id)!; expect(d.name).toBe(c.name); expect(d.persona).toBe(c.persona); }

@@ -74,7 +74,7 @@ export function NewsScreen() {
             <h3><span aria-hidden="true">🏆 </span>Crown Championship History</h3>
             {data.champs.length === 0 ? <p className="small muted">No championship decided yet. It runs in rounds 16–19.</p> : (
               <table className="small"><thead><tr><th>Season</th><th>Champion</th><th>Final</th></tr></thead>
-                <tbody>{data.champs.map(([s, who]) => { const g = finalGame(s); return <tr key={s}><td>{s}</td><td><strong>{who.join(' & ')}</strong>{who.length > 1 ? ' (Joint)' : ''}</td><td>{g ? <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>Replay {g.whiteName} – {g.blackName}</button> : <span className="muted">Result only</span>}</td></tr>; })}</tbody></table>
+                <tbody>{data.champs.map(([s, who]) => { const g = finalGame(s); return <tr key={s}><td>{s}</td><td><strong>{who.join(' & ')}</strong>{who.length > 1 ? ' (Joint)' : ''}</td><td>{g ? <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>Replay {fed.name(g.white)} – {fed.name(g.black)}</button> : <span className="muted">Result only</span>}</td></tr>; })}</tbody></table>
             )}
           </div>
           <div className="panel">

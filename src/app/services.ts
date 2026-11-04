@@ -2,6 +2,7 @@
  * Application command layer: the UI calls these commands; they validate, run one transactional
  * domain operation and notify subscribers. React never mutates history or ratings directly.
  */
+import { showContemporaryNames, subscribeContemporaryNames } from './namePrefs';
 import { CrownDB, AnalysisJob } from '../storage/db';
 import { gameChecksum, sha256Hex } from '../storage/checksum';
 import { EngineChannel, ENGINE_EVENTS } from '../engine/client';
@@ -63,6 +64,7 @@ export class AppServices {
     s.fed.computeMove = req => s.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
       .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs }));
     s.fed.onChange = () => s.notify();
+    subscribeContemporaryNames(() => s.fed.setContemporaryNames(showContemporaryNames()));
     // scheduled-game commits arrive several times a second: re-render at most twice a second for them
     let pending: ReturnType<typeof setTimeout> | null = null;
     s.fed.onLiveChange = () => { if (!pending) pending = setTimeout(() => { pending = null; s.notify(); }, 500); };

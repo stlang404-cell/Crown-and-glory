@@ -67,8 +67,13 @@ export interface Competitor {
   peakRating?: number;
   establishedPeak?: number;
   /** v0.10: historical roster identity (src/federation/rosterPersonas.ts) — a fictional chess persona named after a
-   *  historical figure; absent for original competitors. The name field holds the persona's display name. */
+   *  historical figure; absent for original competitors. The name field holds the persona's display name.
+   *  Contemporary personas (`pub-…`, docs/ROSTER.md) hold their display name under the current Settings choice. */
   persona?: string;
+  /** v0.10 contemporary personas only: the competitor's stable original fictional name, generated with the
+   *  competitor and kept at assignment. Shown instead of the famous name when "Show contemporary famous names" is
+   *  off, or if the identity is ever removed from the data file. Never changes. */
+  altName?: string;
 }
 
 /** A pairing in a world round. result: 1 white win, 0.5 draw, 0 black win, null pending. */

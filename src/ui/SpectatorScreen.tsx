@@ -40,6 +40,7 @@ import { divisionEmblem, titleEmblem } from '../heraldry/catalog';
 import { clubEmblem, clubOf } from '../heraldry/clubs';
 import { divisionLabel } from '../federation/model';
 import { claimModel } from '../exchange/api';
+import { CONTEMPORARY_DISCLOSURE, shownPersona } from '../federation/rosterPersonas';
 import { ENGINE_BUILD } from '../analysis/analyzer';
 import { GRADING_ID, expectedU, toPov } from '../analysis/methodology';
 import type { AnalysisReport, EngineScore } from '../analysis/types';
@@ -221,6 +222,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
     if (!c) return null;
     const club = clubOf(c.id, c.region);
     const active = sideToMove === side && isLive && ply === revealed;
+    const sp = shownPersona(c, fed.showNames);
     return (
       <PlayerBar color={side ? 'black' : 'white'} active={active} testId={`arena-player-${side ? 'black' : 'white'}`}
         avatar={<Portrait seed={c.portraitSeed} size={34} crown={c.titles.some(t => /Crown Champion/.test(t.title))} />}
@@ -229,6 +231,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           <span className="mono">{Math.round(c.rating)} ±{Math.round(c.rd)}</span>
           <Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><Emblem spec={clubEmblem(club.identity)} size="sm" title={club.identity.name} />
           {c.fedTitle && <Emblem spec={titleEmblem(c.fedTitle)} size="sm" title={`Federation Title: ${c.fedTitle}`} />}
+          {sp && <span className="chip" data-testid={`arena-persona-${side ? 'black' : 'white'}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE}>Persona</span>}
           <span>{isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'} · {side ? 'Black' : 'White'}</span>
         </>}
         aside={
@@ -503,6 +506,9 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           label={inSandbox ? `Sandbox board, ${sandbox.sandbox!.line.length} moves from move ${sandboxOrigin}` : `${w?.name} vs ${b?.name}, after ${ply} moves`} />
       </EvalBoard>
       <PlayerCard id={orientation === 'white' ? fixture.white : fixture.black} side={orientation === 'white' ? 0 : 1} />
+      {[fixture.white, fixture.black].some(x => shownPersona(st.competitors.get(x), fed.showNames)?.kind === 'contemporary') && (
+        <p className="small muted" data-testid="persona-disclosure" style={{ margin: '4px 0' }}>Persona: {CONTEMPORARY_DISCLOSURE} Ratings and results are assigned by the world seed.</p>
+      )}
       <MoveNav onFirst={() => nav(0)} onPrev={() => nav(ply - 1)} onNext={() => nav(ply + 1)} onLast={lastNav} lastLabel="Latest Move"
         onFlip={() => setOrientation(o => (o === 'white' ? 'black' : 'white'))}
         indicator={<span className="chip mono" data-testid="arena-ply">{inSandbox ? 'sandbox' : `${ply}/${revealed}`}</span>}
