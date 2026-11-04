@@ -8,7 +8,8 @@ import SPEED from '../analysis/analysis-speed.json';
 import { EngineDiagnostics } from './EngineDiagnostics';
 import { PREMIUM_BOARDS } from './theme';
 import { useServices } from './App';
-import { BOARDS, MOTIONS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
+import { BOARDS, MOTIONS, PIECE_SPEEDS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPieceSpeed, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
+import { DEFAULT_SOUND, SOUND_CATEGORIES, getSoundPrefs, playSound, setSoundPrefs, subscribeSound, unlockAudio, type SoundId } from './sound';
 
 function usePrefs() {
   return useSyncExternalStore(subscribePrefs, getCurrentPrefs, getCurrentPrefs);
@@ -91,7 +92,16 @@ export function SettingsScreen() {
         <p className="small muted" style={{ marginBottom: 0 }}>
           “Follow system” uses your device’s reduced-motion setting (now {systemReduced ? 'on' : 'off'}). “Reduce” turns off piece slides and screen transitions. “Full” keeps them on even when your device asks for less motion.
         </p>
+        <h3 id="set-piece-speed" className="small" style={{ margin: '12px 0 6px' }}>Piece Movement</h3>
+        <div className="seg" role="group" aria-labelledby="set-piece-speed" data-testid="piece-speed">
+          {PIECE_SPEEDS.map(m => <button key={m.id} aria-pressed={prefs.pieceSpeed === m.id} onClick={() => setPieceSpeed(m.id)}>{m.name}</button>)}
+        </div>
+        <p className="small muted" style={{ marginBottom: 0 }}>
+          How quickly pieces slide to their new square{reduced ? ' (off while motion is reduced)' : ''}. Moves, clocks and markets never wait for an animation.
+        </p>
       </section>
+
+      <SoundSettings />
 
       <section className="panel about" aria-labelledby="set-about">
         <div className="panel-title"><h2 id="set-about" style={{ margin: 0 }}>About</h2>
@@ -129,5 +139,46 @@ export function SettingsScreen() {
         </section>
       </details>
     </div>
+  );
+}
+
+function SoundSettings() {
+  const p = useSyncExternalStore(subscribeSound, getSoundPrefs, getSoundPrefs);
+  const preview = (id: SoundId) => { unlockAudio(); setTimeout(() => playSound(id), 30); };
+  return (
+    <section className="panel" aria-labelledby="set-sound" data-testid="sound-settings">
+      <div className="panel-title"><h2 id="set-sound" style={{ margin: 0 }}>Sound</h2>
+        <span className={`chip ${p.enabled ? '' : 'info'}`}>{p.enabled ? 'Sound On' : 'Muted'}</span>
+      </div>
+      <label className="row" style={{ gap: 8 }}>
+        <input type="checkbox" checked={p.enabled} onChange={e => setSoundPrefs({ enabled: e.target.checked })} data-testid="sound-enabled" /> Play sound effects
+      </label>
+      <label className="row" style={{ gap: 8, marginTop: 8 }}>
+        <span style={{ minWidth: 64 }}>Volume</span>
+        <input type="range" min={0} max={100} step={5} value={Math.round(p.volume * 100)} disabled={!p.enabled} aria-label="Sound effects volume"
+          onChange={e => setSoundPrefs({ volume: +e.target.value / 100 })} onPointerUp={() => preview('move')} data-testid="sound-volume" style={{ flex: 1, maxWidth: 260 }} />
+        <span className="mono small" style={{ minWidth: 36 }}>{Math.round(p.volume * 100)}%</span>
+      </label>
+      <fieldset style={{ border: 0, padding: 0, margin: '10px 0 0' }} disabled={!p.enabled}>
+        <legend className="small muted" style={{ marginBottom: 4 }}>Sound categories</legend>
+        {SOUND_CATEGORIES.map(c => (
+          <label key={c.id} className="row" style={{ gap: 8 }}>
+            <input type="checkbox" checked={p.categories[c.id]} onChange={e => setSoundPrefs({ categories: { ...p.categories, [c.id]: e.target.checked } })} data-testid={`sound-cat-${c.id}`} />
+            <span>{c.name}</span><span className="small muted">{c.detail}</span>
+          </label>
+        ))}
+      </fieldset>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }} role="group" aria-label="Preview sounds">
+        {(['move', 'capture', 'check', 'promotion', 'checkmate', 'victory', 'defeat', 'draw', 'tournament', 'rank'] as SoundId[]).map(id => (
+          <button key={id} className="btn small ghost" disabled={!p.enabled} onClick={() => preview(id)}>{id[0].toUpperCase() + id.slice(1)}</button>
+        ))}
+        <span className="spacer" />
+        <button className="btn small ghost" onClick={() => setSoundPrefs(DEFAULT_SOUND)}>Reset Sound Settings</button>
+      </div>
+      <p className="small muted" style={{ marginBottom: 0 }}>
+        All sounds are made on this device; nothing is downloaded. Browsers keep sound off until you first tap or press a key, so the very first moments of a visit are silent.
+        On iPhone, the ring/silent switch can also mute sounds.
+      </p>
+    </section>
   );
 }

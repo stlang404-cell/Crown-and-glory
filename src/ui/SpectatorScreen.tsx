@@ -12,6 +12,8 @@
  * Every live view reads the same committed state; trades carry the market revision they were quoted on and are
  * rejected if a move or trade happened in between.
  */
+import { Position } from '../rules/position';
+import { squareName } from '../rules/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
@@ -308,11 +310,12 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   );
 
   const replaying = !inPlay && (isLive || !!game);
+  const checkSq = (() => { try { const p = Position.fromFen(fen); return p.inCheck() ? squareName(p.kingSq[p.side]) : null; } catch { return null; } })();
   const lastNav = () => { setFollow(true); setPly(revealed); };
   const board = (
     <>
       <PlayerCard id={orientation === 'white' ? fixture.black : fixture.white} side={orientation === 'white' ? 1 : 0} />
-      <Board fen={fen} orientation={orientation} lastMove={last} label={`${w?.name} vs ${b?.name}, after ${ply} moves`} />
+      <Board sounds live={isLive && follow} fen={fen} orientation={orientation} lastMove={last} checkSquare={checkSq} label={`${w?.name} vs ${b?.name}, after ${ply} moves`} />
       <PlayerCard id={orientation === 'white' ? fixture.white : fixture.black} side={orientation === 'white' ? 0 : 1} />
       <MoveNav onFirst={() => nav(0)} onPrev={() => nav(ply - 1)} onNext={() => nav(ply + 1)} onLast={lastNav} lastLabel="Latest Move"
         onFlip={() => setOrientation(o => (o === 'white' ? 'black' : 'white'))}

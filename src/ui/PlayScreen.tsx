@@ -23,6 +23,7 @@ import { FederationService } from '../app/federation';
 import { claimsOf, claimPrices, statesOf } from '../exchange/market';
 import { fmtCrowns } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
+import { playOnce, playSound } from './sound';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export const fmtClock = (ms: number) => {
@@ -432,7 +433,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const board = (
     <>
       {bar(top as 0 | 1)}
-      <Board fen={shownFen} orientation={orientation} legal={browsing ? [] : legal} onMove={onMove} lastMove={last} checkSquare={check} label={browsing ? `Game against ${opp.name}, earlier position after ${shownPly} moves` : `Game against ${opp.name}`} highlights={!browsing && assist?.hint ? [assist.hint] : []} />
+      <Board sounds={!browsing} live={!browsing} fen={shownFen} orientation={orientation} legal={browsing ? [] : legal} onMove={onMove} lastMove={last} checkSquare={check} label={browsing ? `Game against ${opp.name}, earlier position after ${shownPly} moves` : `Game against ${opp.name}`} highlights={!browsing && assist?.hint ? [assist.hint] : []} />
       {bar(bottom)}
       <MoveNav onFirst={nav.first} onPrev={nav.prev} onNext={nav.next} onLast={nav.last} lastLabel="Current Position" onFlip={() => setFlipped(f => !f)}
         indicator={browsing ? <span className="chip gold" data-testid="viewing-earlier">Move {Math.ceil(shownPly / 2)} · Earlier Position</span> : undefined} />
@@ -533,6 +534,17 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
   const { go, services } = useApp();
   const g = final.game, e = final.event;
   const opp = g.humanColor === 'white' ? g.black : g.white;
+  // one result sound per finished game (the overlay only appears for a game that ended in this session)
+  useEffect(() => {
+    const human = g.result === '1/2-1/2' ? 0.5 : (g.result === '1-0') === (g.humanColor === 'white') ? 1 : 0;
+    const outcome = human === 0.5 ? 'draw' : human === 1 ? 'victory' : 'defeat';
+    if (g.termination === 'checkmate') {
+      playOnce(`result:${g.id}`, 'checkmate');
+      const t = setTimeout(() => playSound(outcome), 650);
+      return () => clearTimeout(t);
+    }
+    playOnce(`result:${g.id}`, outcome);
+  }, [g.id]);  
   const rematch = async () => {
     const o = getOpponent(opp.id);
     if (!o) return go({ name: 'play' });

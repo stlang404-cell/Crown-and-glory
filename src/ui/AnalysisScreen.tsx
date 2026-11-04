@@ -202,7 +202,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const board = (
     <>
       {bar(topColor)}
-      <Board fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
+      <Board sounds fen={fen} orientation={orientation} lastMove={lastMove} checkSquare={check} arrows={arrows} label="Analysis board" />
       {bar(topColor === 'white' ? 'black' : 'white')}
       <MoveNav onFirst={() => goPly(0)} onPrev={stepBack} onNext={stepForward} onLast={() => goPly(n)} onFlip={() => setFlipped(f => !f)}
         indicator={<span className="chip mono" data-testid="ply-indicator">{variation ? `variation ${variation.idx + 1}/${variation.line.length}` : `ply ${ply}/${n}`}</span>}

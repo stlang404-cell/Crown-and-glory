@@ -43,7 +43,7 @@ const ORBS: Record<Kind, [number, number, number][]> = {
   q: [[23, 24.5, 3.6], [36.5, 17.5, 3.4], [50, 13.5, 3.8], [63.5, 17.5, 3.4], [77, 24.5, 3.6]],
 };
 
-export const PieceSvg = memo(function PieceSvg({ kind, color, className, style, title }: { kind: Kind; color: 'w' | 'b'; className?: string; style?: React.CSSProperties; title?: string }) {
+export const PieceSvg = memo(function PieceSvg({ kind, color, className, style, title, onAnimationEnd }: { kind: Kind; color: 'w' | 'b'; className?: string; style?: React.CSSProperties; title?: string; onAnimationEnd?: () => void }) {
   const white = color === 'w';
   const fill = white ? 'url(#crown-ivory)' : 'url(#crown-ink)';
   const baseFill = white ? 'url(#crown-ivory-base)' : 'url(#crown-ink-base)';
@@ -51,7 +51,7 @@ export const PieceSvg = memo(function PieceSvg({ kind, color, className, style, 
   const detail = white ? '#a8864f' : 'var(--piece-gild, #d8b56c)';
   const sheen = white ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.16)';
   return (
-    <svg viewBox="0 0 100 100" className={className} style={style} {...(title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true, focusable: 'false' })}>
+    <svg viewBox="0 0 100 100" className={className} style={style} onAnimationEnd={onAnimationEnd} {...(title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true, focusable: 'false' })}>
       <g strokeLinejoin="round" strokeLinecap="round" style={{ stroke }}>
         <path d={PLINTH} style={{ fill: baseFill }} strokeWidth={3} />
         {SHAPES[kind].map((d, i) => (

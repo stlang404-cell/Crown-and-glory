@@ -3,15 +3,18 @@ import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
 import { AppServices } from './app/services';
 import { applyPrefs } from './ui/theme';
+import { installAudioUnlock } from './ui/sound';
 import './ui/themes.css';
 import './ui/styles.css';
 
 applyPrefs(); // idempotent with the inline pre-paint script in index.html
+installAudioUnlock(); // audio starts only after the player's first tap or key press
 
 const root = createRoot(document.getElementById('root')!);
 
 AppServices.boot().then(services => {
   (window as unknown as { __crown?: AppServices }).__crown = services; // debugging / e2e inspection only
+  void import('./ui/sound').then(m => { (window as unknown as { __crownSound?: unknown }).__crownSound = m; }); // e2e inspection only
   root.render(<StrictMode><App services={services} /></StrictMode>);
   void services.processQueue();
 }).catch(e => {

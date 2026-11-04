@@ -29,17 +29,27 @@ export const MOTIONS = [
   { id: 'full', name: 'Full' },
 ] as const;
 
+/** Piece-movement speed (ms for an ordinary move). "Off" places pieces instantly; Reduce motion also turns slides off. */
+export const PIECE_SPEEDS = [
+  { id: 'off', name: 'Off', ms: 0 },
+  { id: 'fast', name: 'Fast', ms: 140 },
+  { id: 'normal', name: 'Normal', ms: 200 },
+  { id: 'slow', name: 'Slow', ms: 280 },
+] as const;
+export type PieceSpeed = (typeof PIECE_SPEEDS)[number]['id'];
+
 export type ThemeId = (typeof THEMES)[number]['id'];
 export type BoardId = (typeof BOARDS)[number]['id'];
 export type MotionPref = (typeof MOTIONS)[number]['id'];
-export interface DisplayPrefs { theme: ThemeId; board: BoardId; motion: MotionPref }
+export interface DisplayPrefs { theme: ThemeId; board: BoardId; motion: MotionPref; pieceSpeed: PieceSpeed }
 
 export const PREFS_KEY = 'crown.display.v1';
-export const DEFAULT_PREFS: DisplayPrefs = { theme: 'obsidian', board: 'theme', motion: 'system' };
+export const DEFAULT_PREFS: DisplayPrefs = { theme: 'obsidian', board: 'theme', motion: 'system', pieceSpeed: 'normal' };
 
 const isTheme = (x: unknown): x is ThemeId => THEMES.some(t => t.id === x);
 const isBoard = (x: unknown): x is BoardId => BOARDS.some(b => b.id === x);
 const isMotion = (x: unknown): x is MotionPref => MOTIONS.some(m => m.id === x);
+const isSpeed = (x: unknown): x is PieceSpeed => PIECE_SPEEDS.some(m => m.id === x);
 
 /** Read preferences; any missing, invalid or unreadable value falls back to the default. */
 export function getPrefs(): DisplayPrefs {
@@ -50,6 +60,7 @@ export function getPrefs(): DisplayPrefs {
     theme: isTheme(o.theme) ? o.theme : DEFAULT_PREFS.theme,
     board: isBoard(o.board) ? o.board : DEFAULT_PREFS.board,
     motion: isMotion(o.motion) ? o.motion : DEFAULT_PREFS.motion,
+    pieceSpeed: isSpeed(o.pieceSpeed) ? o.pieceSpeed : DEFAULT_PREFS.pieceSpeed,
   };
 }
 
@@ -68,6 +79,13 @@ export function setPrefs(patch: Partial<DisplayPrefs>): DisplayPrefs {
 export const setTheme = (theme: ThemeId) => setPrefs({ theme });
 export const setBoard = (board: BoardId) => setPrefs({ board });
 export const setMotion = (motion: MotionPref) => setPrefs({ motion });
+export const setPieceSpeed = (pieceSpeed: PieceSpeed) => setPrefs({ pieceSpeed });
+
+/** Duration of an ordinary piece move in ms (0 = no animation): the speed setting, overridden by reduced motion. */
+export function pieceMoveMs(p: DisplayPrefs = getCurrentPrefs()): number {
+  if (prefersReducedMotion(p)) return 0;
+  return PIECE_SPEEDS.find(x => x.id === p.pieceSpeed)!.ms;
+}
 
 export function getCurrentPrefs(): DisplayPrefs { return current ?? (current = getPrefs()); }
 export function subscribePrefs(l: () => void): () => void { listeners.add(l); return () => { listeners.delete(l); }; }

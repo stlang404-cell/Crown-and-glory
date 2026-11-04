@@ -18,7 +18,7 @@ describe('display preferences (src/ui/theme.ts)', () => {
   it('defaults to Obsidian & Crimson with the theme board when nothing is stored', async () => {
     fakeEnv({});
     const t = await import('../src/ui/theme');
-    expect(t.getPrefs()).toEqual({ theme: 'obsidian', board: 'theme', motion: 'system' });
+    expect(t.getPrefs()).toEqual({ theme: 'obsidian', board: 'theme', motion: 'system', pieceSpeed: 'normal' });
   });
   it('falls back to defaults when storage throws or holds junk, and still applies changes', async () => {
     const { dataset } = fakeEnv('throws');
@@ -38,7 +38,7 @@ describe('display preferences (src/ui/theme.ts)', () => {
     t.setTheme('midnight');
     t.setBoard('walnut');
     t.setMotion('reduce');
-    expect(JSON.parse(store[t.PREFS_KEY])).toEqual({ theme: 'midnight', board: 'walnut', motion: 'reduce' });
+    expect(JSON.parse(store[t.PREFS_KEY])).toEqual({ theme: 'midnight', board: 'walnut', motion: 'reduce', pieceSpeed: 'normal' });
     expect(dataset).toMatchObject({ theme: 'midnight', board: 'walnut', motion: 'reduce' });
     expect(meta.content).toBe('#10151e');
     expect(t.prefersReducedMotion()).toBe(true);

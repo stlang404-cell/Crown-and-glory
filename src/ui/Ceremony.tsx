@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useServices } from './App';
+import { playOnce } from './sound';
 import { Emblem, Trophy } from './Emblem';
 import { Portrait } from './Portrait';
 import { PLAYER_ID } from '../federation/model';
@@ -11,6 +13,10 @@ export function CeremonyOverlay() {
   const fed = services.fed;
   const st = fed.state;
   const c = st?.extra.ceremonies?.find(x => !x.seen);
+  // one sound per ceremony; skipped silently if audio is still locked (no user gesture yet)
+  useEffect(() => {
+    if (c && !services.readOnly) playOnce(`ceremony:${c.id}`, c.kind === 'championship' || c.kind === 'event-title' ? 'tournament' : 'rank');
+  }, [c?.id]);  
   if (!st || !c || services.readOnly) return null;
   const dismiss = () => { void fed.markCeremonySeen(c.id); };
   const visual = (() => {

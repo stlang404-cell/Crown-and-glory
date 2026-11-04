@@ -209,10 +209,21 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .sq.light .coord { color: var(--coord-light); }
 .sq.dark .coord { color: var(--coord-dark); }
 .piece { position: absolute; inset: 4%; z-index: 4; pointer-events: none; filter: drop-shadow(0 2px 1.5px rgba(0, 0, 0, .28)) drop-shadow(0 5px 6px rgba(0, 0, 0, .14)); }
-.piece.moving { animation: slide var(--dur-move) var(--ease); z-index: 5; }
+.piece { transition: scale var(--dur) var(--ease), translate var(--dur) var(--ease), filter var(--dur) var(--ease); }
+/* the piece in flight rides above every other piece; the captured piece fades and sinks underneath it */
+.piece.animating { z-index: 7; will-change: transform; }
+.piece.capture-ghost { z-index: 3; animation: capture-out 200ms cubic-bezier(.4,0,.6,1) forwards; }
+@keyframes capture-out { 0% { opacity: 1; scale: 1; } 55% { opacity: .85; } 100% { opacity: 0; scale: .72; } }
+/* selected piece lifts slightly (scale/translate are separate properties, so they never fight a slide) */
+.sq.sel .piece:not(.capture-ghost) { scale: 1.07; translate: 0 -2.5%; filter: drop-shadow(0 6px 4px rgba(0, 0, 0, .3)) drop-shadow(0 10px 10px rgba(0, 0, 0, .16)); }
+/* legal-move markers appear with a quick grow */
+.sq .dot, .sq .ring { animation: hint-in 140ms var(--ease); }
+@keyframes hint-in { from { opacity: 0; scale: .4; } to { opacity: 1; scale: 1; } }
+/* check: one pulse when it happens, then the steady bloom */
+.sq.check { animation: check-pulse 650ms ease-out 1; }
+@keyframes check-pulse { 0% { box-shadow: inset 0 0 0 3px var(--sq-check), 0 0 0 0 color-mix(in srgb, var(--sq-check) 70%, transparent); } 40% { box-shadow: inset 0 0 0 5px var(--sq-check), 0 0 14px 2px color-mix(in srgb, var(--sq-check) 55%, transparent); } 100% { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--sq-check) 85%, transparent); } }
 .piece.dragging { opacity: .28; }
 .drag-ghost { position: fixed; z-index: 50; pointer-events: none; transform: scale(1.08); filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .4)); }
-@keyframes slide { from { transform: translate(var(--dx), var(--dy)); } to { transform: translate(0, 0); } }
 .arrow-layer { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .promo { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; background: var(--overlay); backdrop-filter: blur(2px); }
 .promo-card { display: flex; gap: 10px; padding: 14px; background: var(--panel); border: 1px solid var(--accent-line); border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -345,10 +356,12 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 }
 /* Reduced motion: the OS setting applies unless the player chose "Full" in Settings; "Reduce" always applies. */
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="full"]) .piece.moving { animation: none; }
+  :root:not([data-motion="full"]) .sq .dot, :root:not([data-motion="full"]) .sq .ring, :root:not([data-motion="full"]) .sq.check { animation: none; }
+  :root:not([data-motion="full"]) .piece.capture-ghost { display: none; }
   :root:not([data-motion="full"]) * { transition: none !important; }
 }
-:root[data-motion="reduce"] .piece.moving { animation: none; }
+:root[data-motion="reduce"] .sq .dot, :root[data-motion="reduce"] .sq .ring, :root[data-motion="reduce"] .sq.check { animation: none; }
+:root[data-motion="reduce"] .piece.capture-ghost { display: none; }
 :root[data-motion="reduce"] * { transition: none !important; scroll-behavior: auto !important; }
 
 /* ---- heraldry (crown-heraldry-1): emblem outlines follow the theme; tinctures are fixed like real arms ---- */
