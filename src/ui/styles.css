@@ -535,3 +535,9 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .rank-step.highest { outline: 1px dashed var(--muted, var(--line)); }
 .rank-screen table { width: 100%; }
 .rank-screen .rank-top > * { min-width: 0; }
+
+/* v1.0 390 px polish (package U): on phones the Federation section links start on their own left-aligned line
+   (a fixture's details also get a 220 px basis in WorldScreen.tsx, so its actions wrap below them). */
+@media (max-width: 700px) {
+  .world-head > .spacer { flex-basis: 100%; height: 0; }
+}

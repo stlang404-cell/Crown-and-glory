@@ -97,7 +97,7 @@ export function WorldScreen() {
 
   return (
     <div>
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className="row world-head" style={{ marginBottom: 12 }}>
         <Insignia division={w.player.division} size={40} />
         <div>
           <h1 style={{ margin: 0 }}>Season {w.season} · Round {w.round}/{ROUNDS_PER_SEASON}</h1>
@@ -122,9 +122,9 @@ export function WorldScreen() {
             const opp = f.white === PLAYER_ID ? f.black : f.white;
             const c = st.competitors.get(opp)!;
             return (
-              <div key={f.id} className="row" style={{ borderBottom: '1px solid var(--line)', paddingBottom: 8 }}>
+              <div key={f.id} className="row fixture-row" style={{ borderBottom: '1px solid var(--line)', paddingBottom: 8 }}>
                 <Portrait seed={c.portraitSeed} size={36} />
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                   <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
                   <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {fmtCareerElo(c.rating, { rd: c.rd })} · Rapid 5+3, rated</div>
                   {f.postponedFrom !== undefined && <div className="small"><span className="chip neg" data-testid="postponed-chip">Postponed from round {f.postponedFrom}</span> <span className="muted">Play by the end of round {LEAGUE_ROUNDS}.</span></div>}
