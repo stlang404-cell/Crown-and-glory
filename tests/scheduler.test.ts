@@ -120,7 +120,7 @@ describe('live scheduler: settlement, persistence, labels, determinism', () => {
     expect(svc.liveGame(done.id)!.moves.length).toBe(lg.moves.length);
     // a stale ply for a running game is discarded too
     const running = svc.activeScheduled()[0];
-    if (running) expect((await svc.scheduledStep(running.id, running.moves.length + 3, { ccn: 'a2a3', score: { kind: 'cp', value: 0 }, depth: 1, nodes: 1, ms: 1 })).applied).toBe(false);
+    if (running) expect((await svc.scheduledStep(running.id, running.moves.length + 3, { ccn: 'a2a3', score: { kind: 'cp', value: 0, pov: 'white' }, depth: 1, nodes: 1, ms: 1 })).applied).toBe(false);
     // advancing: every pairing appears exactly once in the season's games, with the recorded result
     for (const f of svc.playerFixtures()) await svc.forfeit(f.id);
     const statsBefore = svc.state!.competitors.get(done.white)!.stats;

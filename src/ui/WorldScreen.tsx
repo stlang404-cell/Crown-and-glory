@@ -6,6 +6,8 @@ import { Emblem, Trophy } from './Emblem';
 import { divisionEmblem, tournamentCrest } from '../heraldry/catalog';
 import { collect } from '../app/rivalries';
 import { computeRivalry } from '../heraldry/rivalry';
+import { NEW_FEDERATION_TOPOLOGY, populationOf, regionNamesOf } from '../federation/model';
+import { LiveNow } from './LiveNow';
 import { REGION_NAMES, divisionLabel, PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, CHAMPIONSHIP_ROUNDS, CLUB_ROUNDS, ROUNDS_PER_SEASON, DIVISIONS, LEAGUE_EVENT } from '../federation/model';
 import { leagueTable, swissTable, swissEventFor } from '../federation/world';
 import { gamesOf } from '../federation/driver';
@@ -43,13 +45,13 @@ export function WorldScreen() {
       <div>
         <h1>The Six-Square Federation</h1>
         <div className="panel stack" style={{ maxWidth: 760 }}>
-          <p>Found a federation of <strong>2,048 AI competitors</strong> across 16 regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
+          <p>Found a federation of <strong>{populationOf(NEW_FEDERATION_TOPOLOGY).toLocaleString('en')} AI competitors</strong> across {NEW_FEDERATION_TOPOLOGY.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money).</p>
           <details className="small"><summary>Details</summary>
             <p>Each season has a 15-round league, the Federation Open and Challenger Open (Swiss), the Crown Championship (16-player knockout) and, for club owners, a Club Weekend.</p>
             <p>Every competitor has a lasting identity, a hidden playing strength, a public rating (Glicko-2), a career and titles. Your league games are rated. Other results come from a model fitted on engine games, except featured matches, which the engine plays move by move.</p>
           </details>
           <label className="small">Home Region{' '}
-            <select value={region} onChange={e => setRegion(+e.target.value)}>{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+            <select value={region} onChange={e => setRegion(+e.target.value)}>{regionNamesOf(NEW_FEDERATION_TOPOLOGY).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
           </label>
           <button className="btn primary" disabled={!!busy || services.readOnly} onClick={() => act('create', () => fed.create(region))}>{busy ? 'Founding the federation…' : 'Found the federation'}</button>
           {msg && <div className="notice warn">{msg}</div>}
@@ -143,6 +145,7 @@ export function WorldScreen() {
           <div className="small muted">Trading closes when a match starts. There are no markets on your own games.</div>
         </div>
       </div>
+      <LiveNow />
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
           <div className="panel-title"><h3 style={{ margin: 0 }}>{myCircuit ? `${divisionLabel(myCircuit.division)} · ${REGION_NAMES[myCircuit.region]}` : 'Your Division'}</h3><button className="btn ghost small" onClick={() => go({ name: 'standings' })}>All Divisions</button></div>
@@ -214,7 +217,7 @@ export function StandingsScreen() {
         <h1 style={{ margin: 0 }}>Divisions</h1>
       </div>
       <div className="row" style={{ marginBottom: 10 }}>
-        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region">{REGION_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
+        <select value={region} onChange={e => setRegion(+e.target.value)} aria-label="Region">{regionNamesOf(fed.topology()).map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
         <div className="seg" role="group" aria-label="Division">{Array.from({ length: DIVISIONS }, (_, i) => i + 1).map(d => <button key={d} aria-pressed={division === d} onClick={() => setDivision(d)}>{d}</button>)}</div>
       </div>
       <div className="panel">

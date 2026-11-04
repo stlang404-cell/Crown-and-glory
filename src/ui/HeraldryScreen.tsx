@@ -1,5 +1,5 @@
 import { Emblem, Trophy } from './Emblem';
-import { divisionLabel, REGION_NAMES } from '../federation/model';
+import { divisionLabel, regionNamesOf, TOPOLOGY_V1 } from '../federation/model';
 import { divisionEmblem, rankEmblem, RANK_ORDER, titleEmblem, FED_TITLES, FED_TITLE_ABBR, regionEmblem, tournamentCrest, TOURNAMENTS, TOURNAMENT_NAME, TROPHY_FOR, financialEmblem, FIN_TIERS, ACHIEVEMENTS, achievementEmblem } from '../heraldry/catalog';
 import { AI_CLUBS, clubEmblem } from '../heraldry/clubs';
 import { TITLE_RULES, TITLES_ID } from '../heraldry/titles';
@@ -45,7 +45,7 @@ export function HeraldryScreen() {
         </details>
         <div className="small muted">Fictional honours of this federation, earned like real chess titles through norms and a peak rating. They are not FIDE titles.</div>
       </section>
-      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={REGION_NAMES.map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
+      <section className="panel stack" data-testid="gallery-regions"><h3>Regional Federations</h3><Row items={regionNamesOf(TOPOLOGY_V1).map((n, i) => ({ spec: regionEmblem(i), label: n }))} /></section>
       <section className="panel stack" data-testid="gallery-tournaments">
         <h3>Major Tournaments and Their Trophies</h3>
         <div className="emblem-row">{TOURNAMENTS.map(t => <div key={t} className="emblem-cell"><span className="row"><Emblem spec={tournamentCrest(t)} size="md" title={`${TOURNAMENT_NAME[t]} crest`} /><Trophy kind={TROPHY_FOR[t]} size="md" title={`${TOURNAMENT_NAME[t]} trophy`} /></span><span className="small"><strong>{TOURNAMENT_NAME[t]}</strong></span></div>)}</div>

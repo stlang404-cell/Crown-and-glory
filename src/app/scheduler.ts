@@ -126,6 +126,7 @@ export class LiveScheduler {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private ticking = false;
+  private rekick = false;
   private counters = { moves: 0, finished: 0, stale: 0, errors: 0 };
   lastCatchUp: CatchUpPlan | null = null;
   lastError: string | null = null;
@@ -168,6 +169,18 @@ export class LiveScheduler {
     if (!this.fed.ready || this.opts.readOnly?.()) return null;
     const plan = planCatchUp(this.fed.activeScheduled(), this.now(), this.settings);
     this.lastCatchUp = plan;
+    if (!plan.abstract.length && !plan.fastForward.length) return plan;
+    // the catch-up owns every engine slot: no paced move is dispatched meanwhile
+    this.pausedBy.add('catch-up');
+    try {
+      await this.idle();
+      await this.runCatchUp(plan);
+    } finally { this.pausedBy.delete('catch-up'); }
+    this.onChange?.();
+    return plan;
+  }
+
+  private async runCatchUp(plan: CatchUpPlan): Promise<void> {
     if (plan.abstract.length) await this.fed.resolveScheduledAbstract(plan.abstract, `Resolved abstractly when the app reopened after ${Math.round(plan.closedMs / 60_000)} min away (catch-up limit ${this.settings.catchUpK} games).`);
     if (plan.fastForward.length) {
       // fast-forward runs one game per engine slot in parallel; every move is a real engine move
@@ -176,8 +189,6 @@ export class LiveScheduler {
         for (let id = queue.shift(); id; id = queue.shift()) await this.playOut(id, slot);
       }));
     }
-    this.onChange?.();
-    return plan;
   }
 
   private async playOut(id: string, slot: number): Promise<void> {
@@ -199,7 +210,8 @@ export class LiveScheduler {
 
   /** One scheduling pass: fill free slots up to capacity, then hand due moves to free engines. Returns moves dispatched. */
   async tick(): Promise<number> {
-    if (this.ticking || this.paused || !this.fed.ready || this.opts.readOnly?.()) return 0;
+    if (this.ticking) { this.rekick = true; return 0; }
+    if (this.paused || !this.fed.ready || this.opts.readOnly?.()) return 0;
     this.ticking = true;
     try {
       const s = this.settings, cap = this.capacity();
@@ -207,6 +219,7 @@ export class LiveScheduler {
       if (active.length < cap) {
         try { await this.fed.startSlate(cap - active.length, s.maxPerRound); } catch (e) { this.fail(e); }
         active = this.fed.activeScheduled();
+        if (this.paused) return 0; // paused while the slate was being filled (e.g. catch-up started)
       }
       // only the first `cap` games (in start order) advance; extra games (capacity was lowered) wait for a slot
       const runnable = [...active].sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id)).slice(0, cap);
@@ -223,11 +236,16 @@ export class LiveScheduler {
         const p = this.engines[slot].compute(req)
           .then(r => this.fed.scheduledStep(g.id, req.ply, r).then(res => this.record(r, res)))
           .catch(e => this.fail(e))
-          .finally(() => { this.inflight.delete(g.id); this.free.push(slot); this.onChange?.(); });
+          // a freed engine takes the next due move at once (otherwise throughput would be capped at
+          // workers per timer period)
+          .finally(() => { this.inflight.delete(g.id); this.free.push(slot); this.onChange?.(); if (this.running && !this.paused) this.arm(0); });
         this.inflight.set(g.id, p);
       }
       return n;
-    } finally { this.ticking = false; }
+    } finally {
+      this.ticking = false;
+      if (this.rekick) { this.rekick = false; if (this.running && !this.paused) this.arm(0); }
+    }
   }
 
   /** Wait for every dispatched move to be committed (tests, shutdown). */
