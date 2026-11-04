@@ -7,8 +7,8 @@ import { MEASURED_FLOOR, MEASURED_TOP, profileForStrength, strengthNote, beginne
 import { generateFederation } from '../src/federation/generator';
 import { createWorld, Ctx, RoundRecord } from '../src/federation/world';
 import { runRoundHeadless } from '../src/federation/driver';
-import { DIVISIONS, ROUNDS_PER_SEASON, TOPOLOGY_V1, TOPOLOGY_V2 } from '../src/federation/model';
-import { BANDS, LATENT_MIN, NEW_FEDERATION_POPULATION, POPULATION_V1, POPULATION_V2, bandCounts, entrantModel, populationModelOf } from '../src/federation/population';
+import { DIVISIONS, ROUNDS_PER_SEASON, TOPOLOGY_V1, topologyWithRegions } from '../src/federation/model';
+import { BANDS, TARGET_PER_10K, LATENT_MIN, NEW_FEDERATION_POPULATION, POPULATION_V1, POPULATION_V2, bandCounts, entrantModel, populationModelOf } from '../src/federation/population';
 import { CrownDB } from '../src/storage/db';
 import { FederationService } from '../src/app/federation';
 
@@ -71,23 +71,27 @@ describe('population spectrum (crown-population-2)', () => {
       expect(comps).toHaveLength(2048);
       const bands = bandCounts(comps.map(c => c.latent));
       for (const b of BANDS) expect(bands[b.label]).toBeGreaterThan(0);
-      expect(bands['0–399']).toBeGreaterThan(120);
-      expect(bands['400–799']).toBeGreaterThan(250);
-      expect(bands['3200–3999']).toBeGreaterThan(20);
-      expect(bands['3200–3999']).toBeLessThan(120);
-      expect(bands['4000+']).toBeGreaterThanOrEqual(1);
-      expect(bands['4000+']).toBeLessThanOrEqual(5);
-      // more beginners than masters (a pyramid within the fixed 8 × 16 structure)
-      expect(bands['0–399'] + bands['400–799']).toBeGreaterThan(bands['2800–3199'] + bands['3200–3999'] + bands['4000+']);
+      // the owner's target pyramid per 10,000, scaled to 2,048 (docs/V10_PLAN.md): within 15 % or 4 binomial sd + 2 (small top bands are noisy per seed)
+      for (const b of BANDS) {
+        const t = TARGET_PER_10K.filter(x => x.lo >= b.lo && x.hi <= b.hi).reduce((a, x) => a + x.n, 0) * comps.length / 10000;
+        if (b.label === '4000+') continue;
+        expect(Math.abs(bands[b.label] - t)).toBeLessThanOrEqual(Math.max(4 * Math.sqrt(t) + 2, 0.15 * t));
+      }
+      expect(bands['4000+']).toBeGreaterThanOrEqual(2);
+      expect(bands['4000+']).toBeLessThanOrEqual(4);
       const mean = (d: number) => { const a = comps.filter(c => c.division === d); return a.reduce((s, c) => s + c.latent, 0) / a.length; };
-      for (let d = 1; d < DIVISIONS; d++) expect(mean(d)).toBeGreaterThan(mean(d + 1) + 200);
+      for (let d = 1; d < DIVISIONS; d++) expect(mean(d)).toBeGreaterThan(mean(d + 1) + 100);
       const d8 = comps.filter(c => c.division === 8);
       expect(d8.filter(c => c.latent < 800).length / d8.length).toBeGreaterThan(0.9);
       expect(Math.min(...comps.map(c => c.latent))).toBeGreaterThanOrEqual(LATENT_MIN);
       expect(Math.min(...comps.map(c => c.rating))).toBeGreaterThanOrEqual(0);
     }
-    const big = bandCounts(generateFederation(5, TOPOLOGY_V2, POPULATION_V2).map(c => c.latent));
-    expect(big['4000+']).toBeGreaterThanOrEqual(4);
+    // a ~10,000 federation (78 regions) hits the target per 10,000 closely and has a few 4,000+
+    const big = generateFederation(5, topologyWithRegions(78), POPULATION_V2);
+    const bb = bandCounts(big.map(c => c.latent));
+    const per10k = (k: string) => bb[k] * 10000 / big.length;
+    for (const [k, t] of [['0–399', 500], ['400–799', 1500], ['800–1199', 2500], ['1200–1599', 2600], ['1600–1999', 1700], ['2000–2399', 800], ['2400–2799', 280], ['2800–3199', 90], ['3200–3999', 30]] as const) expect(Math.abs(per10k(k) - t)).toBeLessThanOrEqual(Math.max(3 * Math.sqrt(t), 0.12 * t));
+    expect(bb['4000+']).toBeGreaterThanOrEqual(3);
   });
   it('the default (crown-population-1) is unchanged, so every pre-v0.10 seed regenerates identically', () => {
     const a = generateFederation(7), b = generateFederation(7, TOPOLOGY_V1, POPULATION_V1);
@@ -111,7 +115,7 @@ describe('population spectrum (crown-population-2)', () => {
     await svc.create(2, 4242);
     expect(svc.state!.world.populationModel).toBe(POPULATION_V2);
     const lat = [...svc.state!.competitors.values()].map(c => c.latent);
-    expect(lat.filter(x => x < 400).length).toBeGreaterThan(100);
+    expect(lat.filter(x => x < 400).length).toBeGreaterThan(70);
     expect(lat.filter(x => x >= 4000).length).toBeGreaterThanOrEqual(1);
   }, 60_000);
 });

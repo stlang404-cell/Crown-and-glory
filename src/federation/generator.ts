@@ -44,7 +44,9 @@ export function makeName(r: () => number, used: Set<string>): string {
 export function makeCompetitor(seed: number, index: number, region: number, division: number, season: number, used: Set<string>, entrant = false, model: PopulationModel = POPULATION_V1, apex = false): Competitor {
   const r = rng01(hashSeed(seed, 'competitor', index, season));
   // one normal draw in every model, so the rest of the record (name, age, style) uses the same random stream
-  const latent = latentFrom(model, division, normal(r), apex);
+  // crown-population-2 also needs a division-overlap jitter: from its own stream, so names/ages/styles stay identical
+  const z2 = model === POPULATION_V1 ? 0 : normal(rng01(hashSeed(seed, 'spread', index, season)));
+  const latent = latentFrom(model, division, normal(r), apex, z2);
   const rating = entrant ? entrantRating(model, division) : Math.max(0, Math.round(latent + 80 * normal(r)));
   const age = entrant ? 17 + Math.floor(r() * 5) : 18 + Math.floor(r() * 22);
   return {
