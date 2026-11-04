@@ -856,7 +856,7 @@ Academy puzzle pz-1qogh9k ("Find the only move that holds", difficulty 3).
 fen: 3N2/p5/3k1p/2n1pP/P1K1P1/6 w - - 0 25
 line: Nf5+ Kc4 Nd6+ Kd4 Nf5+
 claim: puzzle pz-1qogh9k
-caption: White to move. Black's king is deep in White's half. Can White's knight hold the game?
+caption: White to move. Black's king and knight are centralised. Can White's knight hold the game?
 ```
 <!-- diagram -->
 ```text
@@ -870,7 +870,7 @@ caption: White to move. Black's king is deep in White's half. Can White's knight
   └─────────────
     a b c d e f    White to move
 ```
-*White to move. Black's king is deep in White's half. Can White's knight hold the game?*
+*White to move. Black's king and knight are centralised. Can White's knight hold the game?*
 <!-- /diagram -->
 
 **1.Nf5+ Kc4 2.Nd6+ Kd4 3.Nf5+.** The knight checks from f5 and d6 in turn, and after move 3 the position after
