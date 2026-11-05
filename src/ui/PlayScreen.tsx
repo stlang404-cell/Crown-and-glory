@@ -13,7 +13,11 @@ import { BEGINNER_CALIBRATION_ID } from '../federation/profiles';
 import { MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
 import { CancelledError } from '../engine/client';
 import { GameSession, createGameRecord } from '../games/session';
-import { TIME_CONTROLS, TimeControlId, GameRecord, poolFor } from '../games/types';
+import { TIME_CONTROLS, GameRecord, poolFor, type TimeControl } from '../games/types';
+import { CRITICAL_MS, ClockKeeper, VisibleClock, fmtClock, incrementText, lowTimeThreshold, spokenClock } from '../games/clock';
+import { loadTimeControl, onTimeControl, saveTimeControl } from '../app/timeControlPref';
+import { TimeControlPicker } from './TimeControlPicker';
+import { CAREER_POOL, POOL_LABEL } from '../ratings/pools';
 import { TERMINATION_LABEL } from '../rules/adjudication';
 import { Position } from '../rules/position';
 import { squareName } from '../rules/types';
@@ -38,12 +42,7 @@ import { clearPractice, peekPractice } from '../app/practice';
 import { gameModeLabel } from '../app/study';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
-export const fmtClock = (ms: number) => {
-  if (!Number.isFinite(ms)) return '∞';
-  const t = Math.max(0, ms);
-  const m = Math.floor(t / 60000), s = Math.floor((t % 60000) / 1000);
-  return t < 20000 ? `${m}:${String(s).padStart(2, '0')}.${Math.floor((t % 1000) / 100)}` : `${m}:${String(s).padStart(2, '0')}`;
-};
+export { fmtClock };
 export const resultText = (g: GameRecord) => {
   if (!g.result) return 'In progress';
   if (g.result === '1/2-1/2') return 'Draw';
@@ -64,7 +63,7 @@ export function PlayScreen() {
   // A provisional new career (or any career under 800) is offered the calibrated beginners first (docs/CAREER_RATING.md)
   const [beginnerFirst, setBeginnerFirst] = useState(false);
   useEffect(() => {
-    void services.db.ratingState('rapid').then(p => {
+    void services.db.careerRating().then(p => {
       const on = suggestBeginnerBands(p, services.db.ratingStart);
       setBeginnerFirst(on);
       if (on && !oppTouched) {
@@ -74,7 +73,14 @@ export function PlayScreen() {
       }
     }).catch(() => {});
   }, [services, services.revision]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [tc, setTc] = useState<TimeControlId>(practice?.timeControl ?? 'rapid');
+  // the last selected control (persisted, src/app/timeControlPref.ts; Classical 60+60 by default). A practice hand-off
+  // preselects its own control for this visit without changing the remembered one.
+  const [tc, setTcRaw] = useState<TimeControl>(() => (practice ? TIME_CONTROLS[practice.timeControl] : TIME_CONTROLS.classical60));
+  useEffect(() => {
+    if (!practice) void loadTimeControl(services.db).then(setTcRaw);
+    return onTimeControl(setTcRaw);
+  }, [services]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setTc = (t: TimeControl) => { setTcRaw(t); void saveTimeControl(services.db, t, !services.readOnly); };
   const [mode, setMode] = useState<'rated' | 'casual'>(practice ? 'casual' : 'rated');
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
   const [unfinished, setUnfinished] = useState<GameRecord[]>([]);
@@ -84,19 +90,20 @@ export function PlayScreen() {
   const isMax = opp.level === MAX_LEVEL;
   // Sovereign Unbound is calibrated only at its rated budget; other budgets are casual
   const calibrated = opponentRating(opp) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
-  const ratedAllowed = calibrated && tc !== 'untimed';
+  const ratedAllowed = calibrated && poolFor(tc) !== null;
 
   useEffect(() => {
     void services.db.unfinishedGames().then(setUnfinished);
     void services.db.allGames().then(gs => setRecent(gs.filter(g => g.status === 'finalized').sort((a, b) => (b.endedAt ?? '').localeCompare(a.endedAt ?? ''))[0] ?? null));
   }, [services, services.revision]);
-  useEffect(() => { const p = poolFor(tc); if (p) void services.db.ratingState(p).then(setPool); else setPool(null); }, [tc, services, services.revision]);
+  const tcPool = poolFor(tc);
+  useEffect(() => { if (tcPool) void services.db.ratingState(tcPool).then(setPool); else setPool(null); }, [tcPool, services, services.revision]);
 
   const start = async () => {
     const humanColor = color === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : color;
     const rated = mode === 'rated' && ratedAllowed;
     const record = createGameRecord({
-      id: newId(), mode: rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS[tc], humanColor,
+      id: newId(), mode: rated ? 'rated' : 'casual', timeControl: { ...tc }, humanColor,
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
       engine: playOpponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
@@ -175,14 +182,9 @@ export function PlayScreen() {
         <div className="panel stack">
           <h2>Match Settings</h2>
           {practice && mode === 'casual' && opp.id === practice.opponentId && (
-            <div className="notice" data-testid="practice-preset">Practice game from Today’s Plan: {opp.name}, {TIME_CONTROLS[tc].label}, Casual — saved and analysed, never rated.</div>
+            <div className="notice" data-testid="practice-preset">Practice game from Today’s Plan: {opp.name}, {tc.label}, Casual — saved and analysed, never rated.</div>
           )}
-          <div>
-            <div className="small muted">Time Control</div>
-            <div className="seg" role="group" aria-label="Time control">
-              {(Object.keys(TIME_CONTROLS) as TimeControlId[]).map(id => <button key={id} aria-pressed={tc === id} onClick={() => setTc(id)}>{TIME_CONTROLS[id].label}</button>)}
-            </div>
-          </div>
+          <TimeControlPicker value={tc} onChange={setTc} />
           {isMax && (
             <div data-testid="max-budget">
               <div className="small muted">Thinking Time per Move</div>
@@ -203,7 +205,7 @@ export function PlayScreen() {
               <button aria-pressed={mode === 'casual' || !ratedAllowed} onClick={() => setMode('casual')}>Casual</button>
             </div>
             <div className="small muted" style={{ marginTop: 4 }}>
-              {!calibrated ? (isMax && opponentRating(opp) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
+              {!calibrated ? (isMax && opponentRating(opp) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc.id === 'untimed' ? 'Untimed games are never rated.' : !tcPool ? `${tc.label} is casual only: rated games are 30 minutes or longer.` : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
             </div>
           </div>
           <div>
@@ -214,7 +216,7 @@ export function PlayScreen() {
           </div>
           {pool && mode === 'rated' && ratedAllowed && (
             <div className="notice">
-              Your {poolFor(tc)} career Elo: <strong data-testid="play-my-rating">{careerEloLabel(pool.rating, pool.games, pool.rd)}</strong> ±{Math.round(pool.rd)} ({pool.games} rated games). {isEstablished(pool.games, pool.rd) ? 'It becomes more certain as you play more rated games.' : `Provisional: it moves quickly and is established after at least ${gamesToEstablish(pool.games)} more rated game${gamesToEstablish(pool.games) === 1 ? '' : 's'} and ±100. It changes only through results.`}
+              Your career Elo ({POOL_LABEL[tcPool!]}): <strong data-testid="play-my-rating">{careerEloLabel(pool.rating, pool.games, pool.rd)}</strong> ±{Math.round(pool.rd)} ({pool.games} rated games). {isEstablished(pool.games, pool.rd) ? 'It becomes more certain as you play more rated games.' : `Provisional: it moves quickly and is established after at least ${gamesToEstablish(pool.games)} more rated game${gamesToEstablish(pool.games) === 1 ? '' : 's'} and ±100. It changes only through results.`}
             </div>
           )}
           <button className="btn primary" style={{ width: '100%', fontSize: '1.05rem' }} onClick={start} disabled={services.readOnly}>
@@ -272,6 +274,15 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   // history browsing (Match Center): null follows the game; a number shows that earlier position read-only
   const [viewPly, setViewPly] = useState<number | null>(null);
   const [tab, setTab] = useState<'moves' | 'assistant'>('moves');
+  // visible time only (src/games/clock.ts): the clock never runs while the page is hidden, frozen or closed
+  const vclock = useRef<VisibleClock | null>(null);
+  if (!vclock.current) vclock.current = new VisibleClock();
+  const clockNow = () => vclock.current!.now();
+  const [saveWarn, setSaveWarn] = useState<string | null>(null);
+  const [resumedAt, setResumedAt] = useState<number | null>(null);
+  // the ply an engine move was requested for: one request per position, committed at most once
+  const engineFor = useRef<number | null>(null);
+  const wasPaused = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -280,11 +291,13 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       if (!g) { setError('Game not found.'); return; }
       if (g.status === 'finalized') { go({ name: 'analysis', gameId }); return; }
       const s = new GameSession(g);
-      const t = Date.now(), iso = new Date().toISOString();
-      if (g.status !== 'terminal') {
+      // A read-only tab (the game is open for writing in another tab) never runs this game's clock or engine.
+      if (g.status !== 'terminal' && !services.readOnly) {
+        const t = vclock.current!.now(), iso = new Date().toISOString();
         s.start(t);
-        // Reopening a saved game: time while the app was closed is not charged; the gap is recorded as a pause.
-        if (g.moves.length > 0 || g.pauses.length > 0) { s.pause(t, 'reload', iso); s.resume(t, iso); }
+        // Reopening a saved game: the clock continues from the last committed remaining time (charged up to the last
+        // heartbeat or pause); time while the app was closed is not charged; the gap is recorded as a pause.
+        if (g.moves.length > 0 || g.pauses.length > 0 || g.clockTurn) { s.pause(t, 'reload', iso); s.resume(t, iso); }
       }
       setSession(s);
     });
@@ -311,64 +324,73 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   // terminal-but-not-finalized games (e.g. closed during save) finalize immediately on load
   useEffect(() => { if (session?.isOver) void finalize(session); }, [session, finalize]);
 
-  // clock ticker
+  // clock ticker (display and flag fall; the time itself comes from the visible clock, not from these ticks)
   useEffect(() => {
     if (!session || !session.timed) return;
     const id = setInterval(() => {
-      const o = session.tick(Date.now(), new Date().toISOString());
+      const o = session.tick(clockNow(), new Date().toISOString());
       if (o) void finalize(session);
       force();
     }, 100);
     return () => clearInterval(id);
-  }, [session, finalize]);
+  }, [session, finalize]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // pause on app suspension (doc 04: rated clocks pause on suspension; pauses are recorded)
+  // Pause on exit (src/games/clock.ts, docs/SAVE_FORMAT.md): hidden / frozen / closed / leaving the screen pauses
+  // and commits the clock; visible again resumes it; a heartbeat commits the running clock every 5 s.
   useEffect(() => {
-    if (!session) return;
-    const on = () => {
-      if (document.visibilityState === 'hidden') { services.play.cancel(); setThinking(false); session.pause(Date.now(), 'visibility', new Date().toISOString()); void services.saveGame(session.snapshot()); }
-      else { session.resume(Date.now(), new Date().toISOString()); }
-      force();
-    };
-    document.addEventListener('visibilitychange', on);
-    return () => document.removeEventListener('visibilitychange', on);
+    if (!session || session.isOver || services.readOnly) return;
+    const keeper = new ClockKeeper({
+      session, clock: vclock.current!,
+      save: async rec => { await services.saveGame(rec); setSaveWarn(null); },
+      onSaveError: e => setSaveWarn(`The game couldn't be saved just now (${(e as Error)?.message ?? e}). It is still running; the next save retries.`),
+      onPause: () => { services.play.cancel(); engineFor.current = null; setThinking(false); },
+      onChange: () => { const p = session.paused; if (wasPaused.current && !p) setResumedAt(Date.now()); wasPaused.current = p; force(); },
+    });
+    keeper.attach();
+    return () => keeper.detach('leave');
   }, [session, services]);
+  useEffect(() => { if (resumedAt === null) return; const t = setTimeout(() => setResumedAt(null), 4000); return () => clearTimeout(t); }, [resumedAt]);
 
   const engineColor = session ? (session.humanColor ^ 1) : 1;
 
-  // engine move
+  // engine move: requested once per position (ply) and committed only if the position is still that ply. After a
+  // reload during the engine's turn the same seeded request is made again (node-limited levels return the same move).
   useEffect(() => {
-    if (!session || session.isOver || session.paused || thinking) return;
+    if (!session || session.isOver || session.paused || thinking || services.readOnly) return;
     if (session.sideToMove !== engineColor) return;
+    if (engineFor.current === session.plies) return;
     const rec = session.record;
     const engine = rec.humanColor === 'white' ? rec.black : rec.white;
     // engine claims an available draw only if it is not better
     const claims = session.claims();
     if ((claims.threefold || claims.fiftyMove) && engineScore.current && engineDrawDecision(engineScore.current, 0)) {
-      session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', Date.now(), new Date().toISOString());
+      session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', clockNow(), new Date().toISOString());
       void finalize(session);
       force();
       return;
     }
     setThinking(true);
     const ply = rec.moves.length;
+    engineFor.current = ply;
     services.play.move({
       initialFen: rec.initialFen, setupMoves: rec.setupMoves, moves: rec.moves.map(m => m.ccn), level: engine.engine!.level || 1, profile: engine.engine?.profile, style: engine.engine?.styleId, seed: (rec.engineSeed + ply * 7919) >>> 0,
-      clock: session.timed ? { remainingMs: session.remaining(engineColor as 0 | 1, Date.now()), incrementMs: rec.timeControl.incrementMs } : undefined,
+      clock: session.timed ? { remainingMs: session.remaining(engineColor as 0 | 1, clockNow()), incrementMs: rec.timeControl.incrementMs } : undefined,
       newGame: ply < 2,
     }).then(r => {
       setThinking(false);
+      if (engineFor.current !== ply || session.plies !== ply) return; // superseded (paused, reloaded, already applied)
       engineScore.current = r.score;
-      const res = session.applyMove(r.move, Date.now(), new Date().toISOString(), { depth: r.depth, nodes: r.nodes, timeMs: r.timeMs, selected: r.selected, seed: (rec.engineSeed + ply * 7919) >>> 0, score: r.score.kind === 'mate' ? { kind: 'mate', value: r.score.plies } : r.score.kind === 'cp' ? { kind: 'cp', value: r.score.value } : undefined, stopReason: r.stopReason, build: r.provenance?.build });
-      if (!res.ok && !res.outcome) setError(`The engine's move was rejected (${res.error}). Reopen the game from Play to continue.`);
+      const res = session.applyMove(r.move, clockNow(), new Date().toISOString(), { depth: r.depth, nodes: r.nodes, timeMs: r.timeMs, selected: r.selected, seed: (rec.engineSeed + ply * 7919) >>> 0, score: r.score.kind === 'mate' ? { kind: 'mate', value: r.score.plies } : r.score.kind === 'cp' ? { kind: 'cp', value: r.score.value } : undefined, stopReason: r.stopReason, build: r.provenance?.build }, ply);
+      if (!res.ok && !res.outcome) { if (session.paused) { engineFor.current = null; return; } setError(`The engine's move was rejected (${res.error}). Reopen the game from Play to continue.`); }
       void services.saveGame(session.snapshot());
       if (session.isOver) void finalize(session);
       force();
     }).catch(e => {
       setThinking(false);
+      if (engineFor.current === ply) engineFor.current = null;
       if (!(e instanceof CancelledError)) setError(`The engine stopped (${(e as Error).message}). Reopen the game from Play to continue.`);
     });
-  }, [session, session?.plies, session?.paused, thinking, engineColor, services, finalize]);
+  }, [session, session?.plies, session?.paused, thinking, engineColor, services, finalize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setAssist(null); setViewPly(null); }, [session?.plies]);
 
@@ -406,8 +428,9 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   };
 
   const onMove = (ccn: string) => {
-    if (!session) return;
-    const r = session.applyMove(ccn, Date.now(), new Date().toISOString());
+    // one move per human turn: a repeated submission (double tap, duplicate event) is refused by the ply check
+    if (!session || services.readOnly || session.sideToMove !== session.humanColor) return;
+    const r = session.applyMove(ccn, clockNow(), new Date().toISOString(), undefined, session.plies);
     if (!r.ok && !r.outcome) { setToast(r.error); return; }
     void services.saveGame(session.snapshot());
     if (session.isOver) void finalize(session);
@@ -415,7 +438,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   };
 
   const legal = useMemo(() => {
-    if (!session || session.isOver || session.sideToMove !== session.humanColor || session.paused) return [];
+    if (!session || session.isOver || session.sideToMove !== session.humanColor || session.paused || services.readOnly) return [];
     return session.legalMoves().map(ccnOf);
   }, [session, session?.plies, session?.isOver, session?.paused]);
 
@@ -423,7 +446,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   if (!session) return <p className="muted">Loading match…</p>;
 
   const rec = session.record;
-  const now = Date.now();
+  const now = clockNow();
   const humanColor = session.humanColor;
   const orientation: 'white' | 'black' = (humanColor === 0) !== flipped ? 'white' : 'black';
   const top = orientation === 'white' ? 1 : 0;
@@ -465,7 +488,8 @@ export function MatchScreen({ gameId }: { gameId: string }) {
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
           {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
         </>}
-        aside={session.timed ? <Clock live text={fmtClock(ms)} label={`${p.name} clock`} running={running} low={ms < 20000} /> : undefined}>
+        aside={session.timed ? <Clock live text={fmtClock(ms)} label={`${p.name} clock: ${spokenClock(ms)}${running ? ', running' : session.paused && !session.isOver ? ', paused' : ''}`} running={running}
+          low={ms < lowTimeThreshold(rec.timeControl)} critical={ms < CRITICAL_MS} paused={session.paused && !session.isOver} testId={isHuman ? 'human-clock' : 'engine-clock'} /> : undefined}>
         <Captured fen={shownFen} color={color} name={p.name} />
       </PlayerBar>
     );
@@ -474,7 +498,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
   const rating = (p: GameRecord['white']) => (p.rating !== null ? fmtCareerElo(p.rating) : null);
   const budgetMs = opp.engine?.config?.maxTimeMs;
-  const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
+  const statusText = services.readOnly && !session.isOver ? 'Read-only' : session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
     : thinking && opp.engine?.level === MAX_LEVEL && budgetMs ? `Thinking · up to ${budgetMs / 1000} s` : thinking ? 'Thinking…' : 'Opponent to Move';
 
   const board = (
@@ -484,6 +508,19 @@ export function MatchScreen({ gameId }: { gameId: string }) {
       {bar(bottom)}
       <MoveNav onFirst={nav.first} onPrev={nav.prev} onNext={nav.next} onLast={nav.last} lastLabel="Current Position" onFlip={() => setFlipped(f => !f)}
         indicator={browsing ? <span className="chip gold" data-testid="viewing-earlier">Move {Math.ceil(shownPly / 2)} · Earlier Position</span> : undefined} />
+      {session.timed && (
+        <div className="panel tc-strip small" data-testid="tc-strip">
+          <span className="tc-name" data-testid="match-tc">{rec.timeControl.label}</span>
+          <span className="muted">{incrementText(rec.timeControl)}</span>
+          {rec.rated && rec.pool && <span className="chip">{POOL_LABEL[rec.pool]}</span>}
+          <span className="tc-state" data-testid="clock-state">
+            {session.isOver ? <span className="chip">Clocks stopped</span>
+              : session.paused ? <span className="chip warn">Paused · clocks stopped</span>
+              : resumedAt !== null ? <span className="chip pos">Resumed · {session.sideToMove === humanColor ? 'your' : 'opponent\u2019s'} clock running</span>
+              : <span className="chip">{session.sideToMove === humanColor ? 'Your clock is running' : 'Opponent\u2019s clock is running'}</span>}
+          </span>
+        </div>
+      )}
       <div className="sr-only" aria-live="polite">{rec.moves.length ? `Last move ${rec.moves.at(-1)!.san}` : 'Game started'}{session.isOver && rec.termination ? `. ${TERMINATION_LABEL[rec.termination]}` : ''}</div>
     </>
   );
@@ -499,22 +536,24 @@ export function MatchScreen({ gameId }: { gameId: string }) {
         <div className="row">
           <button className="btn" disabled={!session.canAgreeDraw() || !humanToMove} onClick={() => {
             const yes = engineDrawDecision(engineScore.current, session.plies);
-            if (yes) { session.agreeDraw(Date.now(), new Date().toISOString()); void finalize(session); force(); }
+            if (yes) { session.agreeDraw(clockNow(), new Date().toISOString()); void finalize(session); force(); }
             else setToast(`${opp.name} declines the draw offer.`);
           }} title={session.canAgreeDraw() ? 'Offer a draw' : 'You can offer a draw after each side has made ten moves'}><Icon name="handshake" /> Offer Draw</button>
           {(claims.threefold || claims.fiftyMove) && humanToMove && (
-            <button className="btn" onClick={() => { session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', Date.now(), new Date().toISOString()); void finalize(session); force(); }}>
+            <button className="btn" onClick={() => { session.claimDraw(claims.threefold ? 'threefold' : 'fiftyMove', clockNow(), new Date().toISOString()); void finalize(session); force(); }}>
               Claim Draw ({claims.threefold ? 'Threefold Repetition' : '50-Move Rule'})
             </button>
           )}
           {!confirmResign
             ? <button className="btn danger" disabled={session.isOver} onClick={() => setConfirmResign(true)}><Icon name="flag" /> Resign</button>
             : <span className="row"><span className="small">Resign this game?</span>
-              <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, Date.now(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, Resign</button>
+              <button className="btn danger" onClick={() => { session.resign(humanColor as 0 | 1, clockNow(), new Date().toISOString()); setConfirmResign(false); void finalize(session); force(); }}>Yes, Resign</button>
               <button className="btn" onClick={() => setConfirmResign(false)}>No</button></span>}
         </div>
         {toast && <div className="notice" role="status" onClick={() => setToast(null)}>{toast}</div>}
-        {session.paused && <div className="notice warn">Clocks are paused while the app is in the background.</div>}
+        {services.readOnly && !session.isOver && <div className="notice warn" data-testid="match-read-only">This game is open in another Crown tab, so this tab is read-only: its clock does not run and no moves can be made here. Close the other tab and reload this one to play.</div>}
+        {!services.readOnly && session.paused && !session.isOver && <div className="notice warn" data-testid="paused-notice">Clocks are paused: the game stops whenever the app is in the background, closed or you leave this screen, and restarts from the saved time when you return.</div>}
+        {saveWarn && <div className="notice warn" role="alert" data-testid="save-warning">{saveWarn}</div>}
       </div>
     </>
   );
@@ -612,7 +651,7 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         {e ? (
           <div>
             <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{ratingChange(e.before.rating, e.after.rating).deltaText}</div>
-            <div className="small muted">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo · ±{Math.round(e.after.rd)}</div>
+            <div className="small muted" data-testid="rating-pool">{e.pool === CAREER_POOL ? 'Career Elo (Long Classical)' : `${POOL_LABEL[e.pool]} rating`} · ±{Math.round(e.after.rd)}</div>
             <RatingChangeLine before={e.before.rating} after={e.after.rating} provisional={e.provisionalAfter} />
             {e.after.rating < 0 && <p className="small muted">Career Elo is shown from 0 upward; the underlying rating is {e.after.rating.toFixed(0)} and wins bring it back up.</p>}
             <p className="small muted">{explainEvent(e)}</p>
@@ -656,7 +695,7 @@ function SandboxPanel({ rec }: { rec: GameRecord }) {
   const open = async () => {
     setMsg(null);
     try {
-      const pool = await services.db.ratingState('rapid');
+      const pool = await services.db.careerRating();
       const opp = rec.humanColor === 'white' ? rec.black : rec.white;
       const o = opp.rating ?? 1500;
       const p = rec.humanColor === 'white' ? wdl(pool.rating, o) : wdl(o, pool.rating);

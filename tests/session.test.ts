@@ -62,7 +62,8 @@ describe('game session', () => {
   });
   it('untimed games are never rated; assistance is refused in a rated game', () => {
     expect(mk(TIME_CONTROLS.untimed).record.rated).toBe(false);
-    const s = mk();
+    expect(mk(TIME_CONTROLS.rapid).record.rated).toBe(false); // v1.1: shorter controls are casual for new games
+    const s = mk(TIME_CONTROLS.classical60);
     expect(s.record.rated).toBe(true);
     expect(s.assistanceAllowed).toBe(false);
     expect(s.markAssisted('hint', 'T')).toBe(false); // refused in rated games

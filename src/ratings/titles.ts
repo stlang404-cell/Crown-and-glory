@@ -1,6 +1,6 @@
 /**
  * Rating titles (crown-rating-titles-1): one cosmetic title for every 100 points of the Federation rating (the
- * player's Rapid Glicko-2 rating, as used by the Federation), with an insignia built from the game's heraldry grammar.
+ * player's career Glicko-2 rating, src/ratings/pools.ts, as used by the Federation), with an insignia built from the game's heraldry grammar.
  *
  * A rating title only describes the current rating. It is not a Federation title (Squire … Sovereign, earned by
  * norms), not a division, not a regional league and not financial prestige. Titles and the insignia collection are

@@ -23,6 +23,7 @@ import { PieceSvg, PieceKind, PIECE_NAMES } from './Pieces';
 import type { EngineScore, Grade } from '../analysis/types';
 import { expectedU, toPov } from '../analysis/methodology';
 import './match-center.css';
+import './clock.css';
 
 /* ---------- grade icons (shared by the notation list, the analysis panels and the Arena) ---------- */
 
@@ -194,8 +195,12 @@ export function KingAvatar({ color, size = 40 }: { color: 'white' | 'black'; siz
 }
 
 /** A game clock. `live` marks a running game clock (role="timer"); replays show a static reading. */
-export function Clock({ text, label, running, low, live }: { text: string; label: string; running?: boolean; low?: boolean; live?: boolean }) {
-  return <div className={`clock${running ? ' running' : ''}${low ? ' low' : ''}`} role={live ? 'timer' : undefined} aria-label={label}>{text}</div>;
+export function Clock({ text, label, running, low, live, critical, paused, testId }: { text: string; label: string; running?: boolean; low?: boolean; live?: boolean;
+  /** v1.1: under 20 s (stronger warning) / the game is paused (clock stopped) */ critical?: boolean; paused?: boolean; testId?: string }) {
+  // h:mm:ss values (an hour or more) get the "long" layout (src/ui/clock.css) so 375 px screens never clip digits
+  const long = text.split(':').length > 2;
+  return <div className={`clock${running ? ' running' : ''}${low ? ' low' : ''}${critical ? ' critical' : ''}${long ? ' long' : ''}${paused ? ' paused' : ''}`} role={live ? 'timer' : undefined} aria-label={label} data-testid={testId}>
+    {running && <span className="clock-dot" aria-hidden="true" />}{text}</div>;
 }
 
 /** Pieces captured by one side in the given position, plus the material lead. */

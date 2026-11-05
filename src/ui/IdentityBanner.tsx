@@ -1,3 +1,4 @@
+import { careerTimeline } from '../ratings/pools';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useApp, useServices } from './App';
 import { Emblem } from './Emblem';
@@ -52,7 +53,7 @@ export function IdentityBanner() {
     const t = setTimeout(() => void (async () => {
       try {
         const [pool, events, games, reports] = await Promise.all([
-          services.db.ratingState('rapid').catch(() => null), services.db.ratingEvents('rapid'), services.db.allGames(), services.db.allReports(),
+          services.db.careerRating().catch(() => null), services.db.ratingEvents().then(careerTimeline), services.db.allGames(), services.db.allReports(),
         ]);
         // career Brilliant moves: latest complete report per finished game, the player's own moves only (re-analysis never double-counts)
         const latest = new Map<string, (typeof reports)[number]>();

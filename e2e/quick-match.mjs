@@ -49,7 +49,7 @@ check(3, names.size >= 4 && games1 === games0, `5 rerolls gave ${names.size} dif
 // rated quick match
 await page.locator('[data-testid="qm-draw"]').click();
 const oppName = await page.locator('[data-testid="qm-name"]').textContent();
-const before = await page.evaluate(async () => { const p = await window.__crown.db.ratingState('rapid'); return { rating: p.rating, games: p.games }; });
+const before = await page.evaluate(async () => { const p = await window.__crown.db.careerRating(); return { rating: p.rating, games: p.games }; });
 await page.locator('[data-testid="qm-start"]').click();
 await page.waitForSelector('[data-testid="match"]');
 const rec = await page.evaluate(async () => { const g = (await window.__crown.db.unfinishedGames())[0]; return { mode: g.mode, ctx: g.context.kind, opp: g.humanColor === 'white' ? g.black : g.white }; });
@@ -57,9 +57,9 @@ check(4, rec.mode === 'rated' && rec.ctx === 'quick-match' && rec.opp.name === o
 await page.getByRole('button', { name: /Resign/ }).first().click();
 await page.getByRole('button', { name: 'Yes, Resign' }).click();
 await page.waitForSelector('.result-overlay', { timeout: 20000 });
-const ev = await page.evaluate(async () => { const evs = await window.__crown.db.ratingEvents('rapid'); const p = await window.__crown.db.ratingState('rapid'); return { n: evs.length, last: evs.at(-1) && { opp: evs.at(-1).opponent?.name ?? evs.at(-1).opponentName, delta: evs.at(-1).delta }, rating: p.rating, games: p.games }; });
+const ev = await page.evaluate(async () => { const evs = await window.__crown.db.ratingEvents('classical-long'); const p = await window.__crown.db.careerRating(); return { n: evs.length, last: evs.at(-1) && { opp: evs.at(-1).opponent?.name ?? evs.at(-1).opponentName, delta: evs.at(-1).delta }, rating: p.rating, games: p.games }; });
 await page.reload(); await page.waitForTimeout(2000);
-const ev2 = await page.evaluate(async () => (await window.__crown.db.ratingEvents('rapid')).length);
+const ev2 = await page.evaluate(async () => (await window.__crown.db.ratingEvents('classical-long')).length);
 check(5, ev.n === 1 && ev.games === before.games + 1 && ev.rating < before.rating && ev2 === 1, `One rating event (${before.rating.toFixed(0)} → ${ev.rating.toFixed(0)}, games ${before.games} → ${ev.games}); still ${ev2} after reload`);
 // casual quick match
 await page.goto(url + '#/play');
@@ -70,7 +70,7 @@ await page.waitForSelector('[data-testid="match"]');
 await page.getByRole('button', { name: /Resign/ }).first().click();
 await page.getByRole('button', { name: 'Yes, Resign' }).click();
 await page.waitForSelector('.result-overlay', { timeout: 20000 });
-const ev3 = await page.evaluate(async () => { const p = await window.__crown.db.ratingState('rapid'); return { n: (await window.__crown.db.ratingEvents('rapid')).length, rating: p.rating }; });
+const ev3 = await page.evaluate(async () => { const p = await window.__crown.db.careerRating(); return { n: (await window.__crown.db.ratingEvents('classical-long')).length, rating: p.rating }; });
 check(6, ev3.n === 1 && Math.abs(ev3.rating - ev.rating) < 1e-9, `Casual quick match: rating unchanged (${ev3.rating.toFixed(1)}), still ${ev3.n} rating event`);
 // filters
 await page.goto(url + '#/play');

@@ -20,7 +20,7 @@ export function PopulationScreen() {
   const [mine, setMine] = useState<number | null>(null);
   // percentiles compare you with the field: only for an established rating (docs/CAREER_RATING.md)
   const [prov, setProv] = useState<{ rating: number; games: number } | null>(null);
-  useEffect(() => { void services.db.ratingState('rapid').then(p => { const est = isEstablished(p.games, p.rd); setMine(est ? p.rating : null); setProv(est ? null : { rating: p.rating, games: p.games }); }).catch(() => setMine(null)); }, [services, services.revision]);
+  useEffect(() => { void services.db.careerRating().then(p => { const est = isEstablished(p.games, p.rd); setMine(est ? p.rating : null); setProv(est ? null : { rating: p.rating, games: p.games }); }).catch(() => setMine(null)); }, [services, services.revision]);
   const stats = useMemo(() => (st ? populationStats(st.competitors.values(), mine, DIVISIONS) : null), [st, mine, services.revision]);
   if (!st || !stats) return <NeedsFederation />;
   const maxBand = Math.max(1, ...stats.bands);
@@ -44,7 +44,7 @@ export function PopulationScreen() {
         <div className="panel stat"><span className="k">Active Competitors</span><span className="v">{fmt(stats.active)}</span><span className="small muted">{fmt(stats.retired)} retired · {fmt(stats.reserve)} reserve</span></div>
         <div className="panel stat"><span className="k">Mean Rating</span><span className="v mono">{fmt(stats.mean)}</span></div>
         <div className="panel stat"><span className="k">Median Rating</span><span className="v mono">{fmt(stats.median)}</span><span className="small muted">range {fmt(stats.min)}–{fmt(stats.max)}</span></div>
-        <div className="panel stat" data-testid="player-percentile"><span className="k">Your Percentile</span><span className="v mono">{stats.playerPercentile === null ? '—' : `${stats.playerPercentile.toFixed(1)}%`}</span><span className="small muted">{mine === null ? (prov ? `Your career Elo ${displayElo(prov.rating)} is provisional; your percentile appears once it is established (${gamesToEstablish(prov.games)} more rated games at least, ±100).` : 'Play a rated rapid game to get a rating.') : `Your rating ${fmt(mine)} is above ${stats.playerPercentile!.toFixed(1)}% of active competitors.`}</span></div>
+        <div className="panel stat" data-testid="player-percentile"><span className="k">Your Percentile</span><span className="v mono">{stats.playerPercentile === null ? '—' : `${stats.playerPercentile.toFixed(1)}%`}</span><span className="small muted">{mine === null ? (prov ? `Your career Elo ${displayElo(prov.rating)} is provisional; your percentile appears once it is established (${gamesToEstablish(prov.games)} more rated games at least, ±100).` : 'Play a rated game to get a rating.') : `Your rating ${fmt(mine)} is above ${stats.playerPercentile!.toFixed(1)}% of active competitors.`}</span></div>
       </div>
       <section className="panel stack" data-testid="rating-bands">
         <h2 className="h3" style={{ margin: 0 }}>Rating Distribution</h2>

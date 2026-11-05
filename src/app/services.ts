@@ -102,7 +102,7 @@ export class AppServices {
     const db = await phase('db:open', () => CrownDB.open());
     const s = new AppServices(db);
     await phase('lease', () => s.acquireLease());
-    s.fed = new FederationService(db, async () => { const p = await db.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; });
+    s.fed = new FederationService(db, async () => { const p = await db.careerRating(); return { rating: p.rating, rd: p.rd }; });
     s.fed.runSelfplay = (req, onMove) => s.spectator.selfplay(req, m => onMove(m)).then(r => ({ moves: r.moves, result: r.result, termination: r.termination }));
     s.fed.computeMove = req => s.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
       .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs }));

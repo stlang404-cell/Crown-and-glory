@@ -151,13 +151,13 @@ const SPECS: Spec[] = [
     ev: f => count(f.retryWins, 5, `${f.retryWins} retries won`) },
 
   // ---------------------------------------------------------------- C. Federation Career
-  { id: 'first-title', name: 'Named', c: 'Federation Career', r: 'common', charge: 'quill', field: 'azure', d: 'Establish your rating.', rule: 'Reach an established Rapid rating (20+ rated games and RD 100 or less) and collect your first insignia.',
+  { id: 'first-title', name: 'Named', c: 'Federation Career', r: 'common', charge: 'quill', field: 'azure', d: 'Establish your rating.', rule: 'Reach an established career Elo (20+ rated games and RD 100 or less) and collect your first insignia.',
     ev: f => hit(f.insignia.collected.length > 0, `First insignia: ${RATING_TITLES[f.insignia.collected[0]]?.name}`) },
   ...RATING_TIERS.map(([n, r]): Spec => ({ id: `rating-${n}`, name: `Rating ${n.toLocaleString('en')}`, c: 'Federation Career', r, charge: n >= 2500 ? 'crown' : n >= 2000 ? 'king' : 'rook', field: n >= 2500 ? 'sanguine' : n >= 2000 ? 'purpure' : 'steel',
-    d: `Reach an established rating of ${n.toLocaleString('en')}.`, rule: `Your established Rapid rating reaches ${n.toLocaleString('en')} or more.`,
+    d: `Reach an established rating of ${n.toLocaleString('en')}.`, rule: `Your established career Elo reaches ${n.toLocaleString('en')} or more.`,
     ev: f => hit((f.insignia.peakRating ?? -Infinity) >= n, `Peak established rating ${Math.round(f.insignia.peakRating ?? 0)}`) })),
   ...([[10, 'Collector', 'rare'], [20, 'Curator', 'epic'], [31, 'Complete Heraldry', 'mythic']] as [number, string, Rarity][]).map(([n, name, r]): Spec => ({
-    id: `insignias-${n}`, name, c: 'Federation Career', r, charge: 'laurel', field: n === 31 ? 'or' : 'bronze', d: `Collect ${n} rating insignias.`, rule: `Collect ${n} of the 31 rating-title insignias with an established Rapid rating.`,
+    id: `insignias-${n}`, name, c: 'Federation Career', r, charge: 'laurel', field: n === 31 ? 'or' : 'bronze', d: `Collect ${n} rating insignias.`, rule: `Collect ${n} of the 31 rating-title insignias with an established career Elo.`,
     ev: f => count(f.insignia.collected.length, n, `${f.insignia.collected.length} insignias collected`) })),
   { id: 'promotion', name: 'Ascent', c: 'Federation Career', r: 'uncommon', charge: 'tower', field: 'vert', d: 'Win promotion.', rule: 'Be promoted to a higher division at the end of a season.',
     ev: f => { const p = f.fed?.promotions[0]; return hit(!!p, p && `Season ${p.season}: Division ${p.from} to Division ${p.to}`); } },
@@ -420,11 +420,11 @@ const V2: Spec[] = [
 
   // Rating milestones (0–4,000+)
   ...RATING_TIERS_V2.map(([n, r]): Spec => ({ id: `rating-${n}`, name: `Rating ${n.toLocaleString('en')}`, c: 'Federation Career', r, fam: 'ratings', charge: 'crown', field: n >= 4000 ? 'or' : 'sable',
-    d: `Reach an established rating of ${n.toLocaleString('en')}.`, rule: `Your established Rapid rating reaches ${n.toLocaleString('en')} or more.`,
+    d: `Reach an established rating of ${n.toLocaleString('en')}.`, rule: `Your established career Elo reaches ${n.toLocaleString('en')} or more.`,
     ev: f => hit((f.insignia.peakRating ?? -Infinity) >= n, `Peak established rating ${Math.round(f.insignia.peakRating ?? 0)}`) })),
   ...([[200, 'Rising Star', 'uncommon'], [500, 'Ascendant', 'rare'], [1000, 'Meteoric Rise', 'legendary']] as [number, string, Rarity][]).map(([n, name, r]): Spec => ({
     id: `climb-${n}`, name, c: 'Federation Career', r, fam: 'ratings', charge: 'tower', field: n >= 1000 ? 'or' : n >= 500 ? 'azure' : 'vert', d: `Climb ${n.toLocaleString('en')} points.`,
-    rule: `Your established Rapid rating peaks at least ${n.toLocaleString('en')} above the rating at which it first became established (20+ rated games and RD 100 or less).`,
+    rule: `Your established career Elo peaks at least ${n.toLocaleString('en')} above the rating at which it first became established (20+ rated games and RD 100 or less).`,
     ev: f => { const a = f.insignia.firstEstablished ?? null, p = f.insignia.peakRating; const have = a !== null && p !== null ? Math.max(0, Math.round(p - a)) : 0; return count(have, n, a !== null ? `Established at ${Math.round(a)}, peak ${Math.round(p!)}` : undefined); } })),
 
   // Federation career
@@ -535,7 +535,7 @@ const insigniaRarity = (t: typeof RATING_TITLES[number]): Rarity => (t.era === '
 const INSIGNIAS: VaultDef[] = RATING_TITLES.map(t => ({
   id: `insignia-${t.min}`, name: t.name, collection: 'Insignias', rarity: insigniaRarity(t), kind: 'insignia', family: 'insignias', tier: TIER_OF_RARITY[insigniaRarity(t)], since: 'crown-vault-1',
   description: `Rating-title insignia for ${t.min}${t.max === null ? '+' : `–${t.max}`} (${t.era} era).`,
-  rule: `Your established Rapid rating reaches or passes through ${t.min}${t.max === null ? ' or more' : `–${t.max}`}. Kept even if your rating falls later; provisional ratings never collect.`,
+  rule: `Your established career Elo reaches or passes through ${t.min}${t.max === null ? ' or more' : `–${t.max}`}. Kept even if your rating falls later; provisional ratings never collect.`,
   art: insigniaSpec(t),
   evaluate: f => hit(f.insignia.collected.includes(t.index), `Established rating in the ${t.name} band`),
 }));

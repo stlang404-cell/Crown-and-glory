@@ -17,6 +17,8 @@ export interface PoolState extends Rating {
   lowest: number | null; // established lowest only
   lastEventId: string | null;
   updatedAt: string | null;
+  /** v1.1 (additive, optional): the career pool was seeded once from the legacy Rapid pool (src/ratings/pools.ts). */
+  seed?: import('./pools').PoolSeed;
 }
 
 export interface RatingEvent {
@@ -115,9 +117,10 @@ export function computeRatingEvent(
 
 /** Replay a pool's ledger from scratch; used for audit tests and corruption checks. `start` is the career's rating
  *  origin; when omitted it is read from the first event (each event records the state before it). */
-export function replayLedger(pool: PoolId, events: RatingEvent[], start?: number): PoolState {
+export function replayLedger(pool: PoolId, events: RatingEvent[], start?: number, from?: PoolState): PoolState {
   const sorted = [...events].sort((a, b) => a.sequence - b.sequence);
-  let s = newPoolState(pool, start ?? (sorted[0]?.sequence === 1 ? sorted[0].before.rating : DEFAULTS.rating));
+  // `from`: a seeded pool replays from its seed state (v1.1 career pool), not from the career origin
+  let s = from ? { ...from } : newPoolState(pool, start ?? (sorted[0]?.sequence === 1 ? sorted[0].before.rating : DEFAULTS.rating));
   for (const e of sorted) {
     s = computeRatingEvent(s, e.gameId, e.at, e.opponent, e.score).next;
   }

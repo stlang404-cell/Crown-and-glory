@@ -17,6 +17,7 @@
  * finished" or reads analysis reports (Vault, rivalries, Played Like history, Lab, Academy, news, standings) can see
  * one. Tested in tests/exhibition.test.ts.
  */
+import { RATED_PRESETS, TIME_CONTROLS } from '../games/types';
 import type { CrownDB } from '../storage/db';
 import type { Competitor, StyleId } from '../federation/model';
 import { divisionLabel } from '../federation/model';
@@ -93,19 +94,25 @@ export interface ExhibitionGame {
  * plays at the same pace as any other — and it never decides a game (no time forfeits: exhibitions end only by the
  * rules' checkmate, stalemate and draw adjudication).
  *
- * Integrator note (package X): the long presets mirror X's new rated presets (30+30 … 240+120) and are defined here
- * so this package does not depend on X landing first; unify with src/games/types.ts TIME_CONTROLS when merging.
+ * The long presets ARE the official human-rated presets of src/games/types.ts (RATED_PRESETS: 30+30, 60+60, 90+60,
+ * 120+90, 180+120, 240+120, with their official names); the short ones are the legacy controls (3+2, 5+3, 15+10).
+ * Exhibitions are never rated, so every clock here is a display clock. Ids stay "<min>+<inc>". A stored exhibition
+ * keeps its own copy of its clock (`timeControl`), so games saved with an earlier list (60+30, 90+30, 180+60) still
+ * show and restart with the clock they were played with; `timeControlById` also resolves those retired ids.
  */
 export interface ExhibitionTimeControl { id: string; label: string; initialMs: number; incrementMs: number }
+const fromOfficial = (t: { label: string; initialMs: number; incrementMs: number }): ExhibitionTimeControl =>
+  ({ id: `${t.initialMs / 60_000}+${t.incrementMs / 1000}`, label: t.label, initialMs: t.initialMs, incrementMs: t.incrementMs });
 const tc = (min: number, inc: number, label?: string): ExhibitionTimeControl => ({ id: `${min}+${inc}`, label: label ?? `${min}+${inc}`, initialMs: min * 60_000, incrementMs: inc * 1000 });
 export const EXHIBITION_TIME_CONTROLS: readonly ExhibitionTimeControl[] = [
   { id: 'untimed', label: 'No clock', initialMs: 0, incrementMs: 0 },
-  tc(3, 2, 'Blitz 3+2'), tc(5, 3, 'Rapid 5+3'), tc(15, 10, 'Classical 15+10'),
-  tc(30, 30, 'Classical 30+30'), tc(60, 30, 'Classical 60+30'), tc(90, 30, 'Classical 90+30'),
-  tc(120, 90, 'Classical 120+90'), tc(180, 60, 'Classical 180+60'), tc(240, 120, 'Classical 240+120'),
+  ...(['blitz', 'rapid', 'classical'] as const).map(id => fromOfficial(TIME_CONTROLS[id])),
+  ...RATED_PRESETS.map(id => fromOfficial(TIME_CONTROLS[id])),
 ];
+/** Display clocks offered before the official presets existed (kept so saved selections still resolve). */
+const RETIRED_EXHIBITION_CONTROLS: readonly ExhibitionTimeControl[] = [tc(60, 30, 'Classical 60+30'), tc(90, 30, 'Classical 90+30'), tc(180, 60, 'Classical 180+60')];
 export const timeControlById = (id: string | null | undefined): ExhibitionTimeControl | null => {
-  const t = EXHIBITION_TIME_CONTROLS.find(x => x.id === id);
+  const t = EXHIBITION_TIME_CONTROLS.find(x => x.id === id) ?? RETIRED_EXHIBITION_CONTROLS.find(x => x.id === id);
   return t && t.initialMs > 0 ? t : null;
 };
 

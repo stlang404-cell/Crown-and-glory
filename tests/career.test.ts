@@ -12,6 +12,7 @@ import { sha256Hex } from '../src/storage/checksum';
 import { gameChecksum } from '../src/storage/checksum';
 import { GameSession, createGameRecord } from '../src/games/session';
 import { TIME_CONTROLS } from '../src/games/types';
+import { CAREER_POOL } from '../src/ratings/pools';
 import { CENTER, SCALE, expectedScore, isProvisional, updateRating, type Rating } from '../src/ratings/glicko2';
 import { computeRatingEvent, newPoolState, replayLedger, type PoolState, type RatingEvent } from '../src/ratings/ledger';
 import { CAREER_START, LEGACY_START, careerEloLabel, displayElo, isEstablished, suggestBeginnerBands } from '../src/ratings/career';
@@ -33,7 +34,7 @@ let n = 0;
 function gameVs(beginnerId: string, result: '1-0' | '0-1' | '1/2-1/2', human: { rating: number; rd: number }) {
   const id = `nc-${beginnerId}-${n++}`;
   const o = BEGINNER_OPPONENTS.find(b => b.beginner === beginnerId)!;
-  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human: { kind: 'human', id: 'player', name: 'You', ...human }, engine: playOpponentSnapshot(o), engineSeed: 1, nowIso: '2026-11-04T00:00:00Z' }));
+  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.classical60, humanColor: 'white', human: { kind: 'human', id: 'player', name: 'You', ...human }, engine: playOpponentSnapshot(o), engineSeed: 1, nowIso: '2026-11-04T00:00:00Z' }));
   s.start(0);
   for (const m of ['c2c3', 'c5c4', 'e1f3', 'e6f4']) s.applyMove(m, 1, 'T');
   if (result !== '1/2-1/2') s.resign(result === '1-0' ? 1 : 0, 2, '2026-11-04T00:10:00Z'); // the loser resigns (human = White = 0)
@@ -43,7 +44,7 @@ function gameVs(beginnerId: string, result: '1-0' | '0-1' | '1/2-1/2', human: { 
 }
 const score = (r: string) => (r === '1-0' ? 1 : r === '0-1' ? 0 : 0.5);
 async function playRated(db: CrownDB, beginnerId: string, result: '1-0' | '0-1' | '1/2-1/2') {
-  const p = await db.ratingState('rapid');
+  const p = await db.ratingState(CAREER_POOL);
   const g = gameVs(beginnerId, result, { rating: p.rating, rd: p.rd });
   await db.saveGame(g);
   return db.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: new Date(Date.UTC(2026, 10, 4) + n * 60000).toISOString(), analysisSettingsId: 'std-d7', humanScore: score(result) });
@@ -79,7 +80,7 @@ describe('a new career', () => {
     const db = await CrownDB.open(new IDBFactory());
     expect(db.career.origin).toBe('new');
     expect(db.ratingStart).toBe(CAREER_START);
-    for (const pool of ['rapid', 'blitz', 'classical'] as const) {
+    for (const pool of ['rapid', 'blitz', 'classical', CAREER_POOL] as const) {
       const p = await db.ratingState(pool);
       expect(p).toMatchObject({ rating: 0, rd: 350, sigma: 0.06, games: 0, wins: 0, draws: 0, losses: 0, peak: null });
       expect(isProvisional(p.games, p.rd)).toBe(true);
@@ -111,7 +112,7 @@ describe('a new career', () => {
       expect(event!.after.rd).toBeCloseTo(251.02, 1);
       expect(event!.expected).toBeCloseTo(E, 9);
       expect(event!.provisionalAfter).toBe(true);
-      const st = await db.ratingState('rapid');
+      const st = await db.ratingState(CAREER_POOL);
       expect(st.games).toBe(1);
       expect(displayElo(st.rating)).toBe(Math.max(0, Math.round(want)));
     }
@@ -126,7 +127,7 @@ describe('a new career', () => {
   });
 
   it('becomes established only after 20 rated games with RD ≤ 100; peak counts from then', () => {
-    let s: PoolState = newPoolState('rapid', 0);
+    let s: PoolState = newPoolState(CAREER_POOL, 0);
     const flips: number[] = [];
     for (let i = 0; i < 30; i++) {
       const id = s.rating < 200 ? 'L0d' : s.rating < 380 ? 'L0c' : s.rating < 560 ? 'L0b' : 'L0a';
@@ -146,16 +147,16 @@ describe('a new career', () => {
   it('repeated losses at 0: the stored rating goes negative (never clamped), the displayed career Elo stays 0', async () => {
     const db = await CrownDB.open(new IDBFactory());
     const seen: number[] = [];
-    for (let i = 0; i < 6; i++) { await playRated(db, 'L0d', '0-1'); seen.push((await db.ratingState('rapid')).rating); }
+    for (let i = 0; i < 6; i++) { await playRated(db, 'L0d', '0-1'); seen.push((await db.ratingState(CAREER_POOL)).rating); }
     for (let i = 1; i < seen.length; i++) expect(seen[i]).toBeLessThan(seen[i - 1]);
     expect(seen[0]).toBeCloseTo(-143.11, 1);
     expect(seen.at(-1)!).toBeLessThan(-250);
     expect(seen.every(r => displayElo(r) === 0)).toBe(true);
-    const ev = await db.ratingEvents('rapid');
-    expect(replayLedger('rapid', ev, 0).rating).toBe(seen.at(-1));
+    const ev = await db.ratingEvents(CAREER_POOL);
+    expect(replayLedger(CAREER_POOL, ev, 0).rating).toBe(seen.at(-1));
     // a win climbs from the true (negative) value — the floor is display only
     await playRated(db, 'L0d', '1-0');
-    const up = (await db.ratingState('rapid')).rating;
+    const up = (await db.ratingState(CAREER_POOL)).rating;
     expect(up).toBeGreaterThan(seen.at(-1)!);
     expect(ev.at(-1)!.after.rating).toBeLessThan(0);
   });
@@ -182,14 +183,14 @@ describe('a new career', () => {
     const db = await CrownDB.open(f);
     const id = db.career.id;
     await playRated(db, 'L0c', '1-0');
-    const before = await db.ratingState('rapid');
+    const before = await db.ratingState(CAREER_POOL);
     db.close();
     const again = await CrownDB.open(f);
     expect(again.career.id).toBe(id);
     expect(again.ratingStart).toBe(0);
-    expect(await again.ratingState('rapid')).toEqual(before);
+    expect(await again.ratingState(CAREER_POOL)).toEqual(before);
     expect((await again.ratingState('blitz')).rating).toBe(0);
-    expect((await again.ratingEvents('rapid'))[0].before.rating).toBe(0);
+    expect((await again.ratingEvents(CAREER_POOL))[0].before.rating).toBe(0);
   });
 });
 
@@ -262,7 +263,7 @@ describe('existing careers are never changed', () => {
     db.close();
     const again = await CrownDB.open(f);
     expect(again.career.origin).toBe('new');
-    expect((await again.ratingState('rapid')).rating).toBe(0);
+    expect((await again.ratingState(CAREER_POOL)).rating).toBe(0);
   });
 });
 
@@ -277,7 +278,7 @@ describe('backups carry the career origin', () => {
     const r = await importBundle(b, JSON.parse(JSON.stringify(bundle)));
     expect(r.mode).toBe('restore');
     expect(b.career.id).toBe(a.career.id);
-    expect(await b.ratingState('rapid')).toEqual(await a.ratingState('rapid'));
+    expect(await b.ratingState(CAREER_POOL)).toEqual(await a.ratingState(CAREER_POOL));
     expect((await b.ratingState('blitz')).rating).toBe(0);
   });
   it('an older backup (no career record) restores as a 1500-origin career, and its unplayed pools stay at 1500', async () => {
@@ -315,7 +316,7 @@ describe('Start New Career', () => {
     const f = new IDBFactory(), archiveF = new IDBFactory();
     const { state: oldState } = await legacySave(f);
     const db = await CrownDB.open(f);
-    const fed = new FederationService(db, async () => { const p = await db.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; }, now);
+    const fed = new FederationService(db, async () => { const p = await db.ratingState(CAREER_POOL); return { rating: p.rating, rd: p.rd }; }, now);
     await fed.create(2, 4242);
     expect(fed.state!.world.player.joined).toBe(true);
     await db.put('attempts', { id: 'a1', puzzleId: 'p', at: 'T' });
@@ -344,10 +345,10 @@ describe('Start New Career', () => {
     db.close();
     const fresh = await CrownDB.open(f);
     expect(fresh.career.id).toBe(rec.id);
-    expect(await fresh.ratingState('rapid')).toMatchObject({ rating: 0, rd: 350, games: 0 });
+    expect(await fresh.ratingState(CAREER_POOL)).toMatchObject({ rating: 0, rd: 350, games: 0 });
 
     // the Federation restarts with the career: a new world, and the player joins the lowest division
-    const fed2 = new FederationService(fresh, async () => { const p = await fresh.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; }, now);
+    const fed2 = new FederationService(fresh, async () => { const p = await fresh.ratingState(CAREER_POOL); return { rating: p.rating, rd: p.rd }; }, now);
     await fed2.load();
     expect(fed2.state).toBeNull();
     await fed2.create(5, 99);

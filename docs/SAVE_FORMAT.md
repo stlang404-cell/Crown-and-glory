@@ -222,6 +222,55 @@ record: the `tour:` prefix is carried in the backup `progress` array, restored p
 merged put-if-absent into another career. Unknown or malformed values are sanitised on read (an absent record is a
 fresh guide). Older builds ignore it. Tests: `tests/onboarding.test.ts`.
 
+## v1.1: long time controls, career pool and pause on exit (no schema change, IndexedDB v4)
+All additions are optional fields or new keys; nothing existing is rewritten (tests/grandClassical.test.ts).
+
+* **Game records.** `timeControl` is stored per game as before (id, label, base, increment), so historical games keep
+  and display their original clock (Blitz 3+2, Rapid 5+3, Classical 15+10). New ids: `xrapid30`, `classical60`,
+  `grand90`, `crownmaster120`, `marathon180`, `eternal240` and `custom` (label `Custom <min>+<s>`). New optional field
+  `clockTurn: { ply, startMs }` — the side to move's clock when its turn began, so per-move time (`clockBeforeMs`,
+  `elapsedMs`) stays exact across pauses and reloads. `PauseEvent.reason` gains `pagehide`, `freeze` and `leave`.
+  `pool` may now be `classical-long`; games created before v1.1 keep the pool they were created with.
+* **Rating pools.** `ratingState` / `ratingEvents` gain the pool `classical-long` (the career pool,
+  docs/CAREER_RATING.md §7). Its `PoolState` may carry `seed` (provenance of the one-time seeding from Rapid:
+  model `crown-career-pool-1`, source pool, time, source rating/RD/σ/games/last event, rule). The meta record
+  `careerPoolSeed` holds the same provenance for audit. Backups carry both; validation replays a seeded pool from its
+  seed and checks the seed against the source pool's ledger. A backup without the career pool (pre-v1.1) is seeded on
+  restore exactly as on upgrade.
+* **Preference.** Meta key `pref:timeControl` = `{ v: 1, id, baseMin?, incS? }` (last selected control; not part of
+  backups, like display preferences). Absent or unreadable → Classical 60+60.
+
+### Pause on exit (local human-vs-AI games: Play, Quick Match, Rivals, Federation fixtures)
+Policy implemented by `src/games/clock.ts` (`VisibleClock`, `ClockKeeper`) and the match screen:
+1. **Saved after every move** (unchanged): each committed move writes the whole record (`saveGame`).
+2. **Charged only while visible.** Clocks read a monotonic visible time built from `performance.now()` deltas. It
+   stops when the page is hidden, frozen or closing, and a single gap between two readings is capped at 5 s, so a page
+   suspended without an event (iOS) is not drained. No background timer is relied on.
+3. **Pause on hide.** `visibilitychange` (hidden), `freeze`, `pagehide` and leaving the match screen charge the
+   running clock up to that instant, pause the game (a pause event is recorded), cancel any engine search and save the
+   record synchronously from the event handler. Visible again (`visibilitychange`, `pageshow`, `resume`) restarts the
+   clock from the saved remaining time. Repeated background/foreground cycles never grant time: the visible time of
+   each cycle is charged first.
+4. **Heartbeat.** While a clock runs (human or engine turn) the remaining time is committed to `clocks` and saved
+   every 5 s. After an unexpected termination (crash, killed tab, power loss) the reopened game continues from the
+   last heartbeat: at most ~5 s of thinking is uncharged, and time while the app was closed is never charged.
+5. **Reload during the engine's turn.** The engine move is requested once per position (ply) and committed only if
+   the game is still at that ply (`applyMove(..., expectedPly)`), so a late, duplicate or superseded result is never
+   applied. After a reload the same seeded request is made again; node-limited levels (L1–L7, beginners, Federation
+   profiles under their node caps) return the identical move; time-limited searches (L8, L9) may differ with machine
+   load but still only one move is ever committed for the ply.
+6. **Duplicate human submission** (double tap, repeated event) is refused by the same ply check.
+7. **Interrupted persistence.** A failed save is shown on the match screen; the game keeps running and the next
+   heartbeat or move retries. Finalization stays one atomic, idempotent transaction (one rating event per game).
+8. **Multiple tabs.** A read-only tab (another tab holds the writer lock) shows the game but never starts its clock or
+   engine and accepts no moves.
+9. **Official events.** Federation fixtures are human-vs-AI and use the same policy. Pausing a game never pauses
+   the Federation's own simulation, spectator games or markets (they never depend on the player's clock), never
+   exposes evaluations (rated play has none) and never re-rates or re-settles anything.
+10. **Updates.** An installed-PWA update never activates while the match screen is open, whatever the game's status
+    (`src/app/updatePolicy.ts`, unchanged); after the player leaves, the game is paused and saved, so the reload is
+    harmless.
+
 ## v1.0 additive: Crownmaster Study Match (`crown-study-1`)
 No IndexedDB version change. A study game is an ordinary `games` record (id `study-…`) with `mode: 'casual'`, the
 `untimed` time control, `rated: false`, `pool: null`, `clocks: null`, `context.kind: 'study'` (new value) and

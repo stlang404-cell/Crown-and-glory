@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { Searcher } from '../src/engine/search';
 import { GameSession, createGameRecord } from '../src/games/session';
-import { TIME_CONTROLS, GameRecord } from '../src/games/types';
+import { TIME_CONTROLS, GameRecord, legacyPoolFor } from '../src/games/types';
 import { moveToCcn } from '../src/rules/notation';
 import { analyzeGame } from '../src/analysis/analyzer';
 import type { AnalysisReport, AnalysisSettings } from '../src/analysis/types';
@@ -21,12 +21,15 @@ const other: AnalysisSettings = { ...tiny, id: 'test-d3', depth: 3 };
 function playGame(i: number, humanNodes: number, oppNodes: number): GameRecord {
   const humanColor = i % 2 ? 'white' : 'black';
   const tc = i % 3 === 0 ? TIME_CONTROLS.blitz : TIME_CONTROLS.rapid;
-  const s = new GameSession(createGameRecord({
+  const rec = createGameRecord({
     id: `h${String(i).padStart(3, '0')}`, mode: 'rated', timeControl: tc, humanColor,
     human: { kind: 'human', id: 'player', name: 'You', rating: 1500, rd: 100 },
     engine: { kind: 'engine', id: `opp${i % 4}`, name: `Opponent ${i % 4}`, rating: 1300 + (i % 4) * 100, rd: 50 },
     engineSeed: i, nowIso: new Date(Date.UTC(2026, 0, 1) + i * 86_400_000).toISOString(),
-  }));
+  });
+  // a pre-v1.1 development history: these legacy controls were rated in their own pools then (new games are casual)
+  Object.assign(rec, { mode: 'rated', rated: true, pool: legacyPoolFor(tc.id) });
+  const s = new GameSession(rec);
   const se = new Searcher(14);
   let t = 0;
   s.start(0);

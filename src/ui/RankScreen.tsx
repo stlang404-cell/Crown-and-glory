@@ -25,7 +25,7 @@ export function RankScreen() {
   const [rating, setRating] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
-    services.db.ratingState('rapid').then(p => { if (alive) setRating(p.rating); }).catch(() => { if (alive) setRating(null); });
+    services.db.careerRating().then(p => { if (alive) setRating(p.rating); }).catch(() => { if (alive) setRating(null); });
     return () => { alive = false; };
   }, [services, services.revision]);
   const live: StandingParts | null = useMemo(() => (st && rating !== null ? liveStanding(st, rating) : null), [st, rating, services.revision]);

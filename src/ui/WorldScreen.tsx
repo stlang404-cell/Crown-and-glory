@@ -3,7 +3,8 @@ import { TourHint } from './Onboarding';
 import { NeedsFederation } from './NeedsFederation';
 import { fmtCareerElo } from '../ratings/display';
 import { CompetitorElo } from './CareerElo';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { FEDERATION_TIME_CONTROL } from '../games/types';
 import { useApp, useServices } from './App';
 import { Portrait } from './Portrait';
 import { Emblem, Trophy } from './Emblem';
@@ -48,6 +49,9 @@ export function WorldScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmForfeit, setConfirmForfeit] = useState<string | null>(null);
+  // v1.1: a fixture game created before the update keeps its own clock (Rapid 5+3); new fixture games are 60+60
+  const [fixtureClocks, setFixtureClocks] = useState<Map<string, string>>(new Map());
+  useEffect(() => { void services.db.unfinishedGames().then(gs => setFixtureClocks(new Map(gs.filter(g => g.context.fixtureId).map(g => [g.context.fixtureId!, g.timeControl.label])))).catch(() => {}); }, [services, services.revision]);
   const [confirmAdvance, setConfirmAdvance] = useState(false);
 
   const act = async (label: string, fn: () => Promise<unknown>) => {
@@ -132,11 +136,11 @@ export function WorldScreen() {
                 <Portrait seed={c.portraitSeed} size={36} />
                 <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                   <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
-                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {fmtCareerElo(c.rating, { rd: c.rd })} · Rapid 5+3, rated</div>
+                  <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {fmtCareerElo(c.rating, { rd: c.rd })} · <span data-testid="fixture-tc">{fixtureClocks.get(f.id) ?? FEDERATION_TIME_CONTROL.label}, rated</span></div>
                   {f.postponedFrom !== undefined && <div className="small"><span className="chip neg" data-testid="postponed-chip">Postponed from round {f.postponedFrom}</span> <span className="muted">Play by the end of round {LEAGUE_ROUNDS}.</span></div>}
                 </div>
                 <button className="btn primary small" disabled={!!busy} data-testid="play-fixture" onClick={() => act('play', async () => {
-                  const pr = await services.db.ratingState('rapid');
+                  const pr = await services.db.careerRating();
                   const g = await fed.playerGameFor(f.id, { rating: pr.rating, rd: pr.rd });
                   if (!(await services.db.getGame(g.id))) await services.saveGame(g);
                   go({ name: 'match', gameId: g.id });

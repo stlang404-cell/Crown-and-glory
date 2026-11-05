@@ -152,7 +152,7 @@ export function VaultScreen() {
       <section className="panel" data-testid="vault-totals">
         <div className="vault-stats">
           <div className="stat"><span className="k">Earned</span><span className="v" data-testid="vault-earned">{earned.length} <span className="small muted">of {earnableItems.length}</span></span><Bar have={earned.length} need={earnableItems.length} label="Vault completion" /><span className="small muted" data-testid="vault-pct">{pct}% complete</span></div>
-          <div className="stat"><span className="k">Insignias</span><span className="v" data-testid="vault-insignias">{insignias.filter(i => i.state === 'earned').length} <span className="small muted">of {insignias.length}</span></span><span className="small muted">From your established Rapid rating</span></div>
+          <div className="stat"><span className="k">Insignias</span><span className="v" data-testid="vault-insignias">{insignias.filter(i => i.state === 'earned').length} <span className="small muted">of {insignias.length}</span></span><span className="small muted">From your established career Elo</span></div>
           <div className="stat"><span className="k">Exchange Title</span><span className="v" style={{ fontSize: '1.15rem' }} data-testid="vault-exchange-title">{xt?.name ?? 'None Yet'}</span><span className="small muted">Forecast skill and realized profit, never volume</span></div>
           <div className="stat"><span className="k">Awaiting Grading</span><span className="v">{awaiting}</span><span className="small muted">{GRADING_VALIDATED ? 'Grading validated' : 'Brilliance collectibles open once move grading is validated'}</span></div>
         </div>

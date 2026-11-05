@@ -133,13 +133,19 @@ step('v0.5.0 build served on the same origin');
 if (old) {
   const now = await dump(page);
   const same = k => JSON.stringify(now[k]) === JSON.stringify(old[k]);
+  // v1.1: opening the save seeds the career pool once from the Rapid rating (docs/CAREER_RATING.md §7.3); every
+  // pre-existing pool state is unchanged
+  const legacyStates = now.ratingState.filter(x => x.pool !== 'classical-long');
+  const seeded = now.ratingState.find(x => x.pool === 'classical-long');
+  const oldRapid = old.ratingState.find(x => x.pool === 'rapid');
+  const seedOk = JSON.stringify(legacyStates) === JSON.stringify(old.ratingState) && (!oldRapid || !oldRapid.games || (seeded && seeded.rating === oldRapid.rating && seeded.rd === Math.max(oldRapid.rd, 150) && seeded.games === oldRapid.games && seeded.seed?.from === 'rapid'));
   const oldJ = new Map((old.federation.journal ?? []).map(j => [j.id, JSON.stringify(j)]));
   const keptJ = (now.federation.journal ?? []).filter(j => oldJ.get(j.id) === JSON.stringify(j)).length === oldJ.size;
   const bal = d => JSON.stringify((d.federation.balances ?? d.federation.balance ?? []));
   const legacy = now.reports.find(r => r.engine.buildId === 'crown-search-1+crown-eval-3');
   const commit = await page.evaluate(() => window.__crown.fed.state.world.engineCommitments);
-  check(25, same('games') && same('ratingEvents') && same('ratingState') && same('reports') && same('attempts') && keptJ && bal(now) === bal(old) && legacy && commit?.at(-1)?.build === 'crown-search-2+crown-eval-4',
-    `v0.4.0 save migrated without loss: ${now.games.length} games, ${now.ratingEvents.length} rating events, ${now.reports.length} reports, ${now.attempts.length} attempts, all ${oldJ.size} journals and every balance byte-identical; historical report kept with engine ${legacy?.engine.buildId}; engine commitment recorded (${JSON.stringify(commit?.at(-1))})`);
+  check(25, same('games') && same('ratingEvents') && seedOk && same('reports') && same('attempts') && keptJ && bal(now) === bal(old) && legacy && commit?.at(-1)?.build === 'crown-search-2+crown-eval-4',
+    `v0.4.0 save migrated without loss: ${now.games.length} games, ${now.ratingEvents.length} rating events, ${now.reports.length} reports, ${now.attempts.length} attempts, all ${oldJ.size} journals and every balance byte-identical; career pool seeded once from Rapid (${seeded ? `${Math.round(seeded.rating)} ±${Math.round(seeded.rd)}, ${seeded.games} games carried` : 'no Rapid games'}); historical report kept with engine ${legacy?.engine.buildId}; engine commitment recorded (${JSON.stringify(commit?.at(-1))})`);
   // historical report display + re-analysis with the canonical engine (both kept)
   const gid = old.games[0].id;
   await page.goto(URL_ + `#/analysis/${encodeURIComponent(gid)}`);
@@ -190,13 +196,13 @@ await page.screenshot({ path: OUT + '04-assistant.png' });
 await playOut(page);
 
 // ---- 4, 5, 8: rated game — correct single rating update, history, assistant locked
-const rs0 = await page.evaluate(async () => { const s = await window.__crown.db.ratingState('rapid'); return { rating: s.rating, games: s.games, events: (await window.__crown.db.ratingEvents()).length }; });
-await startMatch(page, /Mira Vell/, { mode: 'Rated' });
+const rs0 = await page.evaluate(async () => { const s = await window.__crown.db.careerRating(); return { rating: s.rating, games: s.games, events: (await window.__crown.db.ratingEvents()).length }; });
+await startMatch(page, /Mira Vell/, { mode: 'Rated', tc: 'Classical 60+60' }); // v1.1: rated games are 30+ minutes
 const locked = await page.locator('[data-testid="assist-locked"]').count(), panel = await page.locator('[data-testid="assist-panel"]').count();
 check(8, locked === 1 && panel === 0, 'Rated game: assistant locked (no assistant panel, no engine help available)');
 await playOut(page);
 await page.waitForSelector('[data-testid="rating-delta"]');
-const rs1 = await page.evaluate(async () => { const s = await window.__crown.db.ratingState('rapid'); const ev = await window.__crown.db.ratingEvents(); return { rating: s.rating, games: s.games, events: ev.length, last: ev.sort((a, b) => a.at.localeCompare(b.at)).at(-1) }; });
+const rs1 = await page.evaluate(async () => { const s = await window.__crown.db.careerRating(); const ev = await window.__crown.db.ratingEvents(); return { rating: s.rating, games: s.games, events: ev.length, last: ev.sort((a, b) => a.at.localeCompare(b.at)).at(-1) }; });
 check(4, rs1.events === rs0.events + 1 && rs1.games === rs0.games + 1 && Math.abs(rs1.rating - rs1.last.after.rating) < 1e-9, `Rating updated exactly once: ${Math.round(rs0.rating)} → ${Math.round(rs1.rating)} (one Glicko-2 event, ledger state matches the event)`);
 await page.reload(); await page.waitForFunction(() => window.__crown);
 const rs2 = await page.evaluate(async () => (await window.__crown.db.ratingEvents()).length);
@@ -245,7 +251,7 @@ await page.locator('[data-testid="cosmetics"]').screenshot({ path: OUT + '08-cos
 check(21, cs.c.owned.includes('frame-gold') && cs.c.equipped.frame === 'frame-gold' && cs.total === 0, `Bought and equipped the Gold frame (cosmetic, ledger conserved); earned-only items stay locked`);
 await page.goto(URL_ + '#/profile');
 await page.waitForSelector('[data-testid="career-standing"]');
-const pass = await page.evaluate(async () => { const t = document.querySelector('[data-testid="career-standing"]').textContent; const s = await window.__crown.db.ratingState('rapid'); const w = window.__crown.fed.state.world; return { t, rating: Math.round(s.rating), div: w.player.division, title: w.player.fedTitle ?? null, avatar: getComputedStyle(document.querySelector('[data-testid="player-avatar"]')).borderTopColor }; });
+const pass = await page.evaluate(async () => { const t = document.querySelector('[data-testid="career-standing"]').textContent; const s = await window.__crown.db.careerRating(); const w = window.__crown.fed.state.world; return { t, rating: Math.round(s.rating), div: w.player.division, title: w.player.fedTitle ?? null, avatar: getComputedStyle(document.querySelector('[data-testid="player-avatar"]')).borderTopColor }; });
 check(11, (pass.t.includes(String(pass.rating)) || pass.t.includes(pass.rating.toLocaleString('en-US'))) && pass.t.includes(`Division ${pass.div} of 8`) && pass.t.includes(pass.title ?? 'None yet'), `Passport shows rating ${pass.rating}, division ${pass.div} and federation title ${pass.title ?? 'none'} as six separate records`);
 check(22, /Cash .*net worth/.test(pass.t) && /Eligibility this season/.test(pass.t) && pass.avatar !== 'rgba(0, 0, 0, 0)', `Career Passport accurate: finances, eligibility, trophies, rivalries, forecasting and achievements from recorded state; equipped frame visible (${pass.avatar})`);
 await page.screenshot({ path: OUT + '09-passport.png', fullPage: true });

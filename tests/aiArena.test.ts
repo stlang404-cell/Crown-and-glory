@@ -117,7 +117,12 @@ describe('AI Arena: display clock vs AI thinking budget', () => {
     const { db, svc } = await world();
     const all = active(svc);
     const a = all[5], b = all[900];
-    expect(EXHIBITION_TIME_CONTROLS.map(t => t.id)).toEqual(expect.arrayContaining(['30+30', '60+30', '90+30', '120+90', '180+60', '240+120', '3+2', '5+3', '15+10', 'untimed']));
+    // the official presets (src/games/types.ts) plus the legacy short clocks and No clock; retired ids still resolve
+    expect(EXHIBITION_TIME_CONTROLS.map(t => t.id)).toEqual(['untimed', '3+2', '5+3', '15+10', '30+30', '60+60', '90+60', '120+90', '180+120', '240+120']);
+    expect(EXHIBITION_TIME_CONTROLS.find(t => t.id === '60+60')!.label).toBe('Classical 60+60');
+    expect(EXHIBITION_TIME_CONTROLS.find(t => t.id === '240+120')!.label).toBe('Eternal Crown 240+120');
+    expect(timeControlById('60+30')).toMatchObject({ initialMs: 60 * 60_000, incrementMs: 30_000 });
+    expect(clocksAt({ moves: [{ ms: 1000 }] as never, timeControl: { id: '180+60', label: 'Classical 180+60', initialMs: 180 * 60_000, incrementMs: 60_000 } })!.white).toBe(180 * 60_000 + 59_000);
     const long = timeControlById('120+90')!;
     expect(long.initialMs).toBe(120 * 60_000);
     expect(long.incrementMs).toBe(90_000);

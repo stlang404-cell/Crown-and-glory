@@ -1,3 +1,4 @@
+import { TC_FILTER_OPTIONS } from '../games/types';
 import { STUDY_LABEL, isStudyGame } from '../app/study';
 import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -126,7 +127,7 @@ export function LibraryScreen() {
         <div className="row" style={{ marginBottom: 10 }}>
           <input type="search" placeholder="Opponent or opening" value={q} onChange={e => setQ(e.target.value)} aria-label="Search games by opponent or opening" className="search-wide" style={{ flex: '1 1 200px' }} />
           <select value={result} onChange={e => setResult(e.target.value)} aria-label="Result filter"><option value="all">All results</option><option value="victory">Wins</option><option value="defeat">Losses</option><option value="draw">Draws</option><option value="in progress">Unfinished</option></select>
-          <select value={tc} onChange={e => setTc(e.target.value)} aria-label="Time control filter"><option value="all">All time controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
+          <select value={tc} onChange={e => setTc(e.target.value)} aria-label="Time control filter"><option value="all">All time controls</option>{TC_FILTER_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>
           <select value={mode} onChange={e => setMode(e.target.value)} aria-label="Mode filter"><option value="all">All modes</option><option value="rated">Rated</option><option value="casual">Casual</option><option value="training">Training</option><option value="study">Study — unrated</option></select>
           <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} aria-label="Sort"><option value="date">Newest first</option><option value="accuracy">Accuracy</option><option value="delta">Rating change</option><option value="moves">Length</option></select>
         </div>

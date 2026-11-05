@@ -1,3 +1,4 @@
+import { careerTimeline } from '../ratings/pools';
 import { useServices } from './App';
 import { titleEmblem } from '../heraldry/catalog';
 import { Elo, usePlayerElo } from './CareerElo';
@@ -61,7 +62,7 @@ export function CareerStatistics({ events }: { events: RatingEvent[] }) {
   const cur = currentRankOf(st);
   const hi = highestRankOf(st);
   const fedTitle = st?.world.player.fedTitle ?? null;
-  const rapid = events.filter(e => e.pool === 'rapid');
+  const rapid = careerTimeline(events);
   const top = rapid.reduce<RatingEvent | null>((b, e) => (!b || e.after.rating > b.after.rating ? e : b), null);
   const est = rapid.filter(e => !isProvisional(e.gamesBefore + 1, e.after.rd));
   const estTop = est.reduce<RatingEvent | null>((b, e) => (!b || e.after.rating > b.after.rating ? e : b), null);

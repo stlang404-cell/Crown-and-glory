@@ -19,8 +19,9 @@ style and region (only the exhibition picker lacked them); the Web Worker exhibi
 
 ## Added
 * Picker filters: title, style, region (plus name, rating band, division).
-* Display clock (src/app/exhibition.ts `EXHIBITION_TIME_CONTROLS`): No clock, 3+2, 5+3, 15+10, 30+30, 60+30, 90+30,
-  120+90, 180+60, 240+120. **Display/accounting only**: each move is charged the engine's real measured thinking time
+* Display clock (src/app/exhibition.ts `EXHIBITION_TIME_CONTROLS`): No clock, the legacy 3+2, 5+3, 15+10 and the
+  official presets of src/games/types.ts (30+30, 60+60, 90+60, 120+90, 180+120, 240+120; v1.1 integration — saved games
+  keep the clock they were played with, and the retired 60+30, 90+30, 180+60 ids still resolve). **Display/accounting only**: each move is charged the engine's real measured thinking time
   (recorded in the move, so replays show the same clocks) plus the increment. It never changes a search request — each
   side keeps its own profile budget, shown as "AI thinking budget: up to X s per move (N nodes)" — and never decides a
   game (no time forfeits). Integrator note: the long presets duplicate package X's rated presets; unify with
