@@ -1,0 +1,28 @@
+PASS 1: Founded 10,240 competitors, 10,240 with a Circuit Grade; new career at step 0 (Commoner III)
+PASS 2: Past the mid-season checkpoint: 10,239 competitors scored at round 8, all 48 steps held; round times 611, 464, 450, 443, 408, 432, 440, 556 ms (round 8 includes the checkpoint)
+PASS 3: A career that forfeits every game stays Commoner III (score 0.4)
+titled competitors: 32; chosen Mitor Ravenhurst (title Squire, step 41)
+PASS 4-1366: Rank guide at 1366 px: 48 steps with labelled insignia, current Commoner III, progress bar, next rank and promotion route shown
+PASS 5-1366: Rank guide at 1366 px: overflow 0, scrolled to the bottom (y 1634)
+PASS H-1366: Dashboard heading at 1366 px: Commoner III with insignia (sublevel marks 1), Career Elo and division, linked to #/ranks
+PASS L-1366: Separate labelled areas at 1366 px: heading "Competitive Rank Rank" (rank frame, rank tooltip) and "Federation Title: none yet (earned by norms) Title" (title tooltip); header "Competitive Rank Commoner III Rank"; rating title tagged "Rating"
+PASS S-1366: Profile at 1366 px: Career Statistics "Current Competitive Rank Rank" / "Highest Competitive Rank Ever Rank" and "Federation Title TitleNone yetPermanent · earned by norms, never lost"; Career Standing "Competitive Rank Rank" apart from "Federation Title Title"
+PASS P-1366: Profile heading Commoner III; Career Statistics highest rank "Highest Competitive Rank Ever RankCommoner III insigniaCommoner IIIStarting rank, season 1 · rank guide" shown apart from Highest Career Elo
+PASS 6-1366: Career Passport at 1366 px shows the rank and highest rank ("COMPETITIVE RANK RANK Commoner III RANK Circuit Grade. Highest ever: Commoner II…"); overflow 0
+PASS 7-1366: Competitor profile at 1366 px: Caella Brackstead shows High Sovereign I (cg-16 I); overflow 0
+PASS 8-1366: Competitor list at 1366 px: 100 rows with a rank insignia, each tagged "Rank" with an accessible label and the rank tooltip; 0 abbreviated Federation Titles tagged "Title"; overflow 0
+PASS T-1366: Competitor profile at 1366 px: Mitor Ravenhurst shows "Competitive Rank: Prince I" (square frame r=3px, color(srgb 0.560784 0.690196 0.92549 / 0.7)) apart from "Federation Title: Squire" (round frame r=999px, rgb(226, 192, 116)); separate tooltips; overflow 0
+PASS 9-1366: League standings at 1366 px: 16 rows with a rank insignia (16 tagged "Rank" with an accessible label); overflow 0
+PASS 4-390: Rank guide at 390 px: 48 steps with labelled insignia, current Commoner III, progress bar, next rank and promotion route shown
+PASS 5-390: Rank guide at 390 px: overflow 0, scrolled to the bottom (y 4244)
+PASS H-390: Dashboard heading at 390 px: Commoner III with insignia (sublevel marks 1), Career Elo and division, linked to #/ranks
+PASS L-390: Separate labelled areas at 390 px: heading "Competitive Rank Rank" (rank frame, rank tooltip) and "Federation Title: none yet (earned by norms) Title" (title tooltip); header "Competitive Rank Commoner III Rank"; rating title tagged "Rating"
+PASS S-390: Profile at 390 px: Career Statistics "Current Competitive Rank Rank" / "Highest Competitive Rank Ever Rank" and "Federation Title TitleNone yetPermanent · earned by norms, never lost"; Career Standing "Competitive Rank Rank" apart from "Federation Title Title"
+PASS P-390: Profile heading Commoner III; Career Statistics highest rank "Highest Competitive Rank Ever RankCommoner III insigniaCommoner IIIStarting rank, season 1 · rank guide" shown apart from Highest Career Elo
+PASS 6-390: Career Passport at 390 px shows the rank and highest rank ("COMPETITIVE RANK RANK Commoner III RANK Circuit Grade. Highest ever: Commoner II…"); overflow 0
+PASS 7-390: Competitor profile at 390 px: Caella Brackstead shows High Sovereign I (cg-16 I); overflow 0
+PASS 8-390: Competitor list at 390 px: 100 rows with a rank insignia, each tagged "Rank" with an accessible label and the rank tooltip; 0 abbreviated Federation Titles tagged "Title"; overflow 0
+PASS T-390: Competitor profile at 390 px: Mitor Ravenhurst shows "Competitive Rank: Prince I" (square frame r=3px, color(srgb 0.560784 0.690196 0.92549 / 0.7)) apart from "Federation Title: Squire" (round frame r=999px, rgb(226, 192, 116)); separate tooltips; overflow 0
+PASS 9-390: League standings at 390 px: 16 rows with a rank insignia (16 tagged "Rank" with an accessible label); overflow 0
+PASS 10: No page or console errors (0)
+ALL CHECKS PASSED

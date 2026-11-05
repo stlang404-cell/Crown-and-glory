@@ -1,0 +1,2 @@
+PASS R0 4462: navigation during the first render (4462): the Career Passport is shown in 10/10 runs
+All checks passed

@@ -1,0 +1,16 @@
+[2026-11-05T01:36:48.074Z] PASS 1: Analysis in the navigation opens the game picker with a "No finished games yet" state on a fresh career
+[2026-11-05T01:36:48.592Z] PASS 2: An unknown game link shows "Game not found" instead of loading forever
+[2026-11-05T01:36:55.038Z] PASS 3: View Analysis opens the review with a 36-square board
+[2026-11-05T01:36:56.186Z] PASS 4: The engine worker analysed the game and the report shows "complete" on screen
+[2026-11-05T01:36:56.212Z] PASS 4b: Played Like card shows both sides next to Career Elo: you "Insufficient information", opponent "Insufficient information"
+[2026-11-05T01:36:56.566Z] PASS 4c: Career Passport holds the permanent Played Like record of the analysed game (1 row: DateOpponentResultCareerPlayed LikeStatus11/5/2026Mira VellLossUnratedInsufficient informationToo few moves (not counted))
+[2026-11-05T01:36:56.703Z] PASS 5: Move grades in the move list (16), evaluation graph (1), move 3 graded "Mistake (provisional)" with 4 engine candidates; list and board in sync (ply 3/16)
+[2026-11-05T01:36:58.115Z] PASS 6: Exploring a best line enters a variation (variation 1/7) and returns to the main line (ply 3/16)
+[2026-11-05T01:36:59.956Z] PASS 7: Replay autoplay advanced to ply 4/16; Home returns to ply 0/16
+[2026-11-05T01:37:00.053Z] PASS 8: The Analysis picker lists the game as "Analysed · accuracy 46.6"
+[2026-11-05T01:37:06.894Z] PASS 9: Picker lists 2 games; the cancelled one shows "Analysis cancelled" with an Analyse Game action, which ran to "complete"
+[2026-11-05T01:37:07.162Z] PASS 10: After reload, game g-20261105013700-pvg3g5 still shows its report (complete)
+[2026-11-05T01:37:07.285Z] PASS 10b: After reload, the Career Passport still lists both analysed games' Played Like records (2)
+[2026-11-05T01:37:08.188Z] PASS 11: Phone (390 px): board shown, horizontal overflow 0px
+[2026-11-05T01:37:08.188Z] PASS 12: No page errors during the journey (0)
+[2026-11-05T01:37:08.233Z] ALL CHECKS PASSED

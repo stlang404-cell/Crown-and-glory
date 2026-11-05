@@ -1,0 +1,14 @@
+[2026-11-05T01:45:10.574Z] founded: {"rules":3,"rule":"Nothing is ever played for you. A round advances only when you press Advance; yo","upcoming":5,"opp":["promotion:in-reach","challenger:open","cup:in-reach","champ:next-season"],"cal":"League: rounds 1–15 · Federation Open & Challenger Open (Swi"}
+[2026-11-05T01:45:10.575Z] PASS 1: Federation screen: crown-competition-3, deadline rule shown before it applies, upcoming matches, qualification opportunities, calendar lists Zonal Championships and Regional Cups
+[2026-11-05T01:45:11.013Z] PASS 2: Registered for the Challenger Open (opportunity status "entered")
+[2026-11-05T01:45:11.464Z] PASS 3: Advance was disabled while the game was unplayed; after the game your league row shows P=1 and Advance is enabled
+[2026-11-05T01:45:14.422Z] PASS 4: Postpone offered for the league game
+[2026-11-05T01:45:17.146Z] PASS 5: After postponing, round 2 advanced; the game is listed as postponed (chip 1, upcoming play-now,postponed,scheduled,to-be-paired,scheduled)
+[2026-11-05T01:45:17.605Z] PASS 6: Reload keeps round 3, the postponed game and the Challenger entry
+[2026-11-05T01:46:27.187Z] advanced to round 17 in 70 s
+[2026-11-05T01:46:27.188Z] PASS 7: Round 17: 24 Zonal Championships and Regional Cups, 64 first-stage matches decided; 19 forfeits recorded (only after consent)
+[2026-11-05T01:46:27.317Z] PASS 8: Tournaments: the cup bracket shows 12 matches; Crown Championship panel present
+[2026-11-05T01:46:27.733Z] PASS 9: Dashboard "Your Season": 3 opportunities; standing "Open Division · Ashmere: 16 of 16, 0 pts from 15"
+[2026-11-05T01:46:31.289Z] PASS 10: 390 px: no horizontal overflow {"#/":0,"#/world":0,"#/tournaments":0,"#/rivals":0}
+[2026-11-05T01:46:31.289Z] PASS 11: no page errors (0)
+ALL PASSED
