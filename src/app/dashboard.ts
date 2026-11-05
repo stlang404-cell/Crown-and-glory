@@ -3,6 +3,7 @@
  * events, Vault unlocks, Grimoire progress); nothing is estimated or invented. Lists are capped so the dashboard
  * stays cheap however long the career gets. These functions never write.
  */
+import { careerTimeline } from '../ratings/pools';
 import type { Fixture } from '../federation/model';
 import { PLAYER_ID, SWISS_ROUNDS } from '../federation/model';
 import type { KoState, SwissState } from '../federation/world';
@@ -182,8 +183,9 @@ export function recentSettlements(st: DashFedState, limit: number = DASH_LIMITS.
 // ---------------------------------------------------------------- ratings and money history
 export interface DashRatingPoint { at: string; rating: number; rd: number; label: string }
 /** Rating history of one pool from its rating events (the same series as the Career Passport). */
-export function ratingSeries(events: readonly RatingEvent[], pool: PoolId = 'rapid'): DashRatingPoint[] {
-  const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
+export function ratingSeries(events: readonly RatingEvent[], pool: PoolId | 'career' = 'career'): DashRatingPoint[] {
+  // 'career': the career timeline (legacy Rapid up to the v1.1 seeding, then the career pool; src/ratings/pools.ts)
+  const ev = pool === 'career' ? careerTimeline(events) : events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
   return [
     ...(ev.length && ev[0].sequence === 1 ? [{ at: ev[0].at, rating: ev[0].before.rating, rd: ev[0].before.rd, label: 'Initial rating' }] : []),
     ...ev.map(e => ({ at: e.at, rating: e.after.rating, rd: e.after.rd, label: `${e.score === 1 ? 'Win' : e.score === 0 ? 'Loss' : 'Draw'} vs ${e.opponent.name}: ${Math.max(0, Math.round(e.after.rating))}` })),

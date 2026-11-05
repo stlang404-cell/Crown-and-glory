@@ -1,0 +1,19 @@
+[2026-11-05T18:56:00.214Z] Launched Crown & Calculation
+[2026-11-05T18:56:00.742Z] Rated match started vs Mira Vell (L1), Classical 60+60, human = White
+[2026-11-05T18:56:00.758Z] Rated-game integrity: assistant locked, no assistance controls rendered
+[2026-11-05T18:56:00.760Z] Game state at start: {"rated":true,"pool":"classical-long","mode":"rated"}
+[2026-11-05T18:56:03.494Z] Game over: Victory; rating delta +666
+[2026-11-05T18:56:03.639Z] DB after game: {"games":[{"id":"g-20261105185600-ime35z","status":"finalized","result":"1-0","termination":"checkmate","moves":29,"rated":true}],"events":[{"id":"rating:g-20261105185600-ime35z:classical-long","delta":665.9274732694715,"after":665.9274732694715}]}
+[2026-11-05T18:56:03.651Z] Duplicate finalization: {"events":1,"rapidGames":1,"blitzGames":0,"blitzRating":0}
+[2026-11-05T18:56:04.594Z] Postgame analysis complete
+[2026-11-05T18:56:04.656Z] Ply 5 selected: ply 5/29; grade "Best"; 3 engine candidates
+[2026-11-05T18:56:05.175Z] Variation explored and returned; accuracy shown: 97.4
+[2026-11-05T18:56:05.330Z] Career shows rating 666 and 1 rating event(s)
+[2026-11-05T18:56:05.472Z] Browser closed
+[2026-11-05T18:56:05.648Z] Reopened Crown & Calculation with the same profile
+[2026-11-05T18:56:05.843Z] Library after restart: 1 game(s): 11/5/2026 Mira Vell Victory 0 → 666 (+666) 97.4 0/0 King's pawn advance (d3), Na4 reply 15 Classical 60+60 Complete
+[2026-11-05T18:56:06.140Z] Recovered report; ply 3 grade "Great"
+[2026-11-05T18:56:06.143Z] DB after restart: {"games":1,"events":1,"reports":1,"rapid":665.9274732694715}
+[2026-11-05T18:56:08.459Z] Assisted casual blitz game: {"n":1,"rated":false,"assistance":2,"events":1,"blitz":0}
+[2026-11-05T18:56:08.916Z] Mobile 390px analysis: horizontal overflow = false
+[2026-11-05T18:56:09.010Z] PASS: rated-game acceptance journey completed (Gate G)

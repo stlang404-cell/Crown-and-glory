@@ -3,6 +3,7 @@
  * keeps the earned-item lists the header customisation is checked against, and the restrained trophy ceremonies.
  * Event-driven and throttled like the Vault (src/vault/service.ts); deferred while a match is in progress.
  */
+import { careerTimeline } from '../ratings/pools';
 import type { CrownDB } from '../storage/db';
 import type { FederationService } from '../app/federation';
 import type { GameRecord } from '../games/types';
@@ -95,7 +96,7 @@ export class LegacyService {
   /** Gather the recorded facts trophies rest on. */
   async input(): Promise<{ input: LegacyInput; events: RatingEvent[]; pool: PoolState | null }> {
     const db = this.host.db;
-    const [games, events, pool] = await Promise.all([db.allGames(), db.ratingEvents(), db.ratingState('rapid').catch(() => null)]);
+    const [games, events, pool] = await Promise.all([db.allGames(), db.ratingEvents(), db.careerRating().catch(() => null)]);
     const finished = games.filter((g: GameRecord) => g.status === 'finalized');
     const st = this.host.fed.state;
     let rivalries: RivalryFact[] = [], forecastChampionSeasons: number[] = [];
@@ -151,7 +152,7 @@ export class LegacyService {
 
   private computeEarned(events: RatingEvent[]): Earned {
     const trophies = [...this.awards.values()].sort(byPrestige);
-    const { collected } = collectedTitles(events.filter(e => e.pool === 'rapid').map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
+    const { collected } = collectedTitles(careerTimeline(events).map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
     const owned = [...(this.host.vault?.owned.values() ?? [])];
     const vault: Earned['vault'] = [], exchangeTitles: Earned['exchangeTitles'] = [];
     for (const u of owned) {

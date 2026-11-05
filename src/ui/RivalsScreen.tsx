@@ -37,10 +37,10 @@ function ChallengeButton({ id, rematch }: { id: string; rematch: boolean }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   return <>
-    <button className="btn small" data-testid={rematch ? 'rival-rematch' : 'rival-challenge'} disabled={busy || services.readOnly} title="A rated rapid game against this rival (not a league fixture)" onClick={async e => {
+    <button className="btn small" data-testid={rematch ? 'rival-rematch' : 'rival-challenge'} disabled={busy || services.readOnly} title="A rated game against this rival (Classical 60+60, not a league fixture)" onClick={async e => {
       e.stopPropagation(); setBusy(true);
       try {
-        const r = await services.db.ratingState('rapid');
+        const r = await services.db.careerRating();
         const g = await services.fed.quickMatchGameFor(id, { rated: true, humanColor: Math.random() < 0.5 ? 'white' : 'black', human: { rating: r.rating, rd: r.rd }, nowMs: Date.now(), challenge: true });
         await services.saveGame(g); go({ name: 'match', gameId: g.id });
       } catch (err) { setMsg((err as Error).message); setBusy(false); }
@@ -121,7 +121,7 @@ export function RivalsScreen() {
                     </tr>;
                   })}</tbody></table></div>
               )}
-              <details className="small muted"><summary>Challenges, rematches and rivalry trophies</summary>A challenge or rematch is a rated rapid game against the rival (a Quick Match, never a league fixture): it counts in the head-to-head shown here but never in rivalry intensity, standings or prizes. Rivalry trophies come from recorded results only: Rivalry Laurel (Nemesis level and you lead the federation head-to-head), Arch-rival Crown (Arch-rival level and you lead), Knockout Verdict (you eliminated the rival in a knockout).</details>
+              <details className="small muted"><summary>Challenges, rematches and rivalry trophies</summary>A challenge or rematch is a rated Classical 60+60 game against the rival (a Quick Match, never a league fixture): it counts in the head-to-head shown here but never in rivalry intensity, standings or prizes. Rivalry trophies come from recorded results only: Rivalry Laurel (Nemesis level and you lead the federation head-to-head), Arch-rival Crown (Arch-rival level and you lead), Knockout Verdict (you eliminated the rival in a knockout).</details>
             </div>
           </div>
         );

@@ -21,6 +21,9 @@ export type View =
   | { name: 'competitor'; id: string }
   | { name: 'watch'; id: string }
   | { name: 'exhibition'; id?: string }
+  /** v1.0 Crownmaster Study Match: setup (#/study) or a study game (#/study/<gameId>). */
+  | { name: 'study'; gameId?: string }
+  | { name: 'arena' }
   | { name: 'exchange'; id?: string }
   | { name: 'finance' }
   | { name: 'forecasts' }
@@ -40,12 +43,13 @@ export function parseHash(hash: string = location.hash): View {
   if (name === 'analysis') return { name: 'analyses' };
   if (name === 'competitor' && id) return { name: 'competitor', id: decodeURIComponent(id) };
   if (name === 'watch' && id) return { name: 'watch', id: decodeURIComponent(id) };
+  if (name === 'study') return id ? { name: 'study', gameId: decodeURIComponent(id) } : { name: 'study' };
   if (name === 'exhibition') return id ? { name: 'exhibition', id: decodeURIComponent(id) } : { name: 'exhibition' };
   if (name === 'exchange') return id ? { name: 'exchange', id: decodeURIComponent(id) } : { name: 'exchange' };
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks'].includes(name)) return { name } as View;
+  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks', 'arena'].includes(name)) return { name } as View;
   return { name: 'dashboard' };
 }
 /** The view for a (re-)read hash: the current object when it is the same route (no re-render), else the new one. */
@@ -56,6 +60,7 @@ export function toHash(v: View): string {
   if (v.name === 'analyses') return '#/analysis';
   if (v.name === 'competitor' || v.name === 'watch') return `#/${v.name}/${encodeURIComponent(v.id)}`;
   if (v.name === 'exchange' && v.id) return `#/exchange/${encodeURIComponent(v.id)}`;
+  if (v.name === 'study' && v.gameId) return `#/study/${encodeURIComponent(v.gameId)}`;
   if (v.name === 'exhibition' && v.id) return `#/exhibition/${encodeURIComponent(v.id)}`;
   if (v.name === 'grimoire' && v.path) return `#/grimoire/${encodeURIComponent(v.path)}`;
   return `#/${v.name}`;

@@ -40,7 +40,8 @@ async function open(viewport = { width: 1366, height: 900 }) {
 let { ctx, page } = await open();
 step('Launched Crown & Calculation');
 await page.getByRole('button', { name: /Mira Vell/ }).click();
-await page.getByRole('button', { name: 'Rapid 5+3' }).click();
+// v1.1: rated games are 30+ minutes; Classical 60+60 is the default (docs/CAREER_RATING.md §7)
+await page.locator('[data-testid="tc-classical60"]').click();
 const rated = page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Rated', exact: true });
 const expectRated = true;
 if (await rated.isDisabled()) fail('Rated mode unavailable (calibration missing)');
@@ -50,13 +51,13 @@ await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.screenshot({ path: OUT + '01-setup.png' });
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');
-step('Rated match started vs Mira Vell (L1), rapid 5+3, human = White');
+step('Rated match started vs Mira Vell (L1), Classical 60+60, human = White');
 if (!(await lockedVisible())) fail('Assistant not locked in a rated game');
 if (await page.locator('[data-testid="assist-panel"]').count()) fail('Assistant panel present in a rated game');
 step('Rated-game integrity: assistant locked, no assistance controls rendered');
 const startRec = await page.evaluate(async () => { const g = (await window.__crown.db.unfinishedGames())[0]; return { rated: g.rated, pool: g.pool, mode: g.mode }; });
 step('Game state at start: ' + JSON.stringify(startRec));
-if (!startRec.rated || startRec.pool !== 'rapid') fail('Game did not start as an eligible rated rapid game');
+if (!startRec.rated || startRec.pool !== 'classical-long') fail('Game did not start as an eligible rated game in the career pool');
 
 const robot = new Searcher(18);
 let plies = 0;
@@ -97,12 +98,12 @@ const dup = await page.evaluate(async (id) => {
   const g = await s.db.getGame(id);
   const again = await s.finalize({ ...g, status: 'terminal' });
   const evs = await s.db.ratingEvents();
-  return { again: again.event?.id ?? null, events: evs.length, rapidGames: (await s.db.ratingState('rapid')).games, blitz: await s.db.ratingState('blitz') };
+  return { again: again.event?.id ?? null, events: evs.length, rapidGames: (await s.db.careerRating()).games, blitz: await s.db.ratingState('blitz') };
 }, gameId);
 step('Duplicate finalization: ' + JSON.stringify({ events: dup.events, rapidGames: dup.rapidGames, blitzGames: dup.blitz.games, blitzRating: dup.blitz.rating }));
 if (dup.events !== 1 || dup.rapidGames !== 1) fail('Duplicate finalization changed the rating ledger');
 // v0.11: a fresh profile is a new career, so every pool starts at 0 (docs/CAREER_RATING.md)
-if (dup.blitz.games !== 0 || dup.blitz.rating !== 0) fail('Blitz pool was affected by a rapid game');
+if (dup.blitz.games !== 0 || dup.blitz.rating !== 0) fail('Blitz pool was affected by a career-pool game');
 
 await page.getByRole('button', { name: 'View analysis' }).click();
 await page.waitForSelector('[data-testid="analysis-status"]');
@@ -148,7 +149,7 @@ const grade3 = await page.textContent('[data-testid="move-grade"]');
 step(`Recovered report; ply 3 grade "${grade3}"`);
 const after = await page.evaluate(async () => {
   const s = window.__crown;
-  return { games: (await s.db.allGames()).length, events: (await s.db.ratingEvents()).length, reports: (await s.db.allReports()).length, rapid: (await s.db.ratingState('rapid')).rating };
+  return { games: (await s.db.allGames()).length, events: (await s.db.ratingEvents()).length, reports: (await s.db.allReports()).length, rapid: (await s.db.careerRating()).rating };
 });
 step('DB after restart: ' + JSON.stringify(after));
 if (after.games !== 1 || after.events !== 1 || after.reports < 1) fail('State not fully recovered');

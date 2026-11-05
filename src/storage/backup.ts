@@ -7,7 +7,8 @@ import { parseLegalCcn } from '../rules/notation';
 import { VARIANT_ID } from '../rules/types';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent, PoolState } from '../ratings/ledger';
-import { replayLedger } from '../ratings/ledger';
+import { newPoolState, replayLedger } from '../ratings/ledger';
+import { SEED_MIN_RD, seededPoolState } from '../ratings/pools';
 import type { AnalysisReport } from '../analysis/types';
 import { CrownDB, APP_SCHEMA } from './db';
 import { canonicalGame, gameChecksum, sha256Hex } from './checksum';
@@ -103,7 +104,17 @@ export async function validateBundle(raw: unknown): Promise<BackupBundle> {
   const start = c?.ratingStart ?? LEGACY_START;
   for (const e of p.ratingEvents) if (e.sequence === 1 && e.before.rating !== start) throw new ImportError(`Rating pool ${e.pool} does not start at this career's initial rating.`);
   for (const s of p.ratingState) {
-    const r = replayLedger(s.pool, p.ratingEvents.filter(e => e.pool === s.pool), start);
+    // v1.1 seeded career pool: the seed must match its source pool's ledger, and the pool replays from the seed
+    let from: PoolState | undefined;
+    if (s.seed) {
+      const sd = s.seed;
+      if (!sd.source || !Number.isFinite(sd.source.rating) || !Number.isFinite(sd.source.rd) || !(sd.source.games > 0) || sd.from === s.pool) throw new ImportError(`Rating pool ${s.pool} has a malformed seed record.`);
+      const src = replayLedger(sd.from, p.ratingEvents.filter(e => e.pool === sd.from && e.sequence <= sd.source.games), start);
+      if (src.games !== sd.source.games || Math.abs(src.rating - sd.source.rating) > 1e-6 || Math.abs(src.rd - sd.source.rd) > 1e-6) throw new ImportError(`Rating pool ${s.pool} was seeded from a rating its ${sd.from} ledger does not reproduce.`);
+      from = { ...seededPoolState({ ...newPoolState(sd.from), ...sd.source }, sd.at, s.pool), seed: sd };
+      if (Math.max(sd.source.rd, SEED_MIN_RD) !== from.rd) throw new ImportError(`Rating pool ${s.pool} seed rule mismatch.`);
+    }
+    const r = replayLedger(s.pool, p.ratingEvents.filter(e => e.pool === s.pool), start, from);
     if (Math.abs(r.rating - s.rating) > 1e-6 || Math.abs(r.rd - s.rd) > 1e-6 || r.games !== s.games) throw new ImportError(`Rating pool ${s.pool} does not match its event ledger.`);
   }
   return b;
@@ -122,6 +133,8 @@ export async function importBundle(db: CrownDB, raw: unknown): Promise<{ mode: '
     // the restored career keeps its own rating origin (a pre-v0.11 career restored into a new profile stays at 1500)
     await db.adoptCareer(bundleCareer(b));
     const r = await db.importRecords(b.payload, true);
+    // a backup from before v1.1 has no career pool yet: seed it now from its Rapid rating, exactly as on upgrade
+    await db.ensureCareerPool();
     // federation & economy state is restored only into an empty career (it is one consistent world)
     const fed = b.payload.federation;
     if (fed && fed.world?.length) {

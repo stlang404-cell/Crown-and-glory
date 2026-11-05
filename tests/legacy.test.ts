@@ -19,7 +19,7 @@ import type { FederationService } from '../src/app/federation';
 const human = { kind: 'human' as const, id: 'player', name: 'You', rating: 1500, rd: 350 };
 const engine = { kind: 'engine' as const, id: 'ai-1', name: 'AI', rating: 1400, rd: 60, engine: { profileId: 'L3', level: 3, levelsId: 'x', searchId: 's', evalId: 'e', calibrationId: 'cal', style: 'standard' } };
 function finishedGame(id: string) {
-  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' }));
+  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.classical60, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' }));
   s.start(0);
   for (const m of ['c2c3', 'c5c4', 'e1f3', 'e6f4']) s.applyMove(m, 1, 'T');
   s.resign(1, 2, `2026-11-03T00:${id.padStart(2, '0').slice(-2)}:00Z`);

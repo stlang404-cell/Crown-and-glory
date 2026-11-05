@@ -8,11 +8,11 @@
  * The setup is kept in memory and mirrored to sessionStorage (best effort) so a reload of the Play screen keeps it.
  */
 import { ROSTER } from '../federation/roster';
-import { TIME_CONTROLS, type TimeControlId } from '../games/types';
+import { TIME_CONTROLS, type PresetId } from '../games/types';
 
 export interface PracticeSetup {
   opponentId: string;
-  timeControl: TimeControlId;
+  timeControl: PresetId;
   mode: 'casual';
   source: 'grimoire-plan';
 }
@@ -28,11 +28,11 @@ export function sanitizePractice(raw: unknown): PracticeSetup | null {
   const tc = typeof r.timeControl === 'string' ? r.timeControl : 'rapid';
   if (!ROSTER.some(o => o.id === opponentId)) return null;
   if (!Object.prototype.hasOwnProperty.call(TIME_CONTROLS, tc)) return null;
-  return { opponentId, timeControl: tc as TimeControlId, mode: 'casual', source: 'grimoire-plan' };
+  return { opponentId, timeControl: tc as PresetId, mode: 'casual', source: 'grimoire-plan' };
 }
 
 /** The practice setup for an engine level (the roster opponent of that level), or null if there is none. */
-export function practiceForLevel(level: number, timeControl: TimeControlId = 'rapid'): PracticeSetup | null {
+export function practiceForLevel(level: number, timeControl: PresetId = 'rapid'): PracticeSetup | null {
   const o = ROSTER.find(x => x.level === level);
   return o ? sanitizePractice({ opponentId: o.id, timeControl }) : null;
 }

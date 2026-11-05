@@ -61,7 +61,15 @@ export class AppServices {
     cancel: () => this.exhibitionEngine.cancel(),
     now: () => new Date().toISOString(),
     onChange: () => this.notify(),
-    onFinished: g => { void this.requestExhibitionAnalysis(g.id).catch(e => console.error('exhibition analysis', e)); },
+    onFinished: g => {
+      void this.requestExhibitionAnalysis(g.id).catch(e => console.error('exhibition analysis', e));
+      // v1.1 practice market: settled exactly once on the result (void at the playing limit)
+      void this.fed?.resolveExhibitionMarket(g).catch(e => console.error('exhibition market settle', e));
+    },
+    // v1.1 practice market (sandbox money only, src/app/exhibitionMarket.ts): prices follow the published moves only
+    onMoved: async g => { await this.fed?.publishExhibitionMove(g); },
+    onSkip: async g => { await this.fed?.closeExhibitionMarket(g.id); },
+    onRestart: async old => { if (old.status !== 'finished') await this.fed?.resolveExhibitionMarket(old, 'restarted'); },
     // phones run one scheduled-game worker: it pauses while an exhibition computes (mobile limits)
     onBusy: busy => { if (this.live && this.device.mobile) { if (busy) this.live.pause('exhibition'); else this.live.resume('exhibition'); } },
     readOnly: () => this.readOnly,
@@ -94,7 +102,7 @@ export class AppServices {
     const db = await phase('db:open', () => CrownDB.open());
     const s = new AppServices(db);
     await phase('lease', () => s.acquireLease());
-    s.fed = new FederationService(db, async () => { const p = await db.ratingState('rapid'); return { rating: p.rating, rd: p.rd }; });
+    s.fed = new FederationService(db, async () => { const p = await db.careerRating(); return { rating: p.rating, rd: p.rd }; });
     s.fed.runSelfplay = (req, onMove) => s.spectator.selfplay(req, m => onMove(m)).then(r => ({ moves: r.moves, result: r.result, termination: r.termination }));
     s.fed.computeMove = req => s.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: req.moves, level: 0, seed: req.seed, profile: req.profile, style: req.style, newGame: true, purpose: 'spectator' })
       .then(r => ({ ccn: r.move, score: r.score, depth: r.depth, nodes: r.nodes, ms: r.timeMs }));

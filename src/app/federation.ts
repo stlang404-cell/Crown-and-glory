@@ -7,6 +7,7 @@
  * previous consistent state; retries are idempotent via journal ids and the round cursor.
  * The UI reads from this service and never mutates money, ratings or results directly.
  */
+import { isStudyGame } from './study';
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { applyFoundingPersonas, applyNameMode } from '../federation/rosterPersonas';
@@ -21,6 +22,11 @@ import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
 import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf, MATCH_CLAIMS, claimsOf } from '../exchange/market';
 import { normaliseModel, RULES } from '../exchange/families';
+import { anchorShares } from '../exchange/npc';
+import { quote } from '../exchange/market';
+import { expectedU as expectedUOfPov, toPov } from '../analysis/methodology';
+import type { ExhibitionGame } from './exhibition';
+import { EXH_MAKER, EXH_MARKET_B, EXH_MARKET_RULES, EXH_OUTCOMES, exhibitionLiveModel, exhibitionMarketId, exhibitionPrior, resultState, voidsMarket } from './exhibitionMarket';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
 import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch, openLengthMarket, closeLengthMarket, resolveLengthMarket, suspensionOf, lengthMarketId } from './markets';
@@ -91,6 +97,7 @@ export interface Ceremony { id: string; season: number; round: number; kind: 'fe
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
 /** Node cap of featured, scheduled and exhibition games (profileForStrength above the measured range plays this budget). */
 export const FEATURED_NODE_CAP = 30_000;
+const expectedUOf = (score: SelfplayMove['score']) => expectedUOfPov(toPov(score, 'white'));
 const MARKET_B = 120;
 const NPC_FUND = 2_000 * MICRO;
 export const COMPETITOR_EXPENSE_SHARE = 0.75;
@@ -535,14 +542,18 @@ export class FederationService {
     const c = this.state!.competitors.get(oppId)!;
     const profile = profileForStrength(c.latent);
     const { createGameRecord } = await import('../games/session');
-    const { TIME_CONTROLS } = await import('../games/types');
+    const { FEDERATION_TIME_CONTROL } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
     const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
     const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
+    // v1.1 transition rule (docs/CAREER_RATING.md §7.4): the clock is fixed when the fixture's game record is created.
+    // A fixture game created before the update (above: returned unchanged) keeps Rapid 5+3 and its pool; every fixture
+    // game created from v1.1 is Classical 60+60, rated in the career pool. Event rules (formats, pairings, scoring,
+    // tiebreaks, prizes, schedule) never depend on the player's clock and are unchanged.
     const rec = createGameRecord({
-      id: `fed-${fixtureId.replace(/:/g, '-')}`, mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: f.white === PLAYER_ID ? 'white' : 'black',
+      id: `fed-${fixtureId.replace(/:/g, '-')}`, mode: 'rated', timeControl: FEDERATION_TIME_CONTROL, humanColor: f.white === PLAYER_ID ? 'white' : 'black',
       human: { kind: 'human', id: 'player', name: 'You', rating: human.rating, rd: human.rd },
       engine: { kind: 'engine', id: c.id, name: c.name, rating: c.rating, rd: c.rd, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'player-game', fixtureId), nowIso: this.now(),
@@ -578,21 +589,25 @@ export class FederationService {
    *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
    *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
    *  Not a league fixture: standings, prize pools and markets are untouched. */
-  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean }): Promise<GameRecord> {
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean;
+    /** v1.1: the player's chosen control (default Classical 60+60); rated only at 30+ minutes (src/games/types.ts). */
+    timeControl?: import('../games/types').TimeControl }): Promise<GameRecord> {
     const c = this.state?.competitors.get(competitorId);
     if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
     const profile = profileForStrength(c.latent);
     const { createGameRecord } = await import('../games/session');
-    const { TIME_CONTROLS } = await import('../games/types');
+    const { DEFAULT_RATED_CONTROL, poolFor } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
     const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
     const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
+    const timeControl = opts.timeControl ?? DEFAULT_RATED_CONTROL;
+    const rated = opts.rated && poolFor(timeControl) !== null;
     return createGameRecord({
-      id: `qm-${c.id.replace(/:/g, '-')}-${opts.nowMs.toString(36)}`, mode: opts.rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS.rapid, humanColor: opts.humanColor,
-      human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
-      engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
+      id: `qm-${c.id.replace(/:/g, '-')}-${opts.nowMs.toString(36)}`, mode: rated ? 'rated' : 'casual', timeControl, humanColor: opts.humanColor,
+      human: { kind: 'human', id: 'player', name: 'You', rating: rated ? opts.human.rating : null, rd: rated ? opts.human.rd : null },
+      engine: { kind: 'engine', id: c.id, name: c.name, rating: rated ? c.rating : null, rd: rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
       // v0.11 rivalry challenges / rematches are ordinary Quick Matches with their own label (src/app/rivalries.ts)
       context: { kind: 'quick-match', eventName: opts.challenge ? `Rivalry Challenge vs ${c.name}` : `Quick Match vs ${c.name}` },
@@ -603,7 +618,7 @@ export class FederationService {
   async recordPlayerGame(game: GameRecord): Promise<void> {
     return this.run(async () => {
       const fixtureId = game.context.fixtureId;
-      if (!fixtureId || !game.result) return;
+      if (!fixtureId || !game.result || game.context.kind !== 'federation' || isStudyGame(game)) return;
       const st = this.clone();
       const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
@@ -846,6 +861,7 @@ export class FederationService {
   /** Why a game cannot carry a sandbox market, or null if it can. */
   static sandboxIneligible(g: GameRecord): string | null {
     if (g.mode === 'rated' || g.rated) return 'Rated games never carry markets';
+    if (isStudyGame(g)) return 'Study Matches never carry markets';
     if (g.context.kind !== 'quick-match') return 'Only casual quick matches (federation and training games are excluded)';
     // Training Hall sparring is created with context 'quick-match' but is a training game, not one started from Play or
     // Random Match (RULEBOOK §Sandbox; RULES_TRACEABILITY D10): it never carries a practice market.
@@ -857,6 +873,26 @@ export class FederationService {
     return null;
   }
 
+  /** Sandbox money is created only by explicit sandbox:mint entries (never official mint): the player's one-time
+   *  practice grant and the sandbox market-maker float. */
+  private fundSandbox(st: FedState, posted: Journal[]): void {
+    const C = (x: number) => x * MICRO;
+    if (!st.journalIds.has('sandbox-grant:player')) this.post(st, [{ id: 'sandbox-grant:player', at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox starting balance (practice money)', lines: [{ account: 'sandbox:mint', amount: -C(500) }, { account: 'sandbox:player', amount: C(500) }] }], posted);
+    const tr = st.balances.get('sandbox:treasury') ?? 0;
+    if (tr < C(1_000)) this.post(st, [{ id: `sandbox-treasury:${st.journalIds.size}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox market-maker float', lines: [{ account: 'sandbox:mint', amount: -(C(5_000) - tr) }, { account: 'sandbox:treasury', amount: C(5_000) - tr }] }], posted);
+  }
+
+  /** Controlled refill: practice money tops up to 200 only after 5 settled sandbox markets since the last refill. */
+  private refillSandbox(st: FedState, posted: Journal[]): void {
+    const settledCount = [...st.markets.values()].filter(x => x.kind === 'sandbox' && (x.status === 'settled' || x.status === 'cancelled')).length;
+    const lastRefill = st.extra.sandboxRefillAt ?? 0;
+    if ((st.balances.get('sandbox:player') ?? 0) < 20 * MICRO && settledCount - lastRefill >= 5) {
+      const amt = 200 * MICRO - (st.balances.get('sandbox:player') ?? 0);
+      this.post(st, [{ id: `sandbox-refill:${settledCount}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox practice refill', lines: [{ account: 'sandbox:mint', amount: -amt }, { account: 'sandbox:player', amount: amt }] }], posted);
+      st.extra.sandboxRefillAt = settledCount;
+    }
+  }
+
   /** Open a sandbox market on the player's own casual game, priced at the rating-based prior. */
   async openSandbox(g: GameRecord, prior: number[]): Promise<Market> {
     const why = FederationService.sandboxIneligible(g);
@@ -866,11 +902,7 @@ export class FederationService {
       const id = `sb:${g.id}`;
       if (st.markets.has(id)) return st.markets.get(id)!;
       const posted: Journal[] = [];
-      const C = (x: number) => x * MICRO;
-      // sandbox money is created only by explicit sandbox:mint entries (never official mint)
-      if (!st.journalIds.has('sandbox-grant:player')) this.post(st, [{ id: 'sandbox-grant:player', at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox starting balance (practice money)', lines: [{ account: 'sandbox:mint', amount: -C(500) }, { account: 'sandbox:player', amount: C(500) }] }], posted);
-      const tr = st.balances.get('sandbox:treasury') ?? 0;
-      if (tr < C(1_000)) this.post(st, [{ id: `sandbox-treasury:${st.journalIds.size}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox market-maker float', lines: [{ account: 'sandbox:mint', amount: -(C(5_000) - tr) }, { account: 'sandbox:treasury', amount: C(5_000) - tr }] }], posted);
+      this.fundSandbox(st, posted);
       const p0 = normaliseModel(prior, 0.03);
       const opp = g.humanColor === 'white' ? g.black : g.white;
       const { market, journal } = openGenericMarket({
@@ -933,16 +965,143 @@ export class FederationService {
       this.post(st, [r.journal], posted);
       st.markets.set(m.id, r.market);
       for (const p of r.positions) st.positions.set(p.id, p);
-      // controlled refill: practice money tops up to 200 only after 5 settled sandbox markets since the last refill
-      const settledCount = [...st.markets.values()].filter(x => x.kind === 'sandbox' && (x.status === 'settled' || x.status === 'cancelled')).length;
-      const lastRefill = st.extra.sandboxRefillAt ?? 0;
-      if ((st.balances.get('sandbox:player') ?? 0) < 20 * MICRO && settledCount - lastRefill >= 5) {
-        const amt = 200 * MICRO - (st.balances.get('sandbox:player') ?? 0);
-        this.post(st, [{ id: `sandbox-refill:${settledCount}`, at: this.now(), kind: 'sandbox-mint', memo: 'Sandbox practice refill', lines: [{ account: 'sandbox:mint', amount: -amt }, { account: 'sandbox:player', amount: amt }] }], posted);
-        st.extra.sandboxRefillAt = settledCount;
-      }
+      this.refillSandbox(st, posted);
       await this.commit(st, posted, { markets: [r.market], positions: r.positions }, { season: st.world.season, round: st.world.round });
     });
+  }
+
+  // ------------------------------------------------------------------ v1.1 practice markets on exhibitions
+  // (src/app/exhibitionMarket.ts, docs/AI_ARENA.md): the casual Sandbox Exchange reused — sandbox:* money only.
+  exhibitionMarketFor(exhibitionId: string): Market | undefined { return this.state?.markets.get(exhibitionMarketId(exhibitionId)); }
+
+  /** Open the practice market of an unfinished exhibition at the public prior (idempotent), re-anchored to the
+   *  published moves so far if it opens mid-game. */
+  async openExhibitionMarket(g: ExhibitionGame): Promise<Market> {
+    if (!this.state) throw new Error('No federation yet. Found the federation first.');
+    if (g.status === 'finished') throw new Error('This exhibition is over: a practice market opens only before the final move.');
+    if (g.restartedAs) throw new Error('This exhibition was restarted: open the market on the new game.');
+    return this.run(async () => {
+      const st = this.clone();
+      const id = exhibitionMarketId(g.id);
+      if (st.markets.has(id)) return st.markets.get(id)!;
+      const posted: Journal[] = [];
+      this.fundSandbox(st, posted);
+      const p0 = exhibitionPrior(g);
+      const { market, journal } = openGenericMarket({
+        id, kind: 'sandbox', sandbox: true, title: `Exhibition: ${g.white.name} vs ${g.black.name}`, outcomes: [...EXH_OUTCOMES],
+        model: p0, prior: p0, rules: EXH_MARKET_RULES, season: st.world.season, round: st.world.round, b: EXH_MARKET_B, at: this.now(),
+        white: g.white.id, black: g.black.id, ref: { exhibition: g.id },
+      });
+      market.cancelVector = p0;
+      market.live = { plies: 0, lastEval: null };
+      this.post(st, [journal], posted);
+      const positions: Position[] = [];
+      const m = g.moves.length ? this.anchorExhibition(st, posted, market, g, positions) : market;
+      st.markets.set(id, m);
+      await this.commit(st, posted, { markets: [m], positions }, { season: st.world.season, round: st.world.round });
+      return m;
+    });
+  }
+
+  /** Practice maker: buys (sandbox money, minted explicitly) until state prices equal the public live model. */
+  private anchorExhibition(st: FedState, posted: Journal[], m0: Market, g: Pick<ExhibitionGame, 'white' | 'black' | 'moves'>, positions: Position[]): Market {
+    const model = exhibitionLiveModel(g);
+    const k = anchorShares(m0.q, m0.b, model);
+    let m: Market = { ...m0, model, live: { plies: g.moves.length, lastEval: g.moves.length ? expectedUOf(g.moves[g.moves.length - 1].score) : null } };
+    for (let s = 0; s < k.length; s++) {
+      if (k[s] <= 0) continue;
+      const pos = st.positions.get(`${m.id}|${EXH_MAKER}`) ?? null;
+      const cost = quote(m, s, k[s], 'buy').total;
+      const have = st.balances.get(EXH_MAKER) ?? 0;
+      if (have < cost) this.post(st, [{ id: `sandbox-maker:${m.id}:${m.history.length}`, at: this.now(), kind: 'sandbox-mint', memo: 'Practice market maker float (sandbox money)', lines: [{ account: 'sandbox:mint', amount: -(cost - have) }, { account: EXH_MAKER, amount: cost - have }] }], posted);
+      const t = trade(m, pos, EXH_MAKER, s, k[s], 'buy', this.now(), m.history.length);
+      this.post(st, [t.journal], posted);
+      m = t.market;
+      st.positions.set(t.position.id, t.position);
+      const i = positions.findIndex(p => p.id === t.position.id);
+      if (i >= 0) positions[i] = t.position; else positions.push(t.position);
+    }
+    return m;
+  }
+
+  /** A move of the exhibition was published: re-anchor its open practice market (idempotent per ply). */
+  async publishExhibitionMove(g: ExhibitionGame): Promise<boolean> {
+    const m0 = this.exhibitionMarketFor(g.id);
+    if (!m0 || m0.status !== 'open' || g.status === 'finished' || (m0.live?.plies ?? 0) >= g.moves.length) return false;
+    return this.run(async () => {
+      const st = this.clone();
+      const m1 = st.markets.get(m0.id)!;
+      if (m1.status !== 'open' || (m1.live?.plies ?? 0) >= g.moves.length) return false;
+      const posted: Journal[] = [];
+      const positions: Position[] = [];
+      const m = this.anchorExhibition(st, posted, m1, g, positions);
+      st.markets.set(m.id, m);
+      await this.commit(st, posted, { markets: [m], positions }, { season: st.world.season, round: st.world.round });
+      return true;
+    }, 'scheduler');
+  }
+
+  /** Trade the practice market at the published ply `expectPly` (rejected once another move is published). */
+  async exhibitionTrade(exhibitionId: string, claim: number, shares: number, side: 'buy' | 'sell', expectPly: number, limit: { maxTotal?: number; minTotal?: number } = {}): Promise<void> {
+    const stored = await this.db.getMeta<ExhibitionGame>(exhibitionId);
+    if (!stored || stored.kind !== 'exhibition') throw new Error('This exhibition does not exist.');
+    if (stored.status === 'finished') throw new Error('Trading has closed: the exhibition is over.');
+    if (stored.moves.length !== expectPly) throw new Error('A new move was published since this quote. Check the new price and try again.');
+    return this.run(async () => {
+      const st = this.clone();
+      const m = st.markets.get(exhibitionMarketId(exhibitionId));
+      if (!m || m.status !== 'open') throw new Error('This exhibition has no open practice market.');
+      if ((m.live?.plies ?? 0) !== expectPly) throw new Error('A new move was published since this quote. Check the new price and try again.');
+      const pos = st.positions.get(`${m.id}|sandbox:player`) ?? null;
+      const t = trade(m, pos, 'sandbox:player', claim, shares, side, this.now(), m.history.length);
+      if (side === 'buy' && limit.maxTotal !== undefined && t.quote.total > limit.maxTotal) throw new Error('The price moved: the trade was not placed.');
+      if (side === 'sell' && limit.minTotal !== undefined && t.quote.total < limit.minTotal) throw new Error('The price moved: the trade was not placed.');
+      const posted: Journal[] = [];
+      this.post(st, [t.journal], posted);
+      st.markets.set(m.id, t.market); st.positions.set(t.position.id, t.position);
+      await this.commit(st, posted, { markets: [t.market], positions: [t.position] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Stop trading (Skip to Result). Idempotent. */
+  async closeExhibitionMarket(exhibitionId: string): Promise<void> {
+    const m = this.exhibitionMarketFor(exhibitionId);
+    if (!m || m.status !== 'open') return;
+    return this.run(async () => {
+      const st = this.clone();
+      const c = closeMarket(st.markets.get(m.id)!, this.now());
+      st.markets.set(c.id, c);
+      await this.commit(st, [], { markets: [c] }, { season: st.world.season, round: st.world.round });
+    }, 'scheduler');
+  }
+
+  /**
+   * Resolve the practice market: settle on the finished exhibition's result, or VOID (cancel at the published opening
+   * prices) when `voidReason` is given or the game hit the playing limit. Exactly once: a resolved market is left
+   * alone and the resolution journal id `settle:<market>` can be posted only once.
+   */
+  async resolveExhibitionMarket(g: ExhibitionGame, voidReason?: string): Promise<'settled' | 'void' | 'none'> {
+    const m0 = this.exhibitionMarketFor(g.id);
+    if (!m0 || m0.status === 'settled' || m0.status === 'cancelled') return 'none';
+    if (!voidReason && (g.status !== 'finished' || !g.result)) return 'none';
+    return this.run(async () => {
+      const st = this.clone();
+      const m = st.markets.get(m0.id)!;
+      if (m.status === 'settled' || m.status === 'cancelled') return 'none' as const;
+      const ps = [...st.positions.values()].filter(p => p.marketId === m.id);
+      const closed = closeMarket(m, this.now());
+      const coll = st.balances.get(acct(m, 'collateral')) ?? 0;
+      const isVoid = !!voidReason || voidsMarket(g.termination);
+      const r = isVoid ? cancelMarket(closed, ps, this.now(), coll) : settleMarket(closed, ps, resultState(g.result!), this.now(), coll, null);
+      const posted: Journal[] = [];
+      this.post(st, [r.journal], posted);
+      const market: Market = { ...r.market, ref: { ...(r.market.ref ?? {}), ...(voidReason ? { void: voidReason } : {}) } };
+      st.markets.set(m.id, market);
+      for (const p of r.positions) st.positions.set(p.id, p);
+      this.refillSandbox(st, posted);
+      await this.commit(st, posted, { markets: [market], positions: r.positions }, { season: st.world.season, round: st.world.round });
+      return isVoid ? 'void' as const : 'settled' as const;
+    }, 'scheduler');
   }
 
   // ------------------------------------------------------------------ live in-play featured games

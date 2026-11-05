@@ -15,7 +15,7 @@
  * "<square>, <colour> <piece>"; move announcements in a polite live region, one per move; clocks not live (no spam).
  */
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const AXE = require.resolve('axe-core/axe.min.js');
@@ -28,6 +28,7 @@ const log = []; let failed = 0;
 const step = m => { const l = `[${new Date().toISOString()}] ${m}`; log.push(l); console.log(l); };
 const check = (id, ok, m) => { step(`${ok ? 'PASS' : 'FAIL'} ${id}: ${m}`); if (!ok) failed++; };
 
+rmSync(OUT + 'profile-' + label, { recursive: true, force: true }); // a fresh profile every run (a reused one carries an old federation)
 const ctx = await chromium.launchPersistentContext(OUT + 'profile-' + label, { viewport: { width: 1366, height: 900 }, reducedMotion: 'no-preference' });
 const page = ctx.pages()[0] ?? await ctx.newPage();
 const errors = [];
@@ -78,11 +79,17 @@ await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Cas
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');
 const matchId = decodeURIComponent((await page.evaluate(() => location.hash)).split('/')[2]);
+// v1.0 Crownmaster Study Match in progress (all aids on, hint and best move shown)
+await page.goto(url + '#/study');
+await page.locator('[data-testid="study-opp"][data-beginner]').first().click();
+await page.click('[data-testid="study-start"]');
+await page.waitForSelector('[data-testid="study-match"]');
+const studyId = decodeURIComponent((await page.evaluate(() => location.hash)).split('/')[2]);
 
 const SCREENS = [
-  ['dashboard', ''], ['play', 'play'], ['match', `match/${encodeURIComponent(matchId)}`], ['federation', 'world'], ['standings', 'standings'], ['tournaments', 'tournaments'],
+  ['dashboard', ''], ['play', 'play'], ['match', `match/${encodeURIComponent(matchId)}`], ['study', 'study'], ['study-match', `study/${encodeURIComponent(studyId)}`], ['federation', 'world'], ['standings', 'standings'], ['tournaments', 'tournaments'],
   ['competitors', 'competitors'], ['competitor', `competitor/${encodeURIComponent(ids.competitor)}`], ['population', 'population'], ['watch', `watch/${encodeURIComponent(ids.fixture)}`],
-  ['exhibition', 'exhibition'], ['exchange', 'exchange'], ['market', ids.market ? `exchange/${encodeURIComponent(ids.market)}` : 'exchange'], ['finance', 'finance'], ['forecasts', 'forecasts'],
+  ['arena', 'arena'], ['exhibition', 'exhibition'], ['exchange', 'exchange'], ['market', ids.market ? `exchange/${encodeURIComponent(ids.market)}` : 'exchange'], ['finance', 'finance'], ['forecasts', 'forecasts'],
   ['news', 'news'], ['games', 'library'], ['replays', 'replays'], ['analyses', 'analysis'], ['analysis', `analysis/${encodeURIComponent(gameId)}`], ['academy', 'academy'],
   ['grimoire', 'grimoire'], ['career', 'profile'], ['rivals', 'rivals'], ['hall', 'hall'], ['heraldry', 'heraldry'], ['vault', 'vault'], ['ranks', 'ranks'], ['lab', 'lab'], ['settings', 'settings'],
 ];

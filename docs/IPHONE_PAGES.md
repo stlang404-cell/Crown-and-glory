@@ -60,6 +60,11 @@ A failing unit test stops the deployment, so a broken build never replaces the g
      **"Update ready — vX (commit). It will install when you leave this game. — Restart to Update"**. Tap the
      button to restart now (your game is saved after every move and resumes), or just keep playing: it installs
      by itself as soon as you leave the game.
+   With the v1.1 long games (30 minutes to 4 hours per player) this matters more and is unchanged: an update never
+   activates while the match screen is open. Leaving the match screen pauses the game and saves its clocks, so the
+   switch that follows cannot cost any time (docs/SAVE_FORMAT.md, "Pause on exit"); "Restart to Update" during a
+   game pauses it and starts the save from the page's `pagehide`; if the browser does not finish that write, the game
+   resumes from its last 5-second heartbeat, never from a drained clock.
 4. **Confirmation.** After the switch you see **"Updated to vX (commit)"** once.
 5. Navigations are network-first with a short timeout (fresh `index.html` when online, the cached copy when offline
    or on a very slow connection), so reopening the app online also loads the newest page.

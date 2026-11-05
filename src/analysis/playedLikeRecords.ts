@@ -7,6 +7,7 @@
  * model id, and only "adequate" ones (a number from a validated model with ≥ ADEQUATE_MOVES informative moves) count
  * toward best / lowest / averages. Everything else stays in the match history with its label.
  */
+import { isStudyGame } from '../app/study';
 import { PLAYED_LIKE_ID, playedLike, reportForPlayedLike, type PlayedLike } from './playedLike';
 import type { AnalysisReport, Pov } from './types';
 import type { GameRecord } from '../games/types';
@@ -71,7 +72,8 @@ export function upsertRecord(list: PlayedLikeGameRecord[] | undefined, rec: Play
 /** Does the game need a (new) record for the current model from these reports? */
 export function needsRecord(game: GameRecord, reports: AnalysisReport[]): AnalysisReport | null {
   // v0.11: unofficial exhibitions (id "exh:…", src/app/exhibition.ts) never get a permanent record
-  if (game.status !== 'finalized' || game.id.startsWith('exh:')) return null;
+  // v1.0: Study Matches (src/app/study.ts) are unofficial too: their analysis shows Played Like, but no record is kept
+  if (game.status !== 'finalized' || game.id.startsWith('exh:') || isStudyGame(game)) return null;
   const rep = reportForPlayedLike(reports);
   if (!rep) return null;
   const have = (game.playedLike ?? []).find(r => r.modelId === PLAYED_LIKE_ID);

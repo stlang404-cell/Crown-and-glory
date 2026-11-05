@@ -199,6 +199,12 @@ describe('crown-vault-2 catalog: preservation, families and tiers', () => {
     // established, so a provisional 0-start career cannot farm "upsets". Everything else stays byte for byte.
     const CLARIFIED = new Set(['upset-higher', 'giant-slayer', 'titan-slayer', 'qm-giant', 'qm-titan']);
     const CLAUSE = ' Counts only while your rating is established (±100 or less).';
+    // v1.1 (docs/CAREER_RATING.md §7): the career Elo moved from the Rapid pool to the Long Classical career pool
+    // (seeded from it), so "established Rapid rating" reads "established career Elo"; nothing else changed.
+    for (const [i, d] of now.entries()) if (d.rule.includes('established career Elo')) {
+      expect((v1[i] as unknown as { rule: string }).rule).toBe(d.rule.replaceAll('established career Elo', 'established Rapid rating'));
+      now[i] = { ...d, rule: d.rule.replaceAll('established career Elo', 'established Rapid rating') };
+    }
     for (const [i, d] of now.entries()) if (CLARIFIED.has(d.id)) {
       expect(d.rule).toBe(`${(v1[i] as unknown as { rule: string }).rule}${CLAUSE}`);
       now[i] = { ...d, rule: (v1[i] as unknown as { rule: string }).rule };

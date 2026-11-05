@@ -1,3 +1,4 @@
+import { POOL_LABEL } from '../ratings/pools';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { GuideCard } from './Onboarding';
 import { HonourTag, RATING_TITLE_TOOLTIP } from './RankBadge';
@@ -182,7 +183,7 @@ export function DashboardScreen() {
   // saved records outside the federation: loaded after the first paint, throttled
   const ratingEvents = useLazy<RatingEvent[]>(() => services.db.ratingEvents(), [], rev);
   const grim = useLazy<DashGrimoire | null>(async () => grimoireSummary(await loadProgress(services.db), new Date().toISOString()), null, rev);
-  const rating = useMemo(() => (ratingEvents ? ratingSeries(ratingEvents, 'rapid') : []), [ratingEvents]);
+  const rating = useMemo(() => (ratingEvents ? ratingSeries(ratingEvents, 'career') : []), [ratingEvents]);
   const rated = useMemo(() => (ratingEvents ? recentRated(ratingEvents) : []), [ratingEvents]);
 
   const foundCta = <button className="btn" data-testid="dash-found-cta" onClick={() => go({ name: 'world' })}>Go to the Federation</button>;
@@ -198,10 +199,23 @@ export function DashboardScreen() {
         <span className="spacer" />
         <span className="dash-head-actions">
           <button className="btn small" onClick={() => go({ name: 'play' })}><Icon name="play" /> Play</button>
+          <button className="btn small" data-testid="dash-study" onClick={() => go({ name: 'study' })}><Icon name="academy" /> Study Match</button>
           <button className="btn small" onClick={() => go({ name: 'world' })}><Icon name="world" /> Federation</button>
         </span>
       </div>
       <GuideCard />
+      {st && (
+        <section className="panel dash-found dash-arena" data-testid="dash-arena" aria-labelledby="dash-h-arena">
+          <div>
+            <h2 id="dash-h-arena" className="dash-h">AI vs AI Match Arena</h2>
+            <p className="small" style={{ margin: '4px 0 0' }}>Watch live official matches with their markets, replay finished games, or start a custom exhibition between any two of the Federation’s competitors.</p>
+          </div>
+          <span className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn primary" data-testid="dash-open-arena" onClick={() => go({ name: 'arena' })}>Watch AI Match</button>
+            <button className="btn" data-testid="dash-start-exhibition" onClick={() => go({ name: 'exhibition' })}>Custom Exhibition</button>
+          </span>
+        </section>
+      )}
       {!st && (
         <div className="panel dash-found" data-testid="dash-not-founded">
           <div>
@@ -270,9 +284,9 @@ export function DashboardScreen() {
             : <ul className="dash-list">{events.map(e => <EventCard key={e.id} e={e} />)}</ul>}
         </Section>
 
-        <Section title="Rapid Rating" id="rating" action={<button className="btn ghost small" onClick={() => go({ name: 'profile' })}>Career</button>}>
+        <Section title="Career Elo" id="rating" action={<button className="btn ghost small" onClick={() => go({ name: 'profile' })}>Career</button>}>
           {ratingEvents === null ? <p className="small muted">Loading your rating history…</p> : rating.length < 2
-            ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play a Rated Game</button>}>Your rating chart appears after your first rated Rapid game.</Empty>
+            ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play a Rated Game</button>}>Your rating chart appears after your first rated game.</Empty>
             : <RatingChart points={rating.slice(-60)} height={200} />}
         </Section>
 
@@ -295,7 +309,7 @@ export function DashboardScreen() {
             ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play</button>}>No rated games yet. Your results appear here after each rated game.</Empty>
             : <ul className="dash-list">{rated.map(r => (
               <li key={r.gameId + r.pool}><button className="dash-row" data-testid="dash-result" onClick={() => go({ name: 'analysis', gameId: r.gameId })}>
-                <span className="dash-row-main"><span className="dash-ellipsis"><span className={`chip ${r.score === 1 ? 'pos' : r.score === 0 ? 'neg' : ''}`}>{r.score === 1 ? 'Win' : r.score === 0 ? 'Loss' : 'Draw'}</span> vs {r.opponent}</span><span className="small muted">{r.pool[0].toUpperCase() + r.pool.slice(1)} · {fmtDate(r.at)}</span></span>
+                <span className="dash-row-main"><span className="dash-ellipsis"><span className={`chip ${r.score === 1 ? 'pos' : r.score === 0 ? 'neg' : ''}`}>{r.score === 1 ? 'Win' : r.score === 0 ? 'Loss' : 'Draw'}</span> vs {r.opponent}</span><span className="small muted">{POOL_LABEL[r.pool]} · {fmtDate(r.at)}</span></span>
                 <span className="dash-row-num"><span className="mono">{Math.round(r.after)}</span><span className="small mono muted">{r.delta >= 0 ? '+' : ''}{r.delta.toFixed(0)}</span></span>
               </button></li>))}</ul>}
           {st && <>

@@ -96,3 +96,83 @@ career founds a new Federation and joins its lowest division (tested). The old c
 importing its backup into an empty career (tested from the archive copy).
 
 Tests: `tests/career.test.ts` (17), `tests/storage.test.ts`; journey `e2e/new-career.mjs` (desktop and 390 px).
+
+## 7. v1.1 Grand Classical update: long time controls and the career pool (crown-career-pool-1)
+
+### 7.1 Time controls
+Human-rated play needs a base of **at least 30 minutes** with a Fischer increment (added to the clock of the player
+who completes a legal move):
+
+| Preset | Base + increment | Plain language |
+|---|---|---|
+| Extended Rapid | 30+30 | 30 minutes per player, plus 30 seconds after every completed move |
+| **Classical (default)** | **60+60** | 60 minutes per player, plus 60 seconds after every completed move |
+| Grand Classical | 90+60 | 90 minutes per player, plus 60 seconds after every completed move |
+| Crownmaster | 120+90 | 120 minutes per player, plus 90 seconds after every completed move |
+| Marathon | 180+120 | 180 minutes per player, plus 120 seconds after every completed move |
+| Eternal Crown | 240+120 | 240 minutes per player, plus 120 seconds after every completed move |
+
+* **Custom:** base 30–240 minutes, increment 0–120 seconds. It is **rated** when it lies inside the presets' envelope
+  (base 30–240 min **and** increment 30–120 s) and then joins the same pool; otherwise (e.g. 45+0 sudden death) it is
+  casual. `isRatedControl` / `poolFor` in `src/games/types.ts`.
+* The last selected control is remembered (meta `pref:timeControl`); new profiles start at Classical 60+60. Play
+  and Quick Match share one selector state.
+* **Older controls** (Blitz 3+2, Rapid 5+3, Classical 15+10, Untimed) remain available, unchanged and with their
+  original labels, **for casual games only**. No shorter control was renamed. Historical games store their own clock
+  definition and are always shown with it.
+* Entry points: Play (rated/casual vs the calibrated ladder), Random Quick Match (the remembered control), Rivals
+  challenges/rematches (Classical 60+60), Federation fixtures (§7.4). Practice hand-offs and sparring stay casual.
+* **AI thinking budget is separate from the clock** (`allocateTime` in `src/engine/levels.ts`, unchanged): an engine
+  never thinks longer than its profile's cap — L1–L7 and beginners 0.4–2 s, L8 and Federation profiles 6 s, L9
+  Sovereign Unbound 10 s in rated games (casual budgets up to 60 s). With 30+ minute clocks the cap always decides,
+  so longer controls never weaken (or strengthen) an engine, and the search runs in a worker so the UI never freezes
+  (tested in tests/grandClassical.test.ts).
+* Clocks show h:mm:ss from one hour (`4:00:00`), m:ss below, tenths under 20 s; low-time warning at 10 % of the base
+  (between 20 s and 5 min), critical under 20 s; running-side indicator, time-control name and increment, paused /
+  resumed status on the match screen.
+
+### 7.2 Rating-pool policy
+* **One career pool, `classical-long` ("Long Classical")**, for every rated game of 30+ minutes. The career Elo shown
+  everywhere (identity header, Play, Quick Match, Passport, ranks and percentiles, Vault facts and insignias, trophies
+  and milestones, Played Like comparisons, the Federation's player rating for pairings, divisions and ranks, Start New
+  Career, backups) reads it through ONE module, `src/ratings/pools.ts` (`CAREER_POOL`, `CrownDB.careerRating()`,
+  `careerTimeline()`). No surface names a pool literally.
+* **Legacy pools** `rapid`, `blitz`, `classical` (15+10) keep their full histories and states, shown under Career
+  Passport → rating pool as "Rapid (legacy)" etc. No new game is rated in them; a game that was already in progress
+  when v1.1 was installed finishes in the pool it was created with (an in-progress match is never changed).
+
+### 7.3 Seeding (once per existing career)
+* When a database opens and the career pool has **never been written** (no state, no events) and the Rapid pool
+  (the career Elo until v1.0) has rated games, the career pool is seeded in one transaction from the player's current
+  measured Rapid rating: **rating kept, RD = max(current RD, 150), volatility σ kept, rated-game count carried** (so
+  an established player is not made provisional by the move; W–D–L start at 0 and count Long Classical games only).
+  This is standard Glicko practice when a player moves to a new pool: the estimate carries over and its uncertainty
+  grows. Nothing is fabricated: no result is invented and no rating moves.
+* The seed is recorded with provenance on the pool state (`PoolState.seed`: source pool, time, source rating/RD/σ,
+  games, last event id, rule) and in the meta record `careerPoolSeed`. It is **never repeated**: once the pool state
+  exists it is only changed by rated results. `add()` aborts the transaction if another tab seeded first.
+* **New careers** (package N rule, §1) have no Rapid games: their career pool is not seeded and starts at the career
+  origin, **0 ±350** (legacy careers that never played Rapid start at their 1500 origin, as for any unplayed pool).
+* The career timeline (charts, peaks, insignias, milestones) is the Rapid history up to the seeding point followed
+  by the career pool's own events; because the pool continues the Rapid rating (and the game count), this is one
+  continuous line (`careerTimeline`).
+* Backups: the seeded state and its provenance are exported; validation replays the career pool from its seed and
+  checks the seed against the Rapid ledger. A pre-v1.1 backup restored into an empty profile is seeded exactly as an
+  upgrade would. Merging into another career still imports no rating events.
+* No duplicate rating updates: finalization is unchanged (one event per game id and pool, atomic, idempotent).
+
+### 7.4 Federation transition rule
+* The clock of a Federation fixture is fixed **when the fixture's game record is created** (when the player first
+  opens the fixture). A fixture game created before v1.1 — in progress or finished — keeps Rapid 5+3 and its Rapid
+  pool. Every fixture game created from v1.1 on is **Classical 60+60, rated in the career pool**. The fixture row
+  shows the clock that applies.
+* No event's rules change mid-event: formats, pairings, scoring, tiebreaks, prizes, schedules and the AI-vs-AI
+  simulation never depend on the player's clock. Pairings, divisions and ranks use the player's career-pool rating,
+  which continues the Rapid rating (§7.3), so no event sees a jump at the transition.
+* Pause on exit applies to fixtures like any human-vs-AI game (docs/SAVE_FORMAT.md); it never pauses the Federation's
+  rounds, spectator games or markets.
+
+Tests: `tests/grandClassical.test.ts` (presets, minimum, default, remembered control, increments, flag, mate and
+stalemate with clocks, formatting, pause/resume, backgrounding, heartbeat reload during the human and engine turns,
+duplicate submission, interrupted save, AI budget, update policy, seeding of v0.9 and v1.0.0-rc.1 saves, idempotency,
+no duplicate ratings, backup round trip, Federation transition); journey `e2e/grand-classical.mjs`.

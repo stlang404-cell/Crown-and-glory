@@ -1,3 +1,4 @@
+import { TC_FILTER_OPTIONS } from '../games/types';
 import { scrollRegion } from './scrollRegion';
 import { TourHint } from './Onboarding';
 import { useEffect, useRef, useState } from 'react';
@@ -29,14 +30,15 @@ import { titleKind } from './HallScreen';
 import { Elo, RatingChangeLine } from './CareerElo';
 import { LegacyCustomise } from './TrophyHall';
 import { CareerStatistics, RankHeading } from './RankHeading';
+import { CAREER_POOL, POOL_LABEL, POOL_ORDER, careerTimeline, isLegacyPool, ownGames } from '../ratings/pools';
 import { CAREER_ELO_NOTE, displayCareerElo, fmtCareerElo, fmtInt, ratingChange } from '../ratings/display';
 
-const POOLS: PoolId[] = ['rapid', 'blitz', 'classical'];
+const POOLS: readonly PoolId[] = POOL_ORDER;
 
 export function ProfileScreen() {
   const services = useServices();
   const { go } = useApp();
-  const [pool, setPool] = useState<PoolId>('rapid');
+  const [pool, setPool] = useState<PoolId>(CAREER_POOL);
   // first render: the rating data read at boot, if nothing has been published since (then the reload below confirms it)
   const [boot] = useState(() => (services.ownRatings && services.ownRatings.revision === services.revision ? services.ownRatings : null));
   const [states, setStates] = useState<Record<string, PoolState>>(() => Object.fromEntries((boot?.states ?? []).map(s => [s.pool, s])));
@@ -75,7 +77,8 @@ export function ProfileScreen() {
   useEffect(() => { void reloader.current?.request(); }, [services.revision]);
 
   const s = states[pool] ?? newPoolState(pool, services.db.ratingStart);
-  const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
+  // the career pool's chart is the career timeline: legacy Rapid up to the v1.1 seeding, then the pool's own games
+  const ev = pool === CAREER_POOL ? careerTimeline(events) : events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);
   const win = window_ === 'all' ? ev : ev.slice(-+window_);
   const points = [
     ...(win.length && win[0].sequence === 1 ? [{ at: win[0].at, rating: displayCareerElo(win[0].before.rating), rd: win[0].before.rd, label: 'Initial career Elo' }] : []),
@@ -83,8 +86,9 @@ export function ProfileScreen() {
   ];
   const rankChanges = ev.filter(e => e.rankBefore !== e.rankAfter);
   const finished = games.filter(g => g.status === 'finalized');
-  const byTc = ['blitz', 'rapid', 'classical', 'untimed'].map(tc => {
-    const gs = finished.filter(g => g.timeControl.id === tc);
+  // by the clock each game was played with (its stored definition: presets, custom controls and legacy controls)
+  const byTc = [...new Set(finished.map(g => g.timeControl.label))].sort((a, b) => a.localeCompare(b)).map(tc => {
+    const gs = finished.filter(g => g.timeControl.label === tc);
     const w = gs.filter(g => g.result && g.result !== '1/2-1/2' && (g.result === '1-0') === (g.humanColor === 'white')).length;
     const d = gs.filter(g => g.result === '1/2-1/2').length;
     return { tc, n: gs.length, w, d, l: gs.length - w - d };
@@ -107,12 +111,12 @@ export function ProfileScreen() {
       <div style={{ height: 12 }} />
       <TourHint step="honours" />
       <div className="seg" role="group" aria-label="Rating Pool" style={{ marginBottom: 12 }}>
-        {POOLS.map(p => <button key={p} aria-pressed={pool === p} onClick={() => setPool(p)}>{p[0].toUpperCase() + p.slice(1)} ({states[p]?.games ?? 0})</button>)}
+        {POOLS.map(p => <button key={p} aria-pressed={pool === p} data-testid={`pool-${p}`} onClick={() => setPool(p)}>{POOL_LABEL[p]} ({states[p] ? ownGames(states[p]) : 0})</button>)}
       </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
-        <div className="panel stat" title={CAREER_ELO_NOTE}><span className="k">Career Elo ({pool[0].toUpperCase() + pool.slice(1)})</span><span className="v mono" data-testid="current-rating">{fmtInt(displayCareerElo(s.rating))}</span><span className="small muted" data-testid="current-rating-status">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span>{ev.length > 0 && <RatingChangeLine before={ev[ev.length - 1].before.rating} after={ev[ev.length - 1].after.rating} className="small" />}</div>
+        <div className="panel stat" title={CAREER_ELO_NOTE}><span className="k">{isLegacyPool(pool) ? `${POOL_LABEL[pool]} rating` : 'Career Elo (Long Classical)'}</span><span className="v mono" data-testid="current-rating">{fmtInt(displayCareerElo(s.rating))}</span><span className="small muted" data-testid="current-rating-status">±{Math.round(s.rd)} · {prov ? 'Provisional' : 'Established'}</span>{ev.length > 0 && <RatingChangeLine before={ev[ev.length - 1].before.rating} after={ev[ev.length - 1].after.rating} className="small" />}</div>
         <div className="panel stat" data-testid="passport-rating-title" title={RATING_TITLE_TOOLTIP}><span className="k">Rating Title <HonourTag kind="rating" /></span><span className="v row" style={{ fontSize: '1.15rem', gap: 8 }}><HonourFrame kind="rating" spec={insigniaSpec(titleFor(s.rating))} size="md" title={`${titleFor(s.rating).name}: rating title insignia`} />{titleFor(s.rating).name}</span><span className="small muted">{prov ? 'Provisional rating · ' : ''}Changes with your rating; one title every 100 points. Not your Competitive Rank; Federation Titles are earned separately by norms and kept for good.</span></div>
-        <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {s.games} rated games</span></div>
+        <div className="panel stat"><span className="k">Record</span><span className="v">{s.wins}–{s.draws}–{s.losses}</span><span className="small muted">W–D–L in {ownGames(s)} rated games{s.seed ? ` · rating carried from ${s.seed.source.games} ${POOL_LABEL[s.seed.from]} games` : ''}</span></div>
         <div className="panel stat"><span className="k">Peak / Lowest</span><span className="v mono" style={{ fontSize: '1.3rem' }} data-testid="career-peak">{s.peak === null ? 'Not yet' : `${fmtInt(displayCareerElo(s.peak))} / ${fmtInt(displayCareerElo(s.lowest ?? s.peak))}`}</span><span className="small muted">{s.peak === null ? `Counts once your rating is established (20 rated games, ±100); ${gamesToEstablish(s.games)} games to go` : 'Established ratings only'}{highest !== null && <span data-testid="highest-so-far"> · highest so far {fmtInt(displayCareerElo(highest))}{prov ? ' (provisional)' : ''}</span>}</span></div>
       </div>
       <div className="panel">
@@ -121,16 +125,18 @@ export function ProfileScreen() {
         </div>
         <RatingChart points={points} />
         <p className="small muted">Career Elo is your Glicko-2 rating on the Crown scale (engine level L1 = 800), not a FIDE rating. Your rating is provisional until you have played 20 rated games and it has settled to ±100 or less.</p>
-        <details className="small muted"><summary>Details</summary>Glicko-2: this career started at {services.db.ratingStart} ±350{services.db.ratingStart === 0 ? ' (every new career starts at 0)' : ' (careers created before v0.11 started at 1500)'}, τ = 0.5, one rated game per rating period. Career Elo is shown from 0 upward; the underlying rating is never clamped. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.</details>
+        <details className="small muted"><summary>Details</summary>Glicko-2: this career started at {services.db.ratingStart} ±350{services.db.ratingStart === 0 ? ' (every new career starts at 0)' : ' (careers created before v0.11 started at 1500)'}, τ = 0.5, one rated game per rating period. Career Elo is shown from 0 upward; the underlying rating is never clamped. Current volatility σ {s.sigma.toFixed(4)}. Rank policy {RANK_POLICY}.{' '}
+          Since v1.1 every rated game is 30 minutes or longer and is rated in the Long Classical pool, your career Elo; Rapid, Blitz and Classical 15+10 are legacy pools whose histories are kept.
+          {s.seed && <span data-testid="pool-seed"> This pool was seeded once on {new Date(s.seed.at).toLocaleDateString()} from your {POOL_LABEL[s.seed.from]} rating {fmtInt(displayCareerElo(s.seed.source.rating))} ±{Math.round(s.seed.source.rd)} after {s.seed.source.games} rated games ({s.seed.rule}).</span>}</details>
       </div>
       <CareerStatistics events={events} />
-      <InsigniaCollection events={events.filter(e => e.pool === 'rapid')} />
+      <InsigniaCollection events={careerTimeline(events)} />
       <LegacyCustomise />
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
           <h3>By Time Control</h3>
           <table><thead><tr><th>Time Control</th><th>Games</th><th>W</th><th>D</th><th>L</th></tr></thead>
-            <tbody>{byTc.map(r => <tr key={r.tc}><td>{r.tc[0].toUpperCase() + r.tc.slice(1)}</td><td>{r.n}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td></tr>)}</tbody></table>
+            <tbody>{byTc.map(r => <tr key={r.tc}><td>{r.tc}</td><td>{r.n}</td><td>{r.w}</td><td>{r.d}</td><td>{r.l}</td></tr>)}</tbody></table>
         </div>
         <div className="panel">
           <h3>By Opponent Strength</h3>
@@ -184,7 +190,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
   if (finished[0]) timeline.push({ at: finished[0].startedAt, text: `First game, against ${oppName(finished[0])}`, gameId: finished[0].id });
   const firstWin = finished.find(g => resultText(g) === 'Victory');
   if (firstWin) timeline.push({ at: firstWin.startedAt, text: `First win, against ${oppName(firstWin)}`, gameId: firstWin.id });
-  for (const e of events) if (e.rankBefore !== e.rankAfter) timeline.push({ at: e.at, text: `${e.pool}: ${e.rankBefore} → ${e.rankAfter} (${displayElo(e.after.rating)})`, gameId: e.gameId });
+  for (const e of events) if (e.rankBefore !== e.rankAfter) timeline.push({ at: e.at, text: `${POOL_LABEL[e.pool]}: ${e.rankBefore} → ${e.rankAfter} (${displayElo(e.after.rating)})`, gameId: e.gameId });
   const clean = attempts.filter(a => a.clean && a.exposure === 0).sort((a, b) => a.at.localeCompare(b.at));
   for (const m of [1, 10, 50, 100, 250]) if (clean.length >= m) timeline.push({ at: clean[m - 1].at, text: `${m} puzzle${m === 1 ? '' : 's'} solved cleanly` });
   timeline.sort((a, b) => b.at.localeCompare(a.at));
@@ -212,7 +218,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
         <div className="panel stat"><span className="k">Best Accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>Open Game</button>}</div>
         <div className="panel stat"><span className="k">Strongest Win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${fmtInt(displayCareerElo(rec.strongestWin.rating))})` : '—'}</span></div>
         <div className="panel stat"><span className="k">Longest Win Streak</span><span className="v">{rec.longestWinStreak}</span></div>
-        <div className="panel stat"><span className="k">Peak Rating</span><span className="v mono" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${fmtInt(displayCareerElo(rec.peakRating.rating))} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
+        <div className="panel stat"><span className="k">Peak Rating</span><span className="v mono" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${fmtInt(displayCareerElo(rec.peakRating.rating))} (${POOL_LABEL[rec.peakRating.pool as PoolId] ?? rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
@@ -240,7 +246,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
         <div className="panel-title"><h3 style={{ margin: 0 }}>Game History ({list.length})</h3><button className="btn small" onClick={exportCsv}>Export CSV</button></div>
         <div className="row" style={{ marginBottom: 8 }}>
           <select value={filters.fOpp} onChange={e => filters.setFOpp(e.target.value)} aria-label="Opponent"><option value="all">All Opponents</option>{[...opp.keys()].map(k => <option key={k}>{k}</option>)}</select>
-          <select value={filters.fTc} onChange={e => filters.setFTc(e.target.value)} aria-label="Time Control"><option value="all">All Time Controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
+          <select value={filters.fTc} onChange={e => filters.setFTc(e.target.value)} aria-label="Time Control"><option value="all">All Time Controls</option>{TC_FILTER_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>
           <select value={filters.fRes} onChange={e => filters.setFRes(e.target.value)} aria-label="Result"><option value="all">All Results</option><option value="victory">Wins</option><option value="draw">Draws</option><option value="defeat">Losses</option></select>
           <input type="date" value={filters.fFrom} onChange={e => filters.setFFrom(e.target.value)} aria-label="From Date" />
           <input type="date" value={filters.fTo} onChange={e => filters.setFTo(e.target.value)} aria-label="To Date" />
