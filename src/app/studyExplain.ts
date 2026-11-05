@@ -95,7 +95,7 @@ export function explainBestMove(o: { fen: string; pov: Pov; candidate: EngineCan
   if (pvSan.length > 1) lines.push(`Engine line: ${pvSan.join(' ')}${c.pvSan.length > PV_SHOWN ? ' …' : ''}.`);
   const f = lineFacts(o.fen, c.pv, o.pov);
   const mat = materialSentence(f, 'Along this line');
-  if (mat && f.applied > 1) lines.push(mat);
+  if (mat) lines.push(mat);
   const mate = mateSentence(f, o.pov);
   if (mate) lines.push(mate);
   else if (c.score.kind === 'mate') lines.push(`The engine’s score is ${scoreText(c.score, o.pov)} (engine estimate, not a proof).`);
