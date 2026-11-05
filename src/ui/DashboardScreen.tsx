@@ -198,6 +198,7 @@ export function DashboardScreen() {
         <span className="spacer" />
         <span className="dash-head-actions">
           <button className="btn small" onClick={() => go({ name: 'play' })}><Icon name="play" /> Play</button>
+          <button className="btn small" data-testid="dash-study" onClick={() => go({ name: 'study' })}><Icon name="academy" /> Study Match</button>
           <button className="btn small" onClick={() => go({ name: 'world' })}><Icon name="world" /> Federation</button>
         </span>
       </div>

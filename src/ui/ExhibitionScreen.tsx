@@ -95,7 +95,8 @@ function ExhibitionHome() {
   );
 }
 
-function CompetitorPicker({ side, selected, other, onSelect }: { side: Pov; selected: Competitor | null; other: Competitor | null; onSelect: (c: Competitor | null) => void }) {
+/** Federation competitor picker (search, band, division, pages); also used by the Study Match setup. */
+export function CompetitorPicker({ side, selected, other, onSelect }: { side: Pov; selected: Competitor | null; other: Competitor | null; onSelect: (c: Competitor | null) => void }) {
   const services = useServices();
   const fed = services.fed;
   const st = fed.state!;

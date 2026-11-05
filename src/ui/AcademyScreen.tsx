@@ -55,6 +55,10 @@ export function AcademyScreen() {
   return (
     <div>
       <h1>Crown Academy</h1>
+      <div className="notice row small" style={{ marginBottom: 14, flexWrap: 'wrap' }} data-testid="academy-study-link">
+        <span>Learn without a clock: a Crownmaster Study Match gives you an engine hint, the best move and why, an evaluation bar, feedback on every move and take backs — always unrated.</span>
+        <button className="btn small" onClick={() => go({ name: 'study' })}>Study Match</button>
+      </div>
       <div className="grid-3" style={{ marginBottom: 14 }}>
         <div className="panel stat"><span className="k">Solved First Try</span><span className="v">{first.filter(a => a.clean).length}</span><span className="small muted">{cleanRate === null ? 'No attempts yet' : `${Math.round(cleanRate * 100)}% of ${first.length} first attempts, without hints`}</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rushBest}</span><span className="small muted">{data.runs.filter(r => r.mode === 'rush').length} runs</span></div>

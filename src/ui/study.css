@@ -1,0 +1,28 @@
+/* Crownmaster Study Match (src/ui/StudyScreen.tsx): mobile first — the board first, the aids in a compact panel. */
+.study-opp-list { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; }
+.study-opp-list .opp-card { min-height: 60px; padding: 8px 10px; }
+.study-aid-set { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; margin: 0; display: grid; gap: 6px; }
+.study-aid-check { display: flex; gap: 8px; align-items: flex-start; min-height: 32px; cursor: pointer; }
+.study-aid-check input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.study-switches { display: flex; flex-wrap: wrap; gap: 6px; }
+.study-switch {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel-3); color: var(--text); font: inherit; font-size: .85rem; cursor: pointer;
+}
+.study-switch[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 650; }
+.study-switch:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.study-switch-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); flex: none; }
+.study-switch[aria-pressed="true"] .study-switch-dot { background: var(--accent); border-color: var(--accent); }
+.study-fb { border-left: 3px solid var(--line-strong); padding: 6px 10px; background: var(--hover); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-top: 6px; }
+.study-fb ul { margin: 4px 0 0; padding-left: 18px; }
+.study-fb.grade-tone-inaccuracy { border-left-color: var(--warn); }
+.study-fb.grade-tone-mistake, .study-fb.grade-tone-blunder { border-left-color: var(--negative); }
+.study-fb.grade-tone-best, .study-fb.grade-tone-great, .study-fb.grade-tone-brilliant, .study-fb.grade-tone-excellent { border-left-color: var(--positive); }
+.study-fb-list { list-style: none; padding: 0; margin: 4px 0 0; }
+.study-toast { margin-top: 8px; }
+@media (max-width: 480px) {
+  .study-match .study-aids { padding: 10px; gap: 8px; }
+  .study-switch { font-size: .8rem; padding: 4px 8px; }
+  .study-opp-list { max-height: 360px; }
+}
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .study-switch { transition: none; } }
