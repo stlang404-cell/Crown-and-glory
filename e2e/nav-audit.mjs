@@ -15,6 +15,8 @@ const log = []; let failed = 0;
 const step = m => { const l = `[${new Date().toISOString()}] ${m}`; log.push(l); console.log(l); };
 const check = (id, ok, m) => { step(`${ok ? 'PASS' : 'FAIL'} ${id}: ${m}`); if (!ok) failed++; };
 const NAV = ['Dashboard', 'Play', 'Federation', 'Exchange', 'Finance', 'Games', 'Analysis', 'Academy', 'Career', 'Rivals', 'Hall of Fame', 'Lab', 'Settings'];
+/** Phone width (390 = iPhone 12–16, 375 = iPhone SE/mini class); NAV_PHONE_W=375 runs the narrower check. */
+const PHONE_W = +(process.env.NAV_PHONE_W ?? 390);
 const TABS = ['Dashboard', 'Play', 'Federation', 'Exchange', 'Career', 'Settings'];
 
 async function audit(page, label, entries, navSel, errors) {
@@ -81,13 +83,13 @@ const rel = await page.evaluate(() => ({ text: (document.querySelector('main')?.
 check(3, rel.text > 40 && !rel.boundary, `Reloading on the last screen keeps it working (${rel.text} chars)`);
 await ctx.close();
 
-const ctx2 = await chromium.launchPersistentContext(OUT + 'profile', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+const ctx2 = await chromium.launchPersistentContext(OUT + 'profile', { viewport: { width: PHONE_W, height: PHONE_W === 375 ? 812 : 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 const page2 = ctx2.pages()[0] ?? await ctx2.newPage();
 const errors2 = [];
 page2.on('pageerror', e => { errors2.push(String(e).slice(0, 300)); step('pageerror (phone): ' + String(e).slice(0, 300)); });
 await page2.goto(url); await page2.waitForFunction(() => window.__crown);
 const phone = await audit(page2, 'phone', TABS, 'nav.tabbar', errors2);
-check(4, phone.length === 0, `Phone tab bar: every tab opens a working screen without overflow${phone.length ? ': ' + phone.join('; ') : ''}`);
+check(4, phone.length === 0, `Phone tab bar (${PHONE_W} px): every tab opens a working screen without overflow${phone.length ? ': ' + phone.join('; ') : ''}`);
 await ctx2.close();
 check(5, errors.length + errors2.length === 0, `No page or console errors (${errors.length + errors2.length})`);
 writeFileSync(OUT + 'log.txt', log.join('\n') + '\n');
