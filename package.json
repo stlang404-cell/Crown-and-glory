@@ -14,7 +14,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "tsx tools/bench/run.ts",
-    "e2e": "node e2e/run.mjs"
+    "e2e": "node e2e/run.mjs",
+    "crownmaster:dev": "vite --config crownmaster/vite.config.ts",
+    "crownmaster:build": "tsc --noEmit -p crownmaster/tsconfig.json && vite build --config crownmaster/vite.config.ts",
+    "crownmaster:serve": "node scripts/serve.mjs --dir dist-crownmaster --open",
+    "crownmaster:bench": "tsx crownmaster/bench.ts"
   },
   "dependencies": {
     "react": "19.2.0",

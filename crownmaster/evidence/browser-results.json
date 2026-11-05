@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "Worker computes 3 real candidates",
+    "Candidate variation explores resulting board",
+    "Invalid editor position reports missing kings",
+    "Known mate in one is calculated in the browser",
+    "Whole-game review produces four graded moves",
+    "Review alternative can be replayed",
+    "Tap-to-move records a legal move",
+    "Stop prevents stale progress updates",
+    "No horizontal overflow at 375px",
+    "No horizontal overflow at 390px",
+    "Offline reload and cached Web Worker calculate successfully",
+    "No browser runtime errors"
+  ],
+  "candidates": [
+    "01c3Depth 6 · c3 b4 d3 Na4 Nf3 c4+0.44",
+    "02b3Depth 6 · b3 a4 Qb2 b4 Nd3 Nd4+0.41",
+    "03d3Depth 6 · d3 c4 c3 cxd3 Nxd3 Na4+0.21"
+  ],
+  "errors": [],
+  "browser": "155.0.8059.79",
+  "note": "Chromium responsive checks; physical iPhone Safari not tested."
+}

@@ -20,3 +20,4 @@ e2e/artifacts/quick-match/
 e2e/artifacts/
 docs/grimoire/build/grimoire.src.md
 .scratch/
+dist-crownmaster/
