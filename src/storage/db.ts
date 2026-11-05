@@ -11,6 +11,7 @@ import { PoolState, RatingEvent, computeRatingEvent, newPoolState } from '../rat
 import type { PoolId } from '../games/types';
 import type { AnalysisReport } from '../analysis/types';
 import { CareerRecord, KNOWN_STARTS, legacyCareerRecord, newCareerRecord } from '../ratings/career';
+import { CAREER_POOL, LEGACY_CAREER_POOL, seededPoolState, shouldSeed } from '../ratings/pools';
 
 export const DB_NAME = 'crown-calculation';
 export const DB_VERSION = 4;
@@ -123,6 +124,8 @@ export class CrownDB {
     db.onversionchange = () => db.close();
     const c = new CrownDB(db, factory);
     await c.loadCareer();
+    // v1.1: seed the career pool once from the measured Rapid rating (idempotent; docs/CAREER_RATING.md §7)
+    await c.ensureCareerPool().catch(e => console.error('career pool seed', e));
     return c;
   }
 
@@ -160,6 +163,30 @@ export class CrownDB {
     await done(tx);
     this.career = record;
   }
+
+  /**
+   * v1.1 career pool seeding (src/ratings/pools.ts): in ONE transaction, if the career pool has never been written
+   * (no state, no events) and the legacy Rapid pool has rated games, write the seeded state (rating kept, RD =
+   * max(RD, 150), σ kept, games carried) with its provenance, and the audit record `careerPoolSeed`. Otherwise
+   * nothing is written. `add()` aborts the transaction if another tab seeded first, so it can never run twice.
+   * Returns the seeded state when this call seeded.
+   */
+  async ensureCareerPool(nowIso: string = new Date().toISOString()): Promise<PoolState | null> {
+    const tx = this.db.transaction(['ratingState', 'ratingEvents', 'meta'], 'readwrite');
+    const states = tx.objectStore('ratingState');
+    const cur = (await req(states.get(CAREER_POOL))) as PoolState | undefined;
+    const src = (await req(states.get(LEGACY_CAREER_POOL))) as PoolState | undefined;
+    const n = await req(tx.objectStore('ratingEvents').index('pool').count(CAREER_POOL));
+    if (!shouldSeed(cur, n, src)) { await done(tx); return null; }
+    const seeded = seededPoolState(src, nowIso);
+    states.add(seeded);
+    tx.objectStore('meta').put({ key: 'careerPoolSeed', value: seeded.seed });
+    await done(tx);
+    return seeded;
+  }
+
+  /** The career pool's state (THE career Elo, src/ratings/pools.ts). */
+  careerRating(): Promise<PoolState> { return this.ratingState(CAREER_POOL); }
 
   /** Restore of a backup into an empty career adopts the backup's career origin (used by importBundle only). */
   async adoptCareer(record: CareerRecord): Promise<void> {

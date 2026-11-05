@@ -25,7 +25,7 @@ export function RatingChangeLine({ before, after, className, provisional }: { be
 }
 
 const NOOP = () => () => {};
-/** The player's career Elo (Rapid pool, the Federation's rating) as the legacy service last read it. */
+/** The player's career Elo (the career pool, the Federation's rating) as the legacy service last read it. */
 export function usePlayerElo(): { rating: number; rd: number; provisional: boolean } | null {
   const services = useServices();
   const lg = services.legacy ?? null;

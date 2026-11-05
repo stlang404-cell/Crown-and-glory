@@ -535,14 +535,18 @@ export class FederationService {
     const c = this.state!.competitors.get(oppId)!;
     const profile = profileForStrength(c.latent);
     const { createGameRecord } = await import('../games/session');
-    const { TIME_CONTROLS } = await import('../games/types');
+    const { FEDERATION_TIME_CONTROL } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
     const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
     const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
+    // v1.1 transition rule (docs/CAREER_RATING.md §7.4): the clock is fixed when the fixture's game record is created.
+    // A fixture game created before the update (above: returned unchanged) keeps Rapid 5+3 and its pool; every fixture
+    // game created from v1.1 is Classical 60+60, rated in the career pool. Event rules (formats, pairings, scoring,
+    // tiebreaks, prizes, schedule) never depend on the player's clock and are unchanged.
     const rec = createGameRecord({
-      id: `fed-${fixtureId.replace(/:/g, '-')}`, mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: f.white === PLAYER_ID ? 'white' : 'black',
+      id: `fed-${fixtureId.replace(/:/g, '-')}`, mode: 'rated', timeControl: FEDERATION_TIME_CONTROL, humanColor: f.white === PLAYER_ID ? 'white' : 'black',
       human: { kind: 'human', id: 'player', name: 'You', rating: human.rating, rd: human.rd },
       engine: { kind: 'engine', id: c.id, name: c.name, rating: c.rating, rd: c.rd, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'player-game', fixtureId), nowIso: this.now(),
@@ -578,21 +582,25 @@ export class FederationService {
    *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
    *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
    *  Not a league fixture: standings, prize pools and markets are untouched. */
-  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean }): Promise<GameRecord> {
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean;
+    /** v1.1: the player's chosen control (default Classical 60+60); rated only at 30+ minutes (src/games/types.ts). */
+    timeControl?: import('../games/types').TimeControl }): Promise<GameRecord> {
     const c = this.state?.competitors.get(competitorId);
     if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
     const profile = profileForStrength(c.latent);
     const { createGameRecord } = await import('../games/session');
-    const { TIME_CONTROLS } = await import('../games/types');
+    const { DEFAULT_RATED_CONTROL, poolFor } = await import('../games/types');
     const { LEVELS_ID } = await import('../engine/levels');
     const { PLAY_SEARCH_ID: SEARCH_ID } = await import('../engine/search');
     const { PLAY_EVAL_ID: EVAL_ID } = await import('../engine/evaluate');
     const { playStyle, STYLE_LABEL } = await import('../engine/styles');
     const style = playStyle(c.style);
+    const timeControl = opts.timeControl ?? DEFAULT_RATED_CONTROL;
+    const rated = opts.rated && poolFor(timeControl) !== null;
     return createGameRecord({
-      id: `qm-${c.id.replace(/:/g, '-')}-${opts.nowMs.toString(36)}`, mode: opts.rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS.rapid, humanColor: opts.humanColor,
-      human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
-      engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
+      id: `qm-${c.id.replace(/:/g, '-')}-${opts.nowMs.toString(36)}`, mode: rated ? 'rated' : 'casual', timeControl, humanColor: opts.humanColor,
+      human: { kind: 'human', id: 'player', name: 'You', rating: rated ? opts.human.rating : null, rd: rated ? opts.human.rd : null },
+      engine: { kind: 'engine', id: c.id, name: c.name, rating: rated ? c.rating : null, rd: rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
       // v0.11 rivalry challenges / rematches are ordinary Quick Matches with their own label (src/app/rivalries.ts)
       context: { kind: 'quick-match', eventName: opts.challenge ? `Rivalry Challenge vs ${c.name}` : `Quick Match vs ${c.name}` },

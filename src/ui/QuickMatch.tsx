@@ -10,6 +10,8 @@ import { REGION_NAMES, divisionLabel } from '../federation/model';
 import type { Competitor } from '../federation/model';
 import { insigniaSpec, titleFor } from '../ratings/titles';
 import { careerEloLabel, displayElo, suggestBeginnerBands } from '../ratings/career';
+import { CASUAL_CONTROLS, DEFAULT_RATED_CONTROL, RATED_PRESETS, TIME_CONTROLS, describeControl, poolFor, type TimeControl } from '../games/types';
+import { loadTimeControl, onTimeControl, saveTimeControl } from '../app/timeControlPref';
 
 /**
  * Random Federation Quick Match: one button, any opponent in the Federation (uniform, not rating-weighted), rated by
@@ -30,7 +32,13 @@ export function QuickMatch() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const st = fed.ready ? fed.state : null;
-  useEffect(() => { void services.db.ratingState('rapid').then(p => setMyRating({ rating: p.rating, rd: p.rd, games: p.games })).catch(() => {}); }, [services, services.revision]);
+  // the remembered control (shared with the Play screen's selector; Classical 60+60 by default)
+  const [tc, setTcRaw] = useState<TimeControl>(DEFAULT_RATED_CONTROL);
+  useEffect(() => { void loadTimeControl(services.db).then(setTcRaw); return onTimeControl(setTcRaw); }, [services]);
+  const setTc = (t: TimeControl) => { setTcRaw(t); void saveTimeControl(services.db, t, !services.readOnly); };
+  const tcRated = poolFor(tc) !== null;
+  const ratedNow = rated && tcRated;
+  useEffect(() => { void services.db.careerRating().then(p => setMyRating({ rating: p.rating, rd: p.rd, games: p.games })).catch(() => {}); }, [services, services.revision]);
   const suggested = !!myRating && suggestBeginnerBands({ rating: myRating.rating, rd: myRating.rd, games: myRating.games ?? 0 }, services.db.ratingStart);
   useEffect(() => { if (!touched && myRating) setPoolRaw(suggested ? 'beginner' : 'anyone'); }, [suggested, touched, myRating]);
   // "near" and "higher" compare with the displayed career Elo (never below 0)
@@ -39,7 +47,7 @@ export function QuickMatch() {
   const draw = async (avoid?: string) => {
     setMsg(null);
     let r = myRating;
-    if (!r) { const p = await services.db.ratingState('rapid'); r = { rating: p.rating, rd: p.rd, games: p.games }; setMyRating(r); }
+    if (!r) { const p = await services.db.careerRating(); r = { rating: p.rating, rd: p.rd, games: p.games }; setMyRating(r); }
     const list = st ? eligiblePool(st.competitors.values(), pool, displayElo(r.rating)) : [];
     const c = pickOpponent(list, Math.random, avoid);
     setPick(c);
@@ -49,8 +57,8 @@ export function QuickMatch() {
     if (!pick) return;
     setBusy(true);
     try {
-      const r = await services.db.ratingState('rapid');
-      const g = await fed.quickMatchGameFor(pick.id, { rated, humanColor: Math.random() < 0.5 ? 'white' : 'black', human: { rating: r.rating, rd: r.rd }, nowMs: Date.now() });
+      const r = await services.db.careerRating();
+      const g = await fed.quickMatchGameFor(pick.id, { rated: ratedNow, timeControl: { ...tc }, humanColor: Math.random() < 0.5 ? 'white' : 'black', human: { rating: r.rating, rd: r.rd }, nowMs: Date.now() });
       await services.saveGame(g);
       go({ name: 'match', gameId: g.id });
     } catch (e) { setMsg((e as Error).message); setBusy(false); }
@@ -69,21 +77,27 @@ export function QuickMatch() {
   const rec = pick ? pick.stats : null;
   return (
     <section className="panel quick-match" data-testid="quick-match" style={{ marginBottom: 14 }}>
-      <div className="panel-title"><h2 style={{ margin: 0 }}>Random Match</h2><span className={`chip ${rated ? 'gold' : ''}`} data-testid="qm-mode">{rated ? 'Rated' : 'Casual'}</span></div>
+      <div className="panel-title"><h2 style={{ margin: 0 }}>Random Match</h2><span className={`chip ${ratedNow ? 'gold' : ''}`} data-testid="qm-mode">{ratedNow ? 'Rated' : 'Casual'}</span></div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <div className="seg" role="group" aria-label="Opponent pool">
           {QUICK_POOLS.map(p => <button key={p.id} aria-pressed={pool === p.id} title={p.detail} onClick={() => { setPool(p.id); setPick(null); setMsg(null); }}>{p.label}</button>)}
         </div>
         <div className="seg" role="group" aria-label="Match type">
-          <button aria-pressed={rated} onClick={() => setRated(true)}>Rated</button>
-          <button aria-pressed={!rated} onClick={() => setRated(false)}>Casual</button>
+          <button aria-pressed={ratedNow} disabled={!tcRated} onClick={() => setRated(true)}>Rated</button>
+          <button aria-pressed={!ratedNow} onClick={() => setRated(false)}>Casual</button>
         </div>
+        <label className="small row" style={{ gap: 6 }}>Time control
+          <select data-testid="qm-tc" value={tc.id === 'custom' ? 'custom' : tc.id} title={describeControl(tc)} onChange={e => { const v = e.target.value; if (v !== 'custom') setTc(TIME_CONTROLS[v as keyof typeof TIME_CONTROLS]); }}>
+            <optgroup label="Rated (30 minutes or more)">{RATED_PRESETS.map(id => <option key={id} value={id}>{TIME_CONTROLS[id].label}</option>)}{tc.id === 'custom' && <option value="custom">{tc.label}{tcRated ? '' : ' (casual)'}</option>}</optgroup>
+            <optgroup label="Shorter · casual only">{CASUAL_CONTROLS.filter(id => id !== 'untimed').map(id => <option key={id} value={id}>{TIME_CONTROLS[id].label}</option>)}</optgroup>
+          </select>
+        </label>
       </div>
       <p className="small muted" style={{ margin: '6px 0' }}>
         {pool === 'beginner' && suggested && <span className="chip info" data-testid="qm-suggested" style={{ marginRight: 6 }}>Suggested for your career Elo</span>}
         {myRating && <span data-testid="qm-my-rating">Your career Elo {careerEloLabel(myRating.rating, myRating.games ?? 0, myRating.rd)} · </span>}
-        {QUICK_POOLS.find(p => p.id === pool)!.detail}{myRating ? ` · ${eligible.length.toLocaleString('en')} eligible` : ''} · every eligible competitor is equally likely · Rapid 5+3 ·{' '}
-        {rated ? 'rated: your Rapid rating changes once, when the game ends' : 'casual: no rating change'}. Not a league game: standings are unaffected.
+        {QUICK_POOLS.find(p => p.id === pool)!.detail}{myRating ? ` · ${eligible.length.toLocaleString('en')} eligible` : ''} · every eligible competitor is equally likely · <span data-testid="qm-tc-text">{tc.label}: {describeControl(tc)}</span> ·{' '}
+        {ratedNow ? 'rated: your career Elo (Long Classical) changes once, when the game ends' : tcRated ? 'casual: no rating change' : 'casual only (rated games are 30 minutes or longer): no rating change'}. Not a league game: standings are unaffected.
       </p>
       {!pick && <button className="btn primary qm-draw" data-testid="qm-draw" onClick={() => void draw()}><Icon name="play" /> Random Match</button>}
       {msg && <div className="notice small" role="status">{msg}{pool !== 'anyone' && <> <button className="btn small ghost" onClick={() => { setPool('anyone'); setMsg(null); }}>Use Anyone</button></>}</div>}
@@ -96,7 +110,7 @@ export function QuickMatch() {
             <span className="small"><span className="mono" data-testid="qm-rating">{fmtCareerElo(pick.rating, { rd: pick.rd })}</span><span className="muted"> · {divisionLabel(pick.division)} · {REGION_NAMES[pick.region]}{rec ? ` · career ${rec.w}–${rec.d}–${rec.l}` : ''}{pick.titles.length ? ` · ${pick.titles.length} title${pick.titles.length === 1 ? '' : 's'}` : ''}</span></span>
           </div>
           <div className="row qm-actions" style={{ gap: 6 }}>
-            <button className="btn primary" data-testid="qm-start" disabled={busy || services.readOnly} onClick={() => void start()}>{rated ? 'Start Rated Match' : 'Start Casual Match'}</button>
+            <button className="btn primary" data-testid="qm-start" disabled={busy || services.readOnly} onClick={() => void start()}>{ratedNow ? 'Start Rated Match' : 'Start Casual Match'}</button>
             <button className="btn" data-testid="qm-reroll" disabled={busy} onClick={() => void draw(pick.id)}>Reroll</button>
             <button className="btn ghost" data-testid="qm-cancel" disabled={busy} onClick={() => { setPick(null); setMsg(null); }}>Cancel</button>
           </div>

@@ -1,0 +1,31 @@
+/* v1.1 long-game clocks (src/games/clock.ts): h:mm:ss values, running indicator, low/critical/paused states,
+   and the time-control strip on the match screen. Digits never clip at 375/390 px (e2e/grand-classical.mjs). */
+.clock { white-space: nowrap; flex-shrink: 0; }
+.clock.long { font-size: 1.3rem; min-width: 0; padding: 4px 10px; letter-spacing: -.02em; }
+.clock-dot { display: inline-block; width: .42em; height: .42em; border-radius: 50%; background: currentColor; margin-right: .32em; vertical-align: .18em; }
+.clock.critical { border-width: 2px; box-shadow: 0 0 0 2px var(--danger-fill); }
+.clock.paused { border-style: dashed; opacity: .82; }
+@media (max-width: 420px) {
+  .clock.long { font-size: 1.08rem; padding: 3px 7px; }
+}
+
+.tc-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; }
+.tc-strip .tc-name { font-weight: 700; }
+.tc-strip .tc-state { margin-left: auto; }
+
+/* time-control picker (Play, Quick Match) */
+.tc-picker { display: flex; flex-direction: column; gap: 8px; }
+.tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.tc-option { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: 8px 10px; min-height: 48px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--bg-2); color: inherit; font: inherit; cursor: pointer; }
+.tc-option[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tc-option .tc-o-name { font-weight: 700; }
+.tc-option .tc-o-sub { font-size: .82rem; opacity: .8; font-variant-numeric: tabular-nums; }
+.tc-summary { padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--line); }
+.tc-custom { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: end; }
+.tc-custom label { display: flex; flex-direction: column; gap: 2px; font-size: .85rem; }
+.tc-custom input { width: 96px; min-height: 40px; font-size: 1rem; }
+.tc-casual { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 420px) {
+  .tc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -8,7 +8,7 @@ import {
   ADJUDICATION_POLICY, Outcome, agreementAllowed, automaticOutcome, claimableDraws, resignationOutcome, timeoutOutcome,
 } from '../rules/adjudication';
 import { Color, RULES_VERSION, START_FEN, VARIANT_ID, WHITE, Move } from '../rules/types';
-import { GAME_SCHEMA_VERSION, GameMode, GameRecord, MoveRecord, ParticipantSnapshot, TimeControl, poolFor } from './types';
+import { GAME_SCHEMA_VERSION, GameMode, GameRecord, MoveRecord, ParticipantSnapshot, PauseEvent, TimeControl, poolFor } from './types';
 import { classifyOpening } from './openings';
 
 export interface NewGameOptions {
@@ -29,7 +29,10 @@ export interface NewGameOptions {
 
 export function createGameRecord(o: NewGameOptions): GameRecord {
   const timed = o.timeControl.id !== 'untimed';
-  const rated = o.mode === 'rated' && timed;
+  // v1.1: a NEW game is rated only at a control of 30+ minutes inside the documented envelope (poolFor); shorter
+  // controls are casual. Games created earlier keep the pool stored on their record.
+  const pool = timed ? poolFor(o.timeControl) : null;
+  const rated = o.mode === 'rated' && pool !== null;
   const white = o.humanColor === 'white' ? o.human : o.engine;
   const black = o.humanColor === 'white' ? o.engine : o.human;
   return {
@@ -44,7 +47,7 @@ export function createGameRecord(o: NewGameOptions): GameRecord {
     mode: rated ? 'rated' : o.mode === 'rated' ? 'casual' : o.mode,
     status: 'active',
     timeControl: o.timeControl,
-    pool: rated ? poolFor(o.timeControl.id) : null,
+    pool: rated ? pool : null,
     rated,
     humanColor: o.humanColor,
     white, black,
@@ -106,11 +109,29 @@ export class GameSession {
     this.turnWallStart = nowMs;
     if (this.timed && !this.isOver) {
       this.runningSince = nowMs;
-      this.turnClockStart = this.pos.side === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
+      const cur = this.pos.side === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
+      // a turn interrupted by a pause or reload keeps the clock value it began with (exact per-move time)
+      const t = this.record.clockTurn;
+      this.turnClockStart = t && t.ply === this.record.moves.length && Number.isFinite(t.startMs) && t.startMs >= cur ? t.startMs : cur;
+      this.record.clockTurn = { ply: this.record.moves.length, startMs: this.turnClockStart };
     }
   }
 
-  pause(nowMs: number, reason: 'visibility' | 'manual' | 'reload', nowIso: string): void {
+  /** Is the clock running (timed, not paused, not over)? */
+  get running(): boolean { return this.runningSince !== null && !this.isOver; }
+
+  /**
+   * Heartbeat: commit the running clock's elapsed time into `record.clocks` (the clock keeps running from `nowMs`).
+   * The caller then persists the record, so an unexpected termination is charged up to this point and no further.
+   * Returns false when nothing is running.
+   */
+  checkpoint(nowMs: number): boolean {
+    if (!this.running) return false;
+    this.chargeRunning(nowMs);
+    return true;
+  }
+
+  pause(nowMs: number, reason: PauseEvent['reason'], nowIso: string): void {
     if (this.isOver || this.runningSince === null) return;
     this.chargeRunning(nowMs);
     this.runningSince = null;
@@ -163,9 +184,11 @@ export class GameSession {
    * before the move (otherwise timeout); (2) the move must be legal; (3) increment is added;
    * (4) automatic terminal states (mate/stalemate/bare kings/fivefold/150) are checked.
    */
-  applyMove(ccn: string, nowMs: number, nowIso: string, engine?: MoveRecord['engine']): { ok: true; record: MoveRecord; outcome: Outcome | null } | { ok: false; error: string; outcome?: Outcome } {
+  applyMove(ccn: string, nowMs: number, nowIso: string, engine?: MoveRecord['engine'], expectedPly?: number): { ok: true; record: MoveRecord; outcome: Outcome | null } | { ok: false; error: string; outcome?: Outcome } {
     if (this.isOver) return { ok: false, error: 'Game is over' };
     if (this.paused) return { ok: false, error: 'Game is paused' };
+    // idempotent commit: a move computed (or submitted) for an earlier position is never applied to a later one
+    if (expectedPly !== undefined && expectedPly !== this.record.moves.length) return { ok: false, error: 'Stale move: the position has changed' };
     const mover = this.pos.side;
     let elapsed = Math.max(0, nowMs - this.turnWallStart);
     let clockBefore: number | null = null;
@@ -194,6 +217,7 @@ export class GameSession {
       clockAfter = mover === WHITE ? this.record.clocks!.whiteMs : this.record.clocks!.blackMs;
       this.runningSince = nowMs;
       this.turnClockStart = mover === WHITE ? this.record.clocks!.blackMs : this.record.clocks!.whiteMs;
+      this.record.clockTurn = { ply: this.record.moves.length + 1, startMs: this.turnClockStart };
     }
     this.turnWallStart = nowMs;
     const rec: MoveRecord = {

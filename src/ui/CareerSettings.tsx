@@ -31,7 +31,7 @@ export function CareerSettings() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [archives, setArchives] = useState<Omit<ArchivedBackup, 'json'>[]>([]);
-  useEffect(() => { void services.db.ratingState('rapid').then(setPool).catch(() => setPool(null)); }, [services, services.revision]);
+  useEffect(() => { void services.db.careerRating().then(setPool).catch(() => setPool(null)); }, [services, services.revision]);
   useEffect(() => { void listArchives().then(setArchives); }, [prepared]);
 
   const backup = async () => {
@@ -60,7 +60,7 @@ export function CareerSettings() {
         <span className="chip" data-testid="career-origin">{career.origin === 'new' ? 'Started at 0' : 'Started before v0.11 (at 1500)'}</span>
       </div>
       <p className="small" style={{ marginTop: 0 }}>
-        Current Rapid career Elo: <strong className="mono" data-testid="career-current">{pool ? careerEloLabel(pool.rating, pool.games, pool.rd) : '…'}</strong>
+        Current career Elo: <strong className="mono" data-testid="career-current">{pool ? careerEloLabel(pool.rating, pool.games, pool.rd) : '…'}</strong>
         {pool ? ` · ${pool.games} rated game${pool.games === 1 ? '' : 's'}` : ''}{fed ? ' · Federation member' : ''}.
         {' '}New careers start at 0 and earn their rating through rated results only. Careers created before v0.11 keep their rating and history.
       </p>

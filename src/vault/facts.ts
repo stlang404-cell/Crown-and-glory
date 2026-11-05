@@ -4,6 +4,7 @@
  * no storage, no clock (local-hour checks use the record's own timestamp), so each achievement rule can be tested
  * with plain objects. Assisted, abandoned, imported and unfinished games never count.
  */
+import { careerTimeline } from '../ratings/pools';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import type { AnalysisReport } from '../analysis/types';
@@ -312,7 +313,7 @@ export function buildFacts(input: VaultInput): Facts {
   const ratedWinsByColour = { white: 0, black: 0 };
   const byId = new Map(games.map(g => [g.id, g]));
   for (const r of rated) { const g = byId.get(r.gameId); if (g && r.score === 1) ratedWinsByColour[g.color]++; }
-  const rapid = evs.filter(e => e.pool === 'rapid');
+  const rapid = careerTimeline(evs);
   const ct = collectedTitles(rapid.map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
   // analyses: own finalized games with at least one complete report (re-analysis never counts twice)
   const ownIds = new Set(input.games.filter(g => g.status === 'finalized').map(g => g.id));

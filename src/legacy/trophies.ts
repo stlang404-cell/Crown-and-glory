@@ -10,6 +10,7 @@
  * put-if-absent (src/legacy/store.ts), so reloading, re-processing or back-filling an old save never duplicates,
  * rewrites or revokes a trophy. Nothing here is ever read by results, pairings, ratings or engine strength.
  */
+import { careerTimeline } from '../ratings/pools';
 import type { RatingEvent } from '../ratings/ledger';
 import type { GameRecord } from '../games/types';
 import type { Norm } from '../heraldry/titles';
@@ -52,7 +53,7 @@ export const TROPHIES: TrophyDef[] = [
   { id: 'season-promotion', kind: 'seasonal-banner', name: 'Promotion Banner', description: 'Promoted to a higher division.', rule: 'Your recorded division for the next season is higher than the one you finished.', tier: 2, repeatable: true },
   { id: 'open-winner', kind: 'invitational', name: 'Open Goblet', description: 'Winner of a Swiss open or invitational event.', rule: 'Recorded winner of the Federation Open, the Challenger Open or any recorded invitational, Swiss or round-robin event.', tier: 3, repeatable: true },
   { id: 'rivalry', kind: 'rivalry-trophy', name: 'Rivalry Trophy', description: 'Mastery over a named rival.', rule: 'A rivalry of Nemesis level or higher (crown-rivalry-1) with at least 4 recorded meetings in which you have won more games than you lost.', tier: 3, repeatable: true },
-  { id: 'rating-milestone', kind: 'rating-milestone', name: 'Rating Milestone', description: 'Your established career Elo reached a new 200-point line.', rule: 'An established (non-provisional) Rapid career Elo at or above the line after a rated game. Kept if the rating later falls.', tier: 1, repeatable: true },
+  { id: 'rating-milestone', kind: 'rating-milestone', name: 'Rating Milestone', description: 'Your established career Elo reached a new 200-point line.', rule: 'An established (non-provisional) career Elo at or above the line after a rated game. Kept if the rating later falls.', tier: 1, repeatable: true },
   { id: 'norm-medal', kind: 'medal', name: 'Norm Medal', description: 'A Federation title norm.', rule: 'A recorded title norm (crown-titles-1) at an event\'s end.', tier: 2, repeatable: true },
   { id: 'crown-champion', kind: 'elite-honour', name: 'Crown of the Federation', description: 'Crown Champion of the Federation.', rule: 'Recorded Crown Champion (or Joint Crown Champion) title.', tier: 5, repeatable: true },
   { id: 'elite-event', kind: 'elite-honour', name: 'Elite Laurel', description: 'Winner of an elite championship or Sovereign final.', rule: 'Recorded winner of an elite championship, masters event or Sovereign final.', tier: 4, repeatable: true },
@@ -92,7 +93,7 @@ export interface LegacyInput {
   currentDivision: number | null;
   norms: Norm[];
   fedTitle: FedTitle | null;
-  /** Rating events of every pool (milestones use the Rapid pool: the Federation's career Elo). */
+  /** Rating events of every pool (milestones use the career timeline: legacy Rapid up to the v1.1 seeding, then the Long Classical career pool). */
   ratingEvents: RatingEvent[];
   /** Finished games (for replay links and monuments). */
   games: GameRecord[];
@@ -165,8 +166,8 @@ export function deriveAwards(x: LegacyInput): TrophyAward[] {
   if (x.fedTitle) for (const t of FED_TITLES.slice(0, FED_TITLES.indexOf(x.fedTitle) + 1)) {
     add({ key: `fed-title:${slug(t)}`, defId: 'fed-title', kind: 'elite-honour', tier: ([2, 3, 4, 5] as Tier[])[FED_TITLES.indexOf(t)], name: `${t} Standard`, season: null, event: `Federation title ${t}`, evidence: `Federation title ${x.fedTitle} recorded`, earnedAt: null });
   }
-  // rating milestones (Rapid pool = the Federation's career Elo; established ratings only)
-  const rapid = x.ratingEvents.filter(e => e.pool === 'rapid').sort((a, b) => a.sequence - b.sequence);
+  // rating milestones (the career timeline = the Federation's career Elo, src/ratings/pools.ts; established ratings only)
+  const rapid = careerTimeline(x.ratingEvents);
   for (const line of RATING_LINES) {
     const e = rapid.find(ev => ev.after.rating >= line && !isProvisional(ev.gamesBefore + 1, ev.after.rd));
     if (e) add({ key: `rating-milestone:${line}`, defId: 'rating-milestone', kind: 'rating-milestone', tier: ratingTier(line), name: `${fmtInt(line)} Career Elo Milestone`, season: null, event: `Established career Elo ${fmtInt(line)}+`, evidence: `${Math.round(e.after.rating)} ±${Math.round(e.after.rd)} after rated game ${e.sequence} vs ${e.opponent.name}`, earnedAt: e.at, replay: { gameId: e.gameId } });

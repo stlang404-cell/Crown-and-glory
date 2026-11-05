@@ -182,7 +182,7 @@ export function DashboardScreen() {
   // saved records outside the federation: loaded after the first paint, throttled
   const ratingEvents = useLazy<RatingEvent[]>(() => services.db.ratingEvents(), [], rev);
   const grim = useLazy<DashGrimoire | null>(async () => grimoireSummary(await loadProgress(services.db), new Date().toISOString()), null, rev);
-  const rating = useMemo(() => (ratingEvents ? ratingSeries(ratingEvents, 'rapid') : []), [ratingEvents]);
+  const rating = useMemo(() => (ratingEvents ? ratingSeries(ratingEvents, 'career') : []), [ratingEvents]);
   const rated = useMemo(() => (ratingEvents ? recentRated(ratingEvents) : []), [ratingEvents]);
 
   const foundCta = <button className="btn" data-testid="dash-found-cta" onClick={() => go({ name: 'world' })}>Go to the Federation</button>;
@@ -270,9 +270,9 @@ export function DashboardScreen() {
             : <ul className="dash-list">{events.map(e => <EventCard key={e.id} e={e} />)}</ul>}
         </Section>
 
-        <Section title="Rapid Rating" id="rating" action={<button className="btn ghost small" onClick={() => go({ name: 'profile' })}>Career</button>}>
+        <Section title="Career Elo" id="rating" action={<button className="btn ghost small" onClick={() => go({ name: 'profile' })}>Career</button>}>
           {ratingEvents === null ? <p className="small muted">Loading your rating history…</p> : rating.length < 2
-            ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play a Rated Game</button>}>Your rating chart appears after your first rated Rapid game.</Empty>
+            ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play a Rated Game</button>}>Your rating chart appears after your first rated game.</Empty>
             : <RatingChart points={rating.slice(-60)} height={200} />}
         </Section>
 

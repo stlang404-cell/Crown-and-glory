@@ -105,7 +105,7 @@ export const STEPS: TourStep[] = [
     id: 'first-rated', kind: 'action', title: 'Finish a rated match',
     why: 'Rated games are unassisted and move your career Elo.',
     body: [
-      'Choose Rated on the Play screen (Rapid, Blitz or Classical; untimed games are never rated). There is no hint, evaluation bar or engine help while a rated game is in progress.',
+      'Choose Rated on the Play screen (30 minutes or longer, Classical 60+60 by default; shorter and untimed games are casual). There is no hint, evaluation bar or engine help while a rated game is in progress.',
       'After the game you see your career Elo before and after, with the change. It is provisional for your first 20 rated games and moves quickly; it only changes through results.',
     ],
     cta: { label: 'Start a rated game', to: { name: 'play' } },
