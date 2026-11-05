@@ -122,7 +122,7 @@ function ExhibitionHome() {
           <label className="small">Watch speed <select value={speed} onChange={e => setSpeed(+e.target.value)} data-testid="exh-speed" aria-label="Watch speed">
             {EXHIBITION_SPEEDS.map((x, i) => <option key={x.label} value={i}>{x.label === 'Instant' ? 'Instant result' : x.label}</option>)}
           </select></label>
-          <label className="small row" style={{ gap: 6 }}><input type="checkbox" checked={practice} onChange={e => setPractice(e.target.checked)} data-testid="exh-practice-market" disabled={services.readOnly} /> Practice market (sandbox money only)</label>
+          <label className="small row" style={{ gap: 6 }}><input type="checkbox" className="exh-check" checked={practice} onChange={e => setPractice(e.target.checked)} data-testid="exh-practice-market" disabled={services.readOnly} /> Practice market (sandbox money only)</label>
         </div>
         <div className="small exh-budget" data-testid="exh-budget">{budget(w, 'White')}{budget(b, 'Black')}{!w && !b && <span className="muted">Each side’s AI thinking budget appears here once chosen.</span>}</div>
         <p className="small muted" style={{ margin: 0 }} data-testid="exh-clock-note">{tc
@@ -580,7 +580,8 @@ function EloComparison({ g, current }: { g: ExhibitionGame; current: (id: string
 
 /** W/D/L model estimate after the shown move: crown-odds-2 on the two public ratings, the published evaluation, the
  *  move number and material. Labelled as a model; it is never a price. */
-function ModelEstimate({ g, ply }: { g: ExhibitionGame; ply: number }) {
+function ModelEstimate({ g, ply: shownPly }: { g: ExhibitionGame; ply: number }) {
+  const ply = Math.max(0, Math.min(shownPly, g.moves.length));
   const m = exhibitionLiveModel(g, ply);
   const labels = [`${g.white.name} wins`, 'Draw', `${g.black.name} wins`];
   return (
@@ -594,7 +595,7 @@ function ModelEstimate({ g, ply }: { g: ExhibitionGame; ply: number }) {
 
 /** Match statistics up to the shown move (from the record: SAN, measured time, search depth and nodes). */
 function MatchStats({ g, ply }: { g: ExhibitionGame; ply: number }) {
-  const ms = g.moves.slice(0, ply);
+  const ms = g.moves.slice(0, Math.max(0, ply));
   const side = (k: 0 | 1) => {
     const own = ms.filter((_, i) => i % 2 === k);
     const n = own.length || 1;
@@ -613,7 +614,7 @@ function MatchStats({ g, ply }: { g: ExhibitionGame; ply: number }) {
         {row('Moves', String(w.moves), String(b.moves))}
         {row('Captures', String(w.captures), String(b.captures))}
         {row('Checks', String(w.checks), String(b.checks))}
-        {row('Avg. thinking time', `${(w.avgMs / 1000).toFixed(1)} s`, `${(b.avgMs / 1000).toFixed(1)} s`)}
+        {row('Avg. thinking time', `${(w.avgMs / 1000).toFixed(2)} s`, `${(b.avgMs / 1000).toFixed(2)} s`)}
         {row('Avg. search depth', w.avgDepth.toFixed(1), b.avgDepth.toFixed(1))}
         {row('Nodes searched', w.nodes.toLocaleString('en-US'), b.nodes.toLocaleString('en-US'))}
       </div>

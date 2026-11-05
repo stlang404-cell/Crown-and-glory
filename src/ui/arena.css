@@ -93,3 +93,4 @@
 .exh-model > div { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 4px 6px; text-align: center; }
 .exh-model .k { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .exh-clock-note { font-size: .74rem; }
+.exh-check { width: 24px; height: 24px; margin: 0; flex: none; }
