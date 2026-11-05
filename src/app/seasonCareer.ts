@@ -9,7 +9,7 @@ import { POSTPONE_DEADLINE, POSTPONE_LIMIT, eventName } from './federation';
 import { DIVISIONS, DIVISION_SIZE, LEAGUE_ROUNDS, PLAYER_ID, ROUNDS_PER_SEASON, SWISS_ROUNDS, divisionLabel, regionName, topologyOf } from '../federation/model';
 import { roundRobin } from '../federation/formats';
 import { allKos, leagueTable, leagueZone, swissEventsOpenTo, swissTable, PROMOTION_PLACES, RELEGATION_PLACES, type KoState } from '../federation/world';
-import { CUP_ROUNDS, OPEN_INVITES, RULES_V2, ZONAL_ROUNDS, ZONAL_SIZE, koTitle, rulesOf, zoneName, zoneOf, zoneRegions } from '../federation/competitions';
+import { CHALLENGER_INVITES, CUP_ROUNDS, OPEN_INVITES, PATH_MIN_POINTS, PATH_PLACES, RULES_V2, RULES_V3, ZONAL_DEPTH, ZONAL_ROUNDS, ZONAL_SIZE, koTitle, openInvitesPerZone, rulesOf, zoneName, zoneOf, zoneRegions } from '../federation/competitions';
 import type { SeasonGame } from '../federation/driver';
 import { CHALLENGER_FEE } from '../economy/economy';
 import { fmtCrowns } from '../exchange/ledger';
@@ -91,9 +91,9 @@ export function opportunities(st: FedState, games: SeasonGame[]): Opportunity[] 
     if (mine) {
       const t = games.some(g => g.event === sw.event && g.result !== null) ? swissTable(sw, games) : [];
       const at = t.findIndex(r => r.id === PLAYER_ID);
-      out.push({ id: sw.event, name: sw.name, status: 'entered', need: at >= 0 ? `Entered · ${at + 1} of ${sw.entrants.length} after ${sw.rounds.length} round${sw.rounds.length === 1 ? '' : 's'}.${sw.event === 'open' ? ' The top 8 not already qualified reach the Crown Championship.' : ''}` : `Entered · ${sw.entrants.length} players, rounds ${SWISS_ROUNDS[0]}–${SWISS_ROUNDS[SWISS_ROUNDS.length - 1]}.` });
+      out.push({ id: sw.event, name: sw.name, status: 'entered', need: at >= 0 ? `Entered · ${at + 1} of ${sw.entrants.length} after ${sw.rounds.length} round${sw.rounds.length === 1 ? '' : 's'}.${swissReward(sw.event, rules, invited)}` : `Entered · ${sw.entrants.length} players, rounds ${SWISS_ROUNDS[0]}–${SWISS_ROUNDS[SWISS_ROUNDS.length - 1]}.${swissReward(sw.event, rules, invited)}` });
     } else if (w.round < SWISS_ROUNDS[0]) out.push({ id: sw.event, name: sw.name, status: 'open', action: { kind: 'register', event: sw.event, free: invited },
-      need: `${invited ? `Invited (${p.invite!.reason}): free entry` : `Entry ${fmtCrowns(CHALLENGER_FEE, 0)}`} — register by the end of round ${SWISS_ROUNDS[0] - 1}.${sw.event === 'open' ? ' Top 8 reach the Crown Championship.' : ''}` });
+      need: `${invited ? `Invited (${p.invite!.reason}): free entry` : `Entry ${fmtCrowns(CHALLENGER_FEE, 0)}`} — register by the end of round ${SWISS_ROUNDS[0] - 1}.${swissReward(sw.event, rules, invited)}` });
     else out.push({ id: sw.event, name: sw.name, status: 'closed', need: `Registration closed before round ${SWISS_ROUNDS[0]}.` });
   }
   if (rules >= RULES_V2) {
@@ -102,26 +102,50 @@ export function opportunities(st: FedState, games: SeasonGame[]): Opportunity[] 
     const myCup = st.plan.cups?.find(k => k.kind === 'cup' && k.qualifiers.includes(PLAYER_ID));
     const myZonal = st.plan.cups?.find(k => k.kind === 'zonal' && k.qualifiers.includes(PLAYER_ID));
     const koStatus = (ko: KoState) => (ko.champions.includes(PLAYER_ID) ? 'won' : koAliveIds(ko).includes(PLAYER_ID) ? 'qualified' : 'eliminated') as Opportunity['status'];
-    if (myCup) out.push({ id: myCup.name, name: koTitle(myCup), status: koStatus(myCup), need: myCup.champions.includes(PLAYER_ID) ? `Won. The ${OPEN_INVITES} highest-rated cup winners are invited to next season's Federation Open.` : `Qualified · rounds ${CUP_ROUNDS[0]}–${CUP_ROUNDS[CUP_ROUNDS.length - 1]}. Winning it can earn a Federation Open invitation.` });
-    else if (p.division >= 2 && !st.plan.cups?.length) out.push({ id: 'cup', name: `${regionName(p.region)} Regional Cup`, status: leagueOver ? 'closed' : 'in-reach', need: `${p.division === 2 ? 'Finish in the top 2 of the Grand Division' : `Win the ${divisionLabel(p.division)}`} of ${regionName(p.region)} (rounds ${CUP_ROUNDS[0]}–${CUP_ROUNDS[CUP_ROUNDS.length - 1]}, 8 players). Winners can be invited to next season's Federation Open.` });
+    const v3 = rules >= RULES_V3;
+    const perZone = openInvitesPerZone(regions);
+    const inviteRule = v3 ? `${perZone === 1 ? 'the highest-rated cup winner of each zone is' : `the ${perZone} highest-rated cup winners of each zone are`} invited to next season's Federation Open, where invited players can take a Crown Path place in the Crown Championship` : `the ${OPEN_INVITES} highest-rated cup winners are invited to next season's Federation Open`;
+    if (myCup) out.push({ id: myCup.name, name: koTitle(myCup), status: koStatus(myCup), need: myCup.champions.includes(PLAYER_ID) ? `Won. ${cap(inviteRule)} (decided at season end).` : `Qualified · rounds ${CUP_ROUNDS[0]}–${CUP_ROUNDS[CUP_ROUNDS.length - 1]}. Winning it can earn a Federation Open invitation: ${inviteRule}.` });
+    else if ((v3 ? p.division >= 3 : p.division >= 2) && !st.plan.cups?.length) out.push({ id: 'cup', name: `${regionName(p.region)} Regional Cup`, status: leagueOver ? 'closed' : 'in-reach',
+      need: `${v3 ? (p.division <= 4 ? `Finish in the top 2 of the ${divisionLabel(p.division)}` : `Win the ${divisionLabel(p.division)}`) : p.division === 2 ? 'Finish in the top 2 of the Grand Division' : `Win the ${divisionLabel(p.division)}`} of ${regionName(p.region)} (rounds ${CUP_ROUNDS[0]}–${CUP_ROUNDS[CUP_ROUNDS.length - 1]}, 8 players). ${v3 ? `${cap(inviteRule)}.` : "Winners can be invited to next season's Federation Open."}` });
     // Zonal Championship (Crown Division)
     const zone = zoneOf(p.region, regions), zr = zoneRegions(zone, regions).length;
     const sure = Math.floor(ZONAL_SIZE / zr);
+    const widened = v3 && Math.max(1, sure) < ZONAL_DEPTH;
     if (myZonal) out.push({ id: myZonal.name, name: koTitle(myZonal), status: koStatus(myZonal), need: myZonal.champions.includes(PLAYER_ID) ? 'Won: you hold a zone place in next season’s Crown Championship.' : `Qualified · rounds ${ZONAL_ROUNDS[0]}–${ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]}. The zonal champion qualifies for next season's Crown Championship.` });
-    else if (p.division === 1 && !st.plan.cups?.length) out.push({ id: 'zonal', name: `${zoneName(zone, regions)} Championship`, status: 'in-reach', need: `Finish in the top ${sure} of your Crown Division (${zr} region${zr === 1 ? '' : 's'} in your zone; rank ${sure + 1} may get a place on points). The zonal champion qualifies for next season's Crown Championship.` });
+    else if (p.division === 1 && !st.plan.cups?.length) out.push({ id: 'zonal', name: `${zoneName(zone, regions)} Championship`, status: 'in-reach', need: widened
+      ? `Win your Crown Division (${zr} regions in your zone: every regional winner plays), or finish 2nd or 3rd: the other ${ZONAL_SIZE - zr} places go to the highest-rated runners-up and third places of the zone. The zonal champion qualifies for next season's Crown Championship.`
+      : `Finish in the top ${sure} of your Crown Division (${zr} region${zr === 1 ? '' : 's'} in your zone; rank ${sure + 1} may get a place on points). The zonal champion qualifies for next season's Crown Championship.` });
     // Crown Championship
     const held = w.crownQualified?.season === w.season && w.crownQualified.ids.includes(PLAYER_ID);
-    if (st.plan.champ) out.push({ id: 'champ', name: 'Crown Championship', status: champQ ? koStatus(st.plan.champ) : 'closed', need: champQ ? (st.plan.champ.champions.includes(PLAYER_ID) ? 'Crown Champion.' : 'Qualified · rounds 16–19.') : 'Not qualified this season. Routes: win a Zonal Championship (next season) or the top 8 of the Federation Open.' });
+    const invitedNow = p.invite?.season === w.season;
+    const path = `${PATH_PLACES} Crown Path places go to the best invited Open entrants scoring at least ${PATH_MIN_POINTS} of 5`;
+    const viaPath = st.plan.champ?.pathPlaces?.includes(PLAYER_ID);
+    if (st.plan.champ) out.push({ id: 'champ', name: 'Crown Championship', status: champQ ? koStatus(st.plan.champ) : 'closed', need: champQ ? (st.plan.champ.champions.includes(PLAYER_ID) ? 'Crown Champion.' : `Qualified${viaPath ? ' through a Crown Path place' : ''} · rounds 16–19.`) : `Not qualified this season. Routes: win a Zonal Championship (next season) or ${v3 ? `a Federation Open place (top ${8 - PATH_PLACES}, or as an invited entrant: ${path})` : 'the top 8 of the Federation Open'}.` });
     else out.push({ id: 'champ', name: 'Crown Championship', status: held ? 'qualified' : 'next-season',
       need: held ? 'Qualified through your zonal title (zone place); the bracket is drawn after round 15.'
-        : p.division === 1 ? 'Win your Zonal Championship (next season), be among the best Crown Division winners if zone places are left, or (from division 2–4) finish in the Open’s top 8.'
+        : !v3 ? (p.division === 1 ? 'Win your Zonal Championship (next season), be among the best Crown Division winners if zone places are left, or (from division 2–4) finish in the Open’s top 8.'
           : p.division <= 4 ? 'Finish in the Federation Open’s top 8 (register by round 3), or reach the Crown Division and win your Zonal Championship.'
-            : `Reach division 4 or win your Regional Cup for a Federation Open invitation; the Open’s top 8 qualify.` });
+            : `Reach division 4 or win your Regional Cup for a Federation Open invitation; the Open’s top 8 qualify.`)
+          : p.division === 1 ? 'Win your Zonal Championship (next season), or be among the best Crown Division winners if zone places are left.'
+            : invitedNow ? `You are invited to the Federation Open: finish in its top ${8 - PATH_PLACES}, or be among the ${PATH_PLACES} best invited finishers with at least ${PATH_MIN_POINTS} of 5 (Crown Path places).`
+              : p.division <= 4 ? `Finish in the Federation Open’s top ${8 - PATH_PLACES} (register by round 3). Crown Path: win your Regional Cup${p.division === 2 ? ' (from division 3–4)' : ''} for an Open invitation (${perZone === 1 ? 'the best cup winner' : `the ${perZone} best cup winners`} of your zone); ${path}.`
+                : `Crown Path: win the Challenger Open${CHALLENGER_INVITES > 1 ? ` (top ${CHALLENGER_INVITES})` : ''} or your Regional Cup (${perZone === 1 ? 'the best cup winner' : `the ${perZone} best cup winners`} of your zone) for a Federation Open invitation; then ${path}. Or reach division 4 and finish in the Open’s top ${8 - PATH_PLACES}.` });
   } else {
     const champQ = st.plan.champ?.qualifiers.includes(PLAYER_ID);
     out.push({ id: 'champ', name: 'Crown Championship', status: champQ ? 'qualified' : st.plan.champ ? 'closed' : 'next-season', need: champQ ? 'Qualified · rounds 16–19.' : 'Win your Crown Division among the 8 best winners, or finish in the Federation Open’s top 8 (divisions 2–4).' });
   }
   return out;
+}
+
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+/** What a Swiss event leads to under the season's rules (shown with registration and standing). */
+function swissReward(event: 'open' | 'challenger', rules: number, invited: boolean): string {
+  if (event === 'open') {
+    if (rules < RULES_V3) return ' The top 8 not already qualified reach the Crown Championship.';
+    return ` The top ${8 - PATH_PLACES} not already qualified reach the Crown Championship; ${PATH_PLACES} more Crown Path places go to the best invited entrants with at least ${PATH_MIN_POINTS} of 5${invited ? ' (you are invited)' : ''}.`;
+  }
+  return rules >= RULES_V3 ? ` The ${CHALLENGER_INVITES === 1 ? 'winner is' : `top ${CHALLENGER_INVITES} are`} invited to next season's Federation Open.` : '';
 }
 
 /** The deadline / forfeit rule as shown to the player before it applies. */

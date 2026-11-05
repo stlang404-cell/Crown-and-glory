@@ -48,7 +48,7 @@ import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
 import { ensureRanks, migrateRanks } from '../federation/ranks';
 import { rankCeremonies } from './ranks';
-import { RULES_V2, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
+import { RULES_V3, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
 import { regionName } from '../federation/model';
 
 export interface WorldGame {
@@ -126,9 +126,9 @@ export class FederationService {
   runSelfplay: (req: { initialFen: string; white: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; black: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; seed: number; maxPlies: number }, onMove: (m: SelfplayMove) => void) => Promise<{ moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string }>
     = async (req, onMove) => playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, m => onMove(m));
 
-  /** v0.11: competition rules of new federations, adopted by older ones at their next season start
+  /** Competition rules of new federations (v1.0: crown-competition-3), adopted by older ones at their next season start
    *  (src/federation/competitions.ts). Tools set 1 to reproduce crown-competition-1 exactly (determinism_check). */
-  competitionRules = RULES_V2;
+  competitionRules = RULES_V3;
 
   constructor(readonly db: CrownDB, readonly playerRating: () => Promise<{ rating: number; rd: number }>, readonly now: () => string = () => new Date().toISOString()) {}
 
@@ -688,7 +688,7 @@ export class FederationService {
       const st = this.clone();
       if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closed before round 4. You can enter next season.');
       const target = event ?? swissEventFor(st.world.player.division);
-      if (!target || !swissEventsOpenTo(st.world).includes(target)) throw new Error(target === 'open' ? 'The Federation Open is for divisions 2–4 and invited Regional Cup winners.' : 'Crown Division players qualify for the Championship through their league.');
+      if (!target || !swissEventsOpenTo(st.world).includes(target)) throw new Error(target === 'open' ? 'The Federation Open is for divisions 2–4 and invited players (Regional Cup and Challenger Open winners).' : 'Crown Division players qualify for the Championship through their league.');
       const invitation = target === 'open' && st.world.player.invite?.season === st.world.season;
       // v0.10 (bug #31): entering the Open cancels its champion market at 1/n per share; a holder who could trigger that
       // cancellation could buy entrants below 1/n and register to collect the difference. You must hold no shares in it.

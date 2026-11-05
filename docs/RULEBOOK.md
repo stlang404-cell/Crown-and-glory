@@ -795,6 +795,23 @@ played and your rating does not change.
 * **Prizes:** $8,000: champion 40 %, finalist 20 %, semifinalists 10 % each, quarterfinalists 5 % each (joint
   champions share 60 % equally).
 
+### The Crown Path (crown-competition-3, v1.0)
+
+Federations founded with v1.0 use crown-competition-3; an older federation finishes its current season under its own
+rules and switches at its next season start. Since v0.11 (crown-competition-2) the Crown Championship's 8 league
+places go first to last season's **Zonal Champions**, and **Regional Cups** (rounds 17–19) lead to Federation Open
+invitations (docs/V3_COMPETITION_RULES.md). crown-competition-3 adds a ladder for players who are still climbing:
+
+* **Regional Cup** (one per region, 8 players): the champions and runners-up of divisions 3 and 4 and the champions of
+  divisions 5–8.
+* **Federation Open invitations** (next season, free entry): the highest-rated cup winner of each zone (two per zone in
+  a 10,240 federation) and the **Challenger Open winner**. Registering for the Open never takes an invited player's place.
+* **Crown Path places:** the Federation Open still sends 8 players to the Crown Championship: its top 6, plus the 2 best
+  **invited** entrants who scored at least **3 of 5** (if fewer invited entrants reach 3 points, the next finishers
+  of the Open take the places).
+* **Zonal Championships** in a 10,240 federation (10 regions per zone): every regional Crown Division winner, then the
+  highest-rated 2nd- and 3rd-placed players of the zone.
+
 ### Club Weekend (rounds 10–11, club owners only)
 
 If you own a club, you and the members of your own division closest to you in rating play a knockout seeded by

@@ -171,7 +171,7 @@ catch-up is bounded and labelled (§2). The founding screen tells phone users th
   Championship by points, so qualifying through the league is much harder than in a 16-region world. **v0.11:** crown-competition-2
   (docs/V3_COMPETITION_RULES.md) adds zone places (8 zones of 10 regions at 10,240: Zonal Championships in rounds
   16–19 qualify for next season's Championship) and Regional Cups whose best winners are invited to the Open;
-  measured qualification rates by player strength are in that document. The economy's
+  measured qualification rates by player strength are in that document. **v1.0:** crown-competition-3 (the Crown Path) adds per-zone Open invitations, Crown Path places and a rating-ordered 2nd/3rd-place zonal pool at 10,240; re-measured in the same document. The economy's
   issuance is per circuit (5× the 16-region total, almost all paid to AI competitors and expensed at season end); the
   economy simulator (`tools/sim/economy.ts`) was not re-run at 80 regions.
 * The featured engine games of a round (up to three, played in full before the round closes) are engine time, not
