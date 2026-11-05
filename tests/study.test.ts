@@ -162,7 +162,7 @@ describe('study games are unrated and never touch official records', () => {
 });
 
 describe('aids are never available outside an unfinished study game', () => {
-  const rated = () => createGameRecord({ id: 'g-rated', mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human, engine, engineSeed: 1, nowIso: NOW });
+  const rated = () => createGameRecord({ id: 'g-rated', mode: 'rated', timeControl: TIME_CONTROLS.classical60, humanColor: 'white', human, engine, engineSeed: 1, nowIso: NOW });
   const casual = () => createGameRecord({ id: 'g-casual', mode: 'casual', timeControl: TIME_CONTROLS.untimed, humanColor: 'white', human, engine, engineSeed: 1, nowIso: NOW });
 
   it('the service guard refuses every aid command for rated, ordinary casual and finished games', () => {
