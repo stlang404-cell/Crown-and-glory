@@ -1,3 +1,4 @@
+import { STUDY_LABEL, isStudyGame } from '../app/study';
 import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtCareerElo, ratingChange } from '../ratings/display';
@@ -72,7 +73,7 @@ export function LibraryScreen() {
       (!ql || x.opponent.toLowerCase().includes(ql) || (x.game.opening?.name ?? '').toLowerCase().includes(ql) || x.game.id.includes(ql)) &&
       (result === 'all' || x.result.toLowerCase() === result) &&
       (tc === 'all' || x.game.timeControl.id === tc) &&
-      (mode === 'all' || (mode === 'rated' ? x.game.rated : mode === 'training' ? x.game.mode === 'training' : !x.game.rated && x.game.mode !== 'training')));
+      (mode === 'all' || (mode === 'rated' ? x.game.rated : mode === 'training' ? x.game.mode === 'training' : mode === 'study' ? isStudyGame(x.game) : !x.game.rated && x.game.mode !== 'training' && !isStudyGame(x.game))));
     const key = (x: LibraryRow) => sort === 'date' ? x.game.startedAt : sort === 'accuracy' ? (x.accuracy ?? -1) : sort === 'delta' ? (x.delta ?? -1e9) : x.game.moves.length;
     r = [...r].sort((a, b) => { const ka = key(a), kb = key(b); return ka < kb ? 1 : ka > kb ? -1 : a.game.id.localeCompare(b.game.id); });
     return r;
@@ -126,7 +127,7 @@ export function LibraryScreen() {
           <input type="search" placeholder="Opponent or opening" value={q} onChange={e => setQ(e.target.value)} aria-label="Search games by opponent or opening" className="search-wide" style={{ flex: '1 1 200px' }} />
           <select value={result} onChange={e => setResult(e.target.value)} aria-label="Result filter"><option value="all">All results</option><option value="victory">Wins</option><option value="defeat">Losses</option><option value="draw">Draws</option><option value="in progress">Unfinished</option></select>
           <select value={tc} onChange={e => setTc(e.target.value)} aria-label="Time control filter"><option value="all">All time controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
-          <select value={mode} onChange={e => setMode(e.target.value)} aria-label="Mode filter"><option value="all">All modes</option><option value="rated">Rated</option><option value="casual">Casual</option><option value="training">Training</option></select>
+          <select value={mode} onChange={e => setMode(e.target.value)} aria-label="Mode filter"><option value="all">All modes</option><option value="rated">Rated</option><option value="casual">Casual</option><option value="training">Training</option><option value="study">Study — unrated</option></select>
           <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} aria-label="Sort"><option value="date">Newest first</option><option value="accuracy">Accuracy</option><option value="delta">Rating change</option><option value="moves">Length</option></select>
         </div>
         {view.length === 0 ? <p className="muted" data-testid="library-empty">{rows.length ? 'No games match these filters.' : <>No games yet. Play a game and it will be saved here. <button className="btn small" onClick={() => go({ name: 'play' })}>Play a Game</button></>}</p> : (
@@ -137,7 +138,7 @@ export function LibraryScreen() {
                 {view.map(r => (
                   <tr key={r.game.id} className="clickable" onClick={() => go(r.game.status === 'finalized' ? { name: 'analysis', gameId: r.game.id } : { name: 'match', gameId: r.game.id })} data-testid="library-row">
                     <td>{new Date(r.game.startedAt).toLocaleDateString()}</td>
-                    <td>{r.opponent}{r.game.mode === 'training' && <span className="chip" style={{ marginLeft: 4 }}>Training</span>}</td>
+                    <td>{r.opponent}{r.game.mode === 'training' && <span className="chip" style={{ marginLeft: 4 }}>Training</span>}{isStudyGame(r.game) && <span className="chip info" style={{ marginLeft: 4 }} data-testid="library-study">{STUDY_LABEL}</span>}</td>
                     <td><span className={`chip ${r.result === 'Victory' ? 'pos' : r.result === 'Defeat' ? 'neg' : ''}`}>{r.result}</span></td>
                     <td>{r.delta !== null ? <span className="mono">{fmtCareerElo(r.ratingBefore!)} → {fmtCareerElo(r.ratingAfter!)} <span style={{ color: r.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>({ratingChange(r.ratingBefore!, r.ratingAfter!).deltaText})</span></span> : <span className="muted">{r.game.rated ? 'pending' : 'unrated'}</span>}</td>
                     <td>{r.accuracy === null ? <span className="muted">—</span> : r.accuracy.toFixed(1)}</td>

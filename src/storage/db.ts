@@ -6,6 +6,7 @@
  * Game finalization, the rating ledger entry, pool state and the analysis intent commit atomically
  * in ONE transaction, keyed by idempotency keys so retries never duplicate a rating update.
  */
+import { isStudyGame } from '../app/study';
 import type { GameRecord } from '../games/types';
 import { PoolState, RatingEvent, computeRatingEvent, newPoolState } from '../ratings/ledger';
 import type { PoolId } from '../games/types';
@@ -300,7 +301,8 @@ export class CrownDB {
     final.finalizationKey = `final:${g.id}`;
     final.checksum = opts.checksum;
     let event: RatingEvent | null = null;
-    if (final.rated && final.pool && opts.humanScore !== null && final.assistance.length === 0) {
+    // a Study Match (src/app/study.ts) is never rated, whatever its record says
+    if (final.rated && final.pool && opts.humanScore !== null && final.assistance.length === 0 && !isStudyGame(final)) {
       const eventId = `rating:${g.id}:${final.pool}`;
       const dup = await req(events.get(eventId));
       if (dup) throw new StorageError('Rating event exists for an unfinalized game (corrupt state)');
