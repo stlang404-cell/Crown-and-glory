@@ -233,10 +233,12 @@ if (await page.getAttribute('[data-testid="match"]', 'data-turn') !== 'over') {
 await page.waitForSelector('.result-overlay', { timeout: 20000 });
 const focusInDialog = await page.evaluate(() => !!document.activeElement?.closest('.result-overlay'));
 const live = await page.evaluate(() => window.__liveLog);
-const announcements = new Set(live.filter(x => /Last move/.test(x.text)).map(x => x.text)).size;
+// one announcement per text change of the move region (consecutive duplicates are one announcement)
+const moveTexts = live.filter(x => /Last move/.test(x.text)).map(x => x.text);
+const announcements = moveTexts.filter((t, i) => i === 0 || t !== moveTexts[i - 1]).length;
 check('kb-game', kbOk && kbMoves >= 5, `A full game is played with the keyboard only (${kbMoves} moves by arrow keys + Enter, ended by keyboard resignation)`);
 check('kb-result-focus', focusInDialog, 'The result dialog receives keyboard focus');
-check('live-moves', announcements >= kbMoves && announcements <= kbMoves * 2 + 2, `Moves are announced in a polite live region once each (${announcements} distinct announcements for ${kbMoves} player moves plus replies; ${live.length} live mutations)`);
+check('live-moves', announcements >= kbMoves && announcements <= kbMoves * 2 + 2, `Moves are announced in a polite live region once each (${announcements} announcements for ${kbMoves} player moves plus replies; ${live.length} live mutations)`);
 
 // promotion by keyboard: a casual untimed game from a promotion position (set up through the save layer)
 await page.goto(url + '#/play');

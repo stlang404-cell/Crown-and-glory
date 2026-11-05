@@ -17,5 +17,5 @@ h3.h4 { font-size: 1em; font-weight: 700; }
 .seg button[role="tab"][aria-selected="true"] { background: var(--panel-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent), var(--shadow-sm); }
 .rank-step.current .chip.gold { color: var(--text); }
 /* standalone name links and buttons reach the 24 px target size */
-.btn.arena-player-name { min-height: 24px; }
+.arena .btn.arena-player-name.arena-player-name { min-height: 24px; }
 .rank-heading-name a { display: inline-flex; align-items: center; min-height: 24px; }

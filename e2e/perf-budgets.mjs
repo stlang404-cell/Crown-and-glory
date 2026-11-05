@@ -56,7 +56,7 @@ const results = { url, at: new Date().toISOString(), host: { cpus: cpus().length
 // in-page helper: run an action, stop at the first DOM mutation under `sel` plus two frames
 const MEASURE = `window.__measure = (sel, action, timeout = 10000) => new Promise(res => {
   const root = document.querySelector(sel) || document.body; let done = false; const t0 = performance.now();
-  const fin = () => { if (done) return; done = true; obs.disconnect(); requestAnimationFrame(() => requestAnimationFrame(() => res(performance.now() - t0))); };
+  const fin = () => { if (done) return; done = true; (window.__dom ??= []).push(performance.now() - t0); obs.disconnect(); requestAnimationFrame(() => requestAnimationFrame(() => res(performance.now() - t0))); };
   const obs = new MutationObserver(fin); obs.observe(root, { subtree: true, childList: true, characterData: true, attributes: true });
   setTimeout(() => { if (!done) { done = true; obs.disconnect(); res(-1); } }, timeout);
   action();
@@ -126,16 +126,18 @@ async function device(kind) {
   await page.getByRole('button', { name: /Start match/i }).click();
   await page.waitForSelector('[data-testid="match"]');
   const mv = [];
+  await page.evaluate(() => { window.__dom = []; window.__sync = []; });
   for (let i = 0; i < RUNS * 4 && mv.length < RUNS; i++) {
     const t = await page.waitForFunction(() => ['human', 'over'].includes(document.querySelector('[data-testid="match"]')?.getAttribute('data-turn')), null, { timeout: 30000 }).then(() => page.getAttribute('[data-testid="match"]', 'data-turn'));
     if (t === 'over') break;
     const ms = await page.evaluate(async () => {
-      const sqs = [...document.querySelectorAll('[data-testid="match"] [data-square]')];
+      // only the player's own pieces (White): selecting one never plays a move by itself
+      const sqs = [...document.querySelectorAll('[data-testid="match"] [data-square]')].filter(e => / white /.test(` ${e.getAttribute('aria-label')} `.replace(',', ' ')));
       for (const s of sqs) {
         s.click();
         await new Promise(r => requestAnimationFrame(r));
         const d = document.querySelector('[data-testid="match"] [data-square] .dot, [data-testid="match"] [data-square] .ring')?.closest('[data-square]');
-        if (d) return window.__measure('[data-testid="match"] .board', () => d.click());
+        if (d) return window.__measure('[data-testid="match"] .board', () => { const t = performance.now(); d.click(); (window.__sync ??= []).push(performance.now() - t); });
       }
       return -1;
     });
@@ -143,6 +145,9 @@ async function device(kind) {
     await page.waitForTimeout(250);
   }
   put('moveInput', mv);
+  R.moveInput.syncMs = stats(await page.evaluate(() => window.__sync ?? []));
+  R.moveInput.domUpdatedMs = stats(await page.evaluate(() => window.__dom ?? []));
+  R.moveInput.loadavg = loadavg();
   if (await page.getAttribute('[data-testid="match"]', 'data-turn') !== 'over') { await page.getByRole('button', { name: /Resign/ }).first().click(); await page.getByRole('button', { name: 'Yes, Resign' }).click(); }
   await page.waitForSelector('.result-overlay', { timeout: 20000 });
   await page.getByRole('button', { name: 'View Analysis' }).click();
@@ -174,24 +179,20 @@ async function device(kind) {
     put(`engineL${level}`, xs);
     R[`engineL${level}`].engine = { medianEngineMs: stats(engineMs[level].map(x => x.engine)).median, medianNodes: stats(engineMs[level].map(x => x.nodes)).median };
   }
-  const prof = await page.evaluate(() => {
-    const f = window.__crown.fed;
-    // the strongest featured competitor's profile (30k-node cap): a scheduled game's request when one is live
-    const live = f.activeScheduled?.()[0];
-    const req = live ? f.scheduledRequest(live.id) : null;
-    return req ? { profile: req.profile, style: req.style } : null;
-  });
-  if (prof) {
-    {
-      const xs = [];
-      await page.evaluate(() => window.__crown.live.pause('perf'));
-      const p = { ...prof.profile, nodes: 30000 };
-      for (let i = 0; i < RUNS; i++) xs.push(await page.evaluate(async ({ p, style, fen, i }) => { const t = performance.now(); await window.__crown.spectator.move({ initialFen: fen, moves: [], level: 0, seed: i, profile: p, style, newGame: true, purpose: 'spectator' }); return performance.now() - t; }, { p, style: prof.style, fen: positions[i % 3], i }));
-      await page.evaluate(() => window.__crown.live.resume('perf'));
-      put('engineFeatured', xs);
-      R.engineFeatured.profile = { id: prof.profile.id, nodes: 30000 };
+  // featured budget: full search capped at FEATURED_NODE_CAP = 30,000 nodes (the budget of featured/scheduled games of
+  // strong competitors; same configuration as L7), on the spectator worker those games use; live games paused
+  {
+    const xs = [], eng = [];
+    await page.evaluate(() => window.__crown.live.pause('perf'));
+    await page.evaluate(() => window.__crown.spectator.move({ initialFen: 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', moves: [], level: 7, seed: 1, newGame: true, purpose: 'spectator' }));
+    for (let i = 0; i < RUNS; i++) {
+      const r = await page.evaluate(async ({ fen, i }) => { const t = performance.now(); const res = await window.__crown.spectator.move({ initialFen: fen, moves: [], level: 7, seed: i, newGame: true, purpose: 'spectator' }); return { wall: performance.now() - t, engine: res.timeMs, nodes: res.nodes }; }, { fen: positions[i % 3], i });
+      xs.push(r.wall); eng.push(r);
     }
-  } else step(`  ${kind} engineFeatured: no live scheduled game to take a featured profile from — not measured`);
+    await page.evaluate(() => window.__crown.live.resume('perf'));
+    put('engineFeatured', xs);
+    R.engineFeatured.engine = { medianEngineMs: stats(eng.map(x => x.engine)).median, medianNodes: stats(eng.map(x => x.nodes)).median };
+  }
 
   // ---- market quote (UI) and trade (service)
   const mid = await page.evaluate(() => [...window.__crown.fed.state.markets.values()].find(m => m.status === 'open' && !m.sandbox && (m.kind ?? 'match') === 'match' && m.white !== 'player' && m.black !== 'player')?.id);
