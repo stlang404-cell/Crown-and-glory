@@ -199,10 +199,23 @@ export function DashboardScreen() {
         <span className="spacer" />
         <span className="dash-head-actions">
           <button className="btn small" onClick={() => go({ name: 'play' })}><Icon name="play" /> Play</button>
+          <button className="btn small" data-testid="dash-study" onClick={() => go({ name: 'study' })}><Icon name="academy" /> Study Match</button>
           <button className="btn small" onClick={() => go({ name: 'world' })}><Icon name="world" /> Federation</button>
         </span>
       </div>
       <GuideCard />
+      {st && (
+        <section className="panel dash-found dash-arena" data-testid="dash-arena" aria-labelledby="dash-h-arena">
+          <div>
+            <h2 id="dash-h-arena" className="dash-h">AI vs AI Match Arena</h2>
+            <p className="small" style={{ margin: '4px 0 0' }}>Watch live official matches with their markets, replay finished games, or start a custom exhibition between any two of the Federation’s competitors.</p>
+          </div>
+          <span className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn primary" data-testid="dash-open-arena" onClick={() => go({ name: 'arena' })}>Watch AI Match</button>
+            <button className="btn" data-testid="dash-start-exhibition" onClick={() => go({ name: 'exhibition' })}>Custom Exhibition</button>
+          </span>
+        </section>
+      )}
       {!st && (
         <div className="panel dash-found" data-testid="dash-not-founded">
           <div>

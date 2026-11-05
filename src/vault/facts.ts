@@ -5,6 +5,7 @@
  * with plain objects. Assisted, abandoned, imported and unfinished games never count.
  */
 import { careerTimeline } from '../ratings/pools';
+import { isStudyGame } from '../app/study';
 import type { GameRecord } from '../games/types';
 import type { RatingEvent } from '../ratings/ledger';
 import type { AnalysisReport } from '../analysis/types';
@@ -164,7 +165,7 @@ const scoreOf = (g: GameRecord): 0 | 0.5 | 1 | null => {
 
 /** Eligible own games: finalized, unassisted, played from the start (not training, retry or import), not abandoned. */
 export function eligible(g: GameRecord): boolean {
-  return g.status === 'finalized' && (g.mode === 'rated' || g.mode === 'casual') && g.assistance.length === 0 &&
+  return g.status === 'finalized' && (g.mode === 'rated' || g.mode === 'casual') && g.assistance.length === 0 && !isStudyGame(g) &&
     g.context.kind !== 'training-retry' && g.context.kind !== 'imported' && !g.setupMoves?.length &&
     g.termination !== 'abandoned' && scoreOf(g) !== null;
 }
@@ -316,7 +317,8 @@ export function buildFacts(input: VaultInput): Facts {
   const rapid = careerTimeline(evs);
   const ct = collectedTitles(rapid.map(e => ({ after: e.after, games: e.gamesBefore + 1, at: e.at })), isProvisional);
   // analyses: own finalized games with at least one complete report (re-analysis never counts twice)
-  const ownIds = new Set(input.games.filter(g => g.status === 'finalized').map(g => g.id));
+  // v1.0: Study Matches (unofficial, src/app/study.ts) never count, neither as games nor as analyses
+  const ownIds = new Set(input.games.filter(g => g.status === 'finalized' && !isStudyGame(g)).map(g => g.id));
   const complete = new Set<string>(), deep = new Set<string>(), long = new Set<string>(), ratedLosses = new Set<string>();
   const ownById = new Map(input.games.filter(g => g.status === 'finalized').map(g => [g.id, g]));
   let lastAt: string | null = null;
@@ -332,7 +334,7 @@ export function buildFacts(input: VaultInput): Facts {
   const marks = new Set<string>();
   // v0.11: favourites and positions saved from unofficial exhibitions (gameId "exh:…") never count
   for (const b of input.bookmarks ?? []) if (!b.gameId.startsWith('exh:')) marks.add(`${b.gameId}:${b.ply}`);
-  for (const g of input.games) for (const ply of g.bookmarks ?? []) marks.add(`${g.id}:${ply}`);
+  for (const g of input.games) if (!isStudyGame(g)) for (const ply of g.bookmarks ?? []) marks.add(`${g.id}:${ply}`);
   const retries = new Set<string>();
   for (const g of input.games) {
     if (g.status !== 'finalized' || g.context.kind !== 'training-retry' || scoreOf(g) !== 1) continue;

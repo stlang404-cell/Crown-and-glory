@@ -1,3 +1,4 @@
+import { STUDY_LABEL, gameModeLabel, isStudyGame } from '../app/study';
 import { AppServices } from '../app/services';
 import { TourHint, useMarkSeen } from './Onboarding';
 import { fmtCareerElo } from '../ratings/display';
@@ -290,6 +291,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   const summaryPanel = (
     <>
       {game.status === 'finalized' && <TourHint step="replay" />}
+      {isStudyGame(game) && <div className="notice small" data-testid="analysis-study-note">{STUDY_LABEL}: Played Like is shown for this game, but study games never count toward your Played Like records, Vault, ratings, the Federation or markets.</div>}
       {report && report.status === 'complete' && (
         <PlayedLikeCard report={report} human={humanPov} humanName="You" oppName={opp.name} oppRating={opp.rating ?? null} event={event} onOpenMoves={() => { setTab('moves'); goPly(1); }} />
       )}
@@ -375,7 +377,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
         status={<>
           <span className="chip">{game.result ?? '*'} · {game.termination ? TERMINATION_LABEL[game.termination] : 'Unfinished'}</span>
           <span className="chip">{game.timeControl.label}</span>
-          <span className={`chip ${game.rated ? 'pos' : ''}`}>{game.mode === 'training' ? 'Training' : game.rated ? 'Rated' : 'Casual'}</span>
+          <span className={`chip ${game.rated ? 'pos' : isStudyGame(game) ? 'info' : ''}`} data-testid="analysis-mode">{gameModeLabel(game)}</span>
         </>}
         actions={<>
           <button className="btn small" aria-pressed={favourite} data-testid="favourite" disabled={services.readOnly} onClick={() => void toggleFavourite()}>{favourite ? '★ Favourite' : '☆ Favourite'}</button>

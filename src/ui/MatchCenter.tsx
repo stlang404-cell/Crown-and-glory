@@ -45,8 +45,11 @@ export function GradeIcon({ grade, provisional }: { grade: Grade | null; provisi
  * at all, and in casual games the Assistant gives an evaluation only on request and records each use (a permanent bar
  * would bypass that record), so no live player game shows one.
  */
-export type EvalContext = { kind: 'play'; rated: boolean } | { kind: 'spectate' } | { kind: 'replay' } | { kind: 'analysis' };
-export const evalBarAllowed = (c: EvalContext): boolean => c.kind !== 'play';
+export type EvalContext = { kind: 'play'; rated: boolean } | { kind: 'spectate' } | { kind: 'replay' } | { kind: 'analysis' }
+  /** v1.0 Crownmaster Study Match (src/app/study.ts): unrated and untimed by construction; the bar is an opt-in aid
+   *  whose every use is recorded on the game. `aidsAllowed` must come from `studyAidsAllowed(record)`. */
+  | { kind: 'study'; aidsAllowed: boolean };
+export const evalBarAllowed = (c: EvalContext): boolean => (c.kind === 'study' ? c.aidsAllowed : c.kind !== 'play');
 
 /** Evaluation text from White's side: "+1.3", "−0.4", "0.0", mate "M3" / "−M2", a finished game "1-0" / "0-1" / "½-½". */
 export function formatEval(s: EngineScore | null): string {

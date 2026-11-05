@@ -11,6 +11,7 @@
  *
  * Exchange logic stays in src/exchange (claims, prices); this module only reads what was recorded.
  */
+import { STUDY_LABEL, isStudyGame } from './study';
 import type { Market } from '../exchange/market';
 import { claimsOf } from '../exchange/market';
 import type { Journal } from '../exchange/ledger';
@@ -376,7 +377,7 @@ export function personalEntry(g: GameRecord, report: AnalysisReport | null, riva
   const opp = g.humanColor === 'white' ? g.black : g.white;
   return {
     id: g.id, kind: 'personal', white: g.white.name, black: g.black.name, whiteRating: g.white.rating, blackRating: g.black.rating, score, result: resultLabel(g.result),
-    event: g.context.eventName ?? (g.mode === 'training' ? 'Training' : g.rated ? 'Rated game' : 'Casual game'), stage: null, season: null, round: null,
+    event: g.context.eventName ?? (isStudyGame(g) ? STUDY_LABEL : g.mode === 'training' ? 'Training' : g.rated ? 'Rated game' : 'Casual game'), stage: null, season: null, round: null,
     at: g.endedAt ?? g.startedAt, plies: g.moves.length, swing: us ? maxSwing(us) : null, priceMove: null, hasMarket: false, championshipFinal: false,
     // only rated games carry ratings that mean something for an upset
     rivalry: rivals.has(opp.id), upsetGap: g.rated ? upsetGapOf(g.white.rating, g.black.rating, score) : 0,

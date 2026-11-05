@@ -61,7 +61,15 @@ export class AppServices {
     cancel: () => this.exhibitionEngine.cancel(),
     now: () => new Date().toISOString(),
     onChange: () => this.notify(),
-    onFinished: g => { void this.requestExhibitionAnalysis(g.id).catch(e => console.error('exhibition analysis', e)); },
+    onFinished: g => {
+      void this.requestExhibitionAnalysis(g.id).catch(e => console.error('exhibition analysis', e));
+      // v1.1 practice market: settled exactly once on the result (void at the playing limit)
+      void this.fed?.resolveExhibitionMarket(g).catch(e => console.error('exhibition market settle', e));
+    },
+    // v1.1 practice market (sandbox money only, src/app/exhibitionMarket.ts): prices follow the published moves only
+    onMoved: async g => { await this.fed?.publishExhibitionMove(g); },
+    onSkip: async g => { await this.fed?.closeExhibitionMarket(g.id); },
+    onRestart: async old => { if (old.status !== 'finished') await this.fed?.resolveExhibitionMarket(old, 'restarted'); },
     // phones run one scheduled-game worker: it pauses while an exhibition computes (mobile limits)
     onBusy: busy => { if (this.live && this.device.mobile) { if (busy) this.live.pause('exhibition'); else this.live.resume('exhibition'); } },
     readOnly: () => this.readOnly,

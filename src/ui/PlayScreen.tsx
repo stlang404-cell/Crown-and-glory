@@ -39,6 +39,7 @@ import { playOnce, playSound } from './sound';
 import { QuickMatch } from './QuickMatch';
 import { PlayedLikeResultLines } from './PlayedLikeCard';
 import { clearPractice, peekPractice } from '../app/practice';
+import { gameModeLabel } from '../app/study';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
 export { fmtClock };
@@ -121,6 +122,7 @@ export function PlayScreen() {
       </section>
       <TourHint step="first-game" />
       <TourHint step="first-rated" />
+      <div className="row small" style={{ marginBottom: 10, flexWrap: 'wrap' }}><button className="btn" data-testid="play-study" onClick={() => go({ name: 'study' })}><Icon name="academy" /> Study Match</button><span className="muted">Untimed, unrated, with optional engine aids.</span></div>
       <QuickMatch />
       <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
         {[
@@ -141,7 +143,7 @@ export function PlayScreen() {
           <div className="panel-title"><h2>Resume</h2></div>
           {unfinished.map(g => (
             <div key={g.id} className="row">
-              <span>vs {g.humanColor === 'white' ? g.black.name : g.white.name} · {g.timeControl.label} · {Math.ceil(g.moves.length / 2)} moves · {g.rated ? 'Rated' : 'Casual'}</span>
+              <span>vs {g.humanColor === 'white' ? g.black.name : g.white.name} · {g.timeControl.label} · {Math.ceil(g.moves.length / 2)} moves · {gameModeLabel(g)}</span>
               <span className="spacer" />
               <button className="btn primary" onClick={() => go({ name: 'match', gameId: g.id })}>{g.status === 'terminal' ? 'Finish Saving' : 'Resume'}</button>
             </div>

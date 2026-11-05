@@ -132,7 +132,9 @@ export interface MoveRecord {
 
 export interface AssistanceEvent {
   ply: number;
-  kind: 'hint' | 'takeback' | 'analysis-during-play' | 'candidates' | 'threat' | 'evaluation' | 'explanation';
+  kind: 'hint' | 'takeback' | 'analysis-during-play' | 'candidates' | 'threat' | 'evaluation' | 'explanation'
+    /** Study Match aids (src/app/study.ts, additive). */
+    | 'best-move' | 'feedback';
   at: string;
 }
 
@@ -178,7 +180,7 @@ export interface GameRecord {
   /** v1.1 (additive, optional): the side to move's clock when its current turn began, so per-move time stays exact
    *  across pauses and reloads. Absent on older records (the move then records the clock at resume). */
   clockTurn?: { ply: number; startMs: number };
-  context: { kind: 'quick-match' | 'training-retry' | 'imported' | 'federation'; sourceGameId?: string; sourcePly?: number; tournamentId?: string; fixtureId?: string; eventName?: string };
+  context: { kind: 'quick-match' | 'training-retry' | 'imported' | 'federation' | 'study'; sourceGameId?: string; sourcePly?: number; tournamentId?: string; fixtureId?: string; eventName?: string };
   opening: { name: string; classifierVersion: string } | null;
   /** Finalization key: guarantees exactly-once result/rating commit. */
   finalizationKey: string | null;
@@ -191,4 +193,7 @@ export interface GameRecord {
   /** v0.10 (additive, optional): permanent Played Like records of the player's own estimate, one per model id
    *  (crown-pl-record-1, src/analysis/playedLikeRecords.ts). Not part of the checksum. */
   playedLike?: import('../analysis/playedLikeRecords').PlayedLikeGameRecord[];
+  /** v1.0 (additive, optional): Crownmaster Study Match state — aid switches and move feedback from engine data
+   *  (src/app/study.ts). Present only on study games (context.kind 'study'). Not part of the checksum. */
+  study?: import('../app/study').StudyState;
 }
