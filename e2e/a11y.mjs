@@ -88,7 +88,7 @@ const studyId = decodeURIComponent((await page.evaluate(() => location.hash)).sp
 const SCREENS = [
   ['dashboard', ''], ['play', 'play'], ['match', `match/${encodeURIComponent(matchId)}`], ['study', 'study'], ['study-match', `study/${encodeURIComponent(studyId)}`], ['federation', 'world'], ['standings', 'standings'], ['tournaments', 'tournaments'],
   ['competitors', 'competitors'], ['competitor', `competitor/${encodeURIComponent(ids.competitor)}`], ['population', 'population'], ['watch', `watch/${encodeURIComponent(ids.fixture)}`],
-  ['exhibition', 'exhibition'], ['exchange', 'exchange'], ['market', ids.market ? `exchange/${encodeURIComponent(ids.market)}` : 'exchange'], ['finance', 'finance'], ['forecasts', 'forecasts'],
+  ['arena', 'arena'], ['exhibition', 'exhibition'], ['exchange', 'exchange'], ['market', ids.market ? `exchange/${encodeURIComponent(ids.market)}` : 'exchange'], ['finance', 'finance'], ['forecasts', 'forecasts'],
   ['news', 'news'], ['games', 'library'], ['replays', 'replays'], ['analyses', 'analysis'], ['analysis', `analysis/${encodeURIComponent(gameId)}`], ['academy', 'academy'],
   ['grimoire', 'grimoire'], ['career', 'profile'], ['rivals', 'rivals'], ['hall', 'hall'], ['heraldry', 'heraldry'], ['vault', 'vault'], ['ranks', 'ranks'], ['lab', 'lab'], ['settings', 'settings'],
 ];

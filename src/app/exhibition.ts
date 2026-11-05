@@ -76,6 +76,82 @@ export interface ExhibitionGame {
   termination: string | null;
   /** SHA-256 over id, moves and result once finished (the analysis queue's input checksum). */
   checksum: string | null;
+  /** v1.1 AI Arena: the DISPLAYED game clock (accounting only, never the engine budget; absent/null = no clock). */
+  timeControl?: ExhibitionTimeControl | null;
+  /** v1.1 AI Arena: set on a restart — the exhibition this one restarts and whether it kept that one's seed. */
+  restartOf?: { id: string; seed: 'same' | 'new' } | null;
+  /** v1.1 AI Arena: set on the OLD record when it was restarted (it stays in the archive, resumable as itself). */
+  restartedAs?: string | null;
+}
+
+/* ------------------------------------------------------------------ display clock (v1.1 AI vs AI Arena) */
+
+/**
+ * Display time controls for exhibitions. The clock is DISPLAY and ACCOUNTING only: each move is charged the engine's
+ * real measured thinking time (recorded in the move, so a replay shows the same clocks) plus the increment. It never
+ * sets the engine's search budget — each side keeps its own profile budget (`thinkingBudget`), so a 120-minute game
+ * plays at the same pace as any other — and it never decides a game (no time forfeits: exhibitions end only by the
+ * rules' checkmate, stalemate and draw adjudication).
+ *
+ * Integrator note (package X): the long presets mirror X's new rated presets (30+30 … 240+120) and are defined here
+ * so this package does not depend on X landing first; unify with src/games/types.ts TIME_CONTROLS when merging.
+ */
+export interface ExhibitionTimeControl { id: string; label: string; initialMs: number; incrementMs: number }
+const tc = (min: number, inc: number, label?: string): ExhibitionTimeControl => ({ id: `${min}+${inc}`, label: label ?? `${min}+${inc}`, initialMs: min * 60_000, incrementMs: inc * 1000 });
+export const EXHIBITION_TIME_CONTROLS: readonly ExhibitionTimeControl[] = [
+  { id: 'untimed', label: 'No clock', initialMs: 0, incrementMs: 0 },
+  tc(3, 2, 'Blitz 3+2'), tc(5, 3, 'Rapid 5+3'), tc(15, 10, 'Classical 15+10'),
+  tc(30, 30, 'Classical 30+30'), tc(60, 30, 'Classical 60+30'), tc(90, 30, 'Classical 90+30'),
+  tc(120, 90, 'Classical 120+90'), tc(180, 60, 'Classical 180+60'), tc(240, 120, 'Classical 240+120'),
+];
+export const timeControlById = (id: string | null | undefined): ExhibitionTimeControl | null => {
+  const t = EXHIBITION_TIME_CONTROLS.find(x => x.id === id);
+  return t && t.initialMs > 0 ? t : null;
+};
+
+/** Display clocks (ms remaining) after `upto` plies: initial − Σ measured engine time + increment per move made. */
+export function clocksAt(g: Pick<ExhibitionGame, 'moves' | 'timeControl'>, upto = g.moves.length): { white: number; black: number; spent: { white: number; black: number } } | null {
+  const t = g.timeControl;
+  if (!t || !(t.initialMs > 0)) return null;
+  const left = [t.initialMs, t.initialMs], spent = [0, 0];
+  for (let i = 0; i < Math.min(upto, g.moves.length); i++) {
+    const ms = Math.max(0, Math.round(g.moves[i].ms || 0));
+    left[i % 2] += t.incrementMs - ms;
+    spent[i % 2] += ms;
+  }
+  return { white: Math.max(0, left[0]), black: Math.max(0, left[1]), spent: { white: spent[0], black: spent[1] } };
+}
+
+/** The engine's own per-move budget of a side (its profile: wall-clock cap and node budget), independent of any clock. */
+export function thinkingBudget(p: Pick<StrengthProfile, 'maxTimeMs' | 'nodes' | 'depth'>): { seconds: number; nodes: number | null; text: string } {
+  const seconds = Math.round(p.maxTimeMs / 100) / 10;
+  const nodes = Number.isFinite(p.nodes) ? p.nodes : null;
+  return { seconds, nodes, text: `AI thinking budget: up to ${seconds} s per move${nodes !== null ? ` (${nodes.toLocaleString('en-US')} nodes)` : ''}` };
+}
+
+/** m:ss or h:mm:ss for a display clock. */
+export function fmtClock(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`;
+}
+
+/**
+ * Restart semantics (documented in docs/AI_ARENA.md): a restart is a NEW exhibition record — new id, same two sides
+ * exactly as recorded at the start (same engine profiles and styles, read from the record, not re-read from the
+ * competitors), same colours and display clock, moves from the start position. `seed: 'same'` replays the identical
+ * game (every move is a fresh seeded search of the recorded seed); `'new'` draws a new seed and so, usually, a new
+ * game. The old record is kept in the archive (marked `restartedAs`); a practice market on it is voided.
+ */
+export function restartOf(old: ExhibitionGame, createdAt: string, seed: 'same' | 'new', fresh?: number): ExhibitionGame {
+  const s = (seed === 'same' ? old.seed : (fresh ?? hashSeed('exhibition-restart', old.id, createdAt, Math.floor(Math.random() * 2 ** 31)))) >>> 0;
+  let id = `${EXH_PREFIX}${createdAt.replace(/[^0-9]/g, '').slice(0, 17)}-${s.toString(36)}`;
+  if (id === old.id) id = `${id}-r`;
+  return {
+    id, kind: 'exhibition', schema: EXHIBITION_ID, official: false, createdAt, finishedAt: null, status: 'playing', seed: s, nodeCap: old.nodeCap,
+    initialFen: old.initialFen, white: old.white, black: old.black, moves: [], result: null, termination: null, checksum: null,
+    timeControl: old.timeControl ?? null, restartOf: { id: old.id, seed }, restartedAs: null,
+  };
 }
 
 export type ComputeMove = (req: { moves: string[]; profile: StrengthProfile; style: StyleId; seed: number }) => Promise<{ ccn: string; score: EngineScore; depth: number; nodes: number; ms: number }>;
@@ -95,7 +171,7 @@ export function sideFacts(c: Pick<Competitor, 'style' | 'rating' | 'division'>):
 }
 
 /** A new exhibition between two distinct competitors (nothing is written). */
-export function newExhibition(white: Competitor, black: Competitor, createdAt: string, seed?: number): ExhibitionGame {
+export function newExhibition(white: Competitor, black: Competitor, createdAt: string, seed?: number, timeControl: ExhibitionTimeControl | null = null): ExhibitionGame {
   if (!white || !black) throw new Error('Choose two competitors.');
   if (white.id === black.id) throw new Error('Choose two different competitors.');
   const s = (seed ?? hashSeed('exhibition', white.id, black.id, createdAt, Math.floor(Math.random() * 2 ** 31))) >>> 0;
@@ -103,6 +179,7 @@ export function newExhibition(white: Competitor, black: Competitor, createdAt: s
     id: `${EXH_PREFIX}${createdAt.replace(/[^0-9]/g, '').slice(0, 17)}-${s.toString(36)}`, kind: 'exhibition', schema: EXHIBITION_ID, official: false,
     createdAt, finishedAt: null, status: 'playing', seed: s, nodeCap: EXHIBITION_NODE_CAP, initialFen: START_FEN,
     white: sideOf(white), black: sideOf(black), moves: [], result: null, termination: null, checksum: null,
+    timeControl: timeControl && timeControl.initialMs > 0 ? { ...timeControl } : null,
   };
 }
 
@@ -197,6 +274,12 @@ export interface RunnerHost {
   /** Whether engine work is running now, on every change (the app pauses scheduled games on phones meanwhile). */
   onBusy?: (busy: boolean) => void;
   readOnly?: () => boolean;
+  /** v1.1: a move was saved; awaited before the move is shown (the practice market re-prices from it). Never throws into the game. */
+  onMoved?: (g: ExhibitionGame) => Promise<void> | void;
+  /** v1.1: Skip to Result was pressed (the practice market stops trading: the remaining moves are not watched). */
+  onSkip?: (g: ExhibitionGame) => Promise<void> | void;
+  /** v1.1: `old` was restarted as `next` (the practice market on `old` is voided). */
+  onRestart?: (old: ExhibitionGame, next: ExhibitionGame) => Promise<void> | void;
 }
 
 /**
@@ -218,9 +301,9 @@ export class ExhibitionRunner {
   private changed(): void { this.host.onBusy?.(this.busy || this.stepping); this.host.onChange?.(); }
 
   /** Start a new exhibition (any running one is paused first; it stays in the archive, resumable). */
-  async start(white: Competitor, black: Competitor, opts: { seed?: number; paused?: boolean } = {}): Promise<ExhibitionGame> {
+  async start(white: Competitor, black: Competitor, opts: { seed?: number; paused?: boolean; timeControl?: ExhibitionTimeControl | null } = {}): Promise<ExhibitionGame> {
     if (this.host.readOnly?.()) throw new Error('This tab is read-only.');
-    const g = newExhibition(white, black, this.host.now(), opts.seed);
+    const g = newExhibition(white, black, this.host.now(), opts.seed, opts.timeControl ?? null);
     this.stopEngine();
     await saveExhibition(this.host.db, g);
     this.game = g; this.error = null;
@@ -228,6 +311,27 @@ export class ExhibitionRunner {
     this.changed();
     if (!opts.paused) this.kick();
     return g;
+  }
+
+  /**
+   * Restart the current exhibition as a NEW game (restartOf): same pairing, colours and clock; the same seed (an
+   * identical replay) or a new one. The engine stops at once; the old record stays archived, marked `restartedAs`.
+   */
+  async restart(seed: 'same' | 'new', opts: { paused?: boolean; fresh?: number } = {}): Promise<ExhibitionGame> {
+    if (this.host.readOnly?.()) throw new Error('This tab is read-only.');
+    const old = this.game;
+    if (!old) throw new Error('No exhibition to restart.');
+    this.stopEngine();
+    const next = restartOf(old, this.host.now(), seed, opts.fresh);
+    const marked: ExhibitionGame = { ...old, restartedAs: next.id };
+    await saveExhibition(this.host.db, marked);
+    await saveExhibition(this.host.db, next);
+    try { await this.host.onRestart?.(marked, next); } catch (e) { console.error('exhibition restart hook', e); }
+    this.game = next; this.error = null;
+    this.state = opts.paused ? 'paused' : 'running';
+    this.changed();
+    if (!opts.paused) this.kick();
+    return next;
   }
 
   /** Make a stored exhibition the current one (an unfinished one opens paused). */
@@ -269,6 +373,7 @@ export class ExhibitionRunner {
   async finish(): Promise<void> {
     if (!this.game || this.game.status === 'finished') return;
     this.stopEngine();
+    try { await this.host.onSkip?.(this.game); } catch (e) { console.error('exhibition skip hook', e); }
     this.state = 'finishing';
     this.changed();
     this.kick();
@@ -316,6 +421,8 @@ export class ExhibitionRunner {
     if (g.status === 'finished') { await this.finalize(g); return false; }
     this.game = g;
     await saveExhibition(this.host.db, g);
+    // the practice market re-prices from the move before it is shown; a market failure never stops the game
+    try { await this.host.onMoved?.(g); } catch (e) { console.error('exhibition move hook', e); }
     this.changed();
     return true;
   }

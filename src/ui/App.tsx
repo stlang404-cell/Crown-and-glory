@@ -20,6 +20,7 @@ import { CompetitorsScreen, CompetitorScreen } from './CompetitorScreen';
 import { PopulationScreen } from './PopulationScreen';
 import { SpectatorScreen } from './SpectatorScreen';
 import { ExhibitionScreen } from './ExhibitionScreen';
+import { ArenaHub } from './ArenaHub';
 import { ExchangeScreen } from './ExchangeScreen';
 import { FinanceScreen } from './FinanceScreen';
 import { ForecastScreen } from './ForecastScreen';
@@ -79,7 +80,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 /** The phone tab bar keeps Dashboard, the four most-used sections and Settings; Finance and the rest live in the side rail,
  *  the Dashboard's Exchange snapshot and the Federation/Career screens. */
 const TABS: View['name'][] = ['dashboard', 'play', 'world', 'exchange', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', exhibition: 'world', study: 'play', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', exhibition: 'world', arena: 'world', study: 'play', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -139,6 +140,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'competitor' && <CompetitorScreen key={view.id} id={view.id} />}
             {view.name === 'watch' && <SpectatorScreen key={view.id} fixtureId={view.id} />}
             {view.name === 'exhibition' && <ExhibitionScreen key={view.id ?? ''} id={view.id} />}
+            {view.name === 'arena' && <ArenaHub />}
             {view.name === 'exchange' && <ExchangeScreen key={view.id ?? ''} marketId={view.id} />}
             {view.name === 'finance' && <FinanceScreen />}
             {view.name === 'forecasts' && <ForecastScreen />}

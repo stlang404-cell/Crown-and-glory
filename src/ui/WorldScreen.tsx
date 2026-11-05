@@ -112,6 +112,7 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'tournaments' })}>Tournaments</button>
         <button className="btn small" onClick={() => go({ name: 'competitors' })}>Competitors</button>
         <button className="btn small" onClick={() => go({ name: 'population' })}>Population</button>
+        <button className="btn small primary" data-testid="arena-link" onClick={() => go({ name: 'arena' })}>Watch AI Match · AI vs AI Arena</button>
         <button className="btn small" data-testid="exhibition-link" onClick={() => go({ name: 'exhibition' })}>Exhibition Arena</button>
         <button className="btn small" data-testid="news-link" onClick={() => go({ name: 'news' })}>News &amp; History</button>
         <button className="btn small" onClick={() => go({ name: 'rivals' })}>Rivals</button>

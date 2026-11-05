@@ -23,6 +23,7 @@ export type View =
   | { name: 'exhibition'; id?: string }
   /** v1.0 Crownmaster Study Match: setup (#/study) or a study game (#/study/<gameId>). */
   | { name: 'study'; gameId?: string }
+  | { name: 'arena' }
   | { name: 'exchange'; id?: string }
   | { name: 'finance' }
   | { name: 'forecasts' }
@@ -48,7 +49,7 @@ export function parseHash(hash: string = location.hash): View {
   if (name === 'federation') return { name: 'world' };
   if (name === 'grimoire') return id ? { name: 'grimoire', path: decodeURIComponent(id) } : { name: 'grimoire' };
   if (name === '' || name === 'dashboard') return { name: 'dashboard' };
-  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks'].includes(name)) return { name } as View;
+  if (['play', 'library', 'replays', 'profile', 'lab', 'academy', 'world', 'standings', 'tournaments', 'competitors', 'population', 'finance', 'forecasts', 'news', 'settings', 'rivals', 'hall', 'heraldry', 'vault', 'ranks', 'arena'].includes(name)) return { name } as View;
   return { name: 'dashboard' };
 }
 /** The view for a (re-)read hash: the current object when it is the same route (no re-render), else the new one. */

@@ -418,6 +418,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           <tbody>{(lg?.points ?? []).map((p, i) => <tr key={i}><td>{p.ply}</td><td className="mono">{p.revision ?? ''}</td><td className="mono">{p.prices.map(x => (x * 100).toFixed(1)).join(' / ')}</td></tr>)}</tbody></table>
       </details>
       {market.status === 'open' && (fixture.result === null || inPlay) && <TradeTicket m={market} compact />}
+      <div className="small" data-testid="arena-cutoff"><strong>Trading cutoff:</strong> {market.status !== 'open' ? `${statusLabel(market.status)}: trading has ended.` : inPlay ? 'in play, between published moves (suspended while the next move is computed); closes at the final move.' : 'until the match starts, and in play between moves if you watch it live; closes at the final move.'} Fee 1% on every trade; each winning share pays $1.</div>
+      <details className="small" data-testid="arena-rules"><summary>Settlement and void rules</summary><p style={{ margin: '4px 0 0' }}>{market.rules ?? 'Settlement: the result on the official game record.'}</p></details>
     </div>
   ) : <div className="panel small" data-testid="arena-market">There’s no official market on this match.</div>;
 
@@ -440,7 +442,8 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
           <table className="small arena-pos-table"><tbody>
             <tr><td>Spent / received</td><td className="mono">{fmtCrowns(pos.spent)} / {fmtCrowns(pos.received)}</td></tr>
             {marketTradable && <tr><td>Value if sold now</td><td className="mono">{fmtCrowns(liquidationValue(market, pos))}</td></tr>}
-            <tr><td>Maximum loss</td><td className="mono">{fmtCrowns(Math.max(0, pos.spent - pos.received))}</td></tr>
+            <tr><td>Maximum loss (exposure)</td><td className="mono" data-testid="arena-exposure">{fmtCrowns(Math.max(0, pos.spent - pos.received))}</td></tr>
+            {marketTradable && claims.map((c, i) => (pos.shares[i] ?? 0) > 0 ? <tr key={c.id}><td>Potential payout if {c.label}</td><td className="mono" data-testid={`arena-payout-${i}`}>{fmtCrowns((pos.shares[i] ?? 0) * 1_000_000)}</td></tr> : null)}
           </tbody></table>
           {market.status === 'open' && pos.shares.some(x => x > 0) && (
             <div className="row" style={{ flexWrap: 'wrap', gap: 6 }} data-testid="arena-exit">
