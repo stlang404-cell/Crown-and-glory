@@ -127,7 +127,7 @@ function MarketTable({ markets, mine, label = 'Markets table' }: { markets: Mark
   return (
     <div style={{ overflowX: 'auto' }} ref={scrollRegion(label)}>
       <table>
-        <thead><tr><th>Market</th><th>Leading</th><th>Status</th><th className="hide-sm">You</th></tr></thead>
+        <thead><tr><th>Market</th><th>Leading</th><th className="hide-sm">Status</th><th className="hide-sm">You</th></tr></thead>
         <tbody>{markets.map(m => {
           const claims = claimsOf(m);
           const pr = claimPrices(m);
@@ -135,9 +135,9 @@ function MarketTable({ markets, mine, label = 'Markets table' }: { markets: Mark
           const pos = mine(m);
           return (
             <tr key={m.id} className="clickable" data-testid="market-row" data-kind={m.kind ?? 'match'} onClick={() => go({ name: 'exchange', id: m.id })}>
-              <td>{m.title}<div className="small muted">{KIND_LABEL[m.kind ?? 'match']} · Season {m.season}, Round {m.round}{m.live ? ' · live trading' : ''}</div></td>
+              <td>{m.title}<div className="small muted">{KIND_LABEL[m.kind ?? 'match']} · Season {m.season}, Round {m.round}{m.live ? ' · live trading' : ''}</div><div className="show-sm" style={{ marginTop: 4 }}>{suspended(m) ? <span className="chip warn">Trading Suspended</span> : <span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span>}</div></td>
               <td className="small">{lead}</td>
-              <td>{suspended(m) ? <span className="chip warn" data-testid="suspended-chip">Trading Suspended</span> : <span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span>}</td>
+              <td className="hide-sm">{suspended(m) ? <span className="chip warn" data-testid="suspended-chip">Trading Suspended</span> : <span className={`chip ${m.status === 'open' ? 'pos' : m.status === 'settled' ? 'info' : ''}`}>{statusLabel(m.status)}</span>}</td>
               <td className="hide-sm mono small">{pos && pos.shares.some(x => x) ? `${pos.shares.reduce((a, b) => a + b, 0)} shares` : ''}</td>
             </tr>
           );

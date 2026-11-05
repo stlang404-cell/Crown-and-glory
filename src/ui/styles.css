@@ -335,6 +335,9 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .analysis { grid-template-columns: 1fr; }
   .board-col { max-width: 640px; margin: 0 auto; width: 100%; }
 }
+/* Shown only at the small breakpoint (see .hide-sm in the media query below). */
+.show-sm { display: none; }
+
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
@@ -357,6 +360,8 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .moves { max-height: 180px; }
   th, td { padding: 6px; }
   .hide-sm { display: none; }
+  .show-sm { display: block; }
+  .search-wide { flex-basis: 100% !important; width: 100%; }
   .navbar .btn { min-width: 44px; padding: 6px 8px; }
   .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   select, input[type="search"], input[type="text"], input[type="date"] { max-width: 100%; min-width: 0; }

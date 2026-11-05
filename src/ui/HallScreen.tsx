@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { TourHint } from './Onboarding';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -8,6 +8,8 @@ import { PLAYER_ID } from '../federation/model';
 import { titleEmblem, FED_TITLES, tournamentCrest, TROPHY_FOR, achievementEmblem, type TournamentId } from '../heraldry/catalog';
 import { nextTitleProgress } from '../heraldry/titles';
 import { achievementsOf } from '../app/achievements';
+import { VAULT } from '../vault/catalog';
+import type { VaultService } from '../vault/service';
 import { rivalriesOf } from '../app/rivalries';
 import type { WorldGame } from '../app/federation';
 import { usePlayerGames } from './RivalsScreen';
@@ -24,12 +26,18 @@ export function titleKind(title: string): TournamentId {
   return 'league';
 }
 
+const NOOP_SUB = () => () => {};
+
 export function HallScreen() {
   const services = useServices();
   const { go } = useApp();
   const fed = services.fed;
   const st = fed.state;
   const games = usePlayerGames();
+  // v1.0: the achievement emblems below show the Sovereign Vault's recorded unlocks (one source of truth); they used to
+  // be re-evaluated here under older, different rules, so the Hall and the Vault could disagree on the same item.
+  const vault = services.vault as VaultService | undefined;
+  useSyncExternalStore(vault ? vault.subscribe : NOOP_SUB, () => vault?.version ?? 0);
   const [finals, setFinals] = useState<WorldGame[]>([]);
   useEffect(() => { if (st) fed.worldGames().then(g => setFinals(g.filter(x => x.event === 'champ'))); }, [services.revision]);
   const data = useMemo(() => {
@@ -50,7 +58,12 @@ export function HallScreen() {
   if (!st || !data) return <div><h1>Hall of Fame</h1><TourHint step="trophy" /><TrophyHall /><div style={{ marginTop: 14 }}><NeedsFederation detail="The champions, event winners and titled competitors of the Federation appear here once you found it. Your own trophies above come from your recorded results." /></div></div>;
   const p = st.world.player;
   const progress = nextTitleProgress({ norms: p.norms ?? [], peakRating: p.peakRating ?? 0, establishedPeak: p.establishedPeak ?? 0, honours: p.titles.map(t => t.title), current: p.fedTitle ?? null });
-  const ach = achievementsOf(st, rivalriesOf(st, PLAYER_ID, games));
+  const ach = achievementsOf(st, rivalriesOf(st, PLAYER_ID, games)).map(a => {
+    const def = VAULT.find(d => d.id === a.def.id);
+    if (!def) return a;
+    const u = vault?.owned.get(def.id);
+    return { def: { ...a.def, name: def.name, description: def.rule }, earned: !!u, evidence: u ? `Unlocked ${new Date(u.earnedAt).toLocaleDateString()} — ${u.evidence}` : '' };
+  });
   const finalOf = (s: number) => finals.find(g => g.season === s && (g.stage ?? '').startsWith('Final'));
   return (
     <div>
