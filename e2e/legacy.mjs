@@ -68,7 +68,7 @@ for (let i = 0; i < 3; i++) {
 if (await page.getAttribute('[data-testid="match"]', 'data-turn') !== 'over') { await page.getByRole('button', { name: /Resign/ }).first().click(); await page.getByRole('button', { name: 'Yes, Resign' }).click(); }
 await page.waitForSelector('.result-overlay [data-testid="rating-change"]', { timeout: 20000 });
 const change = await page.evaluate(async () => {
-  const e = (await window.__crown.db.ratingEvents('rapid')).at(-1);
+  const e = (await window.__crown.db.ratingEvents('classical-long')).at(-1);
   const shown = (v) => Math.max(0, Math.round(v));
   const d = shown(e.after.rating) - shown(e.before.rating);
   const want = `Previous ${shown(e.before.rating).toLocaleString('en-US')} → New ${shown(e.after.rating).toLocaleString('en-US')} (${d >= 0 ? '+' : '−'}${Math.abs(d).toLocaleString('en-US')})`;

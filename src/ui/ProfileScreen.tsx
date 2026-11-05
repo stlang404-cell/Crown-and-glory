@@ -190,7 +190,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
   if (finished[0]) timeline.push({ at: finished[0].startedAt, text: `First game, against ${oppName(finished[0])}`, gameId: finished[0].id });
   const firstWin = finished.find(g => resultText(g) === 'Victory');
   if (firstWin) timeline.push({ at: firstWin.startedAt, text: `First win, against ${oppName(firstWin)}`, gameId: firstWin.id });
-  for (const e of events) if (e.rankBefore !== e.rankAfter) timeline.push({ at: e.at, text: `${e.pool}: ${e.rankBefore} → ${e.rankAfter} (${displayElo(e.after.rating)})`, gameId: e.gameId });
+  for (const e of events) if (e.rankBefore !== e.rankAfter) timeline.push({ at: e.at, text: `${POOL_LABEL[e.pool]}: ${e.rankBefore} → ${e.rankAfter} (${displayElo(e.after.rating)})`, gameId: e.gameId });
   const clean = attempts.filter(a => a.clean && a.exposure === 0).sort((a, b) => a.at.localeCompare(b.at));
   for (const m of [1, 10, 50, 100, 250]) if (clean.length >= m) timeline.push({ at: clean[m - 1].at, text: `${m} puzzle${m === 1 ? '' : 's'} solved cleanly` });
   timeline.sort((a, b) => b.at.localeCompare(a.at));
@@ -218,7 +218,7 @@ function Passport({ games, events, reports, attempts, runs, filters }: { games: 
         <div className="panel stat"><span className="k">Best Accuracy</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.bestAccuracy ? rec.bestAccuracy.value.toFixed(1) : '—'}</span>{rec.bestAccuracy && <button className="btn ghost small" onClick={() => go({ name: 'analysis', gameId: rec.bestAccuracy!.gameId })}>Open Game</button>}</div>
         <div className="panel stat"><span className="k">Strongest Win</span><span className="v" style={{ fontSize: '1.3rem' }}>{rec.strongestWin ? `${rec.strongestWin.opponent} (${fmtInt(displayCareerElo(rec.strongestWin.rating))})` : '—'}</span></div>
         <div className="panel stat"><span className="k">Longest Win Streak</span><span className="v">{rec.longestWinStreak}</span></div>
-        <div className="panel stat"><span className="k">Peak Rating</span><span className="v mono" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${fmtInt(displayCareerElo(rec.peakRating.rating))} (${rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
+        <div className="panel stat"><span className="k">Peak Rating</span><span className="v mono" style={{ fontSize: '1.3rem' }}>{rec.peakRating ? `${fmtInt(displayCareerElo(rec.peakRating.rating))} (${POOL_LABEL[rec.peakRating.pool as PoolId] ?? rec.peakRating.pool})` : '—'}</span><span className="small muted">Established ratings only</span></div>
         <div className="panel stat"><span className="k">Puzzle Rush Best</span><span className="v">{rec.bestRush ?? '—'}</span></div>
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>

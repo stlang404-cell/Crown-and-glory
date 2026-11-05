@@ -1,3 +1,4 @@
+import { POOL_LABEL } from '../ratings/pools';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { GuideCard } from './Onboarding';
 import { HonourTag, RATING_TITLE_TOOLTIP } from './RankBadge';
@@ -295,7 +296,7 @@ export function DashboardScreen() {
             ? <Empty action={<button className="btn small" onClick={() => go({ name: 'play' })}>Play</button>}>No rated games yet. Your results appear here after each rated game.</Empty>
             : <ul className="dash-list">{rated.map(r => (
               <li key={r.gameId + r.pool}><button className="dash-row" data-testid="dash-result" onClick={() => go({ name: 'analysis', gameId: r.gameId })}>
-                <span className="dash-row-main"><span className="dash-ellipsis"><span className={`chip ${r.score === 1 ? 'pos' : r.score === 0 ? 'neg' : ''}`}>{r.score === 1 ? 'Win' : r.score === 0 ? 'Loss' : 'Draw'}</span> vs {r.opponent}</span><span className="small muted">{r.pool[0].toUpperCase() + r.pool.slice(1)} · {fmtDate(r.at)}</span></span>
+                <span className="dash-row-main"><span className="dash-ellipsis"><span className={`chip ${r.score === 1 ? 'pos' : r.score === 0 ? 'neg' : ''}`}>{r.score === 1 ? 'Win' : r.score === 0 ? 'Loss' : 'Draw'}</span> vs {r.opponent}</span><span className="small muted">{POOL_LABEL[r.pool]} · {fmtDate(r.at)}</span></span>
                 <span className="dash-row-num"><span className="mono">{Math.round(r.after)}</span><span className="small mono muted">{r.delta >= 0 ? '+' : ''}{r.delta.toFixed(0)}</span></span>
               </button></li>))}</ul>}
           {st && <>
