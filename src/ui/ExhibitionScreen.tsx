@@ -13,7 +13,7 @@ import { RankBadge, TitleBadge } from './RankBadge';
 import { competitorRank } from '../federation/ranks';
 import type { FedTitle } from '../heraldry/catalog';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useApp, useServices } from './App';
+import { useApp, useServices, useAnalysisProgress } from './App';
 import { NeedsFederation } from './NeedsFederation';
 import { Board } from './Board';
 import { Portrait } from './Portrait';
@@ -220,6 +220,7 @@ function ExhibitionHistory() {
 
 function ExhibitionMatch({ id }: { id: string }) {
   const services = useServices();
+  useAnalysisProgress(); // per-move analysis progress (its own channel: it does not re-run data loads)
   const { go } = useApp();
   const runner = services.exhibitions;
   const [stored, setStored] = useState<ExhibitionGame | null | undefined>(undefined);

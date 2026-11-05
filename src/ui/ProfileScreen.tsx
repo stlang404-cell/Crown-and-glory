@@ -1,6 +1,8 @@
 import { scrollRegion } from './scrollRegion';
 import { TourHint } from './Onboarding';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { RecordsReloader } from '../app/reloader';
+import { mark } from '../app/startup';
 import { useApp, useServices } from './App';
 import { Icon } from './Icons';
 import { RatingChart } from './Charts';
@@ -35,8 +37,10 @@ export function ProfileScreen() {
   const services = useServices();
   const { go } = useApp();
   const [pool, setPool] = useState<PoolId>('rapid');
-  const [states, setStates] = useState<Record<string, PoolState>>({});
-  const [events, setEvents] = useState<RatingEvent[]>([]);
+  // first render: the rating data read at boot, if nothing has been published since (then the reload below confirms it)
+  const [boot] = useState(() => (services.ownRatings && services.ownRatings.revision === services.revision ? services.ownRatings : null));
+  const [states, setStates] = useState<Record<string, PoolState>>(() => Object.fromEntries((boot?.states ?? []).map(s => [s.pool, s])));
+  const [events, setEvents] = useState<RatingEvent[]>(() => boot?.events ?? []);
   const [games, setGames] = useState<GameRecord[]>([]);
   const [window_, setWindow] = useState<'10' | '30' | '100' | 'all'>('all');
   const [reports, setReports] = useState<AnalysisReport[]>([]);
@@ -48,17 +52,27 @@ export function ProfileScreen() {
   const [fFrom, setFFrom] = useState('');
   const [fTo, setFTo] = useState('');
 
+  // The player's own rating data first (one short transaction), then the rest of the saved records; afterwards
+  // reloaded only when the saved records changed, never two loads at once (src/app/reloader.ts).
+  const reloader = useRef<RecordsReloader | null>(null);
   useEffect(() => {
-    void (async () => {
-      const st = await services.db.allRatingStates();
-      setStates(Object.fromEntries(st.map(s => [s.pool, s])));
-      setEvents(await services.db.ratingEvents());
-      setGames(await services.db.allGames());
-      setReports(await services.db.allReports());
-      setAttempts(await services.db.getAll<Attempt>('attempts'));
-      setRuns(await services.db.getAll<TrainingRun>('trainingRuns'));
-    })();
-  }, [services, services.revision]);
+    const db = services.db;
+    const r = new RecordsReloader(async () => `${await db.savedRecordsKey()}|${services.playedLikeVersion}`, async alive => {
+      const own = await db.careerRatings();
+      if (!alive()) return;
+      // unchanged since the boot read: keep the arrays already rendered (no second render of the whole Passport)
+      const same = boot && JSON.stringify(own) === JSON.stringify({ states: boot.states, events: boot.events });
+      if (!same) { setStates(Object.fromEntries(own.states.map(s => [s.pool, s]))); setEvents(own.events); }
+      mark('profile:events');
+      const [g, rep, att, tr] = await Promise.all([db.allGames(), db.allReports(), db.getAll<Attempt>('attempts'), db.getAll<TrainingRun>('trainingRuns')]);
+      if (!alive()) return;
+      setGames(g); setReports(rep); setAttempts(att); setRuns(tr);
+    });
+    reloader.current = r;
+    void r.request();
+    return () => r.stop();
+  }, [services]);
+  useEffect(() => { void reloader.current?.request(); }, [services.revision]);
 
   const s = states[pool] ?? newPoolState(pool, services.db.ratingStart);
   const ev = events.filter(e => e.pool === pool).sort((a, b) => a.sequence - b.sequence);

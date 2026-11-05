@@ -22,7 +22,7 @@ import { fmtCareerElo } from '../ratings/display';
 import { squareName } from '../rules/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { NeedsFederation } from './NeedsFederation';
-import { useApp, useServices } from './App';
+import { useApp, useServices, useAnalysisProgress } from './App';
 import { Board } from './Board';
 import { whiteU, formatScore } from './Charts';
 import { Portrait } from './Portrait';
@@ -78,6 +78,7 @@ export function EvalGraph({ moves, shown, post, onSelect, ply, turns }: { moves:
 
 export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   const services = useServices();
+  useAnalysisProgress(); // per-move analysis progress (its own channel: it does not re-run data loads)
   const { go } = useApp();
   const fed = services.fed;
   const [game, setGame] = useState<WorldGame | null>(null);

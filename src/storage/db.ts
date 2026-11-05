@@ -219,6 +219,13 @@ export class CrownDB {
     return Object.fromEntries([['finalized', finalized], ...names.map((n, i) => [n, rest[i]]), ['grimoire', grimoire]]);
   }
 
+  /** Change key of the player's saved records for screens that show them (record counts of every store they read,
+   *  all games included); no values are read. */
+  async savedRecordsKey(): Promise<string> {
+    const [c, games] = await Promise.all([this.recordCounts(), req(this.store('games').count())]);
+    return `${Object.values(c).join(':')}:${games}`;
+  }
+
   /** Save an in-progress (or terminal-not-yet-finalized) game. Refuses to overwrite a finalized game. */
   async saveGame(g: GameRecord): Promise<void> {
     const tx = this.db.transaction('games', 'readwrite');
@@ -325,6 +332,13 @@ export class CrownDB {
   async allRatingStates(): Promise<PoolState[]> {
     return (await req(this.store('ratingState').getAll())) as PoolState[];
   }
+  /** Every pool's rating state and the whole rating ledger, read in ONE short transaction (the Career Passport's own
+   *  data, loaded before anything else on the screen). Same ordering as ratingEvents(). */
+  async careerRatings(): Promise<{ states: PoolState[]; events: RatingEvent[] }> {
+    const tx = this.db.transaction(['ratingState', 'ratingEvents'], 'readonly');
+    const [states, events] = await Promise.all([req(tx.objectStore('ratingState').getAll()), req(tx.objectStore('ratingEvents').getAll())]) as [PoolState[], RatingEvent[]];
+    return { states, events: events.sort((a, b) => (a.pool === b.pool ? a.sequence - b.sequence : a.at.localeCompare(b.at))) };
+  }
   async ratingEvents(pool?: PoolId): Promise<RatingEvent[]> {
     const s = this.store('ratingEvents');
     const all = (pool ? await req(s.index('pool').getAll(pool)) : await req(s.getAll())) as RatingEvent[];
@@ -384,6 +398,11 @@ export class CrownDB {
   }
   async getAll<T>(store: 'attempts' | 'trainingRuns' | 'bookmarks'): Promise<T[]> {
     return (await req(this.store(store).getAll())) as T[];
+  }
+
+  /** The keys of a whole federation store (no values are read). */
+  async loadKeys(store: FederationStore): Promise<string[]> {
+    return (await req(this.store(store).getAllKeys())) as string[];
   }
 
   /** Load a whole federation store. */

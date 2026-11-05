@@ -47,6 +47,7 @@ import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
 import { ensureRanks, migrateRanks } from '../federation/ranks';
+import { mark } from './startup';
 import { rankCeremonies } from './ranks';
 import { RULES_V3, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
 import { regionName } from '../federation/model';
@@ -135,12 +136,15 @@ export class FederationService {
   get ready(): boolean { return this.state !== null; }
 
   async load(): Promise<void> {
-    const [worlds, seasons, comps, rounds, markets, positions, accounts, journal, assets, finance, liveGames, contracts] = await Promise.all([
+    // the journal is read as its keys only: the state keeps nothing but the posted ids (idempotency), and reading
+    // every posted entry made the load grow with the career (1.6 MB after two seasons at 10,240 competitors)
+    const [worlds, seasons, comps, rounds, markets, positions, accounts, journalIds, assets, finance, liveGames, contracts] = await Promise.all([
       this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<unknown>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
       this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<unknown>('accounts'),
-      this.db.loadAll<Journal>('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
+      this.db.loadKeys('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
       this.db.loadAll<LiveGame>('liveGames'), this.db.loadAll<Contract>('contracts'),
     ]);
+    mark('fed:read');
     const world = worlds.find(w => w.key === 'world');
     if (!world) { this.state = null; return; }
     // compact persistence (src/federation/persist.ts): chunks expanded; individual records of older saves noted so
@@ -152,16 +156,19 @@ export class FederationService {
       world, plan: plans.get(`season:${world.season}`)!, plans,
       competitors: new Map(dc.competitors.map(c => [c.id, c])), rounds: new Map(rounds.map(r => [r.id, decodeRound(r)])),
       markets: new Map(markets.map(m => [m.id, m])), positions: new Map(positions.map(p => [p.id, p])),
-      balances: new Map(da.accounts.map(a => [a.account, a.balance])), journalIds: new Set(journal.map(j => j.id)),
+      balances: new Map(da.accounts.map(a => [a.account, a.balance])), journalIds: new Set(journalIds),
       assets: new Map(assets.map(a => [a.id, a])),
       finance: (finance.find(f => f.key === 'history') as FinanceHistory) ?? { key: 'history', points: [], peak: 0 },
       extra: (finance.find(f => f.key === 'player') as PlayerExtra) ?? { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
       liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
+    mark('fed:decoded');
     applyNameMode(this.state.competitors.values(), this.showNames, { texts: true });
+    mark('fed:names');
     // v0.11 Circuit Grades: records of older saves get their rank from stored data (deterministic; docs/FEUDAL_RANKS.md §7)
     const missing = !world.player.rank && world.player.joined || dc.competitors.some(c => !c.rank);
     if (missing) migrateRanks(this.state, gamesOf([...this.state.rounds.values()].filter(r => r.season === world.season)), (await this.playerRating()).rating);
+    mark('fed:ranks');
   }
 
   /** Settings → "Show contemporary famous names" (display only; docs/ROSTER.md). */

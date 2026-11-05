@@ -85,6 +85,26 @@ fully (swipe it away), reopen it online, wait a few seconds; leave any game you 
    then remove the Home Screen app (long-press → Remove App → Delete), open the URL in Safari, **Add to Home Screen**
    again, open it and **Import Backup**. Removing the app deletes its storage, so export first.
 
+## Startup (v1.0)
+What happens when the app opens (also offline): the service worker serves the cached files → IndexedDB opens (no
+upgrade unless the save format changed) → your Federation and, at the same time, your rating history are read → the
+first screen renders (until then a one-line "opening your saved career…" notice is shown) → after that screen has been
+painted and a quiet second, background work starts one idle step at a time: analysis queue, Vault, legacy trophies,
+Played Like records, live scheduler and its catch-up. A tap on the tab bar during a slow first render is no longer lost.
+
+Budgets (`e2e/startup.mjs`; ×4/×6 measured on the intermediate v1.0 build; p95 of "interactive" — screen visible, then 500 ms without a long task), populated
+career: ~10,900-competitor Federation two seasons in, 12 rated games with analysis reports:
+
+| | Dashboard | Career Passport rating events |
+|---|---|---|
+| desktop, Chromium ×1 (cold, warm, offline) | ≤ 2.5 s (measured ≤ 0.9 s) | ≤ 3 s (measured ≤ 1.3 s) |
+| 390 px, CPU ×4 | ≤ 8 s (measured ≤ 6.9 s) | ≤ 10 s (measured ≤ 8.9 s) |
+| 390 px, CPU ×6 | ≤ 10 s (measured ≤ 8.5 s) | ≤ 12 s (measured ≤ 10.8 s) |
+
+Measured in Chromium with CDP CPU throttling as a proxy for a phone — **not on a physical iPhone and not in Safari**.
+At ×4/×6 most of the cold start is reading and decoding the Federation (≈ 2.5 s at ×6); see
+docs/evidence/v1.0/reload-flake.md for the measurements, the root cause of the v0.11 reload flake and what remains.
+
 ## What was verified, and what was not
 Verified automatically with `e2e/pages-check.mjs` (Chromium with an iPhone-sized touch viewport, 13/13 checks)
 against two real builds served exactly like GitHub Pages under `/Crown-and-glory/` — build A (package version,

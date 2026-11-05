@@ -2,7 +2,7 @@ import { AppServices } from '../app/services';
 import { TourHint, useMarkSeen } from './Onboarding';
 import { fmtCareerElo } from '../ratings/display';
 import { useEffect, useMemo, useState, KeyboardEvent } from 'react';
-import { useApp, useServices } from './App';
+import { useApp, useServices, useAnalysisProgress } from './App';
 import { Board } from './Board';
 import { EvalGraph, formatScore, whiteU } from './Charts';
 import { fmtClock, resultText } from './PlayScreen';
@@ -37,6 +37,7 @@ const fmtAcc = (a: number | null) => (a === null ? '—' : a.toFixed(1));
 
 export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initialPly?: number }) {
   const services = useServices();
+  useAnalysisProgress(); // per-move analysis progress (its own channel: it does not re-run data loads)
   const { go } = useApp();
   const [game, setGame] = useState<GameRecord | null>(null);
   const [reports, setReports] = useState<AnalysisReport[]>([]);
