@@ -1,5 +1,6 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useState } from 'react';
-import { useApp, useServices } from './App';
+import { useApp, useServices, useAnalysisProgress } from './App';
 import { buildRows, type LibraryRow } from './LibraryScreen';
 import { AppServices } from '../app/services';
 import { DEFAULT_ANALYSIS } from '../analysis/analyzer';
@@ -15,6 +16,7 @@ const STATUS_LABEL: Record<string, string> = {
  */
 export function AnalysisPicker() {
   const services = useServices();
+  useAnalysisProgress(); // per-move analysis progress (its own channel: it does not re-run data loads)
   const { go } = useApp();
   const [rows, setRows] = useState<LibraryRow[] | null>(null);
   const [current, setCurrent] = useState<Set<string>>(new Set());
@@ -45,6 +47,7 @@ export function AnalysisPicker() {
         <div className="kicker">Analysis</div>
         <h1>Review a Game</h1>
         <p className="muted">Choose a finished game to see every move graded, the evaluation graph and the engine's best lines.</p>
+        <button className="btn small" onClick={() => go({ name: 'replays' })} data-testid="open-replays">Replay Library: Your Games and Federation Games</button>
       </header>
       {error && <div className="notice warn" role="alert">Your games could not be loaded: {error}. Reload the page to try again.</div>}
       {!error && rows === null && <p className="muted" role="status">Loading your games…</p>}
@@ -56,9 +59,9 @@ export function AnalysisPicker() {
         </div>
       )}
       {rows && rows.length > 0 && (
-        <div className="panel" style={{ padding: 0, overflowX: 'auto' }}>
+        <div className="panel" style={{ padding: 0, overflowX: 'auto' }} ref={scrollRegion('Games to analyse')}>
           <table className="table">
-            <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Moves</th><th>Analysis</th><th aria-label="Actions" /></tr></thead>
+            <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Moves</th><th>Analysis</th><th><span className="sr-only">Actions</span></th></tr></thead>
             <tbody>
               {rows.map(r => {
                 const running = live?.gameId === r.game.id;

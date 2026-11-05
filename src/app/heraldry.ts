@@ -3,14 +3,15 @@
  * Everything is derived from recorded results; nothing here influences pairings, results or ratings.
  */
 import type { FedState, Ceremony } from './federation';
-import { PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, divisionLabel, REGION_NAMES } from '../federation/model';
+import { PLAYER_ID, LEAGUE_ROUNDS, SWISS_ROUNDS, divisionLabel, REGION_NAMES, topologyOf } from '../federation/model';
 import { makeNorm, earnedTitle, type Norm } from '../heraldry/titles';
 import { FED_TITLES, type FedTitle } from '../heraldry/catalog';
 import { selectFeatured } from '../heraldry/rivals';
-import { AI_CLUBS, clubOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/clubs';
+import { clubOf, clubsOf, CLUB_DUES_SHARE, CLUB_OPS_SHARE } from '../heraldry/clubs';
 import type { Journal } from '../exchange/ledger';
 import type { KoState } from '../federation/world';
 import { hashSeed } from '../federation/generator';
+import { wealthAppealParts, wealthOf } from '../economy/wealth';
 
 type G = { event: string; white: string; black: string; result: number | null };
 const MAX_NORMS = 24;
@@ -101,6 +102,8 @@ export function playerClubAppeal(st: FedState, season: number): { share: number;
     { label: `${contracts} sponsored player(s)`, value: 0.03 * contracts },
     { label: `${titles} recent title(s)`, value: 0.02 * titles },
     { label: 'Club suspended (unpaid upkeep)', value: club.suspended ? -0.1 : 0 },
+    // v0.11: facilities, sponsored events, administration (src/economy/wealth.ts); the 45% ceiling still applies
+    ...wealthAppealParts(wealthOf(st.extra), season),
   ];
   const share = Math.max(0, Math.min(0.45, parts.reduce((a, x) => a + x.value, 0)));
   return { share, parts };
@@ -135,7 +138,7 @@ export function clubFinances(st: FedState, season: number, post: (j: Journal[]) 
   if (lines.length) post([{ id: `club-dues:${season}`, at: now, kind: 'club-dues', memo: playerDues > 0 ? `Club membership dues (5% of member balances; your club: ${mine.size} members)` : 'AI club membership dues (5% of member balances)', lines, season }]);
   const ops: { account: string; amount: number }[] = [];
   let total = 0;
-  for (const k of AI_CLUBS) {
+  for (const k of clubsOf(topologyOf(st.world).regions)) {
     const bal = st.balances.get(`club:${k.id}`) ?? 0;
     const amt = Math.floor(bal * CLUB_OPS_SHARE);
     if (amt > 0) { ops.push({ account: `club:${k.id}`, amount: -amt }); total += amt; }

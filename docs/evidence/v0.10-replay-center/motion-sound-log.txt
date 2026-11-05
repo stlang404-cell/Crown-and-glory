@@ -1,0 +1,11 @@
+[2026-11-04T15:40:08.230Z] PASS 1: Sound volume 40%, ceremonies off, piece speed Slow pressed=true after reload
+[2026-11-04T15:40:17.459Z] PASS 2: 20 plies (10 by the player): 20 slides, 68 capture-ghost frames; over 464 frames never an extra (0) or missing (0) piece
+[2026-11-04T15:40:17.459Z] PASS 3: Audio unlocked by the first tap (true); 20 move sounds for 20 plies (player and engine): ["move","move","move","move","move","move","move","capture","move","move","capture","capture","move","capture","capture","move","move","move","move","check"]
+[2026-11-04T15:40:18.624Z] PASS 4: Resigning plays one result sound: ["defeat"]
+[2026-11-04T15:40:22.291Z] PASS 5: Replay autoplay to ply 5/20: 5 slides and 5 sounds
+[2026-11-04T15:40:24.020Z] PASS 6: Rapid scrubbing (9 key presses 33 ms apart) ended on ply 9/20 with 1 slide(s), 1 sound(s), 0 animations still running, 23 pieces drawn
+[2026-11-04T15:40:24.954Z] PASS 7: Stepping back slides the piece home (1) silently (0 sounds)
+[2026-11-04T15:40:26.956Z] PASS 8: With sound turned off, replay steps are silent
+[2026-11-04T15:40:29.778Z] PASS 9: Reduced motion: 0 slides over 3 steps; phone overflow 0px
+[2026-11-04T15:40:29.778Z] PASS 10: No page errors (0)
+[2026-11-04T15:40:29.847Z] video: /home/user/Crown-and-glory/.claude/worktrees/agent-a2cfbad8bdd86b32b/e2e/artifacts/motion-sound/play-and-replay.webm

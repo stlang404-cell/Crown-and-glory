@@ -9,18 +9,21 @@
  */
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
-import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable } from '../federation/world';
+import { applyFoundingPersonas, applyNameMode } from '../federation/rosterPersonas';
+import { showContemporaryNames } from './namePrefs';
+import { NEW_FEDERATION_POPULATION } from '../federation/population';
+import { createWorld, joinPlayer, openRound, registerChallenger as registerChallengerPure, swissEventFor, swissEventsOpenTo, settleRound, Ctx, RoundRecord, SeasonPlan, WorldState, leagueTable, swissTable, gamesByEvent } from '../federation/world';
 import { processRound, gamesOf, ProcessedRound } from '../federation/driver';
 import { Competitor, Fixture, PLAYER_ID, SWISS_ROUNDS, LEAGUE_ROUNDS, CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON, CLUB_ROUNDS, StyleId, Topology, NEW_FEDERATION_TOPOLOGY, topologyOf } from '../federation/model';
 import { pregameWdl, liveModelVector, whiteCp, materialOfFen, ODDS_MODEL_ID } from '../exchange/odds';
 import { profileForStrength } from '../federation/profiles';
 import { Journal, validateJournal, MICRO } from '../exchange/ledger';
 import { prices } from '../exchange/lmsr';
-import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf } from '../exchange/market';
-import { normaliseModel } from '../exchange/families';
+import { Market, Position, openMarket, openGenericMarket, trade, closeMarket, settleMarket, cancelMarket, acct, liquidationValue, claimPrices, revisionOf, MATCH_CLAIMS, claimsOf } from '../exchange/market';
+import { normaliseModel, RULES } from '../exchange/families';
 import { NPC_TRADERS, NPC_WALLET_CAP, npcRound } from '../exchange/npc';
 import { subsidyMicro } from '../exchange/lmsr';
-import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch } from './markets';
+import { MarketOps, openSeasonMarkets, closeDue, afterRound, npcBatch, openLengthMarket, closeLengthMarket, resolveLengthMarket, suspensionOf, lengthMarketId } from './markets';
 import { cosmetic, cosmeticJournal, earned, emptyCosmetics, AVATAR_SEEDS, type CosmeticKind, type CosmeticState } from '../economy/cosmetics';
 import { FED_TITLES } from '../heraldry/catalog';
 import { playerClubAppeal } from './heraldry';
@@ -28,14 +31,26 @@ import { ensureFeatured, trackPeaks, awardNorms, eventGames, NORM_EVENTS, clubFi
 import { validateIdentity, type ClubIdentity } from '../heraldry/clubs';
 import {
   ASSETS, OwnedAsset, assetType, assetValue, genesisJournals, prizePools, seasonStartJournals, payPool, sponsorJournal, purchaseJournal, saleJournal, upkeepJournal,
-  CHALLENGER_FEE, RECOVERY_THRESHOLD, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
+  CHALLENGER_FEE, RECOVERY_THRESHOLD, CUP_SPLIT, ZONAL_SPLIT, treasuryReplenishJournal, voucherJournal, clubLevel, clubUpgradeJournal, clubUpgradeRefundJournal, CONTRACT_SHARE, SPONSOR_BUDGET, stipendFor, avgSeasonEarnings, stipendJournal, contractShareJournal, entryFeeJournal, LEAGUE_SPLIT, SWISS_SPLIT, CHAMP_SPLIT, netWorth, CLUB_SPONSOR_POOL,
 } from '../economy/economy';
+import {
+  type WealthState, type FacilityId, type SponsorTier, type EventSponsorship, SPONSOR, SPONSOR_TIERS, ADMIN, LOAN, HARDSHIP, ATTENDANCE_FEE, GALLERY_ATTENDANCE_FEE, GALLERY_SPONSOR_BONUS,
+  facility, estate, wealthOf, wealthBookValue, liabilities, sponsorMultiplier, sponsorableEvents, sponsorshipId, facilityAccount, estateAccount,
+  facilityBuildJournal, facilityCloseJournal, upkeepLine, estateBuyJournal, estateSellJournal, sponsorshipStakeJournal, sponsorshipSettleJournals, loanDrawJournal, loanRepayJournal, hardshipJournal, treasurySweepJournal, TREASURY_CEILING,
+} from '../economy/wealth';
 import { playSelfplay, SelfplayMove } from '../engine/selfplay';
 import { liveTerminal, plySeed } from './schedulerEngine';
 import { sampleResult } from '../federation/resultModel';
+import { copyData } from '../federation/copy';
+import { accountWrites, competitorWrites, decodeAccounts, decodeCompetitors, decodeRound, encodeRound } from '../federation/persist';
 import type { GameRecord } from '../games/types';
 import type { KoMatch } from '../federation/formats';
 import type { KoState } from '../federation/world';
+import { ensureRanks, migrateRanks } from '../federation/ranks';
+import { mark } from './startup';
+import { rankCeremonies } from './ranks';
+import { RULES_V3, cupEventsOf, isCupEvent, isZonalEvent, koPlacings, koTitle, rulesOf, zoneShort } from '../federation/competitions';
+import { regionName } from '../federation/model';
 
 export interface WorldGame {
   id: string; fixtureId: string; season: number; round: number; event: string; stage?: string;
@@ -62,15 +77,20 @@ export interface LiveGame {
 /** Sponsorship contract: the player pays a season stipend to a competitor and receives a share of their prizes. */
 export interface Contract { id: string; competitorId: string; signedSeason: number; stipend: number; share: number; status: 'active' | 'ended'; earned: number; paid: number; endedSeason: number | null }
 export interface PlayerExtra { key: 'player'; watchlist: string[]; sponsorsPaid: string[]; vouchers: number[]; sandboxGranted: boolean; sandboxRefillAt?: number;
-  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[] }[];
+  /** v0.10: markets the player follows on the Exchange (ids; persisted). */
+  marketWatch?: string[];
+  forecasts: { marketId: string; probs: number[]; at: string; outcome: number | null; prices?: number[]; model?: number[]; ply?: number }[];
   /** v0.5: ceremonies to present (titles, promotions, championships); `seen` once dismissed. */
   ceremonies?: Ceremony[]; favorites?: string[];
   /** v0.5: owned and equipped cosmetics (crown-cosmetics-1). */
-  cosmetics?: CosmeticState }
-export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship'; title: string; ids: string[]; detail: string; seen: boolean }
+  cosmetics?: CosmeticState;
+  /** v0.11: facilities, estates, event sponsorships, administration and recovery (crown-wealth-1; absent = defaults). */
+  wealth?: WealthState }
+export interface Ceremony { id: string; season: number; round: number; kind: 'fed-title' | 'event-title' | 'promotion' | 'championship' | 'rank'; title: string; ids: string[]; detail: string; seen: boolean }
 
 const START_FEN = 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1';
-const FEATURED_NODE_CAP = 30_000;
+/** Node cap of featured, scheduled and exhibition games (profileForStrength above the measured range plays this budget). */
+export const FEATURED_NODE_CAP = 30_000;
 const MARKET_B = 120;
 const NPC_FUND = 2_000 * MICRO;
 export const COMPETITOR_EXPENSE_SHARE = 0.75;
@@ -96,6 +116,8 @@ type Writes = { store: FederationStore | 'games'; put?: unknown[]; del?: string[
 
 export class FederationService {
   state: FedState | null = null;
+  /** Records of an older save still stored individually (replaced by chunk records on their next write). */
+  private legacy = { competitors: new Set<string>(), accounts: new Set<string>() };
   private busy = false;
   live = new Map<string, SelfplayMove[]>();
   onChange: (() => void) | null = null;
@@ -105,30 +127,57 @@ export class FederationService {
   runSelfplay: (req: { initialFen: string; white: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; black: { profile: ReturnType<typeof profileForStrength>; style: StyleId }; seed: number; maxPlies: number }, onMove: (m: SelfplayMove) => void) => Promise<{ moves: SelfplayMove[]; result: '1-0' | '0-1' | '1/2-1/2'; termination: string }>
     = async (req, onMove) => playSelfplay(req.initialFen, req.white, req.black, req.seed, req.maxPlies, m => onMove(m));
 
+  /** Competition rules of new federations (v1.0: crown-competition-3), adopted by older ones at their next season start
+   *  (src/federation/competitions.ts). Tools set 1 to reproduce crown-competition-1 exactly (determinism_check). */
+  competitionRules = RULES_V3;
+
   constructor(readonly db: CrownDB, readonly playerRating: () => Promise<{ rating: number; rd: number }>, readonly now: () => string = () => new Date().toISOString()) {}
 
   get ready(): boolean { return this.state !== null; }
 
   async load(): Promise<void> {
-    const [worlds, seasons, comps, rounds, markets, positions, accounts, journal, assets, finance, liveGames, contracts] = await Promise.all([
-      this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<Competitor>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
-      this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<{ account: string; balance: number }>('accounts'),
-      this.db.loadAll<Journal>('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
+    // the journal is read as its keys only: the state keeps nothing but the posted ids (idempotency), and reading
+    // every posted entry made the load grow with the career (1.6 MB after two seasons at 10,240 competitors)
+    const [worlds, seasons, comps, rounds, markets, positions, accounts, journalIds, assets, finance, liveGames, contracts] = await Promise.all([
+      this.db.loadAll<WorldState>('world'), this.db.loadAll<SeasonPlan>('seasons'), this.db.loadAll<unknown>('competitors'), this.db.loadAll<RoundRecord>('rounds'),
+      this.db.loadAll<Market>('markets'), this.db.loadAll<Position>('positions'), this.db.loadAll<unknown>('accounts'),
+      this.db.loadKeys('journal'), this.db.loadAll<OwnedAsset>('assets'), this.db.loadAll<FinanceHistory | PlayerExtra>('finance'),
       this.db.loadAll<LiveGame>('liveGames'), this.db.loadAll<Contract>('contracts'),
     ]);
+    mark('fed:read');
     const world = worlds.find(w => w.key === 'world');
     if (!world) { this.state = null; return; }
+    // compact persistence (src/federation/persist.ts): chunks expanded; individual records of older saves noted so
+    // they are replaced by their chunk on the next write
+    const dc = decodeCompetitors(comps), da = decodeAccounts(accounts);
+    this.legacy = { competitors: new Set(dc.legacyIds), accounts: new Set(da.legacyIds) };
     const plans = new Map(seasons.map(p => [p.id, p]));
     this.state = {
       world, plan: plans.get(`season:${world.season}`)!, plans,
-      competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(rounds.map(r => [r.id, r])),
+      competitors: new Map(dc.competitors.map(c => [c.id, c])), rounds: new Map(rounds.map(r => [r.id, decodeRound(r)])),
       markets: new Map(markets.map(m => [m.id, m])), positions: new Map(positions.map(p => [p.id, p])),
-      balances: new Map(accounts.map(a => [a.account, a.balance])), journalIds: new Set(journal.map(j => j.id)),
+      balances: new Map(da.accounts.map(a => [a.account, a.balance])), journalIds: new Set(journalIds),
       assets: new Map(assets.map(a => [a.id, a])),
       finance: (finance.find(f => f.key === 'history') as FinanceHistory) ?? { key: 'history', points: [], peak: 0 },
       extra: (finance.find(f => f.key === 'player') as PlayerExtra) ?? { key: 'player', watchlist: [], sponsorsPaid: [], vouchers: [], sandboxGranted: false, forecasts: [] },
       liveGames: new Map(liveGames.map(g => [g.id, g])), contracts: new Map(contracts.map(c => [c.id, c])),
     };
+    mark('fed:decoded');
+    applyNameMode(this.state.competitors.values(), this.showNames, { texts: true });
+    mark('fed:names');
+    // v0.11 Circuit Grades: records of older saves get their rank from stored data (deterministic; docs/FEUDAL_RANKS.md §7)
+    const missing = !world.player.rank && world.player.joined || dc.competitors.some(c => !c.rank);
+    if (missing) migrateRanks(this.state, gamesOf([...this.state.rounds.values()].filter(r => r.season === world.season)), (await this.playerRating()).rating);
+    mark('fed:ranks');
+  }
+
+  /** Settings → "Show contemporary famous names" (display only; docs/ROSTER.md). */
+  showNames = showContemporaryNames();
+  /** Switch the contemporary-names display. Names only, in memory: ids, records and history are untouched. */
+  setContemporaryNames(show: boolean): void {
+    if (show === this.showNames) return;
+    this.showNames = show;
+    if (this.state && applyNameMode(this.state.competitors.values(), show, { texts: true }) > 0) this.onChange?.();
   }
 
   // ------------------------------------------------------------------ helpers
@@ -141,11 +190,11 @@ export class FederationService {
   private clone(opts: { competitors?: boolean } = {}): FedState {
     const s = this.state!;
     return {
-      world: structuredClone(s.world), plan: structuredClone(s.plan), plans: new Map(s.plans),
-      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, structuredClone(v)])) : new Map(s.competitors),
+      world: copyData(s.world), plan: copyData(s.plan), plans: new Map(s.plans),
+      competitors: opts.competitors ? new Map([...s.competitors].map(([k, v]) => [k, copyData(v)])) : new Map(s.competitors),
       rounds: new Map(s.rounds), markets: new Map(s.markets), positions: new Map(s.positions),
       balances: new Map(s.balances), journalIds: new Set(s.journalIds), assets: new Map(s.assets),
-      finance: structuredClone(s.finance), extra: structuredClone(s.extra),
+      finance: copyData(s.finance), extra: copyData(s.extra),
       liveGames: new Map(s.liveGames), contracts: new Map(s.contracts),
     };
   }
@@ -189,7 +238,7 @@ export class FederationService {
     if (!this.state || this.state.world.featured?.length) return false;
     return this.run(async () => {
       const st = this.clone();
-      st.world = structuredClone(st.world);
+      st.world = copyData(st.world);
       if (!ensureFeatured(st)) return false;
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
       return true;
@@ -207,7 +256,7 @@ export class FederationService {
     if (!this.state || last?.build === build) return false;
     return this.run(async () => {
       const st = this.clone();
-      st.world = structuredClone(st.world);
+      st.world = copyData(st.world);
       const live = [...st.liveGames.values()].filter(g => g.status === 'live').length;
       st.world.engineCommitments = [...(st.world.engineCommitments ?? []), { season: st.world.season, round: st.world.round, build, at: this.now(), liveGamesInProgress: live }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
@@ -263,7 +312,9 @@ export class FederationService {
   private ctxOf(st: FedState, player: { rating: number; rd: number }): Ctx {
     const seasonRounds = [...st.rounds.values()].filter(r => r.season === st.world.season);
     const swissHistory = gamesOf(seasonRounds).filter(g => g.event === 'open' || g.event === 'challenger');
-    return { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
+    const ctx: Ctx = { world: st.world, plan: st.plan, competitors: st.competitors, player: { ...player, name: 'You' }, swissHistory };
+    if (this.competitionRules > rulesOf(st.world)) ctx.targetRules = this.competitionRules;
+    return ctx;
   }
 
   /**
@@ -272,12 +323,21 @@ export class FederationService {
    * behind anything (docs/FEDERATION_SCALE.md).
    */
   private busyKind: 'user' | 'scheduler' = 'user';
+  /** Start New Career (docs/CAREER_RATING.md): set by closeForNewCareer; every later command is refused until reload. */
+  private closed = false;
+  /** Run `fn` (the career wipe) as this service's LAST command, after any running command or scheduled commit, so no
+   *  Federation write can land in the new career's database. */
+  async closeForNewCareer<T>(fn: () => Promise<T>): Promise<T> {
+    while (this.busy) await this.idle;
+    return this.run(async () => { this.closed = true; return fn(); });
+  }
   private idle: Promise<void> = Promise.resolve();
   private async run<T>(fn: () => Promise<T>, kind: 'user' | 'scheduler' = 'user'): Promise<T> {
     while (this.busy) {
       if (kind === 'user' && this.busyKind === 'user') throw new Error('Another federation action is still running. Wait a moment and try again.');
       await this.idle;
     }
+    if (this.closed) throw new Error('A new career is starting. Reload the app.');
     this.busy = true;
     this.busyKind = kind;
     let release!: () => void;
@@ -287,15 +347,18 @@ export class FederationService {
 
   private async commit(next: FedState, posted: Journal[], changed: { competitors?: boolean; rounds?: RoundRecord[]; markets?: Market[]; positions?: Position[]; plans?: SeasonPlan[]; assets?: OwnedAsset[]; delAssets?: string[]; worldGames?: WorldGame[]; liveGames?: LiveGame[]; contracts?: Contract[] }, expect: { season: number; round: number } | null): Promise<void> {
     const accounts = new Set(posted.flatMap(j => j.lines.map(l => l.account)));
+    const acctW = accountWrites(accounts, next.balances, this.legacy.accounts);
     const writes: Writes = [
       { store: 'world', put: [next.world] },
       { store: 'seasons', put: changed.plans ?? [next.plan] },
       { store: 'finance', put: [next.finance, next.extra] },
       { store: 'journal', put: posted },
-      { store: 'accounts', put: [...accounts].map(a => ({ account: a, balance: next.balances.get(a) ?? 0 })) },
+      { store: 'accounts', put: acctW.put, del: acctW.del },
     ];
-    if (changed.competitors) writes.push({ store: 'competitors', put: [...next.competitors.values()] });
-    if (changed.rounds?.length) writes.push({ store: 'rounds', put: changed.rounds });
+    // compact persistence (src/federation/persist.ts): competitors in chunks of 512, only changed chunks rewritten
+    const compW = changed.competitors ? competitorWrites(next.competitors, this.state?.competitors ?? null, this.legacy.competitors) : null;
+    if (compW) writes.push({ store: 'competitors', put: compW.put, del: compW.del });
+    if (changed.rounds?.length) writes.push({ store: 'rounds', put: changed.rounds.map(encodeRound) });
     if (changed.markets?.length) writes.push({ store: 'markets', put: changed.markets });
     if (changed.positions?.length) writes.push({ store: 'positions', put: changed.positions });
     if (changed.assets?.length || changed.delAssets?.length) writes.push({ store: 'assets', put: changed.assets ?? [], del: changed.delAssets ?? [] });
@@ -308,15 +371,30 @@ export class FederationService {
       if (!expect && w) throw new Error('A federation already exists. Reload to see it.');
       for (const j of posted.slice(0, 3)) if (await get('journal', j.id)) throw new Error(`Journal ${j.id} already committed`);
     });
+    for (const id of compW?.del ?? []) this.legacy.competitors.delete(id);
+    for (const a of acctW.del) this.legacy.accounts.delete(a);
     this.state = next;
+    if (changed.competitors) applyNameMode(next.competitors.values(), this.showNames); // new entrants under the current setting
     if (this.busyKind === 'scheduler' && this.onLiveChange) this.onLiveChange(); else this.onChange?.();
+  }
+
+  /** Book value of everything the player owns: asset bonds + buy-back values, club upgrade escrow, v0.11 facility and
+   *  estate deposits (each only while not suspended). */
+  private bookValue(st: FedState): number {
+    const owned = [...st.assets.values()];
+    const clubActive = owned.some(a => a.typeId === 'club' && !a.suspended);
+    return owned.filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0) + (clubActive ? st.balances.get('asset:club:upgrade') ?? 0 : 0) + wealthBookValue(wealthOf(st.extra), clubActive);
+  }
+  private netWorthOf(st: FedState): number {
+    const positions = [...st.positions.values()].filter(p => p.holder === 'player:cash').reduce((s, p) => s + liquidationValue(st.markets.get(p.marketId)!, p), 0);
+    return netWorth(st.balances.get('player:cash') ?? 0, this.bookValue(st), positions, liabilities(wealthOf(st.extra)));
   }
 
   private snapshotFinance(st: FedState): void {
     const cash = st.balances.get('player:cash') ?? 0;
-    const assets = [...st.assets.values()].filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0) + ([...st.assets.values()].some(a => a.typeId === 'club' && !a.suspended) ? st.balances.get('asset:club:upgrade') ?? 0 : 0);
+    const assets = this.bookValue(st);
     const positions = [...st.positions.values()].filter(p => p.holder === 'player:cash').reduce((s, p) => s + liquidationValue(st.markets.get(p.marketId)!, p), 0);
-    const nw = netWorth(cash, assets, positions);
+    const nw = netWorth(cash, assets, positions, liabilities(wealthOf(st.extra)));
     st.finance.points.push({ season: st.world.season, round: st.world.round, at: this.now(), cash, assets, positions, netWorth: nw });
     if (st.finance.points.length > 2000) st.finance.points.splice(0, st.finance.points.length - 2000);
     st.finance.peak = Math.max(st.finance.peak, nw);
@@ -329,8 +407,10 @@ export class FederationService {
     if (!Number.isInteger(region) || region < 0 || region >= topology.regions) throw new Error('Choose one of the regions of this federation.');
     return this.run(async () => {
       if (this.state) throw new Error('A federation already exists. Reload to see it.');
-      const comps = generateFederation(seed, topology);
-      const { world, plan } = createWorld(seed, comps, this.now(), topology);
+      // v0.10: new federations use the full rating spectrum (crown-population-2); existing worlds keep theirs
+      const comps = generateFederation(seed, topology, NEW_FEDERATION_POPULATION);
+      applyFoundingPersonas(seed, comps, this.showNames); // v0.10 persona roster: names only, for newly founded federations
+      const { world, plan } = createWorld(seed, comps, this.now(), topology, NEW_FEDERATION_POPULATION, this.competitionRules);
       const st: FedState = {
         world, plan, plans: new Map([[plan.id, plan]]), competitors: new Map(comps.map(c => [c.id, c])), rounds: new Map(), markets: new Map(), positions: new Map(),
         balances: new Map(), journalIds: new Set(), assets: new Map(), finance: { key: 'history', points: [], peak: 0 },
@@ -340,10 +420,11 @@ export class FederationService {
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
       joinPlayer(ctx, region);
+      ensureRanks(st, player.rating, { newCareer: true }); // v0.11: every competitor's Circuit Grade; the player starts at Commoner III
       ensureFeatured(st);
       const posted: Journal[] = [];
       this.post(st, genesisJournals(this.now(), NPC_TRADERS.map(t => t.id), NPC_FUND), posted);
-      this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits), this.now()), posted);
+      this.post(st, seasonStartJournals(1, prizePools(st.plan.circuits, cupEventsOf(rulesOf(st.plan), topology.regions)), this.now()), posted);
       const opened = this.openRoundWithMarkets(st, ctx, posted);
       st.rounds.set(opened.rec.id, opened.rec);
       const ops = this.opsOf(st, posted);
@@ -365,7 +446,7 @@ export class FederationService {
       if ((st.balances.get('treasury') ?? 0) < subsidyMicro(MARKET_B, 3)) continue;
       const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
       const p = pregameWdl({ rating: w.rating, rd: w.rd }, { rating: b.rating, rd: b.rd });
-      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now() });
+      const { market, journal } = openMarket({ id: `mk:${f.id}`, sandbox: false, fixtureId: f.id, title: `${w.name} – ${b.name}`, white: f.white, black: f.black, season: rec.season, round: rec.round, b: MARKET_B, forecast: { ...p, source: `${ODDS_MODEL_ID} on public ratings and RDs` }, at: this.now(), claims: MATCH_CLAIMS, rules: RULES.match });
       this.post(st, [journal], posted);
       // NPC trading on public information; all-or-nothing per market so the market and ledger never diverge
       const res = npcRound(market, new Map(), a => st.balances.get(a) ?? 0, st.world.seed, this.now(), 1);
@@ -379,6 +460,10 @@ export class FederationService {
         for (const p2 of res.positions.values()) { st.positions.set(p2.id, p2); positions.push(p2); }
       }
       st.markets.set(m.id, m); markets.push(m);
+      // v0.10: the match-length (over/under plies) market of the same fixture, public ratings only
+      const ops = this.opsOf(st, posted);
+      openLengthMarket(ops, f, m.title);
+      markets.push(...ops.markets.values()); positions.push(...ops.positions.values());
     }
     return { rec, markets, positions };
   }
@@ -410,7 +495,26 @@ export class FederationService {
   // ------------------------------------------------------------------ queries
   currentRound(): RoundRecord | null { const s = this.state; return s ? s.rounds.get(`${s.world.season}:${s.world.round}`) ?? null : null; }
   seasonRounds(season?: number): RoundRecord[] { const s = this.state!; const n = season ?? s.world.season; return [...s.rounds.values()].filter(r => r.season === n).sort((a, b) => a.round - b.round); }
-  playerFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
+  /** The player's unplayed fixtures: this round's, then postponed league games (v0.11). */
+  playerFixtures(): Fixture[] { return [...this.roundFixtures(), ...this.postponedFixtures()]; }
+  /** The player's unplayed fixtures of the current round. */
+  roundFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 1 && f.result === null) ?? []; }
+  /** v0.11: league games the player postponed (due by the end of league round 15, docs/V3_COMPETITION_RULES.md). */
+  postponedFixtures(): Fixture[] { return this.state?.world.player.postponed ?? []; }
+  /** Fixtures that must be played or forfeited before the world can advance: this round's, and postponed games once
+   *  the postponement deadline (league round 15) is the open round. */
+  blockingFixtures(): Fixture[] { const s = this.state; if (!s) return []; return [...this.roundFixtures(), ...(s.world.round >= POSTPONE_DEADLINE ? this.postponedFixtures() : [])]; }
+  /** Why a fixture cannot be postponed (null = it can). */
+  postponeBlocker(fixtureId: string): string | null {
+    const s = this.state;
+    if (!s) return 'No federation yet.';
+    const f = this.roundFixtures().find(x => x.id === fixtureId);
+    if (!f) return 'Only this round’s unplayed games can be postponed.';
+    if (!f.event.startsWith('league:')) return 'Only league games can be postponed: Swiss and knockout pairings depend on this round’s result.';
+    if (s.world.round >= POSTPONE_DEADLINE) return `League round ${POSTPONE_DEADLINE} is the deadline for every league game.`;
+    if (this.postponedFixtures().length >= POSTPONE_LIMIT) return `You already have ${POSTPONE_LIMIT} postponed games. Play one first.`;
+    return null;
+  }
   featuredFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.tier === 2 && !f.slate) ?? []; }
   /** v0.9: fixtures of the current round promoted to scheduled live games (src/app/scheduler.ts). */
   slateFixtures(): Fixture[] { return this.currentRound()?.fixtures.filter(f => f.slate) ?? []; }
@@ -423,7 +527,7 @@ export class FederationService {
   // ------------------------------------------------------------------ player league games
   /** Create (or return) the rated game record for a player fixture. Opponent strength comes from hidden latent via the calibrated profile map. */
   async playerGameFor(fixtureId: string, human: { rating: number | null; rd: number | null }): Promise<GameRecord> {
-    const f = this.currentRound()!.fixtures.find(x => x.id === fixtureId);
+    const f = this.currentRound()!.fixtures.find(x => x.id === fixtureId) ?? this.postponedFixtures().find(x => x.id === fixtureId);
     if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const existing = (await this.db.allGames()).find(g => g.context.fixtureId === fixtureId);
     if (existing) return existing;
@@ -450,7 +554,7 @@ export class FederationService {
   /** Training Hall: an unrated practice game against a fixture opponent's exact profile (never a federation result). */
   async sparringGameFor(fixtureId: string, humanColor: 'white' | 'black'): Promise<GameRecord> {
     if (!this.ownsAsset('training')) throw new Error('Sparring needs a Training Hall. Buy one in Finance first.');
-    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId);
+    const f = this.currentRound()?.fixtures.find(x => x.id === fixtureId) ?? this.postponedFixtures().find(x => x.id === fixtureId);
     if (!f || f.tier !== 1) throw new Error('That match is not one of yours.');
     const c = this.state!.competitors.get(f.white === PLAYER_ID ? f.black : f.white)!;
     const profile = profileForStrength(c.latent);
@@ -474,7 +578,7 @@ export class FederationService {
    *  profile (hidden latent strength → engine profile, same map as league games) with its public Glicko-2 rating.
    *  Rated games go through the normal finalisation (one rating event per game id); casual games never rate.
    *  Not a league fixture: standings, prize pools and markets are untouched. */
-  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number }): Promise<GameRecord> {
+  async quickMatchGameFor(competitorId: string, opts: { rated: boolean; humanColor: 'white' | 'black'; human: { rating: number | null; rd: number | null }; nowMs: number; challenge?: boolean }): Promise<GameRecord> {
     const c = this.state?.competitors.get(competitorId);
     if (!c || c.status !== 'active') throw new Error('That competitor is not available for a challenge.');
     const profile = profileForStrength(c.latent);
@@ -490,7 +594,8 @@ export class FederationService {
       human: { kind: 'human', id: 'player', name: 'You', rating: opts.rated ? opts.human.rating : null, rd: opts.rated ? opts.human.rd : null },
       engine: { kind: 'engine', id: c.id, name: c.name, rating: opts.rated ? c.rating : null, rd: opts.rated ? c.rd : null, engine: { profileId: profile.id, level: 0, levelsId: LEVELS_ID, searchId: SEARCH_ID, evalId: EVAL_ID, calibrationId: 'federation-public-rating', style: STYLE_LABEL[style], profile, styleId: style } },
       engineSeed: hashSeed(this.state!.world.seed, 'quick-match', `${c.id}:${opts.nowMs}`), nowIso: this.now(),
-      context: { kind: 'quick-match', eventName: `Quick Match vs ${c.name}` },
+      // v0.11 rivalry challenges / rematches are ordinary Quick Matches with their own label (src/app/rivalries.ts)
+      context: { kind: 'quick-match', eventName: opts.challenge ? `Rivalry Challenge vs ${c.name}` : `Quick Match vs ${c.name}` },
     });
   }
 
@@ -500,8 +605,8 @@ export class FederationService {
       const fixtureId = game.context.fixtureId;
       if (!fixtureId || !game.result) return;
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
-      const f = rec.fixtures.find(x => x.id === fixtureId);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
       if (!f || f.result !== null) return; // already recorded (idempotent) or stale
       f.result = game.result === '1-0' ? 1 : game.result === '0-1' ? 0 : 0.5;
       f.gameId = game.id;
@@ -511,6 +616,15 @@ export class FederationService {
       if (won && !st.extra.sponsorsPaid.includes('first-federation-win')) {
         const j = sponsorJournal(st.world.season, 'first-federation-win', st.balances.get(`sponsor:${st.world.season}`) ?? 0, this.now());
         if (j) { this.post(st, [j], posted); st.extra.sponsorsPaid.push('first-federation-win'); }
+      }
+      // v0.11 hardship stipend: every federation game played while in administration (bounded per season)
+      if (wealthOf(st.extra).admin) {
+        const w = this.wealth(st);
+        const h = w.hardship?.season === st.world.season ? w.hardship : { season: st.world.season, games: 0 };
+        if (h.games < HARDSHIP.maxGamesPerSeason && (st.balances.get('treasury') ?? 0) >= HARDSHIP.perGame && !st.journalIds.has(`hardship:${st.world.season}:${fixtureId}`)) {
+          this.post(st, [hardshipJournal(st.world.season, fixtureId, this.now())], posted);
+          w.hardship = { season: h.season, games: h.games + 1 };
+        }
       }
       const ctx = this.ctxOf(st, await this.playerRating());
       settleRound(ctx, rec); // schedule knockout follow-ups if any
@@ -535,8 +649,8 @@ export class FederationService {
   async forfeit(fixtureId: string): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
-      const f = rec.fixtures.find(x => x.id === fixtureId);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
       if (!f || f.tier !== 1 || f.result !== null) throw new Error('There is no unplayed match to forfeit.');
       f.result = f.white === PLAYER_ID ? 0 : 1;
       f.forfeit = true;
@@ -546,13 +660,55 @@ export class FederationService {
     });
   }
 
-  async registerChallenger(useVoucher: boolean): Promise<void> {
+  /** Register for a Swiss event: the player's division-band event (fee or recovery voucher), or — with a v0.11
+   *  Federation Open invitation (Regional Cup winner) — the Federation Open, free. */
+  /**
+   * v0.11 deadline rule: postpone one of this round's league games. It leaves the round (the world can advance) and
+   * stays playable at any time; it must be played or forfeited before league round 15 can be advanced
+   * (POSTPONE_DEADLINE). At most POSTPONE_LIMIT postponed games at once. Swiss and knockout games cannot be postponed.
+   * Nothing is ever played for the player: an unplayed game only becomes a forfeit when the player confirms it.
+   */
+  async postpone(fixtureId: string): Promise<void> {
+    const why = this.postponeBlocker(fixtureId);
+    if (why) throw new Error(why);
+    return this.run(async () => {
+      const st = this.clone();
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const i = rec.fixtures.findIndex(x => x.id === fixtureId && x.tier === 1 && x.result === null);
+      if (i < 0) throw new Error('There is no unplayed match to postpone.');
+      const [f] = rec.fixtures.splice(i, 1);
+      st.world = { ...st.world, player: { ...st.world.player, postponed: [...(st.world.player.postponed ?? []), { ...f, postponedFrom: f.round }] } };
+      st.rounds.set(rec.id, rec);
+      await this.commit(st, [], { rounds: [rec] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Forfeit every fixture that blocks the round (after the player confirmed the list), then advance. Knockout
+   *  follow-up games created by a forfeit are forfeited too (a forfeited match is lost); bounded. */
+  async forfeitAndAdvance(): Promise<ProcessedRound> {
+    for (let guard = 0; guard < 12 && this.blockingFixtures().length; guard++) for (const f of this.blockingFixtures()) await this.forfeit(f.id);
+    return this.advanceRound();
+  }
+
+  async registerChallenger(useVoucher: boolean, event?: 'open' | 'challenger'): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
       if (st.world.round >= SWISS_ROUNDS[0]) throw new Error('Registration closed before round 4. You can enter next season.');
+      const target = event ?? swissEventFor(st.world.player.division);
+      if (!target || !swissEventsOpenTo(st.world).includes(target)) throw new Error(target === 'open' ? 'The Federation Open is for divisions 2–4 and invited players (Regional Cup and Challenger Open winners).' : 'Crown Division players qualify for the Championship through their league.');
+      const invitation = target === 'open' && st.world.player.invite?.season === st.world.season;
+      // v0.10 (bug #31): entering the Open cancels its champion market at 1/n per share; a holder who could trigger that
+      // cancellation could buy entrants below 1/n and register to collect the difference. You must hold no shares in it.
+      if (target === 'open') {
+        const own = st.positions.get(`mk:open-winner:${st.world.season}|player:cash`);
+        const m = st.markets.get(`mk:open-winner:${st.world.season}`);
+        if (own && m && (m.status === 'open' || m.status === 'closed') && own.shares.some(x => x > 0)) throw new Error('You hold shares in the Federation Open champion market. Entering the Open cancels that market, so sell your shares first.');
+      }
       const posted: Journal[] = [];
       const cash = st.balances.get('player:cash') ?? 0;
-      if (useVoucher) {
+      if (invitation) {
+        // invited: free entry, no journal
+      } else if (useVoucher) {
         if (cash >= RECOVERY_THRESHOLD) throw new Error('Recovery vouchers are only for players with less than $100.');
         if (st.extra.vouchers.includes(st.world.season)) throw new Error('You have already used this season’s recovery voucher.');
         this.post(st, [voucherJournal(st.world.season, this.now())], posted);
@@ -563,7 +719,7 @@ export class FederationService {
       }
       // conflict procedure: entering an event cancels its open market on the published 1/n vector first
       const cancelled: Market[] = [], cancelledPos: Position[] = [];
-      if (swissEventFor(st.world.player.division) === 'open') {
+      if (target === 'open') {
         const m = st.markets.get(`mk:open-winner:${st.world.season}`);
         if (m && (m.status === 'open' || m.status === 'closed')) {
           const c = cancelMarket(m, [...st.positions.values()].filter(p => p.marketId === m.id), this.now(), st.balances.get(acct(m, 'collateral')) ?? 0);
@@ -572,7 +728,7 @@ export class FederationService {
           for (const p of c.positions) { st.positions.set(p.id, p); cancelledPos.push(p); }
         }
       }
-      registerChallengerPure(this.ctxOf(st, await this.playerRating()));
+      registerChallengerPure(this.ctxOf(st, await this.playerRating()), target);
       await this.commit(st, posted, { plans: [st.plan], markets: cancelled, positions: cancelledPos }, { season: st.world.season, round: st.world.round });
     });
   }
@@ -607,12 +763,15 @@ export class FederationService {
     // 1) close the market (commit) before any move exists — and any family market whose closing round started
     await this.closeDueMarkets();
     const mk = this.marketFor(fixtureId);
-    if (mk && mk.status === 'open') {
+    const lk = this.state.markets.get(lengthMarketId(fixtureId));
+    if ((mk && mk.status === 'open') || (lk && lk.status === 'open')) {
       await this.run(async () => {
         const st = this.clone();
-        const m = closeMarket(st.markets.get(mk.id)!, this.now());
-        st.markets.set(m.id, m);
-        await this.commit(st, [], { markets: [m] }, { season: st.world.season, round: st.world.round });
+        const ops = this.opsOf(st, []);
+        const m0 = st.markets.get(`mk:${fixtureId}`);
+        if (m0 && m0.status === 'open') { const m = closeMarket(m0, this.now()); st.markets.set(m.id, m); ops.markets.set(m.id, m); }
+        closeLengthMarket(ops, fixtureId);
+        await this.commit(st, [], { markets: [...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       });
     }
     // 2) generate the game
@@ -638,7 +797,7 @@ export class FederationService {
   /** Record a finished featured game in a working state: game record, fixture result, market settlement
    *  (or cancellation when the playing-length limit censored the game). */
   private async finishFeaturedIn(st: FedState, posted: Journal[], fixtureId: string, moves: SelfplayMove[], result: '1-0' | '0-1' | '1/2-1/2', termination: string, mode: WorldGame['mode'], seed: number, profiles: string[]) {
-    const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+    const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
     const f = rec.fixtures.find(x => x.id === fixtureId)!;
     if (f.result !== null) throw new Error('This result is already recorded.');
     const w = st.competitors.get(f.white)!, b = st.competitors.get(f.black)!;
@@ -667,6 +826,8 @@ export class FederationService {
       const fc = st.extra.forecasts.find(x => x.marketId === m.id);
       if (fc) fc.outcome = termination === 'playing-limit' ? null : outcome;
     }
+    // v0.10: the over/under market settles on the official record's ply count (a playing-limit game has 400 plies)
+    { const ops = this.opsOf(st, posted); resolveLengthMarket(ops, fixtureId, moves.length, game.id); markets.push(...ops.markets.values()); positions.push(...ops.positions.values()); }
     settleRound(this.ctxOf(st, await this.playerRating()), rec);
     return { rec, game, markets, positions };
   }
@@ -815,7 +976,10 @@ export class FederationService {
       };
       st.liveGames.set(fixtureId, lg);
       if (m) { const lm = { ...m, live: { plies: 0, lastEval: null } }; st.markets.set(m.id, lm); }
-      await this.commit(st, [], { liveGames: [lg], markets: m ? [st.markets.get(m.id)!] : [] }, { season: st.world.season, round: st.world.round });
+      // the over/under market is not traded in play: it closes when the match starts
+      const ops = this.opsOf(st, []);
+      closeLengthMarket(ops, fixtureId);
+      await this.commit(st, [], { liveGames: [lg], markets: [...(m ? [st.markets.get(m.id)!] : []), ...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       return lg;
     });
   }
@@ -934,9 +1098,13 @@ export class FederationService {
       if (n <= 0) return [];
       const cands = this.slateCandidates().slice(0, n);
       if (!cands.length) return [];
-      const rec = structuredClone(rec0);
+      const rec = copyData(rec0);
       const out: LiveGame[] = [];
       const at = this.now();
+      // v0.10 (bug #29): a scheduled game is a game of this round starting — family markets whose closing round this is
+      // close in the same commit, before any of its moves exists
+      const ops = this.opsOf(st, []);
+      closeDue(ops, st.world.round);
       for (const [event, white, black] of cands) {
         const idx = rec.abstract.findIndex(a => a[0] === event && a[1] === white && a[2] === black);
         if (idx < 0) continue;
@@ -948,7 +1116,7 @@ export class FederationService {
         out.push(lg);
       }
       st.rounds.set(rec.id, rec);
-      await this.commit(st, [], { rounds: [rec], liveGames: out }, { season: st.world.season, round: st.world.round });
+      await this.commit(st, [], { rounds: [rec], liveGames: out, markets: [...ops.markets.values()] }, { season: st.world.season, round: st.world.round });
       return out;
     }, 'scheduler');
   }
@@ -1013,7 +1181,7 @@ export class FederationService {
     if (!this.state || !fixtureIds.length) return 0;
     return this.run(async () => {
       const st = this.clone();
-      const rec = structuredClone(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
+      const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const lgs = this.abstractSlate(st, rec, fixtureIds, note);
       if (!lgs.length) return 0;
       settleRound(this.ctxOf(st, await this.playerRating()), rec);
@@ -1043,16 +1211,16 @@ export class FederationService {
   /** Advance the world by one round. Player fixtures must be played or forfeited; featured games are played in the background first. */
   async advanceRound(): Promise<ProcessedRound> {
     if (!this.state) throw new Error('No federation yet. Found the federation first.');
-    if (this.playerFixtures().length) throw new Error('Play or forfeit your remaining fixtures first.');
+    if (this.blockingFixtures().length) throw new Error(this.state.world.round >= POSTPONE_DEADLINE && this.postponedFixtures().length ? `League round ${POSTPONE_DEADLINE} is the deadline: play or forfeit your postponed games first.` : 'Play, postpone or forfeit your remaining fixtures first.');
     await this.closeDueMarkets();
     for (const f of this.featuredFixtures().filter(x => x.result === null)) await this.playFeatured(f.id, 'background');
-    if (this.playerFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
+    if (this.blockingFixtures().length) throw new Error('A new game of your knockout match is ready. Play it first.');
     return this.run(async () => {
       const st = this.clone({ competitors: true });
       const expect = { season: st.world.season, round: st.world.round };
       const player = await this.playerRating();
       const ctx = this.ctxOf(st, player);
-      const rec = structuredClone(st.rounds.get(`${expect.season}:${expect.round}`)!);
+      const rec = copyData(st.rounds.get(`${expect.season}:${expect.round}`)!);
       // scheduled live games still in progress when the round closes take their tier-3 draw (labelled abstract)
       const slateClosed = this.abstractSlate(st, rec, null, 'The round closed before this game finished.');
       const seasonRounds = [...st.rounds.values()].filter(r => r.season === expect.season && r.id !== rec.id);
@@ -1060,8 +1228,11 @@ export class FederationService {
       const plansChanged: SeasonPlan[] = [];
       const oldPlan = ctx.plan;
       const titlesBefore = st.world.player.titles.length, divisionBefore = st.world.player.division;
+      const rankBefore = st.world.player.rank ? copyData(st.world.player.rank) : undefined;
       const res = processRound(ctx, rec, seasonRounds, this.now());
       const expensesPaid = new Map<string, number>();
+      let wealthEnd: { contracts: Contract[]; assets: OwnedAsset[]; delAssets: string[] } = { contracts: [], assets: [], delAssets: [] };
+      const changedContracts: Contract[] = [];
       st.rounds.set(rec.id, rec);
       const games = gamesOf([...seasonRounds, rec]);
       const season = expect.season, round = expect.round;
@@ -1071,15 +1242,18 @@ export class FederationService {
           const order = swissTable(ev, games).map(r => r.id);
           const pool = `prize:${season}:${ev.event}`;
           this.post(st, [payPool(`prize-pay:${season}:${ev.event}`, pool, st.balances.get(pool) ?? 0, order.slice(0, 8).map((id, i) => ({ id, share: SWISS_SPLIT[i] })), `${ev.name} prizes`, season, round, this.now())], posted);
+          this.settleSponsorship(st, season, ev.event, order.slice(0, 8).map((id, i) => ({ id, share: SWISS_SPLIT[i] })), posted);
           if (order.slice(0, 8).includes(PLAYER_ID)) this.sponsor(st, 'swiss-top8', posted, season);
         }
       }
       // League prizes when the league ends
       if (round === LEAGUE_ROUNDS) {
+        const byEvent = gamesByEvent(games);
         for (const c of oldPlan.circuits) {
-          const order = leagueTable(c, games).map(r => r.id);
+          const order = leagueTable(c, games, undefined, byEvent).map(r => r.id);
           const pool = `prize:${season}:league:${c.region}:${c.division}`;
           this.post(st, [payPool(`prize-pay:${season}:league:${c.region}:${c.division}`, pool, st.balances.get(pool) ?? 0, order.slice(0, 3).map((id, i) => ({ id, share: LEAGUE_SPLIT[i] })), `League prizes R${c.region + 1} D${c.division}`, season, round, this.now())], posted);
+          this.settleSponsorship(st, season, `league:${c.region}:${c.division}`, order.slice(0, 3).map((id, i) => ({ id, share: LEAGUE_SPLIT[i] })), posted);
           const pi = order.indexOf(PLAYER_ID);
           if (pi === 0) this.sponsor(st, 'league-title', posted, season);
           else if (pi > 0 && pi < 3) this.sponsor(st, 'league-podium', posted, season);
@@ -1102,10 +1276,21 @@ export class FederationService {
           for (const m of champ.stages[1].matches) recips.push({ id: m.winner === m.a ? m.b : m.a, share: CHAMP_SPLIT.quarter });
           const pool = `prize:${season}:champ`;
           this.post(st, [payPool(`prize-pay:${season}:champ`, pool, st.balances.get(pool) ?? 0, recips, 'Crown Championship prizes', season, round, this.now())], posted);
+          this.settleSponsorship(st, season, 'champ', recips, posted);
         }
+        // crown-competition-2 knockouts: prizes by stage reached (pools escrowed at season start)
+        for (const ko of oldPlan.cups ?? []) {
+          if (!ko.champions.length) continue;
+          const split = ko.kind === 'zonal' ? ZONAL_SPLIT : CUP_SPLIT;
+          const recips = koPlacings(ko).filter(p => split[p.place] !== undefined).map(p => ({ id: p.id, share: split[p.place] }));
+          const pool = `prize:${season}:${ko.name}`;
+          this.post(st, [payPool(`prize-pay:${season}:${ko.name}`, pool, st.balances.get(pool) ?? 0, recips, `${koTitle(ko)} prizes`, season, round, this.now())], posted);
+        }
+        // any sponsorship whose event paid no prizes this season settles with no winners (purse to the treasury)
+        for (const sp of wealthOf(st.extra).sponsorships.filter(x => x.season === season && x.status === 'active')) this.settleSponsorship(st, season, sp.event, [], posted);
         if (res.seasonEnd.promotions.some(p => p.id === PLAYER_ID)) this.sponsor(st, 'promotion', posted, season);
         // v0.8 club sponsorship (crown-club-appeal-1): local sponsors back a well-run player club from the season's
-        // existing sponsor budget, in proportion to the club's appeal share (max 45% of $600). No new money: it is
+        // existing sponsor budget, in proportion to the club's appeal share (max 45% of $400 since v0.11). No new money: it is
         // paid from a pool that otherwise returns to the treasury.
         {
           const { share } = playerClubAppeal(st, season);
@@ -1118,20 +1303,6 @@ export class FederationService {
         if (sp) this.post(st, [{ id: `sponsor-return:${season}`, at: this.now(), kind: 'transfer', memo: 'Unspent sponsor budget returns to the treasury', lines: [{ account: `sponsor:${season}`, amount: -sp }, { account: 'treasury', amount: sp }], season }], posted);
         const fees = st.balances.get('fees') ?? 0;
         if (fees) this.post(st, [{ id: `fees-recycle:${season}`, at: this.now(), kind: 'transfer', memo: 'Exchange fees recycled to the treasury', lines: [{ account: 'fees', amount: -fees }, { account: 'treasury', amount: fees }], season }], posted);
-        // upkeep: unpaid assets are suspended (no debt is ever created)
-        for (const a of st.assets.values()) {
-          const t = assetType(a.typeId);
-          if (!t.upkeep) continue;
-          const cash = st.balances.get('player:cash') ?? 0;
-          const na = { ...a };
-          const extra = a.typeId === 'club' ? clubLevel(a.level ?? 1).extraUpkeep : 0;
-          if (cash >= t.upkeep + extra) {
-            this.post(st, [upkeepJournal(t, season, this.now())], posted);
-            if (extra) this.post(st, [{ id: `upkeep:club-level:${season}`, at: this.now(), kind: 'upkeep', memo: `${clubLevel(a.level ?? 1).name}: facility upkeep, season ${season}`, lines: [{ account: 'player:cash', amount: -extra }, { account: 'sink', amount: extra }], season }], posted);
-            na.suspended = false; na.upkeepPaidSeason = season;
-          } else na.suspended = true;
-          st.assets.set(a.id, na);
-        }
         // treasury replenishment toward its target (explicit, capped issuance)
         { const rj = treasuryReplenishJournal(season + 1, st.balances.get('treasury') ?? 0, this.now()); if (rj) this.post(st, [rj], posted); }
         // NPC profit sweep: wallet balances above the cap return to the treasury, so trading profits funded by market
@@ -1150,7 +1321,14 @@ export class FederationService {
         // leftover prize escrow (e.g. rounding) returns to the treasury
         for (const [acc, bal] of st.balances) if (acc.startsWith(`prize:${season}:`) && bal > 0) this.post(st, [{ id: `prize-return:${acc}`, at: this.now(), kind: 'transfer', memo: `Unpaid remainder of ${acc}`, lines: [{ account: acc, amount: -bal }, { account: 'treasury', amount: bal }], season }], posted);
         // AI club finances (dues from members' balances, operating costs) before competitor expenses
+        // sponsorship contracts take their share of this command's prizes BEFORE dues and season expenses reduce the
+        // competitors' balances (v0.11 fix: afterwards a championship prize could exceed what was left → LedgerError)
+        this.contractShares(st, posted, changedContracts);
         clubFinances(st, season, js => this.post(st, js, posted), this.now());
+        // v0.11 (crown-wealth-1): loan instalment, upkeep of assets, facilities and estates (after the club's dues, so
+        // a club's income counts toward its own upkeep), then administration entry/exit. Unpaid upkeep suspends; no
+        // debt is ever created except the recovery loan the player chose.
+        wealthEnd = this.seasonEndWealth(st, season, posted);
         // competitor career expenses (coaching, travel, living costs): 75% of each competitor's balance, all of a
         // retired competitor's, leaves circulation into the sink. With fixed issuance per season this bounds the
         // circulating supply (steady state ≈ issuance / 3 held by competitors) instead of growing forever.
@@ -1165,9 +1343,13 @@ export class FederationService {
           const total = -lines.reduce((a, l) => a + l.amount, 0);
           if (total) this.post(st, [{ id: `comp-expenses:${season}`, at: this.now(), kind: 'expenses', memo: 'Competitor season expenses', lines: [...lines, { account: 'sink', amount: total }], season }], posted);
         }
+        // v0.11 treasury ceiling: the treasury refills toward its target by capped mint, and also receives escrow
+        // remainders, unspent sponsor budgets, fees and market-maker profits; anything above the ceiling is retired
+        // to the sink, so idle federation money cannot accumulate season after season (docs/ECONOMY_V11.md §2)
+        { const tr = st.balances.get('treasury') ?? 0; if (tr > TREASURY_CEILING) this.post(st, [treasurySweepJournal(season, tr - TREASURY_CEILING, this.now())], posted); }
         // new season issuance
-        this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits), this.now()), posted);
-        plansChanged.push(structuredClone(oldPlan));
+        this.post(st, seasonStartJournals(season + 1, prizePools(ctx.plan.circuits, cupEventsOf(rulesOf(ctx.plan), topologyOf(ctx.world).regions)), this.now()), posted);
+        plansChanged.push(copyData(oldPlan));
       }
       // career earnings accumulate every credit to the competitor's account (expenses are not subtracted)
       for (const c of st.competitors.values()) {
@@ -1187,11 +1369,12 @@ export class FederationService {
           awardNorms(st, season, round, `Crown Championship S${season}`, eventGames(games, 'champ'), player.rating, ceremonies, fin ? [fin.a, fin.b] : []);
         }
         if (res.seasonEnd) seasonCeremonies(st, season, round, oldPlan.champ, titlesBefore, divisionBefore, ceremonies);
+        rankCeremonies(rankBefore, ctx.world.player.rank, season, round, ceremonies);
         if (ceremonies.length) st.extra.ceremonies = [...(st.extra.ceremonies ?? []).filter(c => !ceremonies.some(n => n.id === c.id)), ...ceremonies].slice(-60);
       }
       // sponsorship contracts: share of prizes paid this round; next season's stipends at season end
-      const changedContracts: Contract[] = [];
-      this.contractShares(st, posted, changedContracts);
+      changedContracts.push(...wealthEnd.contracts);
+      if (!res.seasonEnd) this.contractShares(st, posted, changedContracts);
       if (res.seasonEnd) {
         for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) {
           const comp = st.competitors.get(ct.competitorId);
@@ -1215,7 +1398,7 @@ export class FederationService {
       st.rounds.set(opened.rec.id, opened.rec);
       openSeasonMarkets(ops); // new season: lists all families; otherwise only fills gaps within their windows
       this.snapshotFinance(st);
-      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: changedContracts, liveGames: slateClosed }, expect);
+      await this.commit(st, posted, { competitors: true, rounds: [rec, opened.rec], markets: [...opened.markets, ...ops.markets.values()], positions: [...opened.positions, ...ops.positions.values()], plans: plansChanged, contracts: [...new Set(changedContracts.map(c => c.id))].map(id => st.contracts.get(id)!), liveGames: slateClosed, assets: wealthEnd.assets, delAssets: wealthEnd.delAssets }, expect);
       return res;
     });
   }
@@ -1250,7 +1433,8 @@ export class FederationService {
     const host = L.weekendSize === 8 ? C(40) : C(20), escrow = L.weekendSize === 8 ? C(80) : C(40);
     if (cash >= host + escrow) this.post(st, [{ id: `club-host:${season}`, at: this.now(), kind: 'club-hosting', memo: `Club Weekend (${L.weekendSize} players): hosting cost and prize escrow`, lines: [{ account: 'player:cash', amount: -(host + escrow) }, { account: 'sink', amount: host }, { account: `prize:${season}:club`, amount: escrow }], season }], posted);
     // attendance revenue: each guest pays $5 if they can
-    for (const g of guests) if ((st.balances.get(`comp:${g}`) ?? 0) >= C(5)) this.post(st, [{ id: `club-attend:${season}:${g}`, at: this.now(), kind: 'club-attendance', memo: `Club Weekend attendance (${this.name(g)})`, lines: [{ account: `comp:${g}`, amount: -C(5) }, { account: 'player:cash', amount: C(5) }], season }], posted);
+    const fee = this.hasFacility(st, 'gallery') ? GALLERY_ATTENDANCE_FEE : ATTENDANCE_FEE;
+    for (const g of guests) if ((st.balances.get(`comp:${g}`) ?? 0) >= fee) this.post(st, [{ id: `club-attend:${season}:${g}`, at: this.now(), kind: 'club-attendance', memo: `Club Weekend attendance (${this.name(g)})`, lines: [{ account: `comp:${g}`, amount: -fee }, { account: 'player:cash', amount: fee }], season }], posted);
   }
 
   private payClubWeekend(st: FedState, club: KoState, posted: Journal[]): void {
@@ -1259,7 +1443,7 @@ export class FederationService {
     const bal = st.balances.get(pool) ?? 0;
     const last = club.stages[club.stages.length - 1].round;
     if (bal) this.post(st, [payPool(`prize-pay:${season}:club`, pool, bal, club.champions.map(id => ({ id, share: 1 / club.champions.length })), 'Club Weekend prize', season, last, this.now())], posted);
-    const sponsorAmt = (club.qualifiers.length === 8 ? 60 : 30) * MICRO;
+    const sponsorAmt = (club.qualifiers.length === 8 ? 60 : 30) * MICRO + (this.hasFacility(st, 'gallery') ? GALLERY_SPONSOR_BONUS : 0);
     const sp = st.balances.get(`sponsor:${season}`) ?? 0;
     if (sp >= sponsorAmt) this.post(st, [{ id: `club-sponsor:${season}`, at: this.now(), kind: 'sponsor', memo: 'Club Weekend sponsor (completed event)', lines: [{ account: `sponsor:${season}`, amount: -sponsorAmt }, { account: 'player:cash', amount: sponsorAmt }], season }], posted);
   }
@@ -1274,6 +1458,7 @@ export class FederationService {
       if (!club || club.suspended) throw new Error('You need an active Starter Chess Club to do this.');
       const to = (club.level ?? 1) + 1;
       if (to > 3) throw new Error('Your club is already a Federation Club, the top level.');
+      this.assertNotInAdministration(st, 'rebuilding the club');
       if (st.plan.club && !st.plan.club.champions.length) throw new Error('Finish this season’s Club Weekend before you rebuild the club.');
       const posted: Journal[] = [];
       this.post(st, [clubUpgradeJournal(to, st.world.season, this.now())], posted);
@@ -1292,6 +1477,7 @@ export class FederationService {
       const st = this.clone();
       const club = [...st.assets.values()].find(a => a.typeId === 'club' && !a.suspended);
       if (!club) throw new Error('Sponsorship contracts are signed through your club. Buy a Starter Chess Club first.');
+      this.assertNotInAdministration(st, 'signing contracts');
       const active = [...st.contracts.values()].filter(c => c.status === 'active');
       if (active.length >= clubLevel(club.level ?? 1).contractSlots) throw new Error('All your contract slots are full. Upgrade your club or release a contract.');
       const c = st.competitors.get(competitorId);
@@ -1344,27 +1530,86 @@ export class FederationService {
   // ------------------------------------------------------------------ exchange
   /** Execute a player trade. `opts.expectVersion` (the market history length the quote was computed on) rejects
    *  stale quotes; `opts.maxTotal` caps what a buy may cost (slippage guard). */
-  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string; maxTotal?: number } = {}): Promise<void> {
+  async trade(marketId: string, outcome: number, shares: number, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string; maxTotal?: number; minTotal?: number } = {}): Promise<void> {
     return this.run(async () => {
       const st = this.clone();
-      const m = st.markets.get(marketId);
-      if (!m || m.sandbox) throw new Error('That market could not be found.');
-      if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games.');
-      const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
-      if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who plays in this market. You can still sell shares you already hold.`);
-      const pos = st.positions.get(`${m.id}|player:cash`) ?? null;
-      if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since you opened this ticket. Check the new price and try again.');
-      if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved (a new move or trade). Check the new price and try again.`);
-      if (m.status !== 'open') throw new Error('Trading is closed for this market.');
+      const m = this.tradableMarket(st, marketId, side, opts);
       const seq = m.history.length; // deterministic and unique per market: every trade appends one history entry
-      const t = trade(m, pos, 'player:cash', outcome, shares, side, this.now(), seq);
+      const t = trade(m, st.positions.get(`${m.id}|player:cash`) ?? null, 'player:cash', outcome, shares, side, this.now(), seq);
       if (opts.maxTotal !== undefined && side === 'buy' && t.quote.total > opts.maxTotal) throw new Error('The cost is now above your limit. Check the new price and try again.');
+      if (opts.minTotal !== undefined && side === 'sell' && t.quote.total < opts.minTotal) throw new Error('The sale would now return less than your limit. Check the new price and try again.');
+      if (side === 'buy' && wealthOf(st.extra).admin && t.quote.total > ADMIN.exchangeBuyCap) throw new Error(`In administration, each Exchange purchase is limited to ${fmtWhole(ADMIN.exchangeBuyCap)}. Buy fewer shares.`);
       const posted: Journal[] = [];
       this.post(st, [t.journal], posted);
       st.markets.set(m.id, t.market);
       st.positions.set(t.position.id, t.position);
       this.snapshotFinance(st);
       await this.commit(st, posted, { markets: [t.market], positions: [t.position] }, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Every pre-trade check of a player trade, against the working state of the command (throws a player-facing reason). */
+  private tradableMarket(st: FedState, marketId: string, side: 'buy' | 'sell', opts: { expectVersion?: number; expectRevision?: string }): Market {
+    const m = st.markets.get(marketId);
+    if (!m || m.sandbox) throw new Error('That market could not be found.');
+    if (m.white === PLAYER_ID || m.black === PLAYER_ID) throw new Error('Official markets never list your own games.');
+    const conflict = [...st.contracts.values()].find(c => c.status === 'active' && marketInvolves(m, c.competitorId));
+    if (conflict && side === 'buy') throw new Error(`Conflict of interest: you sponsor ${this.name(conflict.competitorId)}, who plays in this market. You can still sell shares you already hold.`);
+    if (opts.expectVersion !== undefined && m.history.length !== opts.expectVersion) throw new Error('Prices changed since you opened this ticket. Check the new price and try again.');
+    if (opts.expectRevision !== undefined && revisionOf(m) !== opts.expectRevision) throw new Error(`Stale quote: the market moved (a new move or trade). Check the new price and try again.`);
+    if (m.status !== 'open') throw new Error('Trading is closed for this market.');
+    const sus = suspensionOf(st, m);
+    if (sus) throw new Error(sus.text);
+    return m;
+  }
+
+  /** Why trading is suspended on an open market right now (null = tradable or not open). */
+  suspension(marketId: string): string | null {
+    const st = this.state, m = st?.markets.get(marketId);
+    return st && m ? suspensionOf(st, m)?.text ?? null : null;
+  }
+
+  /**
+   * Close a position: sell every share the player holds in `marketId` (or only claim `claim`) in ONE command and one
+   * commit — either every sale executes at the quoted revision or none does. `minTotal` bounds the combined net
+   * proceeds (slippage guard). Returns the net proceeds, µ.
+   */
+  async closePosition(marketId: string, opts: { claim?: number; expectRevision?: string; minTotal?: number } = {}): Promise<number> {
+    return this.run(async () => {
+      const st = this.clone();
+      let m = this.tradableMarket(st, marketId, 'sell', opts);
+      let pos = st.positions.get(`${m.id}|player:cash`) ?? null;
+      if (!pos || !pos.shares.some(x => x > 0)) throw new Error('You hold no shares in this market.');
+      const claims = claimsOf(m);
+      const which = opts.claim === undefined ? claims.map((_, i) => i) : [opts.claim];
+      const posted: Journal[] = [];
+      let net = 0;
+      for (const c of which) {
+        const k = pos!.shares[c] ?? 0;
+        if (k <= 0) continue;
+        const t = trade(m, pos, 'player:cash', c, k, 'sell', this.now(), m.history.length);
+        this.post(st, [t.journal], posted);
+        m = t.market; pos = t.position; net += t.quote.total;
+      }
+      if (!posted.length) throw new Error('You hold no shares of that outcome.');
+      if (opts.minTotal !== undefined && net < opts.minTotal) throw new Error('Closing would now return less than your limit. Check the new price and try again.');
+      st.markets.set(m.id, m);
+      st.positions.set(pos!.id, pos!);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, { markets: [m], positions: [pos!] }, { season: st.world.season, round: st.world.round });
+      return net;
+    });
+  }
+
+  /** v0.10 market watchlist (persisted with the player record; independent of the competitor watchlist). */
+  marketWatchlist(): string[] { return this.state?.extra.marketWatch ?? []; }
+  async setMarketWatch(marketId: string, on: boolean): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      if (!st.markets.has(marketId)) throw new Error('That market could not be found.');
+      const cur = st.extra.marketWatch ?? [];
+      st.extra.marketWatch = on ? [...new Set([...cur, marketId])].slice(-200) : cur.filter(x => x !== marketId);
+      await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }
 
@@ -1377,8 +1622,15 @@ export class FederationService {
       const s = probs.reduce((a, b) => a + b, 0);
       if (s <= 0) throw new Error('That forecast is not valid. Enter a stake above zero.');
       if (probs.length !== m.q.length) throw new Error('A forecast needs one probability for each outcome.');
-      // snapshot of the public market price and model at forecast time (for honest comparisons later)
-      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l] }];
+      if (probs.some(p => !Number.isFinite(p) || p < 0)) throw new Error('A forecast needs probabilities of zero or more.');
+      // v0.10: no forecast while the market is suspended (recorded results the published model has not seen yet)
+      const sus = suspensionOf(st, m);
+      if (sus) throw new Error(sus.text.replace('Trading reopens', 'Forecasts reopen'));
+      // snapshot of the public market price and model at forecast time (for honest comparisons later). v0.10 (bug #30):
+      // in play, the public model at that moment is the LIVE model of the last published move, not the pre-game one
+      const lg = m.live ? [...st.liveGames.values()].find(g => g.marketId === m.id) : undefined;
+      const liveModel = lg && lg.moves.length > 0 && lg.points.length ? lg.points[lg.points.length - 1].model : null;
+      st.extra.forecasts = [...st.extra.forecasts.filter(f => f.marketId !== marketId), { marketId, probs: probs.map(p => p / s), at: this.now(), outcome: null, prices: prices(m.q, m.b), model: liveModel ?? m.model ?? [m.forecast.w, m.forecast.d, m.forecast.l], ...(liveModel ? { ply: lg!.moves.length } : {}) }];
       await this.commit(st, [], {}, { season: st.world.season, round: st.world.round });
     });
   }
@@ -1390,6 +1642,7 @@ export class FederationService {
       const t = ASSETS.find(a => a.id === typeId);
       if (!t) throw new Error('That asset could not be found.');
       if (t.unique && [...st.assets.values()].some(a => a.typeId === typeId)) throw new Error('Already owned: you can only have one of these.');
+      this.assertNotInAdministration(st, 'buying assets');
       const posted: Journal[] = [];
       this.post(st, [purchaseJournal(t, st.world.season, this.now())], posted);
       const owned: OwnedAsset = { id: typeId, typeId, acquiredSeason: st.world.season, suspended: false, upkeepPaidSeason: st.world.season };
@@ -1411,11 +1664,242 @@ export class FederationService {
       if (a.typeId === 'club') {
         this.post(st, [clubUpgradeRefundJournal(st.balances.get('asset:club:upgrade') ?? 0, st.world.season, this.now())], posted);
         for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) { const e = { ...ct, status: 'ended' as const, endedSeason: st.world.season }; st.contracts.set(ct.id, e); ended.push(e); }
+        // v0.11: facilities belong to the club; closing it closes them and returns their deposits
+        const w = this.wealth(st);
+        for (const f of w.facilities) this.post(st, [facilityCloseJournal(facility(f.id)!, st.balances.get(facilityAccount(f.id)) ?? 0, st.world.season, this.now(), 'Club closed:')], posted);
+        w.facilities = [];
       }
       st.assets.delete(id);
       this.snapshotFinance(st);
       await this.commit(st, posted, { delAssets: [id], contracts: ended }, { season: st.world.season, round: st.world.round });
     });
+  }
+
+  // ------------------------------------------------------------------ wealth (v0.11, crown-wealth-1; src/economy/wealth.ts)
+  /** The player's v0.11 wealth record on a working state (created with defaults for older saves). */
+  private wealth(st: FedState): WealthState {
+    const w = wealthOf(st.extra);
+    st.extra.wealth = w;
+    return w;
+  }
+  wealthState(): WealthState { return wealthOf(this.state?.extra ?? {}); }
+  inAdministration(): boolean { return !!this.wealthState().admin; }
+  private clubActive(st: FedState): boolean { return [...st.assets.values()].some(a => a.typeId === 'club' && !a.suspended); }
+  private hasFacility(st: FedState, id: FacilityId): boolean { return this.clubActive(st) && wealthOf(st.extra).facilities.some(f => f.id === id && !f.suspended); }
+  private assertNotInAdministration(st: FedState, what: string): void {
+    if (wealthOf(st.extra).admin) throw new Error(`You are in financial administration, so ${what} is paused. You can still play every game and event. To recover, reach a net worth of ${fmtWhole(ADMIN.exitNetWorth)} with no loan arrears at a season end.`);
+  }
+  private assertCash(st: FedState, amount: number): void {
+    if ((st.balances.get('player:cash') ?? 0) < amount) throw new Error(`You need ${fmtWhole(amount)} in cash for this.`);
+  }
+
+  async buildFacility(id: FacilityId): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const F = facility(id);
+      if (!F) throw new Error('That facility could not be found.');
+      if (!this.clubActive(st)) throw new Error('Facilities are part of a club. You need an active Starter Chess Club first.');
+      this.assertNotInAdministration(st, 'building');
+      const w = this.wealth(st);
+      if (w.facilities.some(f => f.id === id)) throw new Error(`Your club already has a ${F.name}.`);
+      this.assertCash(st, F.cost);
+      const posted: Journal[] = [];
+      this.post(st, [facilityBuildJournal(F, st.world.season, this.now())], posted);
+      w.facilities = [...w.facilities, { id, builtSeason: st.world.season, suspended: false }];
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+  async closeFacility(id: FacilityId): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const F = facility(id);
+      const w = this.wealth(st);
+      if (!F || !w.facilities.some(f => f.id === id)) throw new Error('Your club has no such facility.');
+      const posted: Journal[] = [];
+      this.post(st, [facilityCloseJournal(F, st.balances.get(facilityAccount(id)) ?? 0, st.world.season, this.now())], posted);
+      w.facilities = w.facilities.filter(f => f.id !== id);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+  async buyEstate(id: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const E = estate(id);
+      if (!E) throw new Error('That estate could not be found.');
+      this.assertNotInAdministration(st, 'buying property');
+      const w = this.wealth(st);
+      if (w.estates.some(e => e.id === id)) throw new Error(`You already own the ${E.name}.`);
+      this.assertCash(st, E.price);
+      const posted: Journal[] = [];
+      this.post(st, [estateBuyJournal(E, st.world.season, this.now())], posted);
+      w.estates = [...w.estates, { id, boughtSeason: st.world.season, suspended: false }];
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+  async sellEstate(id: string): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const E = estate(id);
+      const w = this.wealth(st);
+      if (!E || !w.estates.some(e => e.id === id)) throw new Error('You do not own this estate.');
+      const posted: Journal[] = [];
+      this.post(st, [estateSellJournal(E, st.balances.get(estateAccount(id)) ?? 0, st.world.season, this.now())], posted);
+      w.estates = w.estates.filter(e => e.id !== id);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /** Events the player can sponsor right now (before each starts), with whether each is already sponsored. */
+  sponsorableEvents(): { event: string; label: string; sponsored: boolean }[] {
+    const st = this.state;
+    if (!st) return [];
+    const mine = wealthOf(st.extra).sponsorships.filter(s => s.season === st.world.season);
+    return sponsorableEvents(st.plan, st.world.player.region, st.world.round, SWISS_ROUNDS[0], CHAMPIONSHIP_ROUNDS[0]).map(e => ({ ...e, sponsored: mine.some(s => s.event === e.event) }));
+  }
+  async sponsorEvent(event: string, tier: SponsorTier): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      this.assertNotInAdministration(st, 'event sponsorship');
+      const T = SPONSOR_TIERS.find(t => t.id === tier);
+      if (!T) throw new Error('Choose a sponsorship tier.');
+      const ev = sponsorableEvents(st.plan, st.world.player.region, st.world.round, SWISS_ROUNDS[0], CHAMPIONSHIP_ROUNDS[0]).find(e => e.event === event);
+      if (!ev) throw new Error('Sponsorship for that event has closed: events can be sponsored only before they start.');
+      const w = this.wealth(st);
+      const season = st.world.season;
+      const mine = w.sponsorships.filter(s => s.season === season);
+      if (mine.some(s => s.event === event)) throw new Error('You already sponsor this event.');
+      if (mine.length >= SPONSOR.perSeason) throw new Error(`You can sponsor at most ${SPONSOR.perSeason} events per season.`);
+      this.assertCash(st, T.stake);
+      const posted: Journal[] = [];
+      this.post(st, [sponsorshipStakeJournal(season, event, ev.label, T.stake, this.now())], posted);
+      w.sponsorships = [...w.sponsorships, { id: sponsorshipId(season, event), season, event, label: ev.label, tier, stake: T.stake, status: 'active' as const }].slice(-60);
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season, round: st.world.round });
+    });
+  }
+  /** Settle the player's sponsorship of an event that has just paid its prizes (no-op if not sponsored). */
+  private settleSponsorship(st: FedState, season: number, event: string, recipients: { id: string; share: number }[], posted: Journal[]): void {
+    const w0 = wealthOf(st.extra);
+    const sp = w0.sponsorships.find(x => x.season === season && x.event === event && x.status === 'active');
+    if (!sp) return;
+    const w = this.wealth(st);
+    const region = st.world.player.region;
+    const places = recipients.filter(r => r.share > 0);
+    const local = places.filter(r => r.id === PLAYER_ID || st.competitors.get(r.id)?.region === region).length;
+    const localShare = places.length ? local / places.length : 0;
+    const star = places.some(r => r.id === PLAYER_ID);
+    const multiplier = sponsorMultiplier(localShare, star);
+    const returnedThisSeason = w.sponsorships.filter(x => x.season === season && x.ret).reduce((a, x) => a + (x.ret ?? 0), 0);
+    const cap = Math.floor(SPONSOR_BUDGET * SPONSOR.returnBudgetShare) - returnedThisSeason;
+    const ret = Math.max(0, Math.min(Math.floor(sp.stake * multiplier), cap, st.balances.get(`sponsor:${season}`) ?? 0));
+    this.post(st, sponsorshipSettleJournals(sp, places, ret, season, this.now()), posted);
+    const purse = Math.floor(sp.stake * SPONSOR.purseShare);
+    const done: EventSponsorship = { ...sp, status: 'settled', purse, costs: sp.stake - purse, ret, multiplier, localShare, star };
+    w.sponsorships = w.sponsorships.map(x => (x.id === sp.id ? done : x));
+    w.reputation = Math.min(100, w.reputation + SPONSOR.reputation);
+  }
+
+  /** Recovery loan: once per administration episode; repaid in instalments at season ends (a liability in net worth). */
+  async takeRecoveryLoan(): Promise<void> {
+    return this.run(async () => {
+      const st = this.clone();
+      const w = this.wealth(st);
+      if (!w.admin) throw new Error('The recovery loan is only for players in financial administration.');
+      if (w.admin.loanTaken || w.loan) throw new Error('You have already taken the recovery loan for this administration.');
+      if ((st.balances.get('treasury') ?? 0) < LOAN.minTreasury + LOAN.principal) throw new Error('The federation treasury cannot lend right now. Try again next season.');
+      const posted: Journal[] = [];
+      this.post(st, [loanDrawJournal(st.world.season, this.now())], posted);
+      w.loan = { drawnSeason: st.world.season, principal: LOAN.principal, fee: LOAN.fee, outstanding: LOAN.principal + LOAN.fee, repaid: 0, arrears: 0 };
+      w.admin = { ...w.admin, loanTaken: true };
+      this.snapshotFinance(st);
+      await this.commit(st, posted, {}, { season: st.world.season, round: st.world.round });
+    });
+  }
+
+  /**
+   * Season-end wealth processing (inside advanceRound's single commit): loan instalment, upkeep (assets, club level,
+   * facilities, estates), then administration exit or entry with its consequences. Every journal id is per season,
+   * so a retried command never charges twice.
+   */
+  private seasonEndWealth(st: FedState, season: number, posted: Journal[]): { contracts: Contract[]; assets: OwnedAsset[]; delAssets: string[] } {
+    const w = this.wealth(st);
+    const cash = () => st.balances.get('player:cash') ?? 0;
+    const out = { contracts: [] as Contract[], assets: [] as OwnedAsset[], delAssets: [] as string[] };
+    let unpaid: string[] = [];
+    // 1. loan instalment (from the season after the draw)
+    if (w.loan && w.loan.outstanding > 0 && w.loan.drawnSeason < season) {
+      const due = Math.min(w.loan.outstanding, LOAN.instalment + w.loan.arrears);
+      const pay = Math.min(due, cash());
+      if (pay > 0) this.post(st, [loanRepayJournal(season, pay, this.now())], posted);
+      w.loan = { ...w.loan, outstanding: w.loan.outstanding - pay, repaid: w.loan.repaid + pay, arrears: due - pay };
+      if (w.loan.arrears > 0) unpaid.push('loan instalment');
+      if (w.loan.outstanding === 0) w.loan = null;
+    }
+    // 2. upkeep: assets (with the club's level upkeep), facilities, estates
+    const payAsset = (a: OwnedAsset): boolean => {
+      const t = assetType(a.typeId);
+      if (!t.upkeep) return true;
+      const extra = a.typeId === 'club' ? clubLevel(a.level ?? 1).extraUpkeep : 0;
+      const na = { ...a };
+      let ok = false;
+      if (cash() >= t.upkeep + extra) {
+        this.post(st, [upkeepJournal(t, season, this.now())], posted);
+        if (extra) this.post(st, [{ id: `upkeep:club-level:${season}`, at: this.now(), kind: 'upkeep', memo: `${clubLevel(a.level ?? 1).name}: facility upkeep, season ${season}`, lines: [{ account: 'player:cash', amount: -extra }, { account: 'sink', amount: extra }], season }], posted);
+        na.suspended = false; na.upkeepPaidSeason = season; ok = true;
+      } else na.suspended = true;
+      st.assets.set(a.id, na);
+      out.assets = [...out.assets.filter(x => x.id !== na.id), na];
+      return ok;
+    };
+    for (const a of [...st.assets.values()]) if (!payAsset(a)) unpaid.push(assetType(a.typeId).name);
+    const clubOn = this.clubActive(st);
+    w.facilities = w.facilities.map(f => {
+      const F = facility(f.id)!;
+      if (!clubOn) return { ...f, suspended: true };
+      if (cash() >= F.upkeep) { this.post(st, [upkeepLine(`facility:${f.id}`, F.name, F.upkeep, season, this.now())], posted); return { ...f, suspended: false }; }
+      unpaid.push(F.name);
+      return { ...f, suspended: true };
+    });
+    w.estates = w.estates.map(e => {
+      const E = estate(e.id)!;
+      if (cash() >= E.upkeep) { this.post(st, [upkeepLine(`estate:${e.id}`, E.name, E.upkeep, season, this.now())], posted); return { ...e, suspended: false }; }
+      unpaid.push(E.name);
+      return { ...e, suspended: true };
+    });
+    // 3. administration: exit first (recovered), otherwise entry
+    const nw = this.netWorthOf(st);
+    if (w.admin) {
+      if (w.admin.since < season && nw >= ADMIN.exitNetWorth && !(w.loan?.arrears) && !unpaid.length) {
+        w.episodes = [...w.episodes, { ...w.admin, until: season }].slice(-20);
+        w.admin = null;
+      }
+      return out;
+    }
+    const lowWorth = nw < ADMIN.netWorthFloor;
+    if (!unpaid.length && !lowWorth) return out;
+    const reason = unpaid.length ? `Could not pay: ${unpaid.join(', ')}` : `Net worth ${fmtWhole(nw)} below ${fmtWhole(ADMIN.netWorthFloor)}`;
+    const liquidated: string[] = [];
+    // consequences: liquidate estates and facilities (deposits returned), sell back unpaid tools, end contracts
+    for (const e of w.estates) { const E = estate(e.id)!; this.post(st, [estateSellJournal(E, st.balances.get(estateAccount(e.id)) ?? 0, season, this.now(), 'Liquidated (administration):')], posted); liquidated.push(E.name); }
+    w.estates = [];
+    for (const f of w.facilities) { const F = facility(f.id)!; this.post(st, [facilityCloseJournal(F, st.balances.get(facilityAccount(f.id)) ?? 0, season, this.now(), 'Liquidated (administration):')], posted); liquidated.push(F.name); }
+    w.facilities = [];
+    for (const a of [...st.assets.values()]) {
+      if (a.typeId === 'club' || !a.suspended) continue;
+      this.post(st, [{ ...saleJournal(assetType(a.typeId), season, this.now()), id: `admin-liquidate:${season}:${a.id}`, memo: `Liquidated (administration): ${assetType(a.typeId).name}` }], posted);
+      st.assets.delete(a.id); out.delAssets.push(a.id); out.assets = out.assets.filter(x => x.id !== a.id);
+      liquidated.push(assetType(a.typeId).name);
+    }
+    // the club stays (suspended while its upkeep is unpaid); liquidation proceeds may pay it now
+    for (const a of [...st.assets.values()]) if (a.suspended && !st.journalIds.has(`upkeep:${a.typeId}:${season}`)) payAsset(a);
+    for (const ct of [...st.contracts.values()].filter(c => c.status === 'active')) { const e = { ...ct, status: 'ended' as const, endedSeason: season }; st.contracts.set(ct.id, e); out.contracts.push(e); }
+    w.admin = { since: season, until: null, reason, liquidated, loanTaken: false };
+    w.reputation = Math.max(0, w.reputation - ADMIN.reputationHit);
+    return out;
   }
 
   // ------------------------------------------------------------------ cosmetics (crown-cosmetics-1)
@@ -1433,6 +1917,7 @@ export class FederationService {
       const c = cosmetic(id);
       if (!c) throw new Error('That item could not be found.');
       if (c.price === null) throw new Error('This item is earned through results and cannot be bought.');
+      this.assertNotInAdministration(st, 'buying cosmetics');
       const cs = st.extra.cosmetics ?? emptyCosmetics();
       if (cs.owned.includes(id)) throw new Error('Already owned: this item is already in your collection.');
       if ((st.balances.get('player:cash') ?? 0) < c.price) throw new Error('You do not have enough cash for this item.');
@@ -1473,7 +1958,7 @@ export class FederationService {
     const st = this.state!;
     const cash = st.balances.get('player:cash') ?? 0;
     const owned = [...st.assets.values()];
-    const assetValueSum = owned.filter(a => !a.suspended).reduce((s, a) => s + assetValue(assetType(a.typeId)), 0) + (owned.some(a => a.typeId === 'club' && !a.suspended) ? st.balances.get('asset:club:upgrade') ?? 0 : 0);
+    const assetValueSum = this.bookValue(st);
     const myPositions = [...st.positions.values()].filter(p => p.holder === 'player:cash');
     let open = 0, realized = 0, unrealized = 0, fees = 0;
     for (const p of myPositions) {
@@ -1484,7 +1969,8 @@ export class FederationService {
     }
     const journals = [...st.journalIds];
     void journals;
-    return { cash, assets: assetValueSum, positions: open, netWorth: netWorth(cash, assetValueSum, open), realized, unrealized, fees, peak: st.finance.peak, owned, myPositions };
+    const debt = liabilities(wealthOf(st.extra));
+    return { cash, assets: assetValueSum, positions: open, liabilities: debt, netWorth: netWorth(cash, assetValueSum, open, debt), realized, unrealized, fees, peak: st.finance.peak, owned, myPositions };
   }
 
   /** Player-side ledger history (entries touching player:cash), newest first. */
@@ -1515,9 +2001,25 @@ export class FederationService {
 }
 
 function settleNothing(rec: RoundRecord): void { void rec; }
+const fmtWhole = (micro: number) => `$${Math.round(micro / MICRO).toLocaleString('en')}`;
+/** v0.11: postponement limits (docs/V3_COMPETITION_RULES.md). */
+export const POSTPONE_LIMIT = 2;
+export const POSTPONE_DEADLINE = LEAGUE_ROUNDS;
+/** Move a postponed fixture (if it is one) into the open round so it is rated and counted in this round. */
+function takePostponed(st: FedState, rec: RoundRecord, fixtureId: string): Fixture | undefined {
+  const list = st.world.player.postponed ?? [];
+  const f = list.find(x => x.id === fixtureId);
+  if (!f) return undefined;
+  const moved: Fixture = { ...f, round: rec.round };
+  st.world = { ...st.world, player: { ...st.world.player, postponed: list.filter(x => x.id !== fixtureId) } };
+  rec.fixtures.push(moved);
+  return moved;
+}
 function ratingOfC(st: FedState, id: string): number { return st.competitors.get(id)?.rating ?? 0; }
 export function eventName(event: string): string {
   if (event.startsWith('league:')) { const [, r, d] = event.split(':'); return `League · Region ${+r + 1} · Division ${d}`; }
+  if (isZonalEvent(event)) return `${zoneShort(+event.slice(6))} Zonal Championship`;
+  if (isCupEvent(event)) return `${regionName(+event.slice(4))} Regional Cup`;
   return { open: 'Federation Open', challenger: 'Challenger Open', champ: 'Crown Championship', club: 'Club Weekend' }[event] ?? event;
 }
 export { CHAMPIONSHIP_ROUNDS, ROUNDS_PER_SEASON };

@@ -136,12 +136,20 @@ division guideline, and repeat-opponent rewards capped per season.
 
 ## 4. "Circuit Grades" (only if wanted — new system, v0.9 or later)
 
+**v0.11: implemented as a rank tied to division and checkpoint standing — see docs/FEUDAL_RANKS.md** (the text
+below is the earlier v0.9 note, kept for history).
+
 A 16-step career ladder would be a new progression system. To avoid a redundant ladder it should measure
 something divisions and titles do not — e.g. **career milestones** (games completed, events entered, norms
 attempted) — two per division band, purely additive, earned once and never revoked. It needs its own design
 review; it is not implemented and no existing data refers to it.
 
 ## 5. Sub-800 competitors (v0.9 engine work)
+
+**Status (v0.10): done** — beginner levels L0a–L0d (664 / 446 / 302 / 71, measured), crown-population-2 for new
+federations and an additive lower-tier migration for existing ones; see docs/RATING_SPECTRUM.md. Legacy worlds are
+not given new competitor records at season start (that would change circuit sizes); beginners enter through the
+normal turnover slots instead. The floor is L0d (~70), not a rating-1 engine.
 
 Requires genuinely weaker play, calibrated by games (never by assigning low numbers to strong engines):
 1. Beginner profiles: L1 search plus calibrated error models — move choice by softmax over shallow scores with a

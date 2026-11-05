@@ -1,0 +1,27 @@
+[2026-11-04T21:48:15.317Z] v0.4.0 build served from /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/v040/dist
+[2026-11-04T21:48:20.923Z] v0.4.0 career: 1 game(s) (rated Victory), 1 rating event(s), 1 report(s) [crown-search-1+crown-eval-3], 1 Academy attempt(s), 44 journals
+[2026-11-04T21:48:22.272Z] v0.5.0 build served on the same origin
+[2026-11-04T21:48:22.668Z] PASS: 25. v0.4.0 save migrated without loss: 1 games, 1 rating events, 1 reports, 1 attempts, all 44 journals and every balance byte-identical; historical report kept with engine crown-search-1+crown-eval-3; engine commitment recorded ({"season":1,"round":1,"build":"crown-search-2+crown-eval-4","at":"2026-11-04T21:48:22.161Z","liveGamesInProgress":0})
+[2026-11-04T21:48:24.066Z] PASS: 6a. Historical report labelled and kept; re-analysis with the canonical engine produced a second report: [{"id":"report:g-20261104214816-09ldtd:90d0b959d54d:crown-search-1+crown-eval-3:std-d7:crown-grade-v1-experimental","build":"crown-search-1+crown-eval-3","grading":"crown-grade-v1-experimental","acc":"crown-accuracy-v1"},{"id":"report:g-20261104214816-09ldtd:90d0b959d54d:crown-search-2+crown-eval-4:std-d7:crown-grade-v3-experimental","build":"crown-search-2+crown-eval-4","grading":"crown-grade-v3-experimental","acc":"crown-accuracy-v2"}]
+[2026-11-04T21:49:59.692Z] PASS: 1. Complete legal crown-la6-v1 match (52 plies, 0-1, checkmate); every move re-verified by the rules engine
+[2026-11-04T21:49:59.693Z] PASS: 2. Sovereign Max (Defeat): game records {"rules":"crown-la6-v1@1.0.0","backend":"crown-ts","build":"crown-search-2+crown-eval-4","intel":"crown-intel-1","ttBits":20,"maxTimeMs":5000,"nodes":null,"selection":"best"}; all 26 engine moves carry build, score and stop reason (avg depth 14.7, max 5001 ms)
+[2026-11-04T21:50:00.099Z] PASS: 26. Background analysis cancelled when the match started (worker terminated in 0 ms, after 504 ms); its job was re-queued (queued), nothing partial was saved
+[2026-11-04T21:50:00.326Z] PASS: 7. Assistant returned 3 candidate moves from the canonical engine (assist worker); the casual game is now permanently marked assisted (1 use)
+[2026-11-04T21:50:03.942Z] PASS: 8. Rated game: assistant locked (no assistant panel, no engine help available)
+[2026-11-04T21:50:07.893Z] PASS: 4. Rating updated exactly once: 1512 → 1522 (one Glicko-2 event, ledger state matches the event)
+[2026-11-04T21:50:08.378Z] PASS: 5. Permanent history: 2 rating events listed in the Passport after reload
+[2026-11-04T21:50:10.619Z] PASS: 6. Move-by-move analysis: 39/39 plies graded by crown-search-2+crown-eval-4 (crown-grade-v3-experimental, crown-accuracy-v2); accuracies bounded 0–100
+[2026-11-04T21:50:12.631Z] PASS: 9. Puzzle pz-3rc51e served from the active library, verified by crown-puzzle-verify-2 (gap 0.282); solved
+[2026-11-04T21:50:14.258Z] PASS: 10. Lab uses one methodology: "crown-grade-v3-experimental / crown-search-2+crown-eval-4 / std-d7" (other versions excluded and counted, never mixed)
+[2026-11-04T21:50:14.611Z] PASS: 21. Bought and equipped the Gold frame (cosmetic, ledger conserved); earned-only items stay locked
+[2026-11-04T21:50:14.678Z] PASS: 11. Passport shows rating 1522, division 8 and federation title none as six separate records
+[2026-11-04T21:50:14.679Z] PASS: 22. Career Passport accurate: finances, eligibility, trophies, rivalries, forecasting and achievements from recorded state; equipped frame visible (rgb(226, 184, 75))
+[2026-11-04T21:50:17.629Z] PASS: 24. Exported backup (1185 KB, checksummed) imported into an empty profile: 4 games, 2 rating events, 5 reports and the federation ledger identical
+[2026-11-04T21:50:18.427Z] restart diff: {}
+[2026-11-04T21:50:18.440Z] PASS: 23. Browser restarted: games, reports and the whole federation state identical; 24 scheduled background game(s) resumed with every earlier move kept
+[2026-11-04T21:50:18.961Z] PASS: 27. Offline: app shell from the service worker, engine move computed in a Web Worker, career loaded from IndexedDB
+[2026-11-04T21:50:27.014Z]    a11y/responsive: [{"h":"#/play","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/profile","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/finance","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/settings","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/academy","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/world","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]},{"h":"#/heraldry","overflow":false,"unnamed":0,"imgsNoAlt":0,"examples":[]}]
+[2026-11-04T21:50:27.014Z] PASS: 28. Phone width 390 px: no horizontal overflow on 7 screens, every visible control has an accessible name, every SVG image is labelled, keyboard focus moves (BUTTON)
+[2026-11-04T21:50:29.251Z] PASS: rollback. v0.4.0 build reopened the v0.5.0 career: 5 games, federation round 1, ledger conserved, no errors
+[2026-11-04T21:50:30.100Z] console/page errors: 0
+[2026-11-04T21:50:30.101Z] v0.5 JOURNEY: 20/20 steps passed

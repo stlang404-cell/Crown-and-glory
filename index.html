@@ -9,7 +9,7 @@
       (function () {
         var p = {}, d = document.documentElement;
         try { p = JSON.parse(localStorage.getItem('crown.display.v1') || '{}') || {}; } catch (e) { p = {}; }
-        var themes = { obsidian: '#111318', midnight: '#10151e', ivory: '#f2efe8' };
+        var themes = { obsidian: '#111318', midnight: '#10151e', emerald: '#0d1512', ivory: '#f2efe8' };
         var t = themes[p.theme] ? p.theme : 'obsidian';
         d.setAttribute('data-theme', t);
         d.setAttribute('data-board', /^(theme|walnut|slate|green|mono|marble|crimson)$/.test(p.board) ? p.board : 'theme');
@@ -29,7 +29,8 @@
     <title>Crown & Calculation</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app has opened the saved career (replaced by the first screen; v1.0 package R). -->
+    <div id="root"><div data-testid="boot-splash" role="status" style="min-height:100vh;display:flex;align-items:center;justify-content:center;font:15px/1.4 system-ui,-apple-system,sans-serif;opacity:.7;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)">Crown &amp; Calculation · opening your saved career…</div></div>
     <noscript>Crown &amp; Calculation needs JavaScript.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

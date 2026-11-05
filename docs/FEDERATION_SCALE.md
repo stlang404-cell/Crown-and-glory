@@ -1,8 +1,184 @@
-# Federation scale and the live match scheduler (v0.9)
+# Federation scale and the live match scheduler (v0.9, v0.10)
 
 Two questions: how large can the Federation be, and how many AI-vs-AI games can play at the same time while you
 watch. Everything below was measured in this repository. Where a number depends on the machine, the conditions are
-given.
+given. **§0 is the v0.10 work (10,240 competitors); §1–§4 are the v0.9 record, kept as it was measured, with the
+v0.10 changes noted.**
+
+## 0. v0.10: the Grand federation (10,240 competitors)
+
+**Decision.** New federations are founded as **crown-topology-3: 80 regions × 8 divisions × 16 = 10,240 persistent
+AI competitors**, on desktop and on phones. The founding screen also offers Standard (2,048, crown-topology-1) and
+Large (4,096, crown-topology-2). Every existing federation keeps the size it was founded with: a v0.9 2,048 world
+loads, plays and is saved as before (§0.4). 20,480 meets the desktop budget but not the phone budget (§0.3), so
+10,240 is the largest size shipped.
+
+**Conditions.** Same 4-core VM as v0.9, shared with other agents: **load average 6–12 on 4 cores during every run
+below** (worse than the 5–9 of v0.9). Old and new code were run **interleaved** (old, new, old, new …) with the load
+recorded per run. "Old" = the v0.9.0 code at `5c73a73`; "new" = this branch. Phones were not available: the phone
+figures are **Chromium with DevTools CPU throttling 4×** (the DevTools "mid-tier mobile" preset) as a proxy. It slows
+JavaScript and structured cloning in the page; IndexedDB's backend runs in the browser process and is not throttled,
+and WebKit (iPhone) is not Chromium. Treat the phone column as an estimate that is measured, not as an iPhone result.
+
+### 0.1 Root causes (profiles)
+
+`node --cpu-prof --import tsx tools/sim/scale_probe.mts 80 21` (10,240, one season + 2 rounds), and the real app in
+Chromium with the time inside IndexedDB commits recorded (`tools/sim/browser_scale.mjs`, new `commitMs`):
+
+| Cost (old code, 10,240) | Share / time | Why it scaled badly |
+|---|---|---|
+| IndexedDB commit of the round advance (Chromium) | **680 ms of an 866 ms round** | every competitor written as its own record each round (10,240 puts), and at season end every competitor's ledger account (another ~10,000 puts). Chromium measured: 10,240 records put one by one 600–840 ms; the same data in 20 records of 512 about 55 ms. The number of records, not the bytes, is the cost. |
+| `qualificationModel` (qualification market) | 35% of the Node profile | simulated all 80 Crown Division leagues 150 times per round, recomputing the Davidson W/D/L (`10**x`) for every simulated game, allocating a game object per game, and building full standings for every league tied at the top. |
+| `structuredClone` of competitors (`clone`) | 17% | deep copy of 10,240 records per round advance. |
+| `standings` / `leagueTable` / `leagueOrder` | 12% + 5% + 3% | each league table filtered the whole season's games (≈ 77,000) once per circuit: 640 × 77,000 at league end and season end. |
+| `playedIn` (market models) | 3% | one scan of every round per Crown Division league. |
+
+### 0.2 Changes
+
+Behaviour-preserving (same results):
+
+* **Market models** (`src/exchange/families.ts`): the W and W+D thresholds of each remaining pairing are computed once
+  (they depend only on the two public ratings), so a simulated game is one PRNG draw and two comparisons with
+  exactly the same outcome. The qualification model now asks "did the target win its league, and do fewer than 8
+  other winners rank above it" (the winners' order is a strict total order: points, rating, id), and resolves a
+  league's full tiebreak order only when it can matter (the target's own league tied at the top, or another winner on
+  exactly the target's points). The PRNG stream is consumed in the same order. `leagueModel` uses the same prepared
+  form.
+* **One pass instead of one per circuit**: `gamesByEvent` index for league tables at league end, championship build
+  and season end (`src/federation/world.ts`), and for the market models (`src/app/markets.ts`).
+* **`copyData`** (`src/federation/copy.ts`) instead of `structuredClone` for plain records (same keys, same order,
+  `undefined` kept; refuses non-plain data).
+
+Storage format (lossless, no IndexedDB schema change, `src/federation/persist.ts`, docs/SAVE_FORMAT.md):
+
+* **Competitors in chunk records** `~c:<n>` of 512 (by competitor index) in the `competitors` store; only chunks with a
+  changed record are rewritten (retired-only chunks stop being written).
+* **Competitor ledger accounts** `comp:<id>` in chunk records `~a:<n>` in the `accounts` store; all other accounts
+  stay individual records. The backup ledger check reads the chunks.
+* **Packed tier-3 results**: a round record's `abstract` (≈ 5,000 4-tuples per round) is stored as five strings
+  (`packed = { v: 1, n, events, ev, w, b, r }`). Stored rounds shrink by ~46%.
+* Older saves: individual records are read as they are; each is replaced by its chunk, and deleted, in the
+  transaction that first writes that chunk.
+
+Intended changes (larger worlds only; every 16-region world is unchanged, checked by hash):
+
+* crown-topology-3; region names 33–80 (original); regional arms for regions 17–80 (unused division/charge pairs,
+  double border, unique silhouettes, tested); 128 more AI clubs (unique names ≤ 32 characters, arms and mottos) and
+  `clubsOf(regions)` so screens and club finances use a world's own clubs; `clubOf` maps regions 17–80 to their own
+  clubs (v0.9 reused `r % 16`, only ever in scale experiments); the season-market subjects use `% regions` instead of
+  `% 16`.
+* UI: founding size selector (default Grand); Discover Competitors pages of 100 (Prev/Next) instead of a top-200 cap;
+  the clubs table groups members in one pass; the new **Federation Population** screen (§0.5).
+
+Not changed: competition rules (8 Crown Division winners + 8 Federation Open qualifiers for the Championship; Swiss
+fields of 32; 16 per circuit; promotion/relegation), the scheduler's caps, results.
+
+**Behaviour proof.** `tools/sim/determinism_check.mts` now also prints a `canonical` hash over the stores as the app
+reads them (chunks expanded, rounds unpacked) with sorted keys:
+
+| Check | Old (`5c73a73`) | New | |
+|---|---|---|---|
+| 16 regions, 40 rounds (2 seasons + 2), seed 4242 | `0c985165…2dbaa5` | `0c985165…2dbaa5` (branch head) | identical |
+| 80 regions, 21 rounds | `83510f4e…db92f11b` | `83510f4e…db92f11b` (performance + storage commit `cb3c3b1`) | identical |
+| 80 regions, 21 rounds, branch head | `83510f4e…` | `ce3dbe6f…` | differs by the intended club/market-subject changes for regions ≥ 17 above |
+
+The 16-region raw `sha256` changes (`e106b030…` → `6e1650a7…`) only because the stored format changed; 4.27 MB →
+3.71 MB stored. Tests (`tests/federationPersist.test.ts`): codecs round-trip exactly and reject damage; a world
+reloaded after every round across a season end equals one never reloaded; a v0.9-format save (individual records)
+loads, continues identically through a season end and ends fully chunked; backups carry chunks and a tampered chunk
+balance is rejected; the qualification and league models equal the v0.9 reference implementations on 70 random
+worlds with heavy rating and points ties; `copyData` equals `structuredClone`.
+
+### 0.3 Results and budgets
+
+**Budgets** (set before the final runs). Desktop (Chromium 1×): round advance median ≤ 500 ms, slowest round (season
+end) ≤ 1,500 ms, cold load ≤ 1,000 ms, competitor search ≤ 100 ms. Phone proxy (Chromium 4× CPU): median ≤ 1,200 ms,
+slowest ≤ 2,500 ms, cold load ≤ 2,000 ms. Storage ≤ 10 MB per season at the default size.
+
+**Real app, Chromium, real IndexedDB, one season (19 rounds), featured games stubbed** (`node tools/sim/browser_scale.mjs
+<dist> 19 0 0 <port> <regions> <throttle>`; interleaved; slowest round = season end):
+
+| Size | CPU | Load | Old median / slowest / commit median | New median / slowest / commit median | New cold load | Budget |
+|---|---|---|---|---|---|---|
+| 2,048 | 1× | 8.3–8.5 | 342 / 568 / 194 ms | **126 / 319 / 47 ms** | 30 ms | pass |
+| 10,240 | 1× | 8.5–10.4 | 1,414 / 2,181 / 932 ms | **241 / 541 / 90 ms** | 152 ms | **pass** (old: fail) |
+| 2,048 | 4× | 10.0–10.9 | 846 / 2,210 / 348 ms | **328 / 885 / 100 ms** | 149 ms | pass |
+| 10,240 | 4× | 6.9–10.6 | 2,579 / 5,545 / 1,011 ms | **799 / 1,624 / 254 ms** | 528 ms | **pass** (old: fail) |
+| 20,480 | 1× | 10.3 | – | 513 / 912 / 178 ms | 492 ms | median 3% over, slowest pass |
+| 20,480 | 4× | 10.2 | – | 1,566 / 3,292 / 560 ms | 1,436 ms | **fail** |
+
+Earlier single runs on the new code at 10,240 (load 3.4–4.7): 1× median 189–197 ms, season end 452 ms, commit 61–71
+ms; 4× over **two seasons** (38 rounds, load 4.9–6.3): median 993 ms, slowest 1,776 ms (season 2's end), commit
+median 377 ms — commits grow slowly with the records' season history.
+
+**Node + fake-indexeddb, one season** (`tools/sim/scale_probe.mts`, 2 interleaved runs each, load 7–12; heap after GC
+includes fake-indexeddb's copy of the database):
+
+| Size | Old median / slowest | New median / slowest | Old → new season | Stored after 1 season (old → new) | Heap (old → new) |
+|---|---|---|---|---|---|
+| 2,048 | 140–277 / 340–877 ms | 66–90 / 219–409 ms | 3.0–6.2 s → 1.6–2.6 s | 2.46 → 2.20 MB | 31 → 24 MB |
+| 4,096 | 259–525 / 510–1,505 ms | 102–193 / 241–464 ms | 5.1–11.0 s → 2.2–4.4 s | 4.50 → 3.98 MB | 48 → 35 MB |
+| 10,240 | 602–954 / 1,383–2,723 ms | 260–410 / 583–1,286 ms | 12.1–21.2 s → 5.7–11.3 s | 10.62 → 9.33 MB | 100 → 65 MB |
+| 20,480 | 1,447–1,541 / 3,331–4,777 ms | 371–522 / 836–1,224 ms | 33.9–35.1 s → 8.1–12.1 s | 21.08 → 18.48 MB | 188 → 118 MB |
+
+**Long run, 10,240, five seasons (95 rounds)**, 2 interleaved runs, load 6.3–11.8: old median 934–1,011 ms, slowest
+2,224–2,909 ms; new **509–524 ms, slowest 1,090–1,412 ms**. Competitors on record 12,356 (retired ones stay).
+Stored: old 33.4 MB, new **27.3 MB** (rounds 13.0 → 7.0 MB, accounts 0.48 → 0.35 MB; competitors 14.6 MB in both) —
+about **5.5 MB per season**, within the 10 MB budget. Heap 316 → 162 MB (both including fake-indexeddb's copy).
+
+**UI at 10,240** (`e2e/population.mjs` through the real UI, desktop UA): founding the Grand federation 504–626 ms; a
+round with two featured engine games: engine games 4.2 s (unchanged from v0.9: up to three featured games are played
+in full before a round closes), world simulation and commit 564 ms (live scheduler running, load ~10); Population
+screen and Discover Competitors at 1366 px and 390 px without overflow; name search to rendered rows 74–125 ms
+including Playwright round trips. In Node (`tests/population.test.ts`): `filterCompetitors` 2.3 ms per search,
+`populationStats` 14 ms at 10,240.
+
+**Pass/fail.** 10,240 passes every desktop and phone-proxy budget (old code failed both). 20,480 passes the desktop
+slowest-round budget, misses the desktop median budget by 3% under load and fails the phone proxy, so it is not
+offered. **Largest verified stable size: 10,240** (five seasons, no errors, storage and heap bounded as above).
+
+### 0.4 Existing saves
+
+* A v0.9 world (with or without the `topology` field) keeps its size; its records are read as stored. Its first
+  round advance writes chunks and deletes the individual records it replaces in the same transaction; untouched
+  competitor accounts stay individual until they change. Tested in `tests/federationPersist.test.ts` and the v0.9
+  `tests/federationScale.test.ts` save test.
+* Downgrade: a v0.9 app cannot read the chunk records (it would see them as malformed competitors). The app updates
+  forward only (docs/IPHONE_PAGES.md); export a backup before installing an older build.
+
+### 0.5 Population analytics (Federation → Population, `#/population`)
+
+From saved data only (public Glicko-2 ratings and each competitor's stored season history; never hidden strengths):
+active / retired / reserve counts; counts and shares per band 0–399, 400–799, …, 3200–3999, 4000+; a distribution
+chart; mean, median and range; your percentile among active competitors (from your rated rapid pool; ties count half);
+top 10; the strongest competitor of each division; and mean / median / band counts at each completed season's end
+plus now. One pass and one sort (`src/app/population.ts`): 14 ms at 10,240 in Node, memoised per committed state.
+
+### 0.6 Mobile performance mode
+
+Phones and tablets (coarse pointer or mobile user agent, `detectDevice`) keep the v0.9 reduced live load: one engine
+worker, at most 6 scheduled games at once, 24 per round, catch-up K = 2. The live scheduler's caps are unchanged and
+the app never claims that matches play while it is closed: nothing computes while closed or hidden, and the reopen
+catch-up is bounded and labelled (§2). The founding screen tells phone users that Standard has the quickest rounds.
+
+### 0.7 Not done
+
+* No physical iPhone or Android measurement (only Chromium 4× throttling); WebKit's IndexedDB may behave differently.
+* Retired competitors keep full records (≈ +420 per season at 10,240, 12,356 on record after five seasons): their
+  chunks are no longer rewritten, but they are not compacted, and they are kept in memory.
+* Old seasons' rounds stay in memory after load (packed only on disk); the heap grows with seasons (§0.3).
+* Competition balance at 80 regions is unchanged by rule: 8 of 80 Crown Division winners qualify for the
+  Championship by points, so qualifying through the league is much harder than in a 16-region world. **v0.11:** crown-competition-2
+  (docs/V3_COMPETITION_RULES.md) adds zone places (8 zones of 10 regions at 10,240: Zonal Championships in rounds
+  16–19 qualify for next season's Championship) and Regional Cups whose best winners are invited to the Open;
+  measured qualification rates by player strength are in that document. **v1.0:** crown-competition-3 (the Crown Path) adds per-zone Open invitations, Crown Path places and a rating-ordered 2nd/3rd-place zonal pool at 10,240; re-measured in the same document. The economy's
+  issuance is per circuit (5× the 16-region total, almost all paid to AI competitors and expensed at season end); the
+  economy simulator (`tools/sim/economy.ts`) was not re-run at 80 regions.
+* The featured engine games of a round (up to three, played in full before the round closes) are engine time, not
+  world-size time, and were not changed.
+* 20,480 is not offered (phone proxy budget fails; regions beyond 80 have no names, arms or clubs).
+
+## v0.9 record
 
 **Machine and conditions.** A 4-core Linux cloud VM, Node 22, Chromium (Playwright build). Other agents were running
 benchmarks on the same VM the whole time: the load average was **5–9 on 4 cores**. Wall-clock times are therefore
@@ -107,7 +283,7 @@ every round. Its cost grows linearly with the number of regions. It was the larg
   * a 4,096 world persists its topology, reloads, and keeps 256 circuits and 32 regions across a season rollover;
   * a player can join any region of the larger topology.
 
-**Not switched on for new federations:** `NEW_FEDERATION_TOPOLOGY` is still crown-topology-1. Speed is fine at
+**Not switched on for new federations in v0.9** (v0.10: new federations are crown-topology-3 and the content and storage blockers below are resolved, see §0; the economy simulator and Championship quotas are still as listed): Speed is fine at
 4,096. What is not yet safe is the content and the economy around it:
 
 1. **AI clubs.** There are 32 clubs, 2 per region, with arms unique by construction (`src/heraldry/clubs.ts`).
@@ -245,7 +421,7 @@ market on it can trade (scheduled games have none).
   * `leagueOrder` matches the reference implementation;
   * frozen competitor records prove the shared-record optimisation is safe.
 
-## 4. What remains
+## 4. What remains (v0.9 list; v0.10 status in §0.7)
 
 * Switching new federations to crown-topology-2 (blockers and plan in §1.4).
 * Lightweight reserve and retired records, and compaction of old rounds' abstract results (storage growth).

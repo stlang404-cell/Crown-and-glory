@@ -5,6 +5,7 @@ import { COLLECTIONS, EXCHANGE_TITLES, GRADING_VALIDATED, RARITIES, RARITY_LABEL
 import type { VaultService } from '../vault/service';
 import type { UnlockRecord } from '../vault/store';
 import type { EmblemSpec } from '../heraldry/spec';
+import { FAMILIES, TIERS, TIER_LABEL, type FamilyId, type Tier } from '../vault/families';
 
 const noop = () => () => {};
 /** Re-render on Vault changes only (not on every app notification). */
@@ -34,6 +35,36 @@ const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en', { year: 
 const STATE_LABEL: Record<ItemState, string> = { earned: 'Earned', locked: 'Locked', awaiting: 'Awaiting Validated Grading' };
 
 function RarityChip({ r }: { r: Rarity }) { return <span className={`chip rarity rarity-${r}`}>{RARITY_LABEL[r]}</span>; }
+function TierChip({ t }: { t: Tier }) { return <span className={`chip vault-tier tier-${t}`} data-testid="vault-tier">{TIER_LABEL[t]}</span>; }
+const ratio = (it: Item) => { const p = it.result?.progress; return p && p.need > 0 ? p.have / p.need : 0; };
+
+interface FamilyRow { id: FamilyId; name: string; blurb: string; items: Item[]; earned: number; earnable: number; tiers: Record<Tier, { earned: number; total: number }>; next: Item | undefined }
+function familyRows(items: Item[]): FamilyRow[] {
+  return FAMILIES.map(f => {
+    const its = items.filter(it => it.def.family === f.id);
+    const tiers = Object.fromEntries(TIERS.map(t => [t, { earned: 0, total: 0 }])) as FamilyRow['tiers'];
+    for (const it of its) if (earnable(it.def)) { tiers[it.def.tier].total++; if (it.state === 'earned') tiers[it.def.tier].earned++; }
+    const next = its.filter(it => it.state === 'locked' && !it.masked).sort((a, b) => ratio(b) - ratio(a) || RARITIES.indexOf(a.def.rarity) - RARITIES.indexOf(b.def.rarity))[0];
+    return { id: f.id, name: f.name, blurb: f.blurb, items: its, earned: its.filter(it => it.state === 'earned').length, earnable: its.filter(it => earnable(it.def)).length, tiers, next };
+  }).filter(r => r.items.length > 0);
+}
+
+/** Collection completion: one card per family with its tier ladder and next goal. */
+function Families({ rows, onPick }: { rows: FamilyRow[]; onPick: (f: FamilyId) => void }) {
+  return (
+    <div className="vault-families">
+      {rows.map(r => (
+        <button key={r.id} className={`vault-family${r.earned === r.earnable && r.earnable > 0 ? ' complete' : ''}`} onClick={() => onPick(r.id)} data-testid="vault-family" data-family={r.id}
+          aria-label={`${r.name}: ${r.earned} of ${r.earnable} earned. Show this family.`}>
+          <span className="vault-family-head"><strong>{r.name}</strong><span className="small mono" data-testid="vault-family-count">{r.earned}/{r.earnable}</span></span>
+          <Bar have={r.earned} need={r.earnable} label={`${r.name} completion`} />
+          <span className="vault-tiers">{TIERS.filter(t => r.tiers[t].total > 0).map(t => <span key={t} className={`vault-tier-pip tier-${t}${r.tiers[t].earned === r.tiers[t].total ? ' full' : ''}`} title={`${TIER_LABEL[t]}: ${r.tiers[t].earned} of ${r.tiers[t].total}`}>{TIER_LABEL[t]} {r.tiers[t].earned}/{r.tiers[t].total}</span>)}</span>
+          <span className="small muted vault-family-next">{r.next ? <>Next: {r.next.name}{r.next.result?.progress ? ` (${r.next.result.progress.have.toLocaleString('en')}/${r.next.result.progress.need.toLocaleString('en')})` : ''}</> : r.earned === r.earnable ? 'Family complete' : r.blurb}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 function Bar({ have, need, label }: { have: number; need: number; label: string }) {
   const pct = need > 0 ? Math.round((100 * Math.min(have, need)) / need) : 0;
   return <div className="vault-bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={need} aria-valuenow={Math.min(have, need)}><span style={{ width: `${pct}%` }} /></div>;
@@ -46,7 +77,7 @@ function Card({ it, onOpen }: { it: Item; onOpen: () => void }) {
       <Emblem spec={it.art} size="md" title={`${it.name}${it.state === 'earned' ? '' : ' (not earned)'}`} />
       <span className="vault-card-text">
         <strong className="vault-name">{it.name}</strong>
-        <span className="row" style={{ gap: 6 }}><RarityChip r={it.def.rarity} />{it.state === 'awaiting' && <span className="chip info">Awaiting Grading</span>}</span>
+        <span className="row" style={{ gap: 6 }}><TierChip t={it.def.tier} /><RarityChip r={it.def.rarity} />{it.state === 'awaiting' && <span className="chip info">Awaiting Grading (experimental)</span>}</span>
         <span className="small muted vault-rule">{it.rule}</span>
         {p && <><Bar have={p.have} need={p.need} label={`${it.name} progress`} /><span className="small muted mono">{p.have.toLocaleString('en')} / {p.need.toLocaleString('en')}</span></>}
         {it.unlock && <span className="small vault-date">Earned {fmtDate(it.unlock.earnedAt)}</span>}
@@ -67,7 +98,7 @@ function Detail({ it, onClose }: { it: Item; onClose: () => void }) {
       <div className="result-card stack vault-detail" role="dialog" aria-modal="true" aria-label={it.name} onClick={e => e.stopPropagation()}>
         <div className={`vault-detail-art ${it.state}`}><Emblem spec={it.art} size="lg" title={it.name} /></div>
         <h2 style={{ margin: 0 }}>{it.name}</h2>
-        <div className="row" style={{ justifyContent: 'center', gap: 6 }}><RarityChip r={it.def.rarity} /><span className="chip">{it.def.collection}</span><span className={`chip ${it.state === 'earned' ? 'pos' : it.state === 'awaiting' ? 'info' : ''}`}>{STATE_LABEL[it.state]}</span></div>
+        <div className="row" style={{ justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}><TierChip t={it.def.tier} /><RarityChip r={it.def.rarity} /><span className="chip">{FAMILIES.find(f => f.id === it.def.family)?.name ?? it.def.collection}</span><span className={`chip ${it.state === 'earned' ? 'pos' : it.state === 'awaiting' ? 'info' : ''}`}>{STATE_LABEL[it.state]}</span></div>
         {!it.masked && <p className="small" style={{ margin: 0 }}>{it.def.description}</p>}
         <p className="small muted" style={{ margin: 0 }}><strong>Rule:</strong> {it.rule}</p>
         {it.state === 'awaiting' && <p className="small muted" style={{ margin: 0 }}>Move grading is still being validated, so this cannot be earned yet. It unlocks for everyone once grading is validated.</p>}
@@ -82,8 +113,10 @@ function Detail({ it, onClose }: { it: Item; onClose: () => void }) {
 
 export function VaultScreen() {
   const v = useVault();
+  const { go } = useApp();
   const [collection, setCollection] = useState<Collection | 'all'>('all');
   const [rarity, setRarity] = useState<Rarity | 'all'>('all');
+  const [family, setFamily] = useState<FamilyId | 'all'>('all');
   const [state, setState] = useState<ItemState | 'all'>('all');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
@@ -91,9 +124,10 @@ export function VaultScreen() {
   const items = useMemo(() => (v ? VAULT.map(d => itemOf(d, v)) : []), [v, version]);
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return items.filter(it => (collection === 'all' || it.def.collection === collection) && (rarity === 'all' || it.def.rarity === rarity) && (state === 'all' || it.state === state) &&
+    return items.filter(it => (collection === 'all' || it.def.collection === collection) && (family === 'all' || it.def.family === family) && (rarity === 'all' || it.def.rarity === rarity) && (state === 'all' || it.state === state) &&
       (!s || `${it.name} ${it.rule} ${it.def.collection} ${it.masked ? '' : it.def.description}`.toLowerCase().includes(s)));
-  }, [items, collection, rarity, state, q]);
+  }, [items, collection, family, rarity, state, q]);
+  const rows = useMemo(() => familyRows(items), [items]);
   // seeing the Vault counts as seeing its new unlocks: no notice for them afterwards
   const pendingIds = v?.pending.map(u => u.id).join(',') ?? '';
   useEffect(() => { if (v && pendingIds) void v.acknowledge(pendingIds.split(',')); }, [v, pendingIds]);
@@ -108,6 +142,9 @@ export function VaultScreen() {
   const recent = [...earned].sort((a, b) => b.unlock!.at.localeCompare(a.unlock!.at) || b.unlock!.earnedAt.localeCompare(a.unlock!.earnedAt)).slice(0, 6);
   const showcase = items.filter(it => it.def.rarity === 'legendary' || it.def.rarity === 'mythic').sort((a, b) => Number(b.state === 'earned') - Number(a.state === 'earned') || RARITIES.indexOf(b.def.rarity) - RARITIES.indexOf(a.def.rarity));
   const current = open ? items.find(it => it.def.id === open) : undefined;
+  const next = items.filter(it => it.state === 'locked' && !it.masked && ratio(it) > 0 && ratio(it) < 1).sort((a, b) => ratio(b) - ratio(a) || RARITIES.indexOf(a.def.rarity) - RARITIES.indexOf(b.def.rarity)).slice(0, 6);
+  const byRarity = RARITIES.map(r => ({ r, total: earnableItems.filter(it => it.def.rarity === r).length, earned: earned.filter(it => it.def.rarity === r).length }));
+  const pickFamily = (f: FamilyId) => { setFamily(f); setCollection('all'); requestAnimationFrame(() => document.querySelector('[data-testid="vault-collection"]')?.scrollIntoView({ block: 'start' })); };
   return (
     <div data-testid="vault">
       <h1>The Sovereign Vault</h1>
@@ -119,6 +156,20 @@ export function VaultScreen() {
           <div className="stat"><span className="k">Exchange Title</span><span className="v" style={{ fontSize: '1.15rem' }} data-testid="vault-exchange-title">{xt?.name ?? 'None Yet'}</span><span className="small muted">Forecast skill and realized profit, never volume</span></div>
           <div className="stat"><span className="k">Awaiting Grading</span><span className="v">{awaiting}</span><span className="small muted">{GRADING_VALIDATED ? 'Grading validated' : 'Brilliance collectibles open once move grading is validated'}</span></div>
         </div>
+      </section>
+
+      <section className="panel" data-testid="vault-families">
+        <div className="panel-title"><h2>Collection Progress</h2><span className="small muted">{rows.length} families · Bronze, Silver, Gold and Sovereign tiers</span></div>
+        <Families rows={rows} onPick={pickFamily} />
+        <div className="vault-rarity" data-testid="vault-rarity" aria-label="Earned by rarity">
+          {byRarity.map(x => <span key={x.r} className="vault-rarity-cell"><RarityChip r={x.r} /><span className="small mono">{x.earned}/{x.total}</span></span>)}
+        </div>
+      </section>
+
+      <section className="panel" data-testid="vault-next">
+        <div className="panel-title"><h2>Next Goals</h2><span className="small muted">Closest to unlocking</span></div>
+        {next.length === 0 ? <p className="small muted" style={{ margin: 0 }} data-testid="vault-next-empty">No collectible is under way yet. Play rated games, study the Grimoire or forecast a market to start one. <button className="btn small" onClick={() => go({ name: 'play' })}>Play</button> <button className="btn small ghost" onClick={() => go({ name: 'grimoire' })}>Grimoire</button> <button className="btn small ghost" onClick={() => go({ name: 'exchange' })}>Exchange</button></p>
+          : <div className="vault-strip">{next.map(it => <button key={it.def.id} className="vault-mini locked" onClick={() => setOpen(it.def.id)} data-testid="vault-next-item" data-id={it.def.id}><Emblem spec={it.art} size="md" title={it.name} /><span className="small"><strong>{it.name}</strong><br /><span className="muted mono">{it.result!.progress!.have.toLocaleString('en')} / {it.result!.progress!.need.toLocaleString('en')}</span></span></button>)}</div>}
       </section>
 
       <section className="panel" data-testid="vault-recent">
@@ -137,6 +188,10 @@ export function VaultScreen() {
           <select aria-label="Collection" value={collection} onChange={e => setCollection(e.target.value as Collection | 'all')} data-testid="vault-filter-collection">
             <option value="all">All Collections</option>
             {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select aria-label="Family" value={family} onChange={e => setFamily(e.target.value as FamilyId | 'all')} data-testid="vault-filter-family">
+            <option value="all">All Families</option>
+            {FAMILIES.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <select aria-label="Rarity" value={rarity} onChange={e => setRarity(e.target.value as Rarity | 'all')} data-testid="vault-filter-rarity">
             <option value="all">All Rarities</option>

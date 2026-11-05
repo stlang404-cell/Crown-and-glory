@@ -17,7 +17,7 @@ import { roundRobin, standings, leagueOrder, swissOrder, swissPairing, StandingR
 import { mulberry32 } from '../rules/tables';
 
 export const MARKETS_ID = 'crown-markets-2';
-export const FAMILY_B: Record<string, number> = { match: 120, winner: 150, promotion: 80, qualification: 80, season: 100, bracket: 100 };
+export const FAMILY_B: Record<string, number> = { match: 120, winner: 150, promotion: 80, qualification: 80, season: 100, bracket: 100, length: 60, advancement: 100 };
 
 // ---------------------------------------------------------------- knockout match probabilities
 /** Distribution of a's score over a two-game pair: [P(>1), P(=1), P(<1)]. Colours alternate, so W/L are symmetric. */
@@ -101,30 +101,89 @@ export function bracketPayout(states: BracketState[], semi1: string, semi2: stri
   return states.map(s => (s.semi1 === semi1 && s.semi2 === semi2 && champions.includes(s.champion) ? 1 / champions.length : 0));
 }
 
+// ---------------------------------------------------------------- v0.10: quarterfinal advancement (16 product states)
+/**
+ * Crown Championship quarterfinals: four independent two-player matches qf[k] = [a_k, b_k]. State index s (0 … 15)
+ * encodes the four winners: bit k = 0 → a_k advances, 1 → b_k advances. Exhaustive and mutually exclusive.
+ * Claims (canonical, distinct subsets): "X reaches the semifinals" (8 states each) and the conjunction
+ * "X meets Y in the semifinal" for each possible semifinal (X from qf 0/2, Y from qf 1/3; 4 states each).
+ */
+export interface QfState { label: string; winners: string[] }
+export function advancementStates(qf: [string, string][], name: (id: string) => string = x => x): QfState[] {
+  return Array.from({ length: 16 }, (_, s) => { const winners = qf.map((m, k) => m[(s >> k) & 1]); return { winners, label: `${winners.map(name).join(', ')} reach the semifinals` }; });
+}
+export function advancementClaims(qf: [string, string][], name: (id: string) => string = x => x): { id: string; label: string; states: number[] }[] {
+  const all = Array.from({ length: 16 }, (_, s) => s);
+  const claims: { id: string; label: string; states: number[] }[] = [];
+  qf.forEach((m, k) => m.forEach((x, side) => claims.push({ id: `semi:${x}`, label: `${name(x)} reaches the semifinals`, states: all.filter(s => ((s >> k) & 1) === side) })));
+  for (const [k1, k2] of [[0, 1], [2, 3]]) for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+    const x = qf[k1][i], y = qf[k2][j];
+    claims.push({ id: `meet:${x}|${y}`, label: `${name(x)} meets ${name(y)} in the semifinal (both win their quarterfinals)`, states: all.filter(s => ((s >> k1) & 1) === i && ((s >> k2) & 1) === j) });
+  }
+  return claims;
+}
+/** Exact model: independent quarterfinals, each by the two-game knockout probability with the published tiebreaks. */
+export function advancementModel(qf: [string, string][], rating: (id: string) => number, seed: (id: string) => number): number[] {
+  const pa = qf.map(([a, b]) => koMatchProb(rating(a), rating(b), seed(a), seed(b), false).a);
+  return Array.from({ length: 16 }, (_, s) => pa.reduce((acc, p, k) => acc * (((s >> k) & 1) === 0 ? p : 1 - p), 1));
+}
+/** Settlement state for the four recorded quarterfinal winners. */
+export function advancementState(qf: [string, string][], winners: string[]): number {
+  let s = 0;
+  qf.forEach((m, k) => { const i = m.indexOf(winners[k]); if (i < 0) throw new Error(`Quarterfinal ${k} winner ${winners[k]} is not in the match`); s |= i << k; });
+  return s;
+}
+
 // ---------------------------------------------------------------- Monte Carlo models (public ratings)
 type G = { white: string; black: string; result: number | null };
 const draw = (ra: number, rb: number, u: number) => { const p = wdl(ra, rb, NU); return u < p.w ? 1 : u < p.w + p.d ? 0.5 : 0; };
 
-/** Remaining league rounds of one circuit simulated N times. Returns P(rank 1) and P(top 2) per member. */
-export function leagueModel(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 400, seed = 1): { title: Map<string, number>; top2: Map<string, number> } {
+/**
+ * The remaining fixtures of one circuit, prepared once for a Monte Carlo run: member indices and the cumulative
+ * W / W+D thresholds of each pairing. wdl depends only on the two public ratings, so computing it once per pairing
+ * instead of once per simulated game gives exactly the same draws (`u < w ? 1 : u < w + d ? ½ : 0`) as before —
+ * the per-game work is then one PRNG call and two comparisons (docs/FEDERATION_SCALE.md §0.2).
+ */
+interface PreparedCircuit { members: string[]; played: G[]; base: Float64Array; wi: Int32Array; bi: Int32Array; pw: Float64Array; pwd: Float64Array; pairs: [string, string][]; res: Float64Array; pts: Float64Array }
+function prepareCircuit(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number): PreparedCircuit {
   const rr = roundRobin(members);
-  const rnd = mulberry32(seed);
-  const title = new Map(members.map(m => [m, 0])), top2 = new Map(members.map(m => [m, 0]));
-  const seeds = new Map(members.map((m, i) => [m, i + 1]));
-  // exact fast path: points by array; the full tiebreak order only when 1st or 2nd place is tied on points
   const ix = new Map(members.map((m, i) => [m, i]));
   const rt = members.map(m => rating(m));
   const base = new Float64Array(members.length);
   for (const g of played) if (g.result !== null) { const wi = ix.get(g.white), bi = ix.get(g.black); if (wi !== undefined) base[wi] += g.result; if (bi !== undefined) base[bi] += 1 - g.result; }
+  const wi: number[] = [], bi: number[] = [], pw: number[] = [], pwd: number[] = [], pairs: [string, string][] = [];
+  for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) {
+    const a = ix.get(w)!, d = ix.get(b)!;
+    const p = wdl(rt[a], rt[d], NU);
+    wi.push(a); bi.push(d); pw.push(p.w); pwd.push(p.w + p.d); pairs.push([w, b]);
+  }
+  return { members, played, base, wi: Int32Array.from(wi), bi: Int32Array.from(bi), pw: Float64Array.from(pw), pwd: Float64Array.from(pwd), pairs, res: new Float64Array(wi.length), pts: new Float64Array(members.length) };
+}
+/** One simulated completion of a prepared circuit (fills `pts` and `res`, consuming one PRNG draw per game in order). */
+function simulateCircuit(c: PreparedCircuit, rnd: () => number): void {
+  const { pts, res, wi, bi, pw, pwd } = c;
+  pts.set(c.base);
+  for (let g = 0; g < wi.length; g++) {
+    const u = rnd() / 4294967296;
+    const x = u < pw[g] ? 1 : u < pwd[g] ? 0.5 : 0;
+    res[g] = x; pts[wi[g]] += x; pts[bi[g]] += 1 - x;
+  }
+}
+/** The full league order of a simulated completion (points, head-to-head, Sonneborn–Berger, seed). */
+function simulatedOrder(c: PreparedCircuit): StandingRow[] {
+  const games = c.played.concat(c.pairs.map(([w, b], g) => ({ white: w, black: b, result: c.res[g] })));
+  return leagueOrder(standings(c.members, games, new Map(c.members.map((m, i) => [m, i + 1]))), games);
+}
+
+/** Remaining league rounds of one circuit simulated N times. Returns P(rank 1) and P(top 2) per member. */
+export function leagueModel(members: string[], played: G[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 400, seed = 1): { title: Map<string, number>; top2: Map<string, number> } {
+  const rnd = mulberry32(seed);
+  const title = new Map(members.map(m => [m, 0])), top2 = new Map(members.map(m => [m, 0]));
+  // exact fast path: points by array; the full tiebreak order only when 1st or 2nd place is tied on points
+  const c = prepareCircuit(members, played, fromRound, lastRound, rating);
+  const pts = c.pts;
   for (let k = 0; k < N; k++) {
-    const pts = base.slice();
-    const extra: G[] = [];
-    for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rr[(r - 1) % rr.length] ?? []) {
-      const wi = ix.get(w)!, bi = ix.get(b)!;
-      const res = draw(rt[wi], rt[bi], rnd() / 4294967296);
-      pts[wi] += res; pts[bi] += 1 - res;
-      extra.push({ white: w, black: b, result: res });
-    }
+    simulateCircuit(c, rnd);
     let a = -1, b2 = -1;
     for (let i = 0; i < pts.length; i++) { if (a < 0 || pts[i] > pts[a]) { b2 = a; a = i; } else if (b2 < 0 || pts[i] > pts[b2]) b2 = i; }
     let unique = true;
@@ -132,7 +191,7 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
     if (Math.abs(pts[a] - pts[b2]) <= 1e-9) unique = false;
     let first: string, second: string;
     if (unique) { first = members[a]; second = members[b2]; }
-    else { const games = played.concat(extra); const order = leagueOrder(standings(members, games, seeds), games); first = order[0].id; second = order[1].id; }
+    else { const order = simulatedOrder(c); first = order[0].id; second = order[1].id; }
     title.set(first, title.get(first)! + 1 / N);
     top2.set(first, top2.get(first)! + 1 / N); top2.set(second, top2.get(second)! + 1 / N);
   }
@@ -140,35 +199,41 @@ export function leagueModel(members: string[], played: G[], fromRound: number, l
 }
 
 /** Probability that `target` (a Crown Division member) qualifies: wins its division AND is among the 8 best of the
- *  16 division-1 winners by points (then rating). All 16 division-1 leagues are simulated jointly. */
+ *  division-1 winners by points (then rating, then id). All division-1 leagues are simulated jointly.
+ *
+ *  Exact shortcuts (same value as sorting all winners, docs/FEDERATION_SCALE.md §0.2): the winners' order is a strict
+ *  total order (points, rating, id), so "target is in the top 8" is "target won its league and fewer than 8 other
+ *  winners rank above it". Another league's winner only needs its tiebreaks resolved when its points equal the
+ *  target's (otherwise its points alone decide), so the full league order is computed only in that case or when the
+ *  target's own league is tied at the top. The PRNG stream is consumed in the same order as before. */
 export function qualificationModel(target: string, circuits: { members: string[]; played: G[] }[], fromRound: number, lastRound: number, rating: (id: string) => number, N = 300, seed = 2): number {
+  const tc = circuits.findIndex(c => c.members.includes(target));
+  if (tc < 0) return 0; // never a division-1 winner
   const rnd = mulberry32(seed);
   let hit = 0;
-  const rrs = circuits.map(c => roundRobin(c.members));
-  // Exact fast path (same result as the full order): tally points with arrays; the complete league order with its
-  // tiebreaks (head-to-head, Sonneborn–Berger, seed) is computed only when the top of a league is tied.
-  const idx = circuits.map(c => new Map(c.members.map((m, i) => [m, i])));
-  const base = circuits.map((c, ci) => { const a = new Float64Array(c.members.length); for (const g of c.played) if (g.result !== null) { const wi = idx[ci].get(g.white), bi = idx[ci].get(g.black); if (wi !== undefined) a[wi] += g.result; if (bi !== undefined) a[bi] += 1 - g.result; } return a; });
-  const ratings = circuits.map(c => c.members.map(m => rating(m)));
+  const prep = circuits.map(c => prepareCircuit(c.members, c.played, fromRound, lastRound, rating));
+  const max = new Float64Array(prep.length), top = new Int32Array(prep.length), tied = new Uint8Array(prep.length);
+  const rTarget = rating(target);
   for (let k = 0; k < N; k++) {
-    const winners: StandingRow[] = [];
-    circuits.forEach((c, ci) => {
-      const pts = base[ci].slice();
-      const extra: G[] = [];
-      for (let r = fromRound; r <= lastRound; r++) for (const [w, b] of rrs[ci][(r - 1) % rrs[ci].length] ?? []) {
-        const wi = idx[ci].get(w)!, bi = idx[ci].get(b)!;
-        const res = draw(ratings[ci][wi], ratings[ci][bi], rnd() / 4294967296);
-        pts[wi] += res; pts[bi] += 1 - res;
-        extra.push({ white: w, black: b, result: res });
-      }
-      let max = -1, n = 0, at = -1;
-      for (let i = 0; i < pts.length; i++) { if (pts[i] > max + 1e-9) { max = pts[i]; n = 1; at = i; } else if (Math.abs(pts[i] - max) <= 1e-9) n++; }
-      if (n === 1) { winners.push({ id: c.members[at], points: max } as StandingRow); return; }
-      const games = c.played.concat(extra);
-      winners.push(leagueOrder(standings(c.members, games, new Map(c.members.map((m, i) => [m, i + 1]))), games)[0]);
-    });
-    const top8 = winners.sort((a, b) => b.points - a.points || rating(b.id) - rating(a.id) || a.id.localeCompare(b.id)).slice(0, 8).map(r => r.id);
-    if (top8.includes(target)) hit++;
+    for (let ci = 0; ci < prep.length; ci++) {
+      const c = prep[ci];
+      simulateCircuit(c, rnd);
+      const pts = c.pts;
+      let mx = -1, n = 0, at = -1;
+      for (let i = 0; i < pts.length; i++) { if (pts[i] > mx + 1e-9) { mx = pts[i]; n = 1; at = i; } else if (Math.abs(pts[i] - mx) <= 1e-9) n++; }
+      max[ci] = mx; top[ci] = at; tied[ci] = n === 1 ? 0 : 1;
+    }
+    const winnerOf = (ci: number) => (tied[ci] ? simulatedOrder(prep[ci])[0].id : prep[ci].members[top[ci]]);
+    if (winnerOf(tc) !== target) continue;
+    const T = max[tc];
+    let above = 0;
+    for (let ci = 0; ci < prep.length && above < 8; ci++) {
+      if (ci === tc) continue;
+      if (max[ci] !== T) { if (max[ci] > T) above++; continue; }
+      const w = winnerOf(ci), rw = rating(w);
+      if (rTarget - rw < 0 || (rTarget - rw === 0 && w.localeCompare(target) < 0)) above++;
+    }
+    if (above < 8) hit++;
   }
   return hit / N;
 }
@@ -208,10 +273,12 @@ export function normaliseModel(xs: number[], floor = 0.002): number[] {
 
 // ---------------------------------------------------------------- published rules
 export const RULES: Record<string, string> = {
-  match: 'States: White wins / Draw / Black wins. Trading: from round opening until the match starts; if you watch it live, also in-play between moves (after each move is published, before the next is computed). Closure: the final move. Settlement: the result. Cancellation (match never played): 1/3 per share.',
+  match: 'States: White wins / Draw / Black wins. Claims: each result, and Decisive (pays $1 if White or Black wins, nothing on a draw; the same market as the three results, so its price is always 1 − the draw price). Trading: from round opening until the match starts; if you watch it live, also in-play between moves (after each move is published, before the next is computed). Closure: the final move. Settlement: the result on the official game record. VOID (cancelled at 1/3 per state, so Decisive pays 2/3): the match is never played, or it is stopped by the 400-ply playing limit (a censored game is not a result).',
   winner: 'States: every entrant. Trading: until the event\'s first round is processed or its first game starts. Settlement: the champion; joint champions split each share equally. Cancellation: 1/n per share — published conflict rule: if you (the player) enter this event, the market is cancelled at 1/n before your entry takes effect.',
   promotion: 'States: Yes (finishes top two of the division and is promoted) / No. Trading: until the last league round starts. Settlement: the promotion list at season end. Cancellation: ½ per share.',
   qualification: 'States: Yes (qualifies for the Crown Championship as one of the 8 best regional Crown Division winners) / No. Trading: until the last league round starts. Settlement: the Championship field. Cancellation: ½ per share.',
   season: 'States: every member of the division. Trading: until the last league round starts. Settlement: the division title holder (league order: points, head-to-head, Sonneborn–Berger, seed). Cancellation: 1/16 per share.',
+  length: 'States: Over X.5 plies / Under X.5 plies, where X is the line shown in the title. Definition: the number of plies (half-moves) on the official game record of this fixture; Over pays $1 if it is X + 1 or more, Under if it is X or fewer. A game stopped by the 400-ply playing limit has 400 plies on its record and settles Over. Trading: from round opening until the match starts (first move, or when you start watching it live). Settlement: the official game record. VOID (cancelled at ½ per share): the fixture never gets an official game record.',
+  advancement: 'States: the 16 possible sets of quarterfinal winners of the Crown Championship. Claims pay $1 in every state of their set: "X reaches the semifinals" (8 states) and "X meets Y in the semifinal" (4 states: both win their quarterfinals; pays nothing if either loses). Trading: from listing after the round of 16 until the quarterfinals start. Settlement: the four recorded quarterfinal winners (tiebreaks as published: classical, rapid, blitz, higher seed). VOID (|S|/16 per share): the quarterfinals are not played.',
   bracket: 'States: the 8 possible final-four paths (both semifinal winners and the champion). Claims pay 1 crown in each state of their set: champion (2 paths), finalist (4 paths), "X beats Y in the final" (1 path). Condition-false pays 0 — a conjunction claim is not refunded if its condition fails. Trading: until the semifinals start. Settlement: the realised path; a joint final splits ½/½ between the two finalists\' paths. Cancellation: |S|/8 per share.',
 };

@@ -1,0 +1,18 @@
+[2026-11-05T01:47:45.414Z] PASS 1: A new career's Dashboard shows one guide step (rules, "0 of 9 done", 7 later steps locked until relevant) with the rules summary
+[2026-11-05T01:47:45.726Z] PASS 2: The guide is keyboard operable: Tab reaches "Got it", Enter moves on to "first-game"
+[2026-11-05T01:47:45.883Z] {"hash":"#/play","hint":true,"suggested":true,"text":"Guide · Play your first beginner opponentNew careers start at a career Elo of 0 "}
+[2026-11-05T01:47:45.883Z] PASS 3: The step opens Play with an inline hint (0 career Elo, Commoner III) and beginners suggested
+[2026-11-05T01:47:46.139Z] PASS 4: Nothing from the guide appears in a rated match (0 guide elements)
+[2026-11-05T01:47:46.335Z] PASS 5: After a loss the result dialog takes focus on "View Analysis" and offers analysis, Academy practice and a rematch
+[2026-11-05T01:47:47.909Z] PASS 6: The first analysis shows the replay guide (evaluation bar only outside your own game, Played Like)
+[2026-11-05T01:47:47.976Z] PASS 7: Progress is derived from the save: "4 of 9 done", next "federation"
+[2026-11-05T01:47:48.730Z] PASS 8: The Federation screen explains joining before it is founded and the first match/tournament after
+[2026-11-05T01:47:48.758Z] PASS 9: The first live-market tutorial says plainly that money is fictional and how losses work
+[2026-11-05T01:47:48.988Z] PASS 10: Contextual "?" help opens with Enter and closes with Escape
+[2026-11-05T01:47:49.058Z] PASS 11: Career explains rank vs title vs Elo vs Played Like
+[2026-11-05T01:47:49.149Z] PASS 12: The Hall of Fame introduces the first trophy
+[2026-11-05T01:47:49.390Z] PASS 13: Guide state persists in the save (tour:state: ack rules, replay)
+[2026-11-05T01:47:49.821Z] PASS 14: Hiding removes the card and all tips; Settings → Restart the Guide replays it from "rules"
+[2026-11-05T01:47:50.677Z] PASS 15: 390 px: the guide fits (card 366 px, overflow 0)
+[2026-11-05T01:47:50.719Z] PASS 16: No page or console errors (0)
+[2026-11-05T01:47:50.720Z] ALL CHECKS PASSED

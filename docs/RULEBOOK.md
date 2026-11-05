@@ -795,6 +795,23 @@ played and your rating does not change.
 * **Prizes:** $8,000: champion 40 %, finalist 20 %, semifinalists 10 % each, quarterfinalists 5 % each (joint
   champions share 60 % equally).
 
+### The Crown Path (crown-competition-3, v1.0)
+
+Federations founded with v1.0 use crown-competition-3; an older federation finishes its current season under its own
+rules and switches at its next season start. Since v0.11 (crown-competition-2) the Crown Championship's 8 league
+places go first to last season's **Zonal Champions**, and **Regional Cups** (rounds 17–19) lead to Federation Open
+invitations (docs/V3_COMPETITION_RULES.md). crown-competition-3 adds a ladder for players who are still climbing:
+
+* **Regional Cup** (one per region, 8 players): the champions and runners-up of divisions 3 and 4 and the champions of
+  divisions 5–8.
+* **Federation Open invitations** (next season, free entry): the highest-rated cup winner of each zone (two per zone in
+  a 10,240 federation) and the **Challenger Open winner**. Registering for the Open never takes an invited player's place.
+* **Crown Path places:** the Federation Open still sends 8 players to the Crown Championship: its top 6, plus the 2 best
+  **invited** entrants who scored at least **3 of 5** (if fewer invited entrants reach 3 points, the next finishers
+  of the Open take the places).
+* **Zonal Championships** in a 10,240 federation (10 regions per zone): every regional Crown Division winner, then the
+  highest-rated 2nd- and 3rd-placed players of the zone.
+
 ### Club Weekend (rounds 10–11, club owners only)
 
 If you own a club, you and the members of your own division closest to you in rating play a knockout seeded by
@@ -878,20 +895,29 @@ A norm of a higher tier also counts toward lower titles. Titles are **never lost
 
 See section 15. They follow your rating up and down and are descriptions, not honours.
 
-### Achievements — the Sovereign Vault (crown-vault-1)
+### Achievements — the Sovereign Vault (crown-vault-2)
 
-* The Vault holds **134 collectibles**: **94 achievements**, the **9-step Exchange title ladder** and the **31
+* The Vault holds **214 collectibles**: **174 achievements**, the **9-step Exchange title ladder** and the **31
   rating-title insignias**, in nine collections (Chess Mastery, Brilliant Mind, Federation Career, Rivals,
-  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias).
+  Tournaments, Grand Exchange, Patron's Treasury, Legacy, Insignias). v0.11 added 72 achievements (four of them for Played Like performances); every earlier
+  collectible and every earlier unlock is unchanged.
+* Every collectible belongs to one of **20 families** (e.g. Defensive Resilience, Endgame Technique, Win Streaks,
+  Regional Conquest, Forecasting Calibration, Financial Recovery, Career Longevity) and has a **tier**: Bronze
+  (Common or Uncommon), Silver (Rare), Gold (Epic or Legendary) or Sovereign (Mythic). The Vault shows each family's
+  progress, the count earned per rarity and the collectibles closest to unlocking.
 * Each achievement is a fixed rule over your saved records (games, rating history, federation history, ledger and
   forecasts). It is unlocked once and kept; reloading or re-analysing never unlocks it twice.
 * **11 achievements** depend on move grading (Brilliant moves, accuracy, Played Like) and show as "Awaiting
-  validated grading": they **cannot be earned** while grading is experimental. So **83 achievements** are earnable
+  validated grading": they **cannot be earned** while grading is experimental. So **163 achievements** are earnable
   today.
 * **Anti-exploit rules** (examples): assisted, abandoned, training and unfinished games never count as wins; win
   counters count the same opponent once per day; rating-gap achievements need both ratings recorded; provisional
   ratings never unlock rating thresholds; volume alone (many trades) never qualifies.
-* **4 achievements are secret**: their conditions are shown only once earned.
+* **Anti-farming (v0.11 achievements):** only rated games count; a win against an opponent rated more than 400 below
+  you never counts; win counters count one win per opponent per day and at most 10 wins a day; streaks skip (never
+  count) such wins; material comebacks need the deficit held for 4 plies; calibration uses your latest forecast per
+  market and must not be worse than the market price; profit must hold after removing your single best market.
+* **8 achievements are secret**: their conditions are shown only once earned.
 * **Exchange titles** (Apprentice Forecaster … Sovereign of Probability) need a sample of resolved paper forecasts
   that beat the market price by a margin and, for the higher steps, realized profit that holds even after removing
   your single best market.

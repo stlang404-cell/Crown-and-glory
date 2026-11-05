@@ -72,6 +72,7 @@ const THEME_PAIRS = [
   ['Negative text on panel', 'negative', 'panel', 4.5],
   ['Info text on panel', 'info', 'panel', 4.5],
   ['Warning text on panel', 'warn', 'panel', 4.5],
+  ...['royal', 'emerald', 'amethyst', 'burgundy', 'gold', 'silver'].flatMap(k => [[`Royal palette: ${k} text on panel`, k, 'panel', 4.5], [`Royal palette: ${k} text on raised surface`, k, 'panel-2', 4.5]]),
   ['Positive text on raised surface', 'positive', 'panel-2', 4.5],
   ['Negative text on raised surface', 'negative', 'panel-2', 4.5],
   ['Focus ring vs page (UI, 3:1)', 'focus', 'bg', 3],

@@ -1,0 +1,9 @@
+Today's Plan: Practice game vs Dario Quill (L6, National player) · Rapid 5+3 · Casual Play
+Play screen: opponent "Dario Quill", time control Rapid 5+3, mode Casual
+Notice: Practice game from Today’s Plan: Dario Quill, Rapid 5+3, Casual — saved and analysed, never rated.
+Start button: Start Match vs Dario Quill
+Match started: Casual; game #/match/g-20261105013939-m67c9x
+Assistant: panel available, locked notice absent (casual game: available)
+Play reopened: practice notice gone, mode Rated
+Phone width 390 px: horizontal overflow 0px
+PASS practice journey

@@ -16,7 +16,7 @@ import type { Journal } from './ledger';
 export type NpcRole = 'pre' | 'live' | 'round';
 export interface NpcTrader {
   id: string; name: string; noise: number; margin: number; budgetShare: number;
-  bias: 'none' | 'favourite' | 'underdog'; strategy: 'value' | 'momentum' | 'tactical';
+  bias: 'none' | 'favourite' | 'underdog'; strategy: 'value' | 'momentum' | 'tactical' | 'anchor';
   roles: NpcRole[]; kinds?: MarketKind[]; description: string;
 }
 
@@ -28,9 +28,13 @@ export const NPC_TRADERS: NpcTrader[] = [
   { id: 'npc:contrarian', name: 'Lantern Contrarians', noise: 0.08, margin: 0.04, budgetShare: 0.03, bias: 'underdog', strategy: 'value', roles: ['pre', 'round'], description: 'Back the underdog.' },
   { id: 'npc:novice', name: 'First-Time Forecasters', noise: 0.14, margin: 0.02, budgetShare: 0.03, bias: 'none', strategy: 'value', roles: ['pre', 'live'], description: 'Noisy novices.' },
   { id: 'npc:momentum', name: 'Tidewater Momentum', noise: 0, margin: 0.03, budgetShare: 0.02, bias: 'none', strategy: 'momentum', roles: ['live', 'round'], description: 'Buys whatever has risen since the last window (price history only).' },
-  { id: 'npc:specialist', name: 'Summit Tournament Partners', noise: 0.03, margin: 0.02, budgetShare: 0.06, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['winner', 'bracket', 'season', 'promotion', 'qualification'], description: 'Tournament specialist: season and tournament markets only.' },
+  { id: 'npc:specialist', name: 'Summit Tournament Partners', noise: 0.03, margin: 0.02, budgetShare: 0.06, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['winner', 'bracket', 'season', 'promotion', 'qualification', 'advancement'], description: 'Tournament specialist: season and tournament markets only.' },
   { id: 'npc:tactician', name: 'Kestrel Tactical Desk', noise: 0.03, margin: 0.03, budgetShare: 0.04, bias: 'none', strategy: 'tactical', roles: ['live'], description: 'Trades in-play on the public engine evaluation of the current position.' },
-  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0.03, margin: 0.02, budgetShare: 0.12, bias: 'none', strategy: 'value', roles: ['pre', 'round'], kinds: ['match', 'winner', 'season', 'promotion', 'qualification', 'bracket'], description: 'Calibrated fundamental trader on the public rating model.' },
+  // v0.10 (bug #33): the analyst ANCHORS prices to the published public forecast (noise 0, margin 0) in one basket of
+  // buys, also in play after every published move. Before, it moved only one claim toward a noisy belief, so prices
+  // closed several points from the published forecast and "buy wherever the shown forecast beats the price" earned a
+  // steady profit from the market maker's subsidy with no skill (tools/market/simulate.ts, docs/MARKET_INTEGRITY.md).
+  { id: 'npc:analyst', name: 'Meridian Analytics', noise: 0, margin: 0, budgetShare: 0.12, bias: 'none', strategy: 'anchor', roles: ['pre', 'live', 'round'], kinds: ['match', 'winner', 'season', 'promotion', 'qualification', 'bracket', 'length', 'advancement'], description: 'Calibrated fundamental trader: brings prices to the published public forecast.' },
 ];
 export const NPC_WALLET_CAP = 4_000 * 1_000_000; // µ; topped up each season from the treasury up to this cap
 /** Portfolio exposure cap: open cost basis may not exceed this share of the wallet. */
@@ -54,6 +58,16 @@ export interface NpcContext {
   previousClaimPrices?: number[];
   /** Open exposure (cost basis) per trader across other markets, µ. */
   exposure?: (trader: string) => number;
+}
+
+/**
+ * Shares per state that bring the state prices exactly to `target` using buys only: q' = b·ln t + c with the smallest c
+ * such that q' ≥ q in every state (one state needs no shares). Floors to whole shares.
+ */
+export function anchorShares(q: number[], b: number, target: number[]): number[] {
+  const t = target.map(x => Math.max(1e-6, x));
+  const c = Math.max(...q.map((x, i) => x - b * Math.log(t[i])));
+  return q.map((x, i) => Math.max(0, Math.floor(b * Math.log(t[i]) + c - x)));
 }
 
 /** Run the eligible NPC traders once against an open market. */
@@ -82,6 +96,24 @@ export function npcTrade(market: Market, positions: Map<string, Position>, balan
     beliefStates = beliefStates.map(x => x / sum);
     const beliefClaims = claims.map(c => c.states.reduce((a, s) => a + beliefStates[s], 0));
     let pick = -1, target = 0;
+    // anchor: one singleton claim per state is needed (bracket paths, results, Over/Under, tournament entrants)
+    const single = t.strategy === 'anchor' ? ctx.belief.map((_, s) => claims.findIndex(c => c.states.length === 1 && c.states[0] === s)) : [];
+    if (t.strategy === 'anchor' && single.every(i => i >= 0)) {
+      const budget = Math.floor(wallet * t.budgetShare);
+      const room = Math.floor(wallet * NPC_EXPOSURE_SHARE) - (ctx.exposure?.(t.id) ?? 0);
+      const limit = Math.min(budget, room);
+      let k = anchorShares(m.q, m.b, beliefStates);
+      // the basket costs C(q + k) − C(q) plus 1% per leg; scale it down until it fits the budget
+      const basketCost = (ks: number[]) => { let qq = [...m.q], tot = 0; ks.forEach((x, s) => { if (x > 0) { const c = buyClaimMicro(qq, m.b, [s], x); tot += c + feeMicro(c); qq = [...qq]; qq[s] += x; } }); return tot; };
+      for (let g = 0; g < 20 && k.some(x => x > 0) && basketCost(k) > limit; g++) k = k.map(x => Math.floor(x / 2));
+      if (!k.some(x => x > 0) || basketCost(k) > limit) continue;
+      for (let s = 0; s < k.length; s++) {
+        if (k[s] <= 0) continue;
+        const res = trade(m, positions.get(`${m.id}|${t.id}`) ?? null, t.id, single[s], k[s], 'buy', at, seq++);
+        m = res.market; positions.set(res.position.id, res.position); journals.push(res.journal);
+      }
+      continue;
+    }
     if (t.strategy === 'momentum') {
       if (!ctx.previousClaimPrices) continue;
       const rise = pr.map((p, i) => p - (ctx.previousClaimPrices![i] ?? p));
@@ -90,7 +122,8 @@ export function npcTrade(market: Market, positions: Map<string, Position>, balan
       pick = i; target = Math.min(0.97, pr[i] + rise[i] / 2);
     } else {
       // only claims that partition the states are traded by value traders (avoid double counting)
-      const tradable = claims.map((_, i) => i).filter(i => claims.length === ctx.belief.length || claims[i].id.startsWith('champ:') || claims[i].id.startsWith('s'));
+      // (default singleton claims s0…; listed singletons s0…; champion claims; "reaches the semifinals" claims semi:…)
+      const tradable = claims.map((_, i) => i).filter(i => !m.claims || claims[i].id.startsWith('champ:') || claims[i].id.startsWith('s'));
       let best = 0;
       for (const i of tradable) { const e = beliefClaims[i] - pr[i] - t.margin; if (e > best) { best = e; pick = i; } }
       if (pick < 0) continue;

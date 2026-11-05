@@ -40,6 +40,11 @@
   --accent-line: color-mix(in srgb, var(--accent) 48%, transparent);
   --line-soft: color-mix(in srgb, var(--line) 70%, transparent);
   --surface-hi: color-mix(in srgb, var(--text) 4%, transparent);
+  /* v1.0 royal identity: a faint gilt edge on cards, tinted surfaces for the six royal tones */
+  --gilt-line: color-mix(in srgb, var(--gold) 30%, var(--line-soft));
+  --gilt-soft: color-mix(in srgb, var(--gold) 12%, transparent);
+  --royal-soft: color-mix(in srgb, var(--royal) 12%, transparent);
+  --burgundy-soft: color-mix(in srgb, var(--burgundy) 12%, transparent);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, .18);
   --sq-last: color-mix(in srgb, var(--sq-hl) 32%, transparent);
   --sq-last-to: color-mix(in srgb, var(--sq-hl) 50%, transparent);
@@ -67,7 +72,7 @@ a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness:
 a:hover { text-decoration-thickness: 2px; }
 h1, h2, h3 { line-height: 1.2; margin: 0 0 var(--sp-2); letter-spacing: .005em; font-weight: 700; text-wrap: balance; }
 h1 { font-size: var(--fs-2xl); font-family: var(--display); font-weight: 700; letter-spacing: .005em; }
-h2 { font-size: var(--fs-xl); letter-spacing: -.005em; }
+h2 { font-size: var(--fs-xl); font-family: var(--display); letter-spacing: .002em; }
 h3 { font-size: var(--fs-lg); font-weight: 650; }
 p { text-wrap: pretty; }
 .muted { color: var(--muted); }
@@ -99,7 +104,10 @@ p { text-wrap: pretty; }
 .tabbar { display: none; }
 
 /* Surfaces: one radius, one hairline, a soft shadow and a 1 px top highlight. */
-.panel { position: relative; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: var(--sp-4) var(--sp-5); box-shadow: inset 0 1px 0 var(--surface-hi), var(--shadow); }
+.panel { position: relative; background: var(--panel); border: 1px solid var(--line-soft); border-top-color: var(--gilt-line); border-radius: var(--radius); padding: var(--sp-4) var(--sp-5); box-shadow: inset 0 1px 0 var(--surface-hi), var(--shadow); }
+/* v1.0 card hierarchy: panel titles carry a short gilt rule; nested surfaces stay flat */
+.panel-title > :is(h2, h3):first-child { position: relative; padding-left: 12px; }
+.panel-title > :is(h2, h3):first-child::before { content: ""; position: absolute; left: 0; top: .2em; bottom: .2em; width: 3px; border-radius: 2px; background: linear-gradient(var(--gold), color-mix(in srgb, var(--gold) 35%, transparent)); }
 .panel + .panel { margin-top: var(--sp-4); }
 /* grid and row children are spaced by the gap, not by the stacking margin */
 :is(.grid-2, .grid-3, .row, .pick-grid) > .panel + .panel { margin-top: 0; }
@@ -129,10 +137,14 @@ p { text-wrap: pretty; }
 .btn.small svg { width: 18px; height: 18px; }
 .chip { display: inline-flex; align-items: center; gap: 5px; min-height: 22px; padding: 1px 8px; border-radius: var(--radius-xs); font-size: .76rem; font-weight: 650; letter-spacing: .01em; line-height: 1.4; border: 1px solid var(--line); background: var(--hover); color: var(--muted); white-space: nowrap; vertical-align: middle; }
 .chip svg { width: 14px; height: 14px; }
-.chip.gold { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.chip.gold { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 48%, transparent); background: var(--gilt-soft); }
+/* the six royal tones as chips (text over its own 12 % tint; audited in tests/contrast.test.ts) */
+.chip:is(.royal, .emerald, .amethyst, .burgundy, .silver) { --tone: var(--royal); color: var(--tone); border-color: color-mix(in srgb, var(--tone) 45%, transparent); background: color-mix(in srgb, var(--tone) 12%, transparent); }
+.chip.emerald { --tone: var(--emerald); } .chip.amethyst { --tone: var(--amethyst); } .chip.burgundy { --tone: var(--burgundy); } .chip.silver { --tone: var(--silver); }
 .chip.pos { color: var(--positive); border-color: color-mix(in srgb, var(--positive) 40%, transparent); background: color-mix(in srgb, var(--positive) 8%, transparent); }
 .chip.neg { color: var(--negative); border-color: color-mix(in srgb, var(--negative) 40%, transparent); background: color-mix(in srgb, var(--negative) 8%, transparent); }
 .chip.info { color: var(--info); border-color: color-mix(in srgb, var(--info) 38%, transparent); background: color-mix(in srgb, var(--info) 8%, transparent); }
+.chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; flex-wrap: wrap; background: var(--panel-3); padding: 2px; gap: 2px; }
 .seg button { min-height: 40px; padding: 6px 14px; border: 0; border-radius: calc(var(--radius-sm) - 3px); background: transparent; color: var(--muted); cursor: pointer; font-weight: 600; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
 .seg button:hover { color: var(--text); background: var(--hover); }
@@ -275,7 +287,7 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .opp-card:hover { border-color: var(--line-strong); }
 .opp-card[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-line); }
 .portrait { image-rendering: pixelated; border-radius: 10px; flex: none; background: var(--bg-2); border: 1px solid var(--line); }
-.hero { position: relative; overflow: hidden; display: flex; gap: 18px; align-items: center; padding: 22px; border-radius: 18px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--panel) 55%, transparent) 48%, color-mix(in srgb, var(--bg) 30%, transparent)); border: 1px solid var(--accent-line); margin-bottom: 16px; }
+.hero { position: relative; overflow: hidden; display: flex; gap: 18px; align-items: center; padding: 22px; border-radius: 18px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent-strong) 14%, transparent), color-mix(in srgb, var(--panel) 60%, transparent) 50%, color-mix(in srgb, var(--royal) 8%, transparent)); border: 1px solid var(--gilt-line); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 26%, transparent); margin-bottom: 16px; }
 /* a faint pixel staircase in the corner: the only decorative raster motif outside portraits */
 .hero::after { content: ""; position: absolute; right: 14px; bottom: 14px; width: 64px; height: 64px; opacity: .13; pointer-events: none; background:
   linear-gradient(var(--accent), var(--accent)) 0 48px / 64px 16px no-repeat,
@@ -323,6 +335,9 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .analysis { grid-template-columns: 1fr; }
   .board-col { max-width: 640px; margin: 0 auto; width: 100%; }
 }
+/* Shown only at the small breakpoint (see .hide-sm in the media query below). */
+.show-sm { display: none; }
+
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; }
   .rail { display: none; }
@@ -345,6 +360,8 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .moves { max-height: 180px; }
   th, td { padding: 6px; }
   .hide-sm { display: none; }
+  .show-sm { display: block; }
+  .search-wide { flex-basis: 100% !important; width: 100%; }
   .navbar .btn { min-width: 44px; padding: 6px 8px; }
   .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   select, input[type="search"], input[type="text"], input[type="date"] { max-width: 100%; min-width: 0; }
@@ -372,13 +389,21 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .emblem-cell .small { max-width: 110px; }
 .intensity { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .intensity > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-2, var(--info)), var(--accent)); }
-.ceremony { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--overlay); padding: 16px; }
-.ceremony-card { max-width: 440px; width: 100%; text-align: center; background: var(--panel); border: 1px solid var(--accent-line, var(--line)); border-radius: 18px; padding: 24px 20px; box-shadow: var(--shadow); animation: ceremony-in .5s ease-out; }
-.ceremony-card .glow { animation: ceremony-glow 2.4s ease-in-out infinite alternate; }
+.ceremony { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--overlay); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); overflow-y: auto; overscroll-behavior: contain; }
+/* v1.0 ceremonies (promotion, rank change, Federation Title, trophy, tournament victory): a gilt-edged card, a static
+   radiance behind the art, one entrance, one sheen pass and two glow breaths, then stillness. Reduced motion: all off. */
+.ceremony-card { position: relative; overflow: hidden; max-width: 440px; width: 100%; text-align: center; background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 7%, var(--panel)), var(--panel) 46%); border: 1px solid var(--gilt-line); border-radius: 18px; padding: 24px 20px; box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 34%, transparent), var(--shadow); animation: ceremony-in .5s ease-out; }
+.ceremony-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: .8; }
+.ceremony-card::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none; background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--gold) 14%, transparent), transparent); transform: skewX(-12deg); animation: ceremony-sheen 1.4s .45s ease-out 1 both; }
+.ceremony-card > * { position: relative; z-index: 1; }
+.ceremony-card .glow { position: relative; display: inline-grid; place-items: center; padding: 10px 18px; animation: ceremony-glow 1.6s .5s ease-in-out 4 alternate both; }
+.ceremony-card .glow::before { content: ""; position: absolute; inset: -6px -10px; z-index: -1; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%), repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--gold) 9%, transparent) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000 55%, transparent); mask: radial-gradient(closest-side, #000 55%, transparent); }
 @keyframes ceremony-in { from { transform: translateY(14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes ceremony-glow { from { filter: drop-shadow(0 0 0 transparent); } to { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 55%, transparent)); } }
-@media (prefers-reduced-motion: reduce) { .ceremony-card, .ceremony-card .glow { animation: none; } }
-[data-motion="reduce"] .ceremony-card, [data-motion="reduce"] .ceremony-card .glow { animation: none; }
+@keyframes ceremony-sheen { from { left: -60%; } to { left: 120%; } }
+@keyframes ceremony-glow { from { filter: drop-shadow(0 0 0 transparent); } to { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--gold) 50%, transparent)); } }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) :is(.ceremony-card, .ceremony-card .glow) { animation: none; } :root:not([data-motion="full"]) .ceremony-card::after { display: none; } }
+[data-motion="reduce"] :is(.ceremony-card, .ceremony-card .glow) { animation: none; }
+[data-motion="reduce"] .ceremony-card::after { display: none; }
 .rival-card { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
 .swatch-pick { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .swatch-pick button { width: 30px; height: 30px; min-height: 30px; padding: 0; border-radius: 6px; border: 2px solid var(--line); cursor: pointer; }
@@ -446,7 +471,20 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .vault-mini:hover, .vault-card:hover { border-color: var(--line-strong); background: var(--hover); }
 .vault-mini > span { min-width: 0; overflow-wrap: anywhere; }
 .vault-mini:not(.earned):is(.locked, .awaiting) .emblem { filter: grayscale(1) opacity(.35); }
-.vault-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr); gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.vault-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.vault-families { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--sp-2); }
+.vault-family { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; font: inherit; }
+.vault-family:hover { border-color: var(--line-strong); background: var(--hover); }
+.vault-family.complete { border-color: var(--accent-line); }
+.vault-family-head { display: flex; justify-content: space-between; gap: var(--sp-2); min-width: 0; overflow-wrap: anywhere; }
+.vault-family .vault-bar { max-width: none; }
+.vault-family-next { overflow-wrap: anywhere; }
+.vault-tiers { display: flex; flex-wrap: wrap; gap: 4px; }
+.vault-tier-pip, .chip.vault-tier { --tier: var(--muted); font-size: .72rem; padding: 1px 6px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--tier) 50%, transparent); color: var(--tier); white-space: nowrap; }
+.vault-tier-pip.full { background: color-mix(in srgb, var(--tier) 16%, transparent); }
+.tier-bronze { --tier: var(--ins-3); } .tier-silver { --tier: var(--silver); } .tier-gold { --tier: var(--accent); } .tier-sovereign { --tier: var(--ins-1); }
+.vault-rarity { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
+.vault-rarity-cell { display: inline-flex; align-items: center; gap: 6px; }
 .vault-filters > * { width: 100%; min-width: 0; }
 .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: var(--sp-2); }
 .vault-card { display: flex; gap: var(--sp-3); align-items: flex-start; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft); background: transparent; color: inherit; text-align: left; cursor: pointer; min-width: 0; font: inherit; }
@@ -468,4 +506,43 @@ tr.me td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
   .vault-filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .vault-filters input[type="search"] { grid-column: 1 / -1; }
   .vault-toast { left: 16px; right: 16px; width: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+
+/* v0.11 Circuit Grades (src/ui/RankScreen.tsx, RankBadge.tsx; docs/FEUDAL_RANKS.md) */
+.rank-badge-label { overflow-wrap: anywhere; }
+/* Competitive Rank vs Federation Title vs rating title (src/ui/RankBadge.tsx): different frame, shape, colour token and
+   a text tag, so "Knight II" (rank) and "Knight" (title) never read as the same thing. */
+:root, [data-theme] { --rank-tone: var(--royal); --title-tone: var(--gold); --rating-tone: var(--silver); }
+.honour-badge { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; vertical-align: middle; }
+.honour-badge.compact { gap: 3px; }
+.honour-label { min-width: 0; overflow-wrap: anywhere; }
+.honour-kind { font-family: var(--font); font-size: .8em; font-weight: 600; color: var(--muted); }
+.honour-frame { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 2px; line-height: 0; }
+.honour-frame-rank { border: 1.5px solid color-mix(in srgb, var(--rank-tone) 70%, transparent); border-radius: 3px; background: color-mix(in srgb, var(--rank-tone) 10%, transparent); }
+.honour-frame-rank::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 5px; transform: translateX(-50%); background: var(--rank-tone); clip-path: polygon(0 0, 50% 60%, 100% 0, 100% 40%, 50% 100%, 0 40%); }
+.honour-frame-title { border: 2px double var(--title-tone); border-radius: 999px; padding: 3px 5px; background: color-mix(in srgb, var(--title-tone) 12%, transparent); }
+.honour-frame-title::after { content: "★"; position: absolute; top: -7px; right: -5px; font-size: 9px; line-height: 1; color: var(--title-tone); }
+.honour-frame-rating { border: 1px dashed color-mix(in srgb, var(--rating-tone) 70%, transparent); border-radius: 6px; }
+.honour-tag { display: inline-flex; align-items: center; flex: none; min-height: 16px; padding: 0 5px; border-radius: 3px; font-family: var(--font); font-size: .64rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; line-height: 1.4; white-space: nowrap; border: 1px solid currentColor; }
+.honour-tag-rank { color: var(--rank-tone); background: color-mix(in srgb, var(--rank-tone) 10%, transparent); }
+.honour-tag-title { color: var(--title-tone); background: color-mix(in srgb, var(--title-tone) 12%, transparent); border-radius: 999px; }
+.honour-tag-rating { color: var(--rating-tone); border-style: dashed; }
+.honour-areas { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; min-width: 0; }
+.honour-area { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.honour-area-k { font-size: var(--fs-xs); color: var(--muted); font-weight: 600; }
+.rank-screen .rank-bar { margin-top: 4px; height: 8px; }
+.rank-ladder { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.rank-division { border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.rank-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; }
+.rank-step { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; padding: 6px 2px; border-radius: 10px; min-width: 0; }
+.rank-step-label { font-size: .78rem; line-height: 1.15; overflow-wrap: anywhere; }
+.rank-step.current { outline: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.rank-step.highest { outline: 1px dashed var(--muted, var(--line)); }
+.rank-screen table { width: 100%; }
+.rank-screen .rank-top > * { min-width: 0; }
+
+/* v1.0 390 px polish (package U): on phones the Federation section links start on their own left-aligned line
+   (a fixture's details also get a 220 px basis in WorldScreen.tsx, so its actions wrap below them). */
+@media (max-width: 700px) {
+  .world-head > .spacer { flex-basis: 100%; height: 0; }
 }

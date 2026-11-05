@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useState } from 'react';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -61,37 +62,37 @@ export function NewsScreen() {
       </div>
       <div className="grid-2">
         <div className="panel" data-testid="news">
-          <h3>Federation News</h3>
-          {data.news.length === 0 ? <p className="small muted">No news yet. Advance a round to see results here.</p> : (
-            <ul className="small" style={{ maxHeight: 420, overflow: 'auto', paddingLeft: 18 }}>
-              {data.news.map((n, i) => <li key={i}><span className="muted">S{n.season}{n.round < 98 ? ` R${n.round}` : ''} · </span>{n.id ? <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: n.id! })}>{n.text}</button> : n.text}</li>)}
-            </ul>
+          <h2 className="h3">Federation News</h2>
+          {data.news.length === 0 ? <p className="small muted">No news yet. Advance a round to see results here. <button className="btn small" onClick={() => go({ name: 'world' })}>Your Fixtures</button></p> : (
+            <div style={{ maxHeight: 420, overflow: 'auto' }} ref={scrollRegion('Federation news')}><ul className="small" style={{ paddingLeft: 18 }}>
+              {data.news.map((n, i) => <li key={i}><span className="muted">S{n.season}{n.round < 98 ? ` R${n.round}` : ''} · </span>{n.id ? <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: n.id! })}>{n.text}</button> : n.text}</li>)}
+            </ul></div>
           )}
           <div className="small muted">Titles, upsets and settled markets.</div>
         </div>
         <div className="stack">
           <div className="panel" data-testid="champ-history">
-            <h3><span aria-hidden="true">🏆 </span>Crown Championship History</h3>
+            <h2 className="h3"><span aria-hidden="true">🏆 </span>Crown Championship History</h2>
             {data.champs.length === 0 ? <p className="small muted">No championship decided yet. It runs in rounds 16–19.</p> : (
               <table className="small"><thead><tr><th>Season</th><th>Champion</th><th>Final</th></tr></thead>
-                <tbody>{data.champs.map(([s, who]) => { const g = finalGame(s); return <tr key={s}><td>{s}</td><td><strong>{who.join(' & ')}</strong>{who.length > 1 ? ' (Joint)' : ''}</td><td>{g ? <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>Replay {g.whiteName} – {g.blackName}</button> : <span className="muted">Result only</span>}</td></tr>; })}</tbody></table>
+                <tbody>{data.champs.map(([s, who]) => { const g = finalGame(s); return <tr key={s}><td>{s}</td><td><strong>{who.join(' & ')}</strong>{who.length > 1 ? ' (Joint)' : ''}</td><td>{g ? <button className="btn ghost small inline-link" onClick={() => go({ name: 'watch', id: g.fixtureId })}>Replay {fed.name(g.white)} – {fed.name(g.black)}</button> : <span className="muted">Result only</span>}</td></tr>; })}</tbody></table>
             )}
           </div>
           <div className="panel">
-            <h3>Rivalries</h3>
+            <h2 className="h3">Rivalries</h2>
             {data.rivalries.length === 0 ? <p className="small muted">Rivalries appear here once two competitors have met three times.</p> : (
               <table className="small"><thead><tr><th>Pair</th><th>Meetings</th><th>Score</th></tr></thead>
-                <tbody>{data.rivalries.map(r => <tr key={r.a + r.b}><td><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: r.a })}>{data.name(r.a)}</button> vs <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: r.b })}>{data.name(r.b)}</button>{r.champ ? <span className="chip gold" style={{ marginLeft: 6 }}>Championship ×{r.champ}</span> : null}</td><td>{r.n}</td><td className="mono">{r.sa}–{r.n - r.sa}</td></tr>)}</tbody></table>
+                <tbody>{data.rivalries.map(r => <tr key={r.a + r.b}><td><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: r.a })}>{data.name(r.a)}</button> vs <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: r.b })}>{data.name(r.b)}</button>{r.champ ? <span className="chip gold" style={{ marginLeft: 6 }}>Championship ×{r.champ}</span> : null}</td><td>{r.n}</td><td className="mono">{r.sa}–{r.n - r.sa}</td></tr>)}</tbody></table>
             )}
             <div className="small muted">Counts meetings in the Crown Division, Federation Open and Crown Championship.</div>
           </div>
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Season Archive</h3>
+        <h2 className="h3">Season Archive</h2>
         {data.archive.length === 0 ? <p className="small muted">No titles yet. Event winners appear here when each event ends.</p> : data.archive.map(([s, items]) => (
           <details key={s} open={s === data.archive[0][0]}><summary><strong>Season {s}</strong> · {items.length} {items.length === 1 ? 'title' : 'titles'}</summary>
-            <ul className="small">{items.sort((a, b) => a.title.localeCompare(b.title)).map((x, i) => <li key={i}>{/Crown Division/.test(x.title) && <Insignia division={1} size={14} />} {x.title}: <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => x.id && go({ name: 'competitor', id: x.id })}>{x.who}</button></li>)}</ul>
+            <ul className="small">{items.sort((a, b) => a.title.localeCompare(b.title)).map((x, i) => <li key={i}>{/Crown Division/.test(x.title) && <Insignia division={1} size={14} />} {x.title}: <button className="btn ghost small inline-link" onClick={() => x.id && go({ name: 'competitor', id: x.id })}>{x.who}</button></li>)}</ul>
           </details>
         ))}
       </div>

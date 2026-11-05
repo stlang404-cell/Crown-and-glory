@@ -1,0 +1,11 @@
+[2026-11-05T01:38:43.695Z] PASS 1: Defaults: pool "Beginner Bands" (suggested label true), type "Rated"
+[2026-11-05T01:38:43.704Z] Beginner-band pool: 2185 active competitors rated under 800
+[2026-11-05T01:38:44.485Z] PASS 2: Card shows a real active beginner-band competitor: Kana Brackmere 506 ±120 (roster: {"id":"c7543","rating":506,"rd":120,"status":"active"})
+[2026-11-05T01:38:44.772Z] PASS 3: 5 rerolls gave 6 different opponents; rerolls and Cancel created no game (0 → 0)
+[2026-11-05T01:38:45.158Z] PASS 4: Rated game created vs Noella Fairholt (snapshot rating 529, own calibrated profile fed-e485)
+[2026-11-05T01:38:47.555Z] PASS 5: One rating event (0 → -31, games 0 → 1); still 1 after reload
+[2026-11-05T01:38:48.323Z] PASS 6: Casual quick match: rating unchanged (-30.6), still 1 rating event
+[2026-11-05T01:38:48.515Z] PASS 7: Elite filter drew a 2,415 ±120 competitor
+[2026-11-05T01:38:49.360Z] PASS 8: Phone: card shown, horizontal overflow 0px
+[2026-11-05T01:38:49.360Z] PASS 9: No page errors (0)
+[2026-11-05T01:38:49.411Z] ALL CHECKS PASSED

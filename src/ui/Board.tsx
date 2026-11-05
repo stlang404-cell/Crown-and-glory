@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, KeyboardEvent, PointerEvent as RPointerEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, KeyboardEvent, PointerEvent as RPointerEvent } from 'react';
 import { PieceSvg, PieceKind, PIECE_NAMES } from './Pieces';
 import { detectTransition, isForward, parseBoard as parseCells, type Cell } from './boardMotion';
 import { pieceMoveMs } from './theme';
@@ -39,8 +39,14 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
   const boardRef = useRef<HTMLDivElement>(null);
   const focusRef = useRef<(HTMLButtonElement | null)[]>([]);
   const justDragged = useRef(false);
+  // roving tabindex: Tab returns to the square the player last focused (arrow keys move it)
+  const [focusPos, setFocusPos] = useState(0);
+  const promoRef = useRef<HTMLDivElement>(null);
+  const descId = useId();
 
   useEffect(() => { setSelected(null); setPromo(null); }, [fen]);
+  // the promotion chooser takes keyboard focus when it opens (queen first); Escape cancels it
+  useEffect(() => { if (promo) promoRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, [promo]);
 
   // ---- motion (presentation only: `board` is always the authoritative position) ----
   const prevBoard = useRef<Cell[] | null>(null);
@@ -189,11 +195,26 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
   };
 
   const onKey = (e: KeyboardEvent, pos: number) => {
+    if (e.key === 'Escape' && selected) { e.preventDefault(); setSelected(null); return; }
     const map: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -6, ArrowDown: 6 };
-    if (!(e.key in map)) return;
+    let next: number;
+    if (e.key === 'Home') next = pos - (pos % 6);
+    else if (e.key === 'End') next = pos - (pos % 6) + 5;
+    else if (e.key in map) {
+      next = pos + map[e.key];
+      // left/right stay on the row instead of wrapping to the next rank
+      if ((e.key === 'ArrowLeft' && pos % 6 === 0) || (e.key === 'ArrowRight' && pos % 6 === 5)) next = -1;
+    } else return;
     e.preventDefault();
-    const next = pos + map[e.key];
-    if (next >= 0 && next < 36) focusRef.current[next]?.focus();
+    if (next >= 0 && next < 36) { setFocusPos(next); focusRef.current[next]?.focus(); }
+  };
+  const onPromoKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); const from = promo?.from; setPromo(null); setSelected(null); if (from) focusRef.current[order.indexOf(sqIndex(from))]?.focus(); return; }
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault(); e.stopPropagation();
+    const bs = [...(promoRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
+    const i = bs.indexOf(document.activeElement as HTMLButtonElement);
+    bs[(i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? bs.length - 1 : 1)) % bs.length]?.focus();
   };
 
   const last = lastMove ? [lastMove.slice(0, 2), lastMove.slice(2, 4)] : [];
@@ -206,17 +227,20 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
 
   return (
     <div className={`board-wrap${showCoords ? ' with-coords' : ''}`}>
-      <div ref={boardRef} className={`board${legal.length ? ' interactive' : ''}${selected ? ' has-sel' : ''}`} role="grid" aria-label={label} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => setDrag(null)}>
-        {order.map((idx, pos) => {
+      <div ref={boardRef} className={`board${legal.length ? ' interactive' : ''}${selected ? ' has-sel' : ''}`} role="grid" aria-label={label} aria-describedby={legal.length ? descId : undefined} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => setDrag(null)}>
+        {[0, 1, 2, 3, 4, 5].map(row => (
+          <div key={row} role="row" className="board-row">
+        {order.slice(row * 6, row * 6 + 6).map((idx, c6) => {
+          const pos = row * 6 + c6;
           const name = sqName(idx);
           const p = board[idx];
           const light = (idx % 6 + Math.floor(idx / 6)) % 2 === 1;
           const isDest = dests.has(name);
           const cls = ['sq', light ? 'light' : 'dark', last.includes(name) ? `last ${name === last[0] ? 'last-from' : 'last-to'}` : '', selected === name || highlights.includes(name) ? 'sel' : '', checkSquare === name ? 'check' : '', isDest ? (p ? 'dest capture' : 'dest') : ''].filter(Boolean).join(' ');
-          const row = Math.floor(pos / 6), col = pos % 6;
+          const col = pos % 6;
           return (
+            <span key={name} role="gridcell" className="board-cell">
             <button
-              key={name}
               ref={el => { focusRef.current[pos] = el; }}
               className={cls}
               data-square={name}
@@ -224,7 +248,8 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
               onClick={() => clickSquare(name)}
               onPointerDown={e => onPointerDown(e, name)}
               onKeyDown={e => onKey(e, pos)}
-              tabIndex={pos === 0 ? 0 : -1}
+              onFocus={() => { if (focusPos !== pos) setFocusPos(pos); }}
+              tabIndex={pos === focusPos ? 0 : -1}
             >
               {showCoords && col === 0 && <span className="coord rank">{name[1]}</span>}
               {showCoords && row === 5 && <span className="coord file">{name[0]}</span>}
@@ -242,8 +267,11 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
               )}
               {isDest && (p ? <span className="ring" /> : <span className="dot" />)}
             </button>
+            </span>
           );
         })}
+          </div>
+        ))}
         {arrows.length > 0 && (
           <svg className="arrow-layer" viewBox="0 0 6 6" aria-hidden>
             <defs>
@@ -260,7 +288,7 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
           </svg>
         )}
         {promo && (
-          <div className="promo" role="dialog" aria-label="Choose promotion piece">
+          <div className="promo" role="dialog" aria-modal="true" aria-label="Choose promotion piece" ref={promoRef} onKeyDown={onPromoKey}>
             <div className="promo-card">
               {(['q', 'r', 'n'] as const).map(k => (
                 <button key={k} aria-label={`Promote to ${PIECE_NAMES[k]}`} onClick={() => { const m = promo.from + promo.to + k; setPromo(null); setSelected(null); onMove?.(m); }}>
@@ -274,6 +302,7 @@ export function Board({ fen, orientation, legal = [], onMove, lastMove, checkSqu
           </div>
         )}
       </div>
+      {legal.length > 0 && <span id={descId} className="sr-only">Arrow keys move between squares, Home and End go to the ends of a rank. Enter or Space selects a piece and then its destination; Escape cancels.</span>}
       {drag?.started && board[sqIndex(drag.from)] && (
         <PieceSvg
           kind={board[sqIndex(drag.from)]!.toLowerCase() as PieceKind}

@@ -22,9 +22,22 @@ export const ROUNDS_PER_SEASON = 19;
 export interface Topology { id: string; regions: number; divisions: number; divisionSize: number }
 export const TOPOLOGY_V1: Topology = { id: 'crown-topology-1', regions: REGIONS, divisions: DIVISIONS, divisionSize: DIVISION_SIZE };
 export const TOPOLOGY_V2: Topology = { id: 'crown-topology-2', regions: 32, divisions: DIVISIONS, divisionSize: DIVISION_SIZE };
-export const TOPOLOGIES: Topology[] = [TOPOLOGY_V1, TOPOLOGY_V2];
-/** Topology given to NEWLY founded federations (existing worlds keep the one they were founded with). */
+/** v0.10: 80 regions × 8 divisions × 16 = 10,240 competitors (docs/FEDERATION_SCALE.md §0). */
+export const TOPOLOGY_V3: Topology = { id: 'crown-topology-3', regions: 80, divisions: DIVISIONS, divisionSize: DIVISION_SIZE };
+export const TOPOLOGIES: Topology[] = [TOPOLOGY_V1, TOPOLOGY_V2, TOPOLOGY_V3];
+/** Topology of `FederationService.create` when none is given (tests, tools): the original 2,048 world. The app
+ *  chooses the size of a NEW federation with `newFederationTopology` (existing worlds keep theirs). */
 export const NEW_FEDERATION_TOPOLOGY: Topology = TOPOLOGY_V1;
+/** Federation sizes offered when founding (docs/FEDERATION_SCALE.md §0). */
+export const FEDERATION_SIZES: { topology: Topology; label: string }[] = [
+  { topology: TOPOLOGY_V1, label: 'Standard' }, { topology: TOPOLOGY_V2, label: 'Large' }, { topology: TOPOLOGY_V3, label: 'Grand' },
+];
+/** Default size of a new federation (v0.10): the Grand federation, 10,240 competitors, on desktop and on phones.
+ *  Measured in Chromium (docs/FEDERATION_SCALE.md §0.3): round advance median 0.24 s on desktop and 0.8 s with
+ *  4× CPU throttling (a phone proxy), slowest round (season end) 0.54 s / 1.6 s, under load. Phones keep their reduced live-game load
+ *  (src/app/scheduler.ts: one engine worker, at most 6 games at once, 24 per round). The founding screen offers the
+ *  smaller sizes; an existing federation never changes size. */
+export const newFederationTopology = (device: { mobile: boolean }): Topology => { void device; return TOPOLOGY_V3; };
 /** The topology of a stored world (absent field = crown-topology-1, the v0.1–v0.8 federation). */
 export const topologyOf = (world?: { topology?: Topology } | null): Topology => world?.topology ?? TOPOLOGY_V1;
 export const populationOf = (t: Topology) => t.regions * t.divisions * t.divisionSize;
@@ -34,7 +47,8 @@ export function topologyWithRegions(regions: number): Topology {
   return TOPOLOGIES.find(t => t.regions === regions) ?? { id: `crown-topology-custom-${regions}`, regions, divisions: DIVISIONS, divisionSize: DIVISION_SIZE };
 }
 
-export type StyleId = 'universal' | 'tactical' | 'positional' | 'defensive' | 'endgame' | 'aggressive';
+/** Playing styles. gambiteer, materialist and complicator were added in crown-styles-6 (src/engine/styles.ts). */
+export type StyleId = 'universal' | 'tactical' | 'positional' | 'defensive' | 'endgame' | 'aggressive' | 'gambiteer' | 'materialist' | 'complicator';
 
 export interface CompetitorSeason { season: number; region: number; division: number; rank: number; points: number; played: number; rating: number; earnings: number }
 
@@ -66,6 +80,17 @@ export interface Competitor {
   fedTitle?: import('../heraldry/catalog').FedTitle | null;
   peakRating?: number;
   establishedPeak?: number;
+  /** v0.10: historical roster identity (src/federation/rosterPersonas.ts) — a fictional chess persona named after a
+   *  historical figure; absent for original competitors. The name field holds the persona's display name.
+   *  Contemporary personas (`pub-…`, docs/ROSTER.md) hold their display name under the current Settings choice. */
+  persona?: string;
+  /** v0.10 contemporary personas only: the competitor's stable original fictional name, generated with the
+   *  competitor and kept at assignment. Shown instead of the famous name when "Show contemporary famous names" is
+   *  off, or if the identity is ever removed from the data file. Never changes. */
+  altName?: string;
+  /** v0.11 Circuit Grade (src/federation/ranks.ts, docs/FEUDAL_RANKS.md): [step 0–47, demotion protection,
+   *  highest step ever, season it was first reached, last standing score × 10]. Absent in older saves (derived at load). */
+  rank?: import('./ranks').CompRank;
 }
 
 /** A pairing in a world round. result: 1 white win, 0.5 draw, 0 black win, null pending. */
@@ -87,6 +112,8 @@ export interface Fixture {
    *  computed by the engine, but after the app reopened rather than live; 'abstract' = drawn from the tier-3 result
    *  model (exactly the draw the fixture would have had without the scheduler) — no game record exists. */
   resolution?: 'simulated' | 'fast-forwarded' | 'abstract';
+  /** v0.11: a league game the player postponed from this round (played in a later round; src/app/federation.ts). */
+  postponedFrom?: number;
 }
 
 export const PLAYER_ID = 'player';
@@ -100,8 +127,15 @@ export const REGION_NAMES = [
   // crown-topology-2 regions 17–32 (original names)
   'Quarrydown', 'Rivenford', 'Saltmarsh', 'Thistlemoor', 'Umberlea', 'Vantage Bay', 'Westerholm', 'Yarrowdale',
   'Amberlynn', 'Blackwater', 'Corrin Heights', 'Driftmoor', 'Emberfell', 'Foxglove Vale', 'Gullhaven', 'Harrowmere',
+  // crown-topology-3 regions 33–80 (original names)
+  'Ivyreach', 'Jessamine Shore', 'Kelderwick', 'Larchmont Fells', 'Mistral Cove', 'Nightingale Rise', 'Opalcairn', 'Pinecrest Hollow',
+  'Quenmoor', 'Rookhaven', 'Silverbirch', 'Tidewatch', 'Underhill Marches', 'Velvet Downs', 'Willowmere', 'Wrenfield',
+  'Aldermoor', 'Bramblegate', 'Cinderwick', 'Dovecote Vale', 'Elderglen', 'Falconridge', 'Glimmerdeep', 'Hollowmere',
+  'Inkwell Isles', 'Jorvale', 'Kingfisher Bay', 'Lindenhall', 'Marigold Reach', 'Nettlefold', 'Oriel Point', 'Primrose March',
+  'Quillhaven', 'Ruskwood', 'Starling Coast', 'Tamberlyn', 'Ulverdale', 'Vespermoor', 'Wintergate', 'Yewborough',
+  'Zephyr Strand', 'Ashgrove Fen', 'Bellmarsh', 'Copperleigh', 'Duskwater', 'Everbright', 'Frostholm', 'Goldenmere',
 ];
-/** Region name; regions beyond the named 32 (scale experiments only) are numbered. */
+/** Region name; regions beyond the named 80 (scale experiments only) are numbered. */
 export const regionName = (r: number) => REGION_NAMES[r] ?? `Region ${r + 1}`;
 /** Names of the regions that exist in a world of this topology (UI pickers). */
 export const regionNamesOf = (t: Topology) => Array.from({ length: t.regions }, (_, i) => regionName(i));

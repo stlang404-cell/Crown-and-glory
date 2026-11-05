@@ -14,7 +14,7 @@ export const GENESIS_TREASURY = C(25_000); // standing float for market subsidie
 export const STARTING_GRANT = C(1_000);
 export const SPONSOR_BUDGET = C(1_200);
 /** v0.8: part of the season sponsor budget that local sponsors give a player club, scaled by its appeal share. */
-export const CLUB_SPONSOR_POOL = C(600);
+export const CLUB_SPONSOR_POOL = C(400); // v0.11: was $600 (club owners led chess-only careers by ~55% in the 24-season sweep; docs/ECONOMY_V11.md)
 /** The treasury funds market subsidies and NPC wallets. At each season start it is replenished toward the
  *  target by an explicit, capped mint entry — the only issuance besides prize pools, sponsors and grants. */
 export const TREASURY_TARGET = C(25_000);
@@ -28,6 +28,16 @@ export const CHALLENGER_POOL = C(600);
 export const CHAMP_POOL = C(8_000);
 export const SWISS_SPLIT = [0.3, 0.2, 0.12, 0.12, 0.065, 0.065, 0.065, 0.065];
 export const CHAMP_SPLIT: Record<string, number> = { champion: 0.4, final: 0.2, semi: 0.1, quarter: 0.05 };
+/** v0.11 crown-competition-2 knockouts (src/federation/competitions.ts), escrowed at season start like every pool.
+ *  Zonal Championship (16 players, one per zone): $1,000, split as the Crown Championship. Regional Cup (8 players,
+ *  one per region): $150 — champion 50%, finalist 25%, semifinalists 12.5% each. Issuance per season: 8 × $1,000 +
+ *  regions × $150 ($10,400 at 16 regions, $20,000 at 80; the league pools are $92,800 / $464,000). */
+export const ZONAL_POOL = C(1_000);
+export const CUP_POOL = C(150);
+export const ZONAL_SPLIT: Record<string, number> = CHAMP_SPLIT;
+export const CUP_SPLIT: Record<string, number> = { champion: 0.5, final: 0.25, semi: 0.125 };
+/** Pool of a crown-competition-2 knockout by event id (`zonal-<z>` or `cup-<r>`). */
+export const cupPool = (event: string) => (event.startsWith('zonal-') ? ZONAL_POOL : CUP_POOL);
 
 /** Player-only sponsor milestones, each paid at most once per season from the season's sponsor budget. */
 export const SPONSOR_MILESTONES: Record<string, { label: string; amount: number }> = {
@@ -65,20 +75,25 @@ export function genesisJournals(at: string, npcIds: string[], npcFund: number): 
   return out;
 }
 
-export interface PrizePools { league: Record<string, number>; open: number; challenger: number; champ: number; sponsor: number }
-export function prizePools(circuits: { region: number; division: number }[]): PrizePools {
-  return {
+export interface PrizePools { league: Record<string, number>; open: number; challenger: number; champ: number; sponsor: number;
+  /** v0.11 crown-competition-2 knockouts by event id; absent under crown-competition-1 (the journal is then unchanged). */
+  cups?: Record<string, number> }
+export function prizePools(circuits: { region: number; division: number }[], cupEvents: string[] = []): PrizePools {
+  const pools: PrizePools = {
     league: Object.fromEntries(circuits.map(c => [`${c.region}:${c.division}`, leaguePool(c.division)])),
     open: OPEN_POOL, challenger: CHALLENGER_POOL, champ: CHAMP_POOL, sponsor: SPONSOR_BUDGET,
   };
+  if (cupEvents.length) pools.cups = Object.fromEntries(cupEvents.map(e => [e, cupPool(e)]));
+  return pools;
 }
 
 /** Season issuance: mint exactly the season's prize pools and sponsor budget, escrowed immediately. */
 export function seasonStartJournals(season: number, pools: PrizePools, at: string): Journal[] {
-  const total = Object.values(pools.league).reduce((a, b) => a + b, 0) + pools.open + pools.challenger + pools.champ + pools.sponsor;
+  const total = Object.values(pools.league).reduce((a, b) => a + b, 0) + pools.open + pools.challenger + pools.champ + pools.sponsor + Object.values(pools.cups ?? {}).reduce((a, b) => a + b, 0);
   const lines = [{ account: 'mint', amount: -total }];
   for (const [k, v] of Object.entries(pools.league)) lines.push({ account: `prize:${season}:league:${k}`, amount: v });
   lines.push({ account: `prize:${season}:open`, amount: pools.open }, { account: `prize:${season}:challenger`, amount: pools.challenger }, { account: `prize:${season}:champ`, amount: pools.champ }, { account: `sponsor:${season}`, amount: pools.sponsor });
+  for (const [k, v] of Object.entries(pools.cups ?? {})) lines.push({ account: `prize:${season}:${k}`, amount: v });
   return [j(`mint:season:${season}`, 'mint', `Season ${season} issuance: prize pools and sponsor budget (escrowed)`, lines, season, 0, at)];
 }
 
@@ -168,6 +183,13 @@ export function prestige(p: { titles: { title: string }[]; promotions: number; b
     chess, chessTier: tier(chess, [[0, 'Unranked'], [50, 'Contender'], [200, 'Titled'], [500, 'Laureate'], [1000, 'Grandee']]), chessBasis,
     financial: fin, financialTier: tier(fin, [[0, 'Apprentice'], [60, 'Saver'], [150, 'Investor'], [300, 'Patron'], [600, 'Magnate']]), financialBasis,
   };
+}
+
+/** v0.11: add the financial prestige of estates, facilities and sponsorship (src/economy/wealth.ts) to the financial ladder. */
+export function withWealthPrestige(p: Prestige, w: { points: number; basis: string[] }): Prestige {
+  if (!w.points) return p;
+  const financial = p.financial + w.points;
+  return { ...p, financial, financialTier: tier(financial, [[0, 'Apprentice'], [60, 'Saver'], [150, 'Investor'], [300, 'Patron'], [600, 'Magnate']]), financialBasis: [...p.financialBasis, ...w.basis] };
 }
 
 // ---------------------------------------------------------------- institutions (v0.4.0)

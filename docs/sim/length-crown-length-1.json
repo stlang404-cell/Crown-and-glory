@@ -1,0 +1,90 @@
+{
+ "id": "crown-length-1",
+ "data": "3200 games from tools/odds/data (tools/odds/generate.ts), censored by the playing limit: 0",
+ "split": "by game: FNV-1a(game id) mod 4 = 0 held out",
+ "trainGames": 2400,
+ "testGames": 800,
+ "grid": "X = 20…200 step 5",
+ "coefficients": [
+  0.44116,
+  -4.044853,
+  0.40224,
+  -0.795898,
+  -0.842403,
+  0.347849
+ ],
+ "features": "[1, ln(X/60), level, gap, level·ln(X/60), gap·ln(X/60)]",
+ "heldOut": {
+  "logLossPerRow": 0.31435,
+  "baselineMarginalLogLoss": 0.32369,
+  "rows": 29600,
+  "atModelLine": {
+   "games": 800,
+   "overRate": 0.525,
+   "brier": 0.2502
+  },
+  "calibrationAllRows": [
+   {
+    "bin": "0.00–0.10",
+    "n": 14702,
+    "meanP": 0.036,
+    "freq": 0.045
+   },
+   {
+    "bin": "0.10–0.20",
+    "n": 3374,
+    "meanP": 0.143,
+    "freq": 0.128
+   },
+   {
+    "bin": "0.20–0.30",
+    "n": 1851,
+    "meanP": 0.247,
+    "freq": 0.23
+   },
+   {
+    "bin": "0.30–0.40",
+    "n": 1326,
+    "meanP": 0.348,
+    "freq": 0.334
+   },
+   {
+    "bin": "0.40–0.50",
+    "n": 1104,
+    "meanP": 0.449,
+    "freq": 0.462
+   },
+   {
+    "bin": "0.50–0.60",
+    "n": 991,
+    "meanP": 0.55,
+    "freq": 0.57
+   },
+   {
+    "bin": "0.60–0.70",
+    "n": 953,
+    "meanP": 0.651,
+    "freq": 0.677
+   },
+   {
+    "bin": "0.70–0.80",
+    "n": 991,
+    "meanP": 0.751,
+    "freq": 0.787
+   },
+   {
+    "bin": "0.80–0.90",
+    "n": 1337,
+    "meanP": 0.852,
+    "freq": 0.866
+   },
+   {
+    "bin": "0.90–1.00",
+    "n": 2971,
+    "meanP": 0.963,
+    "freq": 0.963
+   }
+  ]
+ },
+ "monotoneInLine": true
+}

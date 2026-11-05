@@ -1,11 +1,16 @@
+import { CONTEMPORARY_DISCLOSURE, isContemporaryId, shownPersona } from '../federation/rosterPersonas';
+import { HelpTip, TourHint } from './Onboarding';
+import { fmtCareerElo } from '../ratings/display';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
 import { Board } from './Board';
 import { Captured, Clock, KingAvatar, MatchHeader, MatchLayout, MoveNav, NotationList, PlayerBar, moveKeys } from './MatchCenter';
 import { Portrait } from './Portrait';
 import { Icon } from './Icons';
-import { ROSTER, Opponent, getOpponent, levelRating, opponentSnapshot, CALIBRATION_ID } from '../federation/roster';
-import { getLevel, MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
+import { ROSTER, CALIBRATION_ID } from '../federation/roster';
+import { BEGINNER_OPPONENTS, PLAY_OPPONENTS, PlayOpponent, findOpponent, opponentLevelLabel, opponentProfile, opponentRating, playOpponentSnapshot } from '../federation/opponents';
+import { BEGINNER_CALIBRATION_ID } from '../federation/profiles';
+import { MAX_BUDGET_NAMES, MAX_BUDGETS_S, MAX_LEVEL, MAX_RATED_BUDGET_S, maxProfile } from '../engine/levels';
 import { CancelledError } from '../engine/client';
 import { GameSession, createGameRecord } from '../games/session';
 import { TIME_CONTROLS, TimeControlId, GameRecord, poolFor } from '../games/types';
@@ -14,6 +19,9 @@ import { Position } from '../rules/position';
 import { squareName } from '../rules/types';
 import type { RatingEvent, PoolState } from '../ratings/ledger';
 import { explainEvent } from '../ratings/ledger';
+import { careerEloLabel, displayElo, gamesToEstablish, isEstablished, suggestBeginnerBands } from '../ratings/career';
+import { ratingChange } from '../ratings/display';
+import { RatingChangeLine } from './CareerElo';
 import type { EngineScore } from '../analysis/types';
 import { formatScore } from './Charts';
 import type { AssistCandidate } from '../engine/protocol';
@@ -25,6 +33,7 @@ import { fmtCrowns, fmtPrice } from '../exchange/ledger';
 import { wdl } from '../federation/resultModel';
 import { playOnce, playSound } from './sound';
 import { QuickMatch } from './QuickMatch';
+import { PlayedLikeResultLines } from './PlayedLikeCard';
 import { clearPractice, peekPractice } from '../app/practice';
 
 const newId = () => `g-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -48,7 +57,22 @@ export function PlayScreen() {
   // control, and Casual — a practice setup never starts a rated game by itself (src/app/practice.ts).
   const [practice] = useState(() => peekPractice());
   useEffect(() => { if (practice) clearPractice(); }, [practice]);
-  const [opp, setOpp] = useState<Opponent>(() => (practice && getOpponent(practice.opponentId)) || ROSTER[2]);
+  const [opp, setOppRaw] = useState<PlayOpponent>(() => (practice && findOpponent(practice.opponentId)) || ROSTER[2]);
+  const [oppTouched, setOppTouched] = useState(!!practice);
+  const setOpp = (o: PlayOpponent) => { setOppTouched(true); setOppRaw(o); };
+  // A provisional new career (or any career under 800) is offered the calibrated beginners first (docs/CAREER_RATING.md)
+  const [beginnerFirst, setBeginnerFirst] = useState(false);
+  useEffect(() => {
+    void services.db.ratingState('rapid').then(p => {
+      const on = suggestBeginnerBands(p, services.db.ratingStart);
+      setBeginnerFirst(on);
+      if (on && !oppTouched) {
+        const r = displayElo(p.rating);
+        const best = [...BEGINNER_OPPONENTS].sort((a, b) => Math.abs((opponentRating(a)?.rating ?? 0) - r) - Math.abs((opponentRating(b)?.rating ?? 0) - r))[0];
+        if (best) setOppRaw(best);
+      }
+    }).catch(() => {});
+  }, [services, services.revision]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tc, setTc] = useState<TimeControlId>(practice?.timeControl ?? 'rapid');
   const [mode, setMode] = useState<'rated' | 'casual'>(practice ? 'casual' : 'rated');
   const [color, setColor] = useState<'white' | 'black' | 'random'>('random');
@@ -58,7 +82,7 @@ export function PlayScreen() {
   const [budget, setBudget] = useState<number>(MAX_RATED_BUDGET_S);
   const isMax = opp.level === MAX_LEVEL;
   // Sovereign Unbound is calibrated only at its rated budget; other budgets are casual
-  const calibrated = levelRating(opp.level) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
+  const calibrated = opponentRating(opp) !== null && (!isMax || budget === MAX_RATED_BUDGET_S);
   const ratedAllowed = calibrated && tc !== 'untimed';
 
   useEffect(() => {
@@ -73,7 +97,7 @@ export function PlayScreen() {
     const record = createGameRecord({
       id: newId(), mode: rated ? 'rated' : 'casual', timeControl: TIME_CONTROLS[tc], humanColor,
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
-      engine: opponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
+      engine: playOpponentSnapshot(opp, budget), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
     await services.saveGame(record);
     go({ name: 'match', gameId: record.id });
@@ -88,6 +112,8 @@ export function PlayScreen() {
           <p className="muted" style={{ margin: 0 }}>Six-square chess against engine opponents. Every game is saved, rated games change your rating, and every finished game gets a full analysis.</p>
         </div>
       </section>
+      <TourHint step="first-game" />
+      <TourHint step="first-rated" />
       <QuickMatch />
       <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
         {[
@@ -117,28 +143,31 @@ export function PlayScreen() {
       )}
       <div className="grid-2">
         <div className="panel">
-          <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span></div>
+          <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span><HelpTip term="Career Elo" /></div>
           <div className="stack" role="radiogroup" aria-label="Opponent">
-            {ROSTER.map(o => {
-              const cal = levelRating(o.level);
-              return (
-                <button key={o.id} className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)}>
+            {PLAY_OPPONENTS.map((o: PlayOpponent, i) => {
+              const cal = opponentRating(o);
+              const beginner = !!o.beginner;
+              return (<div key={o.id} style={{ display: 'contents' }}>
+                {i === 0 && <div className="small muted" data-testid="beginner-group" style={{ fontWeight: 700 }}>Beginners · 0–399 and 400–799 · they miss threats and sometimes play random moves{beginnerFirst && <> · <span className="chip info" data-testid="beginner-suggested">Suggested for your career Elo</span></>}</div>}
+                {i === BEGINNER_OPPONENTS.length && <div className="small muted" style={{ fontWeight: 700, marginTop: 6 }}>Calibrated ladder · 800 and up</div>}
+                <button className="opp-card" aria-pressed={opp.id === o.id} onClick={() => setOpp(o)} data-testid={beginner ? `opp-beginner-${o.beginner}` : undefined}>
                   <Portrait seed={o.portraitSeed} size={48} crown={o.level >= 8} />
                   <div style={{ flex: 1 }}>
-                    <div className="row" style={{ gap: 6 }}><strong>{o.name}</strong><span className="chip gold">L{o.level} {getLevel(o.level).name}</span></div>
-                    <div className="small muted">{o.club} · {getLevel(o.level).description}</div>
+                    <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}><strong>{o.name}</strong><span className={beginner ? 'chip info' : 'chip gold'}>{opponentLevelLabel(o)}</span>{beginner && <span className="chip">Beginner</span>}</div>
+                    <div className="small muted">{o.club} · {opponentProfile(o).description}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? Math.round(cal.rating) : '—'}</div>
+                    <div style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{cal ? fmtCareerElo(cal.rating) : '—'}</div>
                     <div className="small muted">{cal ? `±${Math.round(cal.rd)}` : 'not yet rated'}</div>
                   </div>
                 </button>
-              );
+              </div>);
             })}
           </div>
           <details className="small">
             <summary>Details</summary>
-            <p className="muted">Opponent ratings come from measured engine test games (calibration {CALIBRATION_ID}).</p>
+            <p className="muted">Opponent ratings come from measured engine test games (calibration {CALIBRATION_ID}; beginners {BEGINNER_CALIBRATION_ID}, measured by matches chained down from L1 = 800). Ratings are engine-vs-engine on the Crown scale, not FIDE or human ratings.</p>
           </details>
         </div>
         <div className="panel stack">
@@ -172,7 +201,7 @@ export function PlayScreen() {
               <button aria-pressed={mode === 'casual' || !ratedAllowed} onClick={() => setMode('casual')}>Casual</button>
             </div>
             <div className="small muted" style={{ marginTop: 4 }}>
-              {!calibrated ? (isMax && levelRating(opp.level) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
+              {!calibrated ? (isMax && opponentRating(opp) ? `Only the ${MAX_RATED_BUDGET_S} s setting is rated, so this game is casual.` : 'This opponent has no rating yet, so games are casual.') : tc === 'untimed' ? 'Untimed games are never rated.' : mode === 'rated' ? 'Rated: no engine help during play, and the result changes your rating.' : 'Casual: saved and analysed, never rated.'}
             </div>
           </div>
           <div>
@@ -183,7 +212,7 @@ export function PlayScreen() {
           </div>
           {pool && mode === 'rated' && ratedAllowed && (
             <div className="notice">
-              Your {poolFor(tc)} rating: <strong>{Math.round(pool.rating)}</strong> ±{Math.round(pool.rd)} ({pool.games} games). It becomes more certain as you play more rated games.
+              Your {poolFor(tc)} career Elo: <strong data-testid="play-my-rating">{careerEloLabel(pool.rating, pool.games, pool.rd)}</strong> ±{Math.round(pool.rd)} ({pool.games} rated games). {isEstablished(pool.games, pool.rd) ? 'It becomes more certain as you play more rated games.' : `Provisional: it moves quickly and is established after at least ${gamesToEstablish(pool.games)} more rated game${gamesToEstablish(pool.games) === 1 ? '' : 's'} and ±100. It changes only through results.`}
             </div>
           )}
           <button className="btn primary" style={{ width: '100%', fontSize: '1.05rem' }} onClick={start} disabled={services.readOnly}>
@@ -401,7 +430,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const claims = session.claims();
   const humanToMove = session.sideToMove === humanColor && !session.isOver;
   const opp = rec.humanColor === 'white' ? rec.black : rec.white;
-  const oppMeta = getOpponent(opp.id);
+  const oppMeta = findOpponent(opp.id);
   const plies = rec.moves.length;
 
   // the shown position: the live game, or an earlier position while browsing (no moves can be made there)
@@ -421,12 +450,16 @@ export function MatchScreen({ gameId }: { gameId: string }) {
     const isHuman = c === humanColor;
     const ms = session.remaining(c, now);
     const running = session.timed && session.sideToMove === c && !session.isOver && !session.paused;
+    // Federation opponent: shown under the contemporary-names setting, with the persona disclosure
+    const comp = !isHuman && p.id ? services.fed.state?.competitors.get(p.id.replace(/^spar:/, '')) : undefined;
+    const sp = shownPersona(comp, services.fed.showNames);
+    const shownName = comp && isContemporaryId(comp.persona) ? `${comp.name}${p.id.startsWith('spar:') ? ' (sparring)' : ''}` : p.name;
     return (
       <PlayerBar color={color} active={session.sideToMove === c && !session.isOver} testId={isHuman ? 'human-bar' : 'engine-bar'}
         avatar={isHuman ? <KingAvatar color={color} /> : <Portrait seed={oppMeta?.portraitSeed ?? 1} size={40} crown={(oppMeta?.level ?? 0) >= 8} />}
-        name={<>{p.name} {!isHuman && <span className="chip gold">{p.engine?.profile ? 'Federation' : `L${p.engine?.level}`}</span>}</>}
+        name={<>{shownName} {!isHuman && <span className="chip gold">{p.engine?.profile ? (p.engine.profileId.startsWith('L0') ? p.engine.profileId : 'Federation') : `L${p.engine?.level}`}</span>}{sp && <> <span className="chip" data-testid="opponent-persona" title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Fictional persona. ${CONTEMPORARY_DISCLOSURE}`}>Fictional Persona</span></>}</>}
         meta={<>
-          {p.rating !== null ? `${Math.round(p.rating)} ±${Math.round(p.rd ?? 0)}` : isHuman ? 'Unrated' : 'Not yet rated'}
+          {p.rating !== null ? `${fmtCareerElo(p.rating, { rd: p.rd })}` : isHuman ? 'Unrated' : 'Not yet rated'}
           {!isHuman && thinking && session.sideToMove === c && ' · thinking…'}
           {isHuman && <> · {rec.rated ? <span className="chip pos">Rated · Unassisted</span> : <span className="chip">Casual</span>}</>}
         </>}
@@ -437,7 +470,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   };
 
   const startBlack = (rec.moves[0] ? Position.fromFen(rec.moves[0].fenAfter).side === 0 : session.pos.side === 1);
-  const rating = (p: GameRecord['white']) => (p.rating !== null ? String(Math.round(p.rating)) : null);
+  const rating = (p: GameRecord['white']) => (p.rating !== null ? fmtCareerElo(p.rating) : null);
   const budgetMs = opp.engine?.config?.maxTimeMs;
   const statusText = session.paused ? 'Paused' : session.isOver ? 'Finished' : humanToMove ? 'Your Move'
     : thinking && opp.engine?.level === MAX_LEVEL && budgetMs ? `Thinking · up to ${budgetMs / 1000} s` : thinking ? 'Thinking…' : 'Opponent to Move';
@@ -456,7 +489,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const movesPanel = (
     <>
       <div className="panel stack">
-        <div className="panel-title"><h3>Moves</h3>{rec.opening && <span className="small muted">{rec.opening.name}</span>}</div>
+        <div className="panel-title"><h2 className="h3">Moves</h2>{rec.opening && <span className="small muted">{rec.opening.name}</span>}</div>
         <NotationList label="Move list" startsWithBlack={startBlack} current={shownPly} onSelect={goPly} moves={rec.moves.map(m => ({ san: m.san }))} empty="Moves appear here as they are played." />
         {browsing && <div className="small muted">You are looking at an earlier position. Use Current Position to return to the game.</div>}
       </div>
@@ -558,13 +591,13 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
     playOnce(`result:${g.id}`, outcome);
   }, [g.id]);  
   const rematch = async () => {
-    const o = getOpponent(opp.id);
+    const o = findOpponent(opp.id);
     if (!o) return go({ name: 'play' });
     const pool = g.pool ? await services.db.ratingState(g.pool) : null;
     const rec = createGameRecord({
       id: newId(), mode: g.rated ? 'rated' : 'casual', timeControl: g.timeControl, humanColor: g.humanColor === 'white' ? 'black' : 'white',
       human: { kind: 'human', id: 'player', name: 'You', rating: pool?.rating ?? null, rd: pool?.rd ?? null },
-      engine: opponentSnapshot(o), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
+      engine: playOpponentSnapshot(o), engineSeed: Math.floor(Math.random() * 2 ** 31), nowIso: new Date().toISOString(),
     });
     await services.saveGame(rec);
     go({ name: 'match', gameId: rec.id });
@@ -576,14 +609,24 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
         <div className="muted">{g.result} · {g.termination ? TERMINATION_LABEL[g.termination] : ''} · vs {opp.name}</div>
         {e ? (
           <div>
-            <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{e.delta >= 0 ? '+' : ''}{e.delta.toFixed(1)}</div>
-            <div>{e.pool[0].toUpperCase() + e.pool.slice(1)} rating {Math.round(e.before.rating)} → <strong>{Math.round(e.after.rating)}</strong> (±{Math.round(e.after.rd)}){e.provisionalAfter ? ' · provisional' : ''}</div>
+            <div className={`delta ${e.delta >= 0 ? 'up' : 'down'}`} data-testid="rating-delta">{ratingChange(e.before.rating, e.after.rating).deltaText}</div>
+            <div className="small muted">{e.pool[0].toUpperCase() + e.pool.slice(1)} career Elo · ±{Math.round(e.after.rd)}</div>
+            <RatingChangeLine before={e.before.rating} after={e.after.rating} provisional={e.provisionalAfter} />
+            {e.after.rating < 0 && <p className="small muted">Career Elo is shown from 0 upward; the underlying rating is {e.after.rating.toFixed(0)} and wins bring it back up.</p>}
             <p className="small muted">{explainEvent(e)}</p>
           </div>
         ) : <p className="muted">{g.rated ? 'Rating update unavailable.' : 'Casual game: saved to your Library, no rating change.'}</p>}
         <p className="small muted">Game saved. Your analysis is being prepared.</p>
-        <div className="row" style={{ justifyContent: 'center' }}>
-          <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
+        <PlayedLikeResultLines gameId={g.id} sides={{
+          white: { name: g.white.name, career: g.humanColor === 'white' ? (e ? Math.round(e.after.rating) : null) : g.white.rating ?? null },
+          black: { name: g.black.name, career: g.humanColor === 'black' ? (e ? Math.round(e.after.rating) : null) : g.black.rating ?? null },
+        }} />
+        {resultText(g) === 'Defeat' && (
+          <p className="small" data-testid="after-loss">Every loss is study material: the analysis marks the moves that cost the game, the Academy turns your analysed mistakes into puzzles, and a rematch swaps colours.</p>
+        )}
+        <div className="row" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="btn primary" autoFocus onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
+          {resultText(g) !== 'Victory' && <button className="btn" data-testid="after-loss-practice" onClick={() => { onClose(); go({ name: 'academy' }); }}>Practise in the Academy</button>}
           {g.context.kind === 'federation'
             ? <button className="btn" data-testid="back-to-federation" onClick={() => { onClose(); go({ name: 'world' }); }}>Back to Federation</button>
             : <><button className="btn" onClick={rematch}>Rematch</button>

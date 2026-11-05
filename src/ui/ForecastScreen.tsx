@@ -1,8 +1,42 @@
+import { scrollRegion } from './scrollRegion';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
 import { scoreAll, summary, calibration, rollingBrier, FORECAST_ID } from '../app/forecasting';
 import { statesOf } from '../exchange/market';
 import { KIND_LABEL, statusLabel } from './ExchangeScreen';
+import { useState } from 'react';
+import { leagueTable, leagueSeasons, calibrationGrade, MIN_FORECASTS, CAL_MIN_PAIRS, LEAGUE_ID } from '../app/forecastLeague';
+import type { Market } from '../exchange/market';
+import type { ForecastRecord } from '../app/forecasting';
+
+/** Season league table against simulated forecasters on the same markets and information, plus the calibration grade. */
+function ForecastLeague({ forecasts, markets, season }: { forecasts: ForecastRecord[]; markets: Map<string, Market>; season: number }) {
+  const seasons = leagueSeasons(forecasts, markets);
+  const [sel, setSel] = useState<number>(seasons[0] ?? season);
+  const t = leagueTable(forecasts, markets, sel);
+  const cal = calibrationGrade(forecasts, markets);
+  return (
+    <div className="grid-2" style={{ marginTop: 14 }}>
+      <div className="panel" data-testid="forecast-league">
+        <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Forecasting League</h2>
+          {seasons.length > 1 && <select aria-label="Season" value={sel} onChange={e => setSel(+e.target.value)}>{seasons.map(x => <option key={x} value={x}>Season {x}</option>)}</select>}
+        </div>
+        <div className="small muted">Your resolved forecasts of season {sel} against simulated forecasters. Each forecasts exactly the markets you did, from the public forecast and prices at the moment you forecast — never later information. Lower Brier is better.</div>
+        {t.n === 0 ? <p className="small muted">No resolved forecasts this season yet.</p> : (
+          <table className="small"><thead><tr><th>#</th><th>Forecaster</th><th>Brier</th></tr></thead>
+            <tbody>{t.rows.map(r => <tr key={r.id} style={r.id === 'you' ? { fontWeight: 700 } : undefined} title={r.description}><td className="mono">{r.rank}</td><td>{r.name}</td><td className="mono">{r.brier.toFixed(3)}</td></tr>)}</tbody></table>
+        )}
+        <div className="small">{t.qualified ? <>You rank <strong>{t.youRank}</strong> of {t.rows.length}{t.skillVsPrice !== null && <> · skill against the market price {(t.skillVsPrice * 100).toFixed(1)}%</>}.</> : <>Rank needs at least {MIN_FORECASTS} resolved forecasts this season ({t.n} so far).</>}</div>
+      </div>
+      <div className="panel" data-testid="calibration-challenge">
+        <h2 className="h3">Calibration Challenge</h2>
+        <div className="small">{cal.grade === 'Unrated' ? <>Unrated: the grade needs {CAL_MIN_PAIRS} probabilities from resolved forecasts ({cal.pairs} so far).</> : <><strong>{cal.grade}</strong> · expected calibration error {(cal.ece! * 100).toFixed(1)} points over {cal.pairs} probabilities{cal.direction && cal.direction !== 'balanced' ? ` · leaning ${cal.direction}` : ''}.</>}</div>
+        <div className="small muted">Expected calibration error is the average gap between the chances you gave and how often those outcomes happened (weighted by how many fall in each 10% bin). Well calibrated: up to 5 points; fairly: up to 10. Practice only: no money and no prestige.</div>
+        <details className="small muted"><summary>Details</summary>{LEAGUE_ID}. The simulated forecasters are formulas, not people: the published public forecast, the market price, an overconfident and an underconfident version of the forecast, a favourite-backer, a seeded noisy novice and equal chances.</details>
+      </div>
+    </div>
+  );
+}
 
 function CalibrationChart({ bins }: { bins: ReturnType<typeof calibration> }) {
   const W = 300, H = 300, pad = 30;
@@ -64,21 +98,22 @@ export function ForecastScreen() {
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Calibration</h3>
+          <h2 className="h3">Calibration</h2>
           {s.n === 0 ? <p className="small muted">No resolved forecasts yet.</p> : <CalibrationChart bins={bins} />}
           <div className="small muted">How often things you called at a given chance actually happened. Points on the dashed line are perfectly calibrated; small samples are noisy.</div>
           <details className="small muted"><summary>Details</summary>Each point pools every outcome probability you gave within a 10%-wide bin: x = your average probability, y = how often those outcomes happened (bar: 95% Wilson interval).</details>
         </div>
         <div className="panel">
-          <h3>Skill Progression</h3>
+          <h2 className="h3">Skill Progression</h2>
           <SkillChart rows={rollingBrier(sc)} />
           <div className="small muted">Your average Brier score over your last 10 resolved forecasts, compared with the market price and the public forecast on the same events.</div>
         </div>
       </div>
+      <ForecastLeague forecasts={st.extra.forecasts} markets={st.markets} season={st.world.season} />
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>History</h3>
-        {sc.length + pending.length === 0 ? <p className="small muted">No forecasts yet. Open any market and use the Paper Forecast panel.</p> : (
-          <div style={{ overflowX: 'auto' }}>
+        <h2 className="h3">History</h2>
+        {sc.length + pending.length === 0 ? <p className="small muted" data-testid="forecast-empty">No forecasts yet. Open any market and use the Paper Forecast panel. <button className="btn small" onClick={() => go({ name: 'exchange' })}>Open the Exchange</button></p> : (
+          <div style={{ overflowX: 'auto' }} ref={scrollRegion('Forecast history')}>
             <table className="small">
               <thead><tr><th>Market</th><th>Type</th><th>Your Top Call</th><th>Result</th><th>Brier</th><th className="hide-sm">Market</th><th className="hide-sm">Public</th></tr></thead>
               <tbody>

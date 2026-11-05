@@ -1,0 +1,176 @@
+{
+ "universal": {
+  "games": {
+   "games": 220,
+   "avgPlies": 77.5,
+   "piecesAt40": 4.15,
+   "styledPawnsAt30": 3.41,
+   "universalPawnsAt30": 3.32,
+   "drawRate": 0.255,
+   "queensOffRate": 0.782,
+   "medianQueensOffPly": 32
+  },
+  "side": {
+   "capturesPerGame": 8.69,
+   "checksPerGame": 5.41,
+   "promosPerGame": 0.365,
+   "kingZoneAttacksPerMove": 2.919,
+   "attacksSufferedPerMove": 2.67,
+   "behindRate": 0.324,
+   "aheadRate": 0.42
+  }
+ },
+ "gam2": {
+  "decisions": null,
+  "games": {
+   "games": 440,
+   "avgPlies": 78.9,
+   "piecesAt40": 4.02,
+   "styledPawnsAt30": 3.17,
+   "universalPawnsAt30": 3.23,
+   "drawRate": 0.23,
+   "queensOffRate": 0.832,
+   "medianQueensOffPly": 27
+  },
+  "styledSide": {
+   "capturesPerGame": 9.03,
+   "checksPerGame": 5.78,
+   "promosPerGame": 0.37,
+   "kingZoneAttacksPerMove": 3.035,
+   "attacksSufferedPerMove": 2.674,
+   "behindRate": 0.398,
+   "aheadRate": 0.378
+  },
+  "universalSide": {
+   "capturesPerGame": 9.09,
+   "checksPerGame": 5.8,
+   "promosPerGame": 0.39,
+   "kingZoneAttacksPerMove": 2.943,
+   "attacksSufferedPerMove": 2.787,
+   "behindRate": 0.285,
+   "aheadRate": 0.497
+  },
+  "strength": {
+   "games": 440,
+   "nodes": 2000,
+   "wdl": [
+    160,
+    101,
+    179
+   ],
+   "score": 0.478,
+   "elo": -15,
+   "eloCI": [
+    -41,
+    12
+   ]
+  },
+  "direction": {},
+  "decisionPass": false,
+  "directionPass": false,
+  "strengthPass": true,
+  "pass": false
+ },
+ "cpx2": {
+  "decisions": null,
+  "games": {
+   "games": 440,
+   "avgPlies": 78.1,
+   "piecesAt40": 5.28,
+   "styledPawnsAt30": 3.32,
+   "universalPawnsAt30": 3.37,
+   "drawRate": 0.157,
+   "queensOffRate": 0.657,
+   "medianQueensOffPly": 43
+  },
+  "styledSide": {
+   "capturesPerGame": 8.57,
+   "checksPerGame": 5.73,
+   "promosPerGame": 0.29,
+   "kingZoneAttacksPerMove": 2.926,
+   "attacksSufferedPerMove": 2.695,
+   "behindRate": 0.349,
+   "aheadRate": 0.41
+  },
+  "universalSide": {
+   "capturesPerGame": 8.59,
+   "checksPerGame": 5.94,
+   "promosPerGame": 0.36,
+   "kingZoneAttacksPerMove": 2.944,
+   "attacksSufferedPerMove": 2.668,
+   "behindRate": 0.323,
+   "aheadRate": 0.436
+  },
+  "strength": {
+   "games": 440,
+   "nodes": 2000,
+   "wdl": [
+    180,
+    69,
+    191
+   ],
+   "score": 0.487,
+   "elo": -9,
+   "eloCI": [
+    -37,
+    20
+   ]
+  },
+  "direction": {},
+  "decisionPass": false,
+  "directionPass": false,
+  "strengthPass": true,
+  "pass": false
+ },
+ "mat2": {
+  "decisions": null,
+  "games": {
+   "games": 440,
+   "avgPlies": 77.4,
+   "piecesAt40": 4.52,
+   "styledPawnsAt30": 3.33,
+   "universalPawnsAt30": 3.45,
+   "drawRate": 0.257,
+   "queensOffRate": 0.761,
+   "medianQueensOffPly": 31
+  },
+  "styledSide": {
+   "capturesPerGame": 8.65,
+   "checksPerGame": 5.44,
+   "promosPerGame": 0.36,
+   "kingZoneAttacksPerMove": 2.925,
+   "attacksSufferedPerMove": 2.66,
+   "behindRate": 0.262,
+   "aheadRate": 0.49
+  },
+  "universalSide": {
+   "capturesPerGame": 8.47,
+   "checksPerGame": 5.39,
+   "promosPerGame": 0.34,
+   "kingZoneAttacksPerMove": 2.911,
+   "attacksSufferedPerMove": 2.667,
+   "behindRate": 0.395,
+   "aheadRate": 0.354
+  },
+  "strength": {
+   "games": 440,
+   "nodes": 2000,
+   "wdl": [
+    174,
+    113,
+    153
+   ],
+   "score": 0.524,
+   "elo": 17,
+   "eloCI": [
+    -9,
+    43
+   ]
+  },
+  "direction": {},
+  "decisionPass": false,
+  "directionPass": false,
+  "strengthPass": true,
+  "pass": false
+ }
+}

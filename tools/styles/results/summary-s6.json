@@ -1,0 +1,510 @@
+{
+ "universal": {
+  "games": {
+   "games": 100,
+   "avgPlies": 78.3,
+   "piecesAt40": 4.55,
+   "styledPawnsAt30": 3.53,
+   "universalPawnsAt30": 3.54,
+   "drawRate": 0.31,
+   "queensOffRate": 0.77,
+   "medianQueensOffPly": 31
+  },
+  "side": {
+   "capturesPerGame": 8.65,
+   "checksPerGame": 5.515,
+   "promosPerGame": 0.345,
+   "kingZoneAttacksPerMove": 2.854,
+   "attacksSufferedPerMove": 2.604,
+   "behindRate": 0.318,
+   "aheadRate": 0.415
+  }
+ },
+ "tactical": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.127,
+   "signature": "contact",
+   "styleRate": 0.73,
+   "universalRate": 0.743
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 82.9,
+   "piecesAt40": 4.46,
+   "styledPawnsAt30": 3.42,
+   "universalPawnsAt30": 3.42,
+   "drawRate": 0.21,
+   "queensOffRate": 0.775,
+   "medianQueensOffPly": 36
+  },
+  "styledSide": {
+   "capturesPerGame": 9.17,
+   "checksPerGame": 6.17,
+   "promosPerGame": 0.42,
+   "kingZoneAttacksPerMove": 2.983,
+   "attacksSufferedPerMove": 2.664,
+   "behindRate": 0.333,
+   "aheadRate": 0.393
+  },
+  "universalSide": {
+   "capturesPerGame": 9.04,
+   "checksPerGame": 6.09,
+   "promosPerGame": 0.36,
+   "kingZoneAttacksPerMove": 2.901,
+   "attacksSufferedPerMove": 2.727,
+   "behindRate": 0.299,
+   "aheadRate": 0.422
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    82,
+    42,
+    76
+   ],
+   "score": 0.515,
+   "elo": 10,
+   "eloCI": [
+    -33,
+    53
+   ]
+  },
+  "direction": {
+   "captures+checks above the Universal side": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "positional": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.143,
+   "signature": "quiet",
+   "styleRate": 0.24,
+   "universalRate": 0.257
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 82,
+   "piecesAt40": 4.35,
+   "styledPawnsAt30": 3.56,
+   "universalPawnsAt30": 3.56,
+   "drawRate": 0.265,
+   "queensOffRate": 0.775,
+   "medianQueensOffPly": 31
+  },
+  "styledSide": {
+   "capturesPerGame": 8.77,
+   "checksPerGame": 5.57,
+   "promosPerGame": 0.38,
+   "kingZoneAttacksPerMove": 2.937,
+   "attacksSufferedPerMove": 2.608,
+   "behindRate": 0.33,
+   "aheadRate": 0.429
+  },
+  "universalSide": {
+   "capturesPerGame": 8.83,
+   "checksPerGame": 5.63,
+   "promosPerGame": 0.36,
+   "kingZoneAttacksPerMove": 2.847,
+   "attacksSufferedPerMove": 2.696,
+   "behindRate": 0.334,
+   "aheadRate": 0.423
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    71,
+    53,
+    76
+   ],
+   "score": 0.487,
+   "elo": -9,
+   "eloCI": [
+    -47,
+    30
+   ]
+  },
+  "direction": {
+   "fewer checks than the Universal side": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "aggressive": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.207,
+   "signature": "kingPressure",
+   "styleRate": 0.333,
+   "universalRate": 0.347
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 89.3,
+   "piecesAt40": 4.79,
+   "styledPawnsAt30": 3.52,
+   "universalPawnsAt30": 3.44,
+   "drawRate": 0.28,
+   "queensOffRate": 0.78,
+   "medianQueensOffPly": 38
+  },
+  "styledSide": {
+   "capturesPerGame": 9.01,
+   "checksPerGame": 6.03,
+   "promosPerGame": 0.28,
+   "kingZoneAttacksPerMove": 2.97,
+   "attacksSufferedPerMove": 2.551,
+   "behindRate": 0.381,
+   "aheadRate": 0.358
+  },
+  "universalSide": {
+   "capturesPerGame": 9.37,
+   "checksPerGame": 6.01,
+   "promosPerGame": 0.39,
+   "kingZoneAttacksPerMove": 2.771,
+   "attacksSufferedPerMove": 2.747,
+   "behindRate": 0.273,
+   "aheadRate": 0.466
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    59,
+    56,
+    85
+   ],
+   "score": 0.435,
+   "elo": -45,
+   "eloCI": [
+    -83,
+    -5
+   ]
+  },
+  "direction": {
+   "more king-zone attacks than the Universal side": true,
+   "fewer draws than Universal self-play": true,
+   "more checks than a side in Universal self-play": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "defensive": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.21,
+   "signature": "safety",
+   "styleRate": 0.257,
+   "universalRate": 0.253
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 79.1,
+   "piecesAt40": 4.05,
+   "styledPawnsAt30": 3.58,
+   "universalPawnsAt30": 3.52,
+   "drawRate": 0.355,
+   "queensOffRate": 0.85,
+   "medianQueensOffPly": 29
+  },
+  "styledSide": {
+   "capturesPerGame": 8.74,
+   "checksPerGame": 5.14,
+   "promosPerGame": 0.35,
+   "kingZoneAttacksPerMove": 2.874,
+   "attacksSufferedPerMove": 2.376,
+   "behindRate": 0.313,
+   "aheadRate": 0.437
+  },
+  "universalSide": {
+   "capturesPerGame": 8.7,
+   "checksPerGame": 5.25,
+   "promosPerGame": 0.32,
+   "kingZoneAttacksPerMove": 2.625,
+   "attacksSufferedPerMove": 2.64,
+   "behindRate": 0.334,
+   "aheadRate": 0.412
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    63,
+    71,
+    66
+   ],
+   "score": 0.492,
+   "elo": -5,
+   "eloCI": [
+    -38,
+    30
+   ]
+  },
+  "direction": {
+   "fewer attacks suffered than the Universal side": true,
+   "more draws than Universal self-play": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "endgame": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.107,
+   "signature": "simplify",
+   "styleRate": 0.06,
+   "universalRate": 0.047
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 85.1,
+   "piecesAt40": 4.22,
+   "styledPawnsAt30": 3.35,
+   "universalPawnsAt30": 3.5,
+   "drawRate": 0.3,
+   "queensOffRate": 0.8,
+   "medianQueensOffPly": 28
+  },
+  "styledSide": {
+   "capturesPerGame": 8.99,
+   "checksPerGame": 5.62,
+   "promosPerGame": 0.38,
+   "kingZoneAttacksPerMove": 2.846,
+   "attacksSufferedPerMove": 2.627,
+   "behindRate": 0.358,
+   "aheadRate": 0.398
+  },
+  "universalSide": {
+   "capturesPerGame": 9.26,
+   "checksPerGame": 6.25,
+   "promosPerGame": 0.41,
+   "kingZoneAttacksPerMove": 2.882,
+   "attacksSufferedPerMove": 2.616,
+   "behindRate": 0.304,
+   "aheadRate": 0.451
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    66,
+    60,
+    74
+   ],
+   "score": 0.48,
+   "elo": -14,
+   "eloCI": [
+    -51,
+    24
+   ]
+  },
+  "direction": {
+   "queens off earlier than in Universal self-play (median ply)": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "gambiteer": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.173,
+   "signature": "quiet",
+   "styleRate": 0.247,
+   "universalRate": 0.257
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 84.3,
+   "piecesAt40": 4.03,
+   "styledPawnsAt30": 3.19,
+   "universalPawnsAt30": 3.25,
+   "drawRate": 0.29,
+   "queensOffRate": 0.85,
+   "medianQueensOffPly": 29
+  },
+  "styledSide": {
+   "capturesPerGame": 9.07,
+   "checksPerGame": 6.21,
+   "promosPerGame": 0.34,
+   "kingZoneAttacksPerMove": 2.953,
+   "attacksSufferedPerMove": 2.625,
+   "behindRate": 0.354,
+   "aheadRate": 0.392
+  },
+  "universalSide": {
+   "capturesPerGame": 9.27,
+   "checksPerGame": 5.82,
+   "promosPerGame": 0.34,
+   "kingZoneAttacksPerMove": 2.877,
+   "attacksSufferedPerMove": 2.711,
+   "behindRate": 0.297,
+   "aheadRate": 0.449
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    67,
+    58,
+    75
+   ],
+   "score": 0.48,
+   "elo": -14,
+   "eloCI": [
+    -54,
+    28
+   ]
+  },
+  "direction": {
+   "behind on material after more of its moves than the Universal side": true,
+   "more king-zone attacks than the Universal side": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "materialist": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.133,
+   "signature": "capture",
+   "styleRate": 0.093,
+   "universalRate": 0.097
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 82,
+   "piecesAt40": 4.53,
+   "styledPawnsAt30": 3.31,
+   "universalPawnsAt30": 3.54,
+   "drawRate": 0.265,
+   "queensOffRate": 0.81,
+   "medianQueensOffPly": 31
+  },
+  "styledSide": {
+   "capturesPerGame": 8.86,
+   "checksPerGame": 5.93,
+   "promosPerGame": 0.46,
+   "kingZoneAttacksPerMove": 2.927,
+   "attacksSufferedPerMove": 2.53,
+   "behindRate": 0.218,
+   "aheadRate": 0.532
+  },
+  "universalSide": {
+   "capturesPerGame": 8.7,
+   "checksPerGame": 5.49,
+   "promosPerGame": 0.32,
+   "kingZoneAttacksPerMove": 2.757,
+   "attacksSufferedPerMove": 2.685,
+   "behindRate": 0.437,
+   "aheadRate": 0.306
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    86,
+    53,
+    61
+   ],
+   "score": 0.563,
+   "elo": 44,
+   "eloCI": [
+    5,
+    83
+   ]
+  },
+  "direction": {
+   "behind on material after fewer of its moves than the Universal side": true,
+   "ahead on material after more of its moves than the Universal side": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": true,
+  "pass": true
+ },
+ "complicator": {
+  "decisions": {
+   "positions": 300,
+   "nodes": 8000,
+   "disagreement": 0.17,
+   "signature": "contact",
+   "styleRate": 0.707,
+   "universalRate": 0.743
+  },
+  "games": {
+   "games": 200,
+   "avgPlies": 81.7,
+   "piecesAt40": 5.49,
+   "styledPawnsAt30": 3.28,
+   "universalPawnsAt30": 3.5,
+   "drawRate": 0.195,
+   "queensOffRate": 0.705,
+   "medianQueensOffPly": 44
+  },
+  "styledSide": {
+   "capturesPerGame": 8.69,
+   "checksPerGame": 5.52,
+   "promosPerGame": 0.3,
+   "kingZoneAttacksPerMove": 2.662,
+   "attacksSufferedPerMove": 2.727,
+   "behindRate": 0.373,
+   "aheadRate": 0.351
+  },
+  "universalSide": {
+   "capturesPerGame": 8.89,
+   "checksPerGame": 6.12,
+   "promosPerGame": 0.41,
+   "kingZoneAttacksPerMove": 2.975,
+   "attacksSufferedPerMove": 2.432,
+   "behindRate": 0.264,
+   "aheadRate": 0.463
+  },
+  "strength": {
+   "games": 200,
+   "nodes": 8000,
+   "wdl": [
+    66,
+    39,
+    95
+   ],
+   "score": 0.427,
+   "elo": -51,
+   "eloCI": [
+    -92,
+    -9
+   ]
+  },
+  "direction": {
+   "more knights/rooks/queens at ply 40 than in Universal self-play": true,
+   "queens off later than in Universal self-play (median ply)": true,
+   "fewer draws than Universal self-play": true
+  },
+  "decisionPass": true,
+  "directionPass": true,
+  "strengthPass": false,
+  "pass": false
+ }
+}

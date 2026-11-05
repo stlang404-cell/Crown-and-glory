@@ -94,12 +94,12 @@ export function GrimoireScreen({ path }: { path?: string }) {
       <p className="muted small">The Academy’s textbook: six books and two appendices. Every board is checked against the real rules; exercises accept exactly the moves the book verified.</p>
       <div className="grid-2" style={{ marginBottom: 14 }}>
         <div className="panel" data-testid="grimoire-review">
-          <div className="panel-title"><h3 style={{ margin: 0 }}>Review</h3><span className={`chip ${due.length ? 'gold' : ''}`} data-testid="review-counts" data-due={due.length} data-scheduled={scheduled}>{due.length} due · {scheduled} scheduled</span></div>
+          <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Review</h2><span className={`chip ${due.length ? 'gold' : ''}`} data-testid="review-counts" data-due={due.length} data-scheduled={scheduled}>{due.length} due · {scheduled} scheduled</span></div>
           <p className="small muted">Missed exercises come back after 1, 3, 7 and 14 days. A clean solve moves an exercise to the next interval; a miss starts it again.</p>
           <button className="btn" disabled={!due.length} onClick={() => go({ name: 'grimoire', path: 'review' })}>{due.length ? 'Start Review' : 'Nothing Due Today'}</button>
         </div>
         <div className="panel">
-          <div className="panel-title"><h3 style={{ margin: 0 }}>Tactical Topics</h3><span className="chip">Book II</span></div>
+          <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Tactical Topics</h2><span className="chip">Book II</span></div>
           {mastery.length ? (
             <ul className="grim-mastery">{mastery.map(t => <li key={t.topic.id}><span>{t.topic.label}</span><span className="chip">{Math.round((t.mastery ?? 0) * 100)}% first try · {t.attempted}/{t.exercises}</span></li>)}</ul>
           ) : <p className="small muted">Mastery appears once you try the exercises of a Book II chapter: the share solved first try on your latest attempt.</p>}
@@ -149,7 +149,7 @@ function ChapterReader({ chapter, bookTitle, progress, solved, exMap, afterChang
       <h1>{chapter.title}</h1>
       {chapter.objectives.length > 0 && (
         <div className="panel" style={{ marginBottom: 14 }}>
-          <h3 style={{ marginTop: 0 }}>Learning objectives</h3>
+          <h2 className="h3" style={{ marginTop: 0 }}>Learning objectives</h2>
           <ul className="md">{chapter.objectives.map((o, i) => <li key={i}>{inline(o, `o${i}`)}</li>)}</ul>
         </div>
       )}
@@ -332,7 +332,7 @@ function ExercisePlayer({ ex, afterChange, review = false, onDone }: { ex: Grimo
   const goal = ex.kind === 'mate' ? `${toMove} to move: mate in ${ex.mateIn}` : ex.source === 'puzzle' ? `${toMove} to move · Academy puzzle ${ex.puzzleId}` : `${toMove} to move · the engine’s choice`;
   return (
     <div className="grim-exercise panel" data-testid="grim-exercise" data-exercise={ex.id} data-status={status} data-answer={accepted(ex).join(' ')} data-solution={ex.kind === 'line' ? ex.solution.join(' ') : ex.firstMoves.join(' ')} data-wrong={wrongExample} data-kind={ex.kind}>
-      <div className="panel-title"><h3 style={{ margin: 0 }}>{ex.number === 'guided' ? 'Guided exercise' : `Exercise ${ex.number}`}</h3><span className="chip gold">{goal}</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{ex.number === 'guided' ? 'Guided exercise' : `Exercise ${ex.number}`}</h2><span className="chip gold">{goal}</span></div>
       <div className="grim-exercise-body">
         <div className="grim-board">
           <Board fen={fen} orientation={orientation} legal={legal} onMove={onMove} lastMove={last} checkSquare={check.inCheck() ? squareName(check.kingSq[check.side]) : null} highlights={hm ? [hm.slice(0, 2)] : []} label={`Exercise board: ${ex.caption}`} />

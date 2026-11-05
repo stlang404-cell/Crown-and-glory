@@ -1,0 +1,38 @@
+gate at 37434f0 Version 1.0.0-rc.1
+TSC-OK
+ Test Files  75 passed (75)
+      Tests  821 passed (821)
+✓ built in 6.25s
+Release check passed: Crown & Calculation version 1.0.0-rc.1 · commit 37434f0 · built 2026-11-05T01:36:24.849Z · 11 precached files verified
+run exit 0 :: 1 pass / 0 fail :: [2026-11-05T01:36:43.079Z] PASS: rated-game acceptance journey completed (Gate G)
+offline exit 0 :: 1 pass / 0 fail :: PASS: offline play works in Chromium
+analysis-journey exit 0 :: 16 pass / 0 fail :: [2026-11-05T01:37:08.233Z] ALL CHECKS PASSED
+nav-audit exit 0 :: 6 pass / 0 fail :: [2026-11-05T01:38:08.373Z] ALL CHECKS PASSED
+motion-sound exit 0 :: 11 pass / 0 fail :: [2026-11-05T01:38:31.771Z] ALL CHECKS PASSED
+motion-extra exit 0 :: 9 pass / 0 fail :: [2026-11-05T01:38:41.078Z] ALL CHECKS PASSED
+quick-match exit 0 :: 10 pass / 0 fail :: [2026-11-05T01:38:49.411Z] ALL CHECKS PASSED
+vault exit 0 :: 15 pass / 0 fail :: [2026-11-05T01:39:10.161Z] ALL CHECKS PASSED
+grimoire exit 0 :: 1 pass / 0 fail :: PASS: Grimoire journey
+dashboard exit 0 :: 11 pass / 0 fail :: [2026-11-05T01:39:36.647Z] ALL CHECKS PASSED
+practice exit 0 :: 1 pass / 0 fail :: PASS practice journey
+academy exit 0 :: 1 pass / 0 fail :: PASS: Academy journey
+replay-center exit 0 :: 17 pass / 0 fail :: [2026-11-05T01:41:02.762Z] REPLAY CENTER JOURNEY: 17/17 checks passed
+market-integrity exit 0 :: 10 pass / 0 fail :: [2026-11-05T01:41:09.280Z] ALL CHECKS PASSED
+population exit 0 :: 11 pass / 0 fail :: ALL CHECKS PASSED
+legacy exit 0 :: 13 pass / 0 fail :: [2026-11-05T01:44:43.375Z] ALL CHECKS PASSED
+new-career exit 0 :: 19 pass / 0 fail :: [2026-11-05T01:45:07.780Z] All checks passed
+federation-career exit 0 :: 12 pass / 0 fail :: ALL PASSED
+exhibition exit 0 :: 18 pass / 0 fail :: [2026-11-05T01:47:24.807Z] ALL PASS
+ranks exit 0 :: 27 pass / 0 fail :: ALL CHECKS PASSED
+finance exit 0 :: 9 pass / 0 fail :: ALL PASS
+onboarding exit 0 :: 17 pass / 0 fail :: [2026-11-05T01:47:50.720Z] ALL CHECKS PASSED
+a11y exit 1 :: 0 pass / 0 fail :: Node.js v22.23.4
+nav-audit-375 exit 0 :: [2026-11-05T01:48:51.493Z] ALL CHECKS PASSED
+startup-race exit 0 :: PASS R0 4462: navigation during the first render (4462): the Career Passport is shown in 10/10 runs All checks passed 
+m6-arena exit 0 :: [2026-11-05T01:51:43.876Z] M6 ARENA JOURNEY: 11/11 steps passed
+v5 exit 0 :: [2026-11-05T01:54:46.994Z] v0.5 JOURNEY: 20/20 steps passed
+pages-check exit 0 :: [2026-11-05T01:55:47.371Z] ALL CHECKS PASSED
+GATE10-DONE
+
+[exited with code 0]
+a11y (rerun after installing the locked axe-core devDependency in the main node_modules): exit 0 :: ALL CHECKS PASSED

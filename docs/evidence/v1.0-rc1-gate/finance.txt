@@ -1,0 +1,9 @@
+[2026-11-05T01:47:39.947Z] PASS 1: Finance shows net worth, Lifetime Statistics, milestones, the administration explainer, facilities, sponsorship and estates: [["networth",true],["lifetime",true],["admin-none",true],["facilities",true],["sponsorship",true],["estates",true],["milestones",true],["liabilities",true]]
+[2026-11-05T01:47:39.960Z] PASS 2: Fresh career: liabilities $0, lifetime earnings $0 (the $1,000 grant is financing, not earnings); ledger total 0
+[2026-11-05T01:47:40.989Z] PASS 3: After club + lounge + Supporter sponsorship: cash $50, net worth $500 (ledger $500); conserved true
+[2026-11-05T01:47:40.989Z] PASS 4: One journal per action: asset-buy:club, facility-build:lounge, event-sponsor:1:league:0:8
+[2026-11-05T01:47:42.648Z] PASS 5: Reload: cash $50, 4 player journals (before 4), wealth state unchanged
+[2026-11-05T01:47:42.652Z] PASS 6: Unaffordable estate and facility buttons are disabled: [true,true]
+[2026-11-05T01:47:43.080Z] PASS 7: 390 px: horizontal overflow 0px
+[2026-11-05T01:47:43.453Z] PASS 8: No page errors (0)
+ALL PASS

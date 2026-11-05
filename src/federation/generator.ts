@@ -1,17 +1,24 @@
 /**
- * Deterministic seeded population generator (crown-population-1).
- * Latent strength by division: N(2500 − 190·(d−1), 120²) clamped to [750, 3050] on the calibrated engine
- * scale (L1 = 800 … L8 ≈ 2987). Public ratings start at latent + N(0, 80²) with RD 120 (established
+ * Deterministic seeded population generator. crown-population-1 (default, every pre-v0.10 world):
+ * latent strength by division N(2500 − 190·(d−1), 120²) clamped to [750, 3050] on the calibrated engine
+ * scale (L1 = 800 … L8 ≈ 2987). crown-population-2 (new federations from v0.10): the full 0–4,000+ spectrum,
+ * src/federation/population.ts. Public ratings start at latent + N(0, 80²) with RD 120 (established
  * veterans) so that forecasts begin informative but imperfect. Names are generated from original syllables.
  */
 import { mulberry32 } from '../rules/tables';
 import { Competitor, StyleId, Topology, TOPOLOGY_V1 } from './model';
+import { POPULATION_V1, PopulationModel, apexRegions, entrantRating, latentFrom, v1DivisionMean } from './population';
 
 const FIRST_A = ['Al', 'Be', 'Ca', 'Da', 'El', 'Fa', 'Ga', 'Ha', 'Is', 'Jo', 'Ka', 'Le', 'Ma', 'Ne', 'Or', 'Pa', 'Qu', 'Ro', 'Sa', 'Te', 'Ul', 'Va', 'Wi', 'Ya', 'Ze', 'Mi', 'No', 'Ri', 'Lu', 'Eo'];
 const FIRST_B = ['ra', 'ren', 'lia', 'mon', 'nis', 'tor', 'via', 'den', 'ric', 'sha', 'lan', 'mira', 'dov', 'ella', 'tis', 'ko', 'rin', 'sel', 'vin', 'na', 'th', 'mar', 'ise', 'dan'];
 const LAST_A = ['Ash', 'Brack', 'Cold', 'Dar', 'Ever', 'Fair', 'Gold', 'Hollow', 'Iron', 'Kings', 'Lark', 'Marr', 'North', 'Oak', 'Pike', 'Quill', 'Raven', 'Stone', 'Thorn', 'Vale', 'West', 'Wren', 'Brook', 'Crane', 'Dusk', 'Fen', 'Glen', 'Hart', 'Moss', 'Rook'];
 const LAST_B = ['ford', 'well', 'mere', 'wood', 'by', 'ton', 'field', 'grave', 'holt', 'stead', 'ley', 'worth', 'combe', 'ridge', 'more', 'gate', 'shaw', 'bury', 'den', 'hurst'];
-export const STYLES: StyleId[] = ['universal', 'tactical', 'positional', 'defensive', 'endgame', 'aggressive'];
+/**
+ * Styles assigned to generated competitors. gambiteer and materialist were appended when they passed validation
+ * (crown-styles-6, docs/STYLES_REPORT.md §8); complicator failed and is not assigned. Appending changes only which
+ * style a newly generated competitor draws (same random stream); stored competitors keep their style.
+ */
+export const STYLES: StyleId[] = ['universal', 'tactical', 'positional', 'defensive', 'endgame', 'aggressive', 'gambiteer', 'materialist'];
 
 export function normal(r: () => number): number {
   const u = Math.max(1e-12, r()), v = r();
@@ -24,7 +31,8 @@ export function hashSeed(...parts: (string | number)[]): number {
   return h >>> 0;
 }
 
-export function divisionMean(d: number): number { return 2500 - 190 * (d - 1); }
+/** crown-population-1 division mean (unchanged). */
+export function divisionMean(d: number): number { return v1DivisionMean(d); }
 
 export function makeName(r: () => number, used: Set<string>): string {
   for (let k = 0; k < 50; k++) {
@@ -38,10 +46,13 @@ export function makeName(r: () => number, used: Set<string>): string {
   return n;
 }
 
-export function makeCompetitor(seed: number, index: number, region: number, division: number, season: number, used: Set<string>, entrant = false): Competitor {
+export function makeCompetitor(seed: number, index: number, region: number, division: number, season: number, used: Set<string>, entrant = false, model: PopulationModel = POPULATION_V1, apex = false): Competitor {
   const r = rng01(hashSeed(seed, 'competitor', index, season));
-  const latent = Math.max(750, Math.min(3050, divisionMean(division) + 120 * normal(r)));
-  const rating = entrant ? divisionMean(division) : Math.round(latent + 80 * normal(r));
+  // one normal draw in every model, so the rest of the record (name, age, style) uses the same random stream
+  // crown-population-2 also needs a division-overlap jitter: from its own stream, so names/ages/styles stay identical
+  const z2 = model === POPULATION_V1 ? 0 : normal(rng01(hashSeed(seed, 'spread', index, season)));
+  const latent = latentFrom(model, division, normal(r), apex, z2);
+  const rating = entrant ? entrantRating(model, division) : Math.max(0, Math.round(latent + 80 * normal(r)));
   const age = entrant ? 17 + Math.floor(r() * 5) : 18 + Math.floor(r() * 22);
   return {
     id: `c${String(index).padStart(4, '0')}`,
@@ -58,13 +69,15 @@ export function makeCompetitor(seed: number, index: number, region: number, divi
   };
 }
 
-/** Generate the initial competitors (2,048 for crown-topology-1; deterministic for a world seed and topology). */
-export function generateFederation(seed: number, topology: Topology = TOPOLOGY_V1): Competitor[] {
+/** Generate the initial competitors (2,048 for crown-topology-1; deterministic for a world seed, topology and
+ *  population model). The default model is crown-population-1, so every pre-v0.10 seed regenerates identically. */
+export function generateFederation(seed: number, topology: Topology = TOPOLOGY_V1, model: PopulationModel = POPULATION_V1): Competitor[] {
   const used = new Set<string>();
   const out: Competitor[] = [];
+  const apex = model === POPULATION_V1 ? new Set<number>() : apexRegions(seed, topology, hashSeed);
   let i = 0;
   for (let region = 0; region < topology.regions; region++) for (let division = 1; division <= topology.divisions; division++) for (let k = 0; k < topology.divisionSize; k++) {
-    out.push(makeCompetitor(seed, i++, region, division, 1, used));
+    out.push(makeCompetitor(seed, i++, region, division, 1, used, false, model, division === 1 && k === 0 && apex.has(region)));
   }
   return out;
 }

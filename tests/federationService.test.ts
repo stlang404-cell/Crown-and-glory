@@ -24,7 +24,8 @@ const total = (svc: FederationService) => [...svc.state!.balances.values()].redu
 const nonNegative = (svc: FederationService) => [...svc.state!.balances].every(([a, v]) => a === 'mint' || v >= 0);
 
 async function playMine(svc: FederationService, outcomeForPlayer = 1) {
-  for (const f of svc.playerFixtures()) {
+  // knockout follow-ups (v0.11 Regional Cups and Zonal Championships too) appear as each game is recorded
+  for (let pass = 0; pass < 8 && svc.blockingFixtures().length; pass++) for (const f of svc.blockingFixtures()) {
     const g = await svc.playerGameFor(f.id, { rating: 1500, rd: 200 });
     const white = g.humanColor === 'white';
     const res = outcomeForPlayer === 0.5 ? '1/2-1/2' : (outcomeForPlayer === 1) === white ? '1-0' : '0-1';

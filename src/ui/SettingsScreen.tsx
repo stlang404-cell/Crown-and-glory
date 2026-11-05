@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { HelpPanel } from './Onboarding';
 import { CURRENT_BUILD } from '../app/updates';
 import { DB_VERSION } from '../storage/db';
 import { RULES_VERSION } from '../rules/types';
@@ -7,9 +8,12 @@ import { ANALYSIS_PRESETS, DEFAULT_ANALYSIS, ENGINE_BUILD } from '../analysis/an
 import SPEED from '../analysis/analysis-speed.json';
 import { EngineDiagnostics } from './EngineDiagnostics';
 import { LiveSchedulerSettings } from './LiveSchedulerSettings';
+import { CareerSettings } from './CareerSettings';
 import { PREMIUM_BOARDS } from './theme';
 import { useServices } from './App';
 import { BOARDS, MOTIONS, PIECE_SPEEDS, THEMES, DEFAULT_PREFS, getCurrentPrefs, prefersReducedMotion, setBoard, setMotion, setPieceSpeed, setPrefs, setTheme, subscribePrefs, type BoardId } from './theme';
+import { setShowContemporaryNames, showContemporaryNames, subscribeContemporaryNames } from '../app/namePrefs';
+import { CONTEMPORARY_DISCLOSURE } from '../federation/rosterPersonas';
 import { DEFAULT_SOUND, SOUND_CATEGORIES, getSoundPrefs, playSound, setSoundPrefs, subscribeSound, unlockAudio, type SoundId } from './sound';
 
 function usePrefs() {
@@ -102,9 +106,15 @@ export function SettingsScreen() {
         </p>
       </section>
 
+      <HelpPanel />
+
       <SoundSettings />
 
       <LiveSchedulerSettings />
+
+      <PersonaNameSettings />
+
+      <CareerSettings />
 
       <section className="panel about" aria-labelledby="set-about">
         <div className="panel-title"><h2 id="set-about" style={{ margin: 0 }}>About</h2>
@@ -142,6 +152,23 @@ export function SettingsScreen() {
         </section>
       </details>
     </div>
+  );
+}
+
+/** Settings → Federation Names: the contemporary famous-names switch (docs/ROSTER.md; default on). */
+function PersonaNameSettings() {
+  const show = useSyncExternalStore(subscribeContemporaryNames, showContemporaryNames, showContemporaryNames);
+  return (
+    <section className="panel" aria-labelledby="set-names" data-testid="persona-settings">
+      <div className="panel-title"><h2 id="set-names" style={{ margin: 0 }}>Federation Names</h2><span className={`chip ${show ? '' : 'info'}`}>{show ? 'Famous Names On' : 'Original Names'}</span></div>
+      <label className="row" style={{ gap: 8 }}>
+        <input type="checkbox" checked={show} onChange={e => setShowContemporaryNames(e.target.checked)} data-testid="contemporary-names" /> Show contemporary famous names
+      </label>
+      <p className="small muted" style={{ marginBottom: 0 }}>
+        Some Federation competitors carry the names of well-known people of recent times. {CONTEMPORARY_DISCLOSURE} Their ratings, styles, regions, divisions and careers are assigned by the world seed, independently of the person.
+        Turn this off to show each of them under their own original name instead; their records and history stay the same. Historical figures (who died in 1925 or earlier) keep their names.
+      </p>
+    </section>
   );
 }
 

@@ -1,0 +1,11 @@
+[2026-11-04T21:40:06.326Z] PASS 1: Defaults: pool "Beginner Bands" (suggested label true), type "Rated"
+[2026-11-04T21:40:06.329Z] Beginner-band pool: 2113 active competitors rated under 800
+[2026-11-04T21:40:06.841Z] PASS 2: Card shows a real active beginner-band competitor: Yadov Quillby 0 ±120 (roster: {"id":"c6652","rating":0,"rd":120,"status":"active"})
+[2026-11-04T21:40:07.048Z] PASS 3: 5 rerolls gave 6 different opponents; rerolls and Cancel created no game (0 → 0)
+[2026-11-04T21:40:07.405Z] PASS 4: Rated game created vs Calia Valegrave (snapshot rating 658, own calibrated profile fed-L0a)
+[2026-11-04T21:40:09.590Z] PASS 5: One rating event (0 → -17, games 0 → 1); still 1 after reload
+[2026-11-04T21:40:09.889Z] PASS 6: Casual quick match: rating unchanged (-17.0), still 1 rating event
+[2026-11-04T21:40:10.052Z] PASS 7: Elite filter drew a 2,628 ±120 competitor
+[2026-11-04T21:40:10.617Z] PASS 8: Phone: card shown, horizontal overflow 0px
+[2026-11-04T21:40:10.617Z] PASS 9: No page errors (0)
+[2026-11-04T21:40:10.634Z] ALL CHECKS PASSED

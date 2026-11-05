@@ -28,6 +28,8 @@ export interface MetaDB {
 export const UNLOCK_PREFIX = 'ach:';
 export const TOAST_PREFIX = 'achtoast:';
 export const BACKFILL_KEY = 'vault:backfilled';
+/** crown-vault-2 (v0.11): the expansion's own one-time back-fill on saves that already ran the crown-vault-1 back-fill. */
+export const BACKFILL_V2_KEY = 'vault:backfilled:crown-vault-2';
 
 /** Evaluate every definition (and meta entries a second time with the newly earned ids) — pure. */
 export function evaluateAll(defs: VaultDef[], facts: Facts): Map<string, EvalResult> {
@@ -40,11 +42,11 @@ export function evaluateAll(defs: VaultDef[], facts: Facts): Map<string, EvalRes
 }
 
 /** Unlock records for collectibles earned now and not yet owned — pure. */
-export function newUnlocks(results: Map<string, EvalResult>, owned: ReadonlyMap<string, UnlockRecord>, nowIso: string, backfill: boolean): UnlockRecord[] {
+export function newUnlocks(results: Map<string, EvalResult>, owned: ReadonlyMap<string, UnlockRecord>, nowIso: string, backfill: boolean | ((id: string) => boolean)): UnlockRecord[] {
   const out: UnlockRecord[] = [];
   for (const [id, r] of results) {
     if (!r.earned || owned.has(id)) continue;
-    out.push({ id, at: nowIso, earnedAt: r.when ?? nowIso, evidence: r.evidence ?? '', ...(r.ref ? { ref: r.ref } : {}), backfill, catalog: VAULT_ID });
+    out.push({ id, at: nowIso, earnedAt: r.when ?? nowIso, evidence: r.evidence ?? '', ...(r.ref ? { ref: r.ref } : {}), backfill: typeof backfill === 'function' ? backfill(id) : backfill, catalog: VAULT_ID });
   }
   return out;
 }

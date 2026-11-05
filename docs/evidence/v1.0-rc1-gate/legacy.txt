@@ -1,0 +1,36 @@
+[2026-11-05T01:41:20.400Z] PASS 1: Fresh header: {"name":"You","rating":"Career Elo 0 ±350 · provisional","position":"relative"}
+[2026-11-05T01:41:25.367Z] PASS 2: Rated game shows "Previous 0 → New 0 (+0)" (ledger: "Previous 0 → New 0 (+0)")
+[2026-11-05T01:41:25.669Z] PASS 3: Profile career Elo 0, "Previous 0 → New 0 (+0)", header "Career Elo 0 ±343 · provisional", Played Like slot true
+[2026-11-05T01:43:40.674Z] Season 1 completed in 133.9 s
+[2026-11-05T01:43:40.833Z] PASS 4: Ceremony in flow, reduced motion respected (animation none): "Trophy awarded · Bronze 1 Season Monument Season 1 finished Trophy Hall Continue"
+[2026-11-05T01:43:41.131Z] PASS 5: Trophy Hall: monument-seasons:1; registry 14 trophies in 10 kinds
+[2026-11-05T01:43:41.943Z] PASS 6: Earned banner/accent equipped; an unearned accent is refused (true) and its button disabled (true)
+[2026-11-05T01:43:43.634Z] PASS Q-1366: 1366 px: header "Competitive Rank Commoner III Rank" (rank frame r=3px, rank tooltip), no Federation Title yet (no title area); rating title tagged "Rating"; heading "Competitive Rank Rank" / "Federation Title: none yet (earned by norms) Title" with separate tooltips
+[2026-11-05T01:43:47.566Z] PASS 7: Reload: 1/1 trophies (1 stored), ceremony again false, name "Ines of the Six Squares", featured 1
+[2026-11-05T01:43:50.934Z] PASS Q-390: 390 px (compact header): "Competitive Rank Commoner III Rank" visible true; rating title tagged "Rating"; heading "Competitive Rank Rank" / "Federation Title: none yet (earned by norms) Title" with separate tooltips
+[2026-11-05T01:43:51.169Z] PASS 8: Phone header: compact 200px (Elo, toggle; details hidden) → expanded 346px (division, trophies, net worth) → collapsed 200px; overflow 0
+[2026-11-05T01:43:53.608Z]   390px #/dashboard: scrolled 5151/5151, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:43:55.431Z]   390px #/play: scrolled 3601/3601, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:43:57.617Z]   390px #/world: scrolled 6754/6754, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:00.176Z]   390px #/exchange: scrolled 12800/12800, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:02.118Z]   390px #/finance: scrolled 8198/8198, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:03.936Z]   390px #/library: scrolled 0/0, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:05.744Z]   390px #/analysis: scrolled 0/0, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:07.811Z]   390px #/academy: scrolled 2362/2362, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:10.505Z]   390px #/profile: scrolled 10257/10257, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:12.452Z]   390px #/rivals: scrolled 9429/9429, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:14.271Z]   390px #/hall: scrolled 4779/4779, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:19.711Z]   390px #/vault: scrolled 42332/42332, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:21.770Z]   390px #/lab: scrolled 2208/2208, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:23.965Z]   390px #/settings: scrolled 5805/5805, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:25.774Z]   390px #/standings: scrolled 712/712, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:27.837Z]   390px #/tournaments: scrolled 1800/1800, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:30.779Z]   390px #/competitors: scrolled 11650/11650, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:32.588Z]   390px #/replays: scrolled 4633/4633, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:34.400Z]   390px #/news: scrolled 5831/5831, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:37.853Z]   390px #/heraldry: scrolled 20711/20711, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:39.666Z]   390px #/forecasts: scrolled 1194/1194, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:41.474Z]   390px #/population: scrolled 2129/2129, content ends above the tab bar true, overflow 0, fixed in main 0
+[2026-11-05T01:44:41.475Z] PASS 9: 390 px: every main screen scrolls to its bottom, content clears the tab bar, no overflow, no fixed covers
+[2026-11-05T01:44:43.375Z] PASS 10: No page or console errors (0)
+[2026-11-05T01:44:43.375Z] ALL CHECKS PASSED

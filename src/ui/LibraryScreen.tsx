@@ -1,4 +1,6 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { fmtCareerElo, ratingChange } from '../ratings/display';
 import { useApp, useServices } from './App';
 import { resultText } from './PlayScreen';
 import type { GameRecord } from '../games/types';
@@ -104,6 +106,7 @@ export function LibraryScreen() {
         <h1 style={{ margin: 0 }}>Chess Library</h1>
         <span className="chip">{rows.length} Games</span>
         <span className="spacer" />
+        <button className="btn small primary" onClick={() => go({ name: 'replays' })} data-testid="open-replays">Replay Library</button>
         <select value={batch} onChange={e => setBatch(e.target.value)} aria-label="Batch analysis settings">{ANALYSIS_PRESETS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
         <button className="btn small" disabled={services.readOnly} onClick={async () => { const n = await services.batchReanalyze(ANALYSIS_PRESETS.find(p => p.id === batch)!); setMsg(n ? `Queued ${n} game(s) for analysis. Earlier analyses are kept.` : 'Every finished game already has a complete analysis with these settings.'); }}>Analyse All</button>
         {services.progress && <button className="btn small" onClick={() => void services.cancelAllAnalysis()}>Cancel Analysis</button>}
@@ -120,14 +123,14 @@ export function LibraryScreen() {
       )}
       <div className="panel">
         <div className="row" style={{ marginBottom: 10 }}>
-          <input type="search" placeholder="Search opponent or opening" value={q} onChange={e => setQ(e.target.value)} aria-label="Search games" style={{ flex: '1 1 200px' }} />
+          <input type="search" placeholder="Opponent or opening" value={q} onChange={e => setQ(e.target.value)} aria-label="Search games by opponent or opening" className="search-wide" style={{ flex: '1 1 200px' }} />
           <select value={result} onChange={e => setResult(e.target.value)} aria-label="Result filter"><option value="all">All results</option><option value="victory">Wins</option><option value="defeat">Losses</option><option value="draw">Draws</option><option value="in progress">Unfinished</option></select>
           <select value={tc} onChange={e => setTc(e.target.value)} aria-label="Time control filter"><option value="all">All time controls</option><option value="blitz">Blitz</option><option value="rapid">Rapid</option><option value="classical">Classical</option><option value="untimed">Untimed</option></select>
           <select value={mode} onChange={e => setMode(e.target.value)} aria-label="Mode filter"><option value="all">All modes</option><option value="rated">Rated</option><option value="casual">Casual</option><option value="training">Training</option></select>
           <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} aria-label="Sort"><option value="date">Newest first</option><option value="accuracy">Accuracy</option><option value="delta">Rating change</option><option value="moves">Length</option></select>
         </div>
-        {view.length === 0 ? <p className="muted">{rows.length ? 'No games match these filters.' : 'No games yet. Play a game and it will be saved here.'}</p> : (
-          <div style={{ overflowX: 'auto' }}>
+        {view.length === 0 ? <p className="muted" data-testid="library-empty">{rows.length ? 'No games match these filters.' : <>No games yet. Play a game and it will be saved here. <button className="btn small" onClick={() => go({ name: 'play' })}>Play a Game</button></>}</p> : (
+          <div style={{ overflowX: 'auto' }} ref={scrollRegion('Games table')}>
             <table>
               <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Rating</th><th>Accuracy</th><th className="hide-sm">Mistakes/Blunders</th><th className="hide-sm">Opening</th><th className="hide-sm">Moves</th><th className="hide-sm">Time Control</th><th>Analysis</th></tr></thead>
               <tbody>
@@ -136,7 +139,7 @@ export function LibraryScreen() {
                     <td>{new Date(r.game.startedAt).toLocaleDateString()}</td>
                     <td>{r.opponent}{r.game.mode === 'training' && <span className="chip" style={{ marginLeft: 4 }}>Training</span>}</td>
                     <td><span className={`chip ${r.result === 'Victory' ? 'pos' : r.result === 'Defeat' ? 'neg' : ''}`}>{r.result}</span></td>
-                    <td>{r.delta !== null ? <>{Math.round(r.ratingBefore!)}→{Math.round(r.ratingAfter!)} <span style={{ color: r.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>({r.delta >= 0 ? '+' : ''}{r.delta.toFixed(1)})</span></> : <span className="muted">{r.game.rated ? 'pending' : 'unrated'}</span>}</td>
+                    <td>{r.delta !== null ? <span className="mono">{fmtCareerElo(r.ratingBefore!)} → {fmtCareerElo(r.ratingAfter!)} <span style={{ color: r.delta >= 0 ? 'var(--positive)' : 'var(--negative)' }}>({ratingChange(r.ratingBefore!, r.ratingAfter!).deltaText})</span></span> : <span className="muted">{r.game.rated ? 'pending' : 'unrated'}</span>}</td>
                     <td>{r.accuracy === null ? <span className="muted">—</span> : r.accuracy.toFixed(1)}</td>
                     <td className="hide-sm">{r.mistakes === null ? '—' : `${r.mistakes}/${r.blunders}`}</td>
                     <td className="hide-sm small">{r.game.opening?.name ?? '—'}</td>

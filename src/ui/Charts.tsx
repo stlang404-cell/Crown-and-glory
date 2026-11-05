@@ -43,7 +43,10 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
       onPointerDown={e => pick(e.clientX)} onPointerMove={e => e.buttons && pick(e.clientX)}>
       <rect width={W} height={H} style={{ fill: 'var(--eval-black)' }} />
       <path d={area} style={{ fill: 'var(--eval-white)', opacity: 0.92 }} />
-      <line x1="0" x2={W} y1={H / 2} y2={H / 2} style={{ stroke: 'var(--accent)', opacity: 0.6 }} strokeDasharray="4 4" />
+      {/* v1.0 legibility: quarter guides, a crisp edge on the evaluation line, an even-position midline */}
+      {[0.25, 0.75].map(g => <line key={g} x1="0" x2={W} y1={H * g} y2={H * g} style={{ stroke: 'var(--line-strong)', opacity: 0.45 }} vectorEffect="non-scaling-stroke" />)}
+      <path d={path} fill="none" style={{ stroke: 'var(--line-strong)' }} strokeWidth={1.25} vectorEffect="non-scaling-stroke" />
+      <line x1="0" x2={W} y1={H / 2} y2={H / 2} style={{ stroke: 'var(--accent)', opacity: 0.75 }} strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
       {plies.filter(p => p.grade && GRADE_COLOR[p.grade]).map(p => (
         <circle key={p.ply} cx={x(p.ply)} cy={y(whiteU(p.evalAfter, accuracyId))} r={4} style={{ fill: GRADE_COLOR[p.grade!], stroke: 'var(--grade-ink)' }} strokeWidth={1.5} />
       ))}
@@ -51,39 +54,41 @@ export function EvalGraph({ plies, total, selected, onSelect, accuracyId }: { pl
       <defs>
         <pattern id="pending-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="8" style={{ fill: 'var(--line-strong)' }} /></pattern>
       </defs>
-      <line x1={x(selected)} x2={x(selected)} y1="0" y2={H} style={{ stroke: 'var(--accent)' }} strokeWidth="2" />
+      <line x1={x(selected)} x2={x(selected)} y1="0" y2={H} style={{ stroke: 'var(--accent)' }} strokeWidth="2" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
 
 export interface RatingPoint { at: string; rating: number; rd: number; label: string }
 
-export function RatingChart({ points, height = 220 }: { points: RatingPoint[]; height?: number }) {
-  if (points.length < 2) return <p className="muted">Your rating chart appears after your first rated game at this time control.</p>;
-  const W = 640, H = height, pad = 36;
-  const lo = Math.min(...points.map(p => p.rating - p.rd));
+export function RatingChart({ points: raw, height = 220, caption = 'Shaded band: how uncertain your rating is', empty = 'Your rating chart appears after your first rated game at this time control.', label = 'Rating history' }: { points: RatingPoint[]; height?: number; caption?: string; empty?: string; label?: string }) {
+  // Crown-scale ratings are displayed with a floor of 0 (docs/CAREER_RATING.md); a stored career rating may be below it
+  const points = raw.map(p => ({ ...p, rating: Math.max(0, p.rating) }));
+  if (points.length < 2) return <p className="muted">{empty}</p>;
+  const W = 640, H = height, pad = 42;
+  const lo = Math.max(0, Math.min(...points.map(p => p.rating - p.rd)));
   const hi = Math.max(...points.map(p => p.rating + p.rd));
   const min = Math.floor((lo - 20) / 50) * 50, max = Math.ceil((hi + 20) / 50) * 50;
   const x = (i: number) => pad + (i / (points.length - 1)) * (W - pad - 10);
   const y = (r: number) => 10 + (1 - (r - min) / (max - min)) * (H - 40);
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.rating)}`).join(' ');
   const band = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.rating + p.rd)}`).join(' ') + ' ' +
-    [...points].reverse().map((p, j) => `L${x(points.length - 1 - j)},${y(p.rating - p.rd)}`).join(' ') + ' Z';
+    [...points].reverse().map((p, j) => `L${x(points.length - 1 - j)},${y(Math.max(min, p.rating - p.rd))}`).join(' ') + ' Z';
   const ticks: number[] = [];
   const step = Math.max(50, Math.ceil((max - min) / 5 / 50) * 50);
   for (let t = min; t <= max; t += step) ticks.push(t);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`Rating history with uncertainty band, ${points.length} points, latest ${Math.round(points[points.length - 1].rating)}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label={`${label} with uncertainty band, ${points.length} points, latest ${Math.round(points[points.length - 1].rating)}`}>
       {ticks.map(t => (
         <g key={t}>
           <line x1={pad} x2={W - 10} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--chart-grid)' }} />
-          <text x={pad - 6} y={y(t) + 4} style={{ fill: 'var(--muted)' }} fontSize="11" textAnchor="end">{t}</text>
+          <text x={pad - 6} y={y(t) + 4} style={{ fill: 'var(--muted)' }} fontSize="13" fontWeight={600} textAnchor="end">{t}</text>
         </g>
       ))}
       <path d={band} style={{ fill: 'color-mix(in srgb, var(--info) 16%, transparent)' }} />
       <path d={line} fill="none" style={{ stroke: 'var(--accent)' }} strokeWidth="2.5" />
       {points.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.rating)} r="3.5" style={{ fill: 'var(--panel)', stroke: 'var(--accent)' }} strokeWidth="2"><title>{p.label}</title></circle>)}
-      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="11">Shaded band: how uncertain your rating is</text>
+      <text x={pad} y={H - 6} style={{ fill: 'var(--muted)' }} fontSize="12.5">{caption}</text>
     </svg>
   );
 }

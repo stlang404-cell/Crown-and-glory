@@ -8,7 +8,7 @@
 [data-theme="obsidian"] {
   --bg: #111318;
   --bg-2: #0b0c10;
-  --bg-glow: #2a1a21;
+  --bg-glow: #28161d;
   --panel: #1a1d24;
   --panel-2: #252932;
   --panel-3: #16181e;
@@ -16,16 +16,16 @@
   --line-strong: #6a707e;
   --text: #f2ede3;
   --muted: #aeb3bd;
-  --accent: #ea8592;
-  --accent-strong: #b23c4b;
-  --accent-strong-2: #9c3140;
-  --accent-ink: #fff8f2;
-  --accent-2: #8ea7c1;
+  --accent: #e2c074;
+  --accent-strong: #962a3f;
+  --accent-strong-2: #7c2033;
+  --accent-ink: #fff8f0;
+  --accent-2: #a9b8ca;
   --positive: #7fd3a6;
-  --negative: #f4a173;
+  --negative: #f3949a;
   --info: #93bde6;
-  --warn: #e8c477;
-  --focus: #f09aa6;
+  --warn: #f2b25e;
+  --focus: #f0cf85;
   --danger-fill: #b8323f;
   --clock-run: #f2ede3;
   --clock-run-ink: #111318;
@@ -34,12 +34,12 @@
   --chart-grid: #2b2f39;
   --eval-white: #e9e2d4;
   --eval-black: #23262e;
-  --brand-crown: #d4566a;
+  --brand-crown: #d9b25e;
   --brand-ink: #0b0c10;
   --brand-light: #f2ede3;
   --brand-dark: #6c7382;
   --grade-ink: #10121a;
-  --ins-1: #ea8592;
+  --ins-1: #e2c074;
   --ins-2: #e4dccd;
   --ins-3: #d49a6a;
   --ins-4: #93bde6;
@@ -66,6 +66,13 @@
   --frame-b: #121318;
   --frame-rim: #4c515d;
   --frame-rim-2: #191b21;
+  /* royal palette: text-safe (4.5:1) on --panel and --panel-2 and over their own 12% tints */
+  --royal: #8fb0ec;
+  --emerald: #6fd1a0;
+  --amethyst: #c4a5ef;
+  --burgundy: #ef8f9f;
+  --gold: #e2c074;
+  --silver: #c3cad4;
   color-scheme: dark;
 }
 
@@ -73,7 +80,7 @@
 [data-theme="midnight"] {
   --bg: #10151e;
   --bg-2: #0b0f16;
-  --bg-glow: #1d2840;
+  --bg-glow: #1c2a48;
   --panel: #1b2431;
   --panel-2: #222d3d;
   --panel-3: #18202c;
@@ -82,10 +89,10 @@
   --text: #f1ebdd;
   --muted: #b3bfcd;
   --accent: #d8b56c;
-  --accent-strong: #e3c37f;
-  --accent-strong-2: #c79f55;
-  --accent-ink: #1a1408;
-  --accent-2: #b8924a;
+  --accent-strong: #3762bb;
+  --accent-strong-2: #2b519f;
+  --accent-ink: #ffffff;
+  --accent-2: #b9a2e8;
   --positive: #83d6b0;
   --negative: #ed9b9b;
   --info: #8fc3ee;
@@ -106,11 +113,11 @@
   --grade-ink: #10151e;
   --ins-1: #d8b56c;
   --ins-2: #c9c2b0;
-  --ins-3: #c58b52;
+  --ins-3: #d49c64;
   --ins-4: #8fc3ee;
   --ins-5: #83d6b0;
   --ins-6: #b3bfcd;
-  --ins-7: #9a8cc9;
+  --ins-7: #b4a6e4;
   --ins-8: #7d90a5;
   --ins-ink: #10151e;
   --piece-b-stroke: #d8b56c;
@@ -130,6 +137,13 @@
   --frame-b: #1d170e;
   --frame-rim: #6a5530;
   --frame-rim-2: #2a2114;
+  /* royal palette: text-safe (4.5:1) on --panel and --panel-2 and over their own 12% tints */
+  --royal: #93b4f0;
+  --emerald: #74d4a6;
+  --amethyst: #c3a8f0;
+  --burgundy: #f0929f;
+  --gold: #dcb96e;
+  --silver: #c3ccd8;
   color-scheme: dark;
 }
 
@@ -142,21 +156,21 @@
   --panel-2: #f0ece4;
   --panel-3: #f7f5f0;
   --line: #dcd5c8;
-  --line-strong: #8a8578;
+  --line-strong: #7a756a;
   --text: #1c2129;
   --muted: #535a66;
-  --accent: #34567c;
-  --accent-strong: #3b5f88;
-  --accent-strong-2: #2e4d70;
+  --accent: #284a8a;
+  --accent-strong: #2c4f92;
+  --accent-strong-2: #233f78;
   --accent-ink: #ffffff;
-  --accent-2: #8c3445;
-  --positive: #1b6e45;
-  --negative: #b0352b;
+  --accent-2: #8a2b3e;
+  --positive: #17633d;
+  --negative: #9f2e25;
   --info: #5a45a8;
-  --warn: #855600;
-  --focus: #2e5f9a;
+  --warn: #774d00;
+  --focus: #2b5aa8;
   --danger-fill: #b0352b;
-  --clock-run: #d3e0ee;
+  --clock-run: #d6e0f2;
   --clock-run-ink: #1c2129;
   --danger-ink: #ffffff;
   --chart-bg: #f4f2ed;
@@ -170,9 +184,9 @@
   --grade-ink: #10121a;
   --ins-1: #8c3445;
   --ins-2: #6c7280;
-  --ins-3: #95582a;
-  --ins-4: #2e5f9a;
-  --ins-5: #1b6e45;
+  --ins-3: #82461d;
+  --ins-4: #284a8a;
+  --ins-5: #17633d;
   --ins-6: #535a66;
   --ins-7: #5a45a8;
   --ins-8: #7a7f89;
@@ -194,7 +208,86 @@
   --frame-b: #2b323d;
   --frame-rim: #7b8798;
   --frame-rim-2: #252b34;
+  /* royal palette: text-safe (4.5:1) on --panel and --panel-2 and over their own 12% tints */
+  --royal: #284a8a;
+  --emerald: #1b6a45;
+  --amethyst: #6a3f9a;
+  --burgundy: #8a2b3e;
+  --gold: #74520f;
+  --silver: #4d5666;
   color-scheme: light;
+}
+
+/* ---------- Emerald & Gold (v1.0) ---------- */
+[data-theme="emerald"] {
+  --bg: #0d1512;
+  --bg-2: #080d0b;
+  --bg-glow: #163026;
+  --panel: #142019;
+  --panel-2: #1b2a22;
+  --panel-3: #111b16;
+  --line: #2a3b33;
+  --line-strong: #667b71;
+  --text: #eef0e6;
+  --muted: #a9b9af;
+  --accent: #dfbd6c;
+  --accent-strong: #1c7650;
+  --accent-strong-2: #166442;
+  --accent-ink: #ffffff;
+  --accent-2: #b7c4c9;
+  --positive: #86dcb0;
+  --negative: #f29a9a;
+  --info: #9cc0ee;
+  --warn: #f0b860;
+  --focus: #f0cf85;
+  --danger-fill: #a83a3a;
+  --clock-run: #dfbd6c;
+  --clock-run-ink: #14100a;
+  --danger-ink: #ffffff;
+  --chart-bg: #111b16;
+  --chart-grid: #26372e;
+  --eval-white: #e8e2cf;
+  --eval-black: #1b2a22;
+  --brand-crown: #dfbd6c;
+  --brand-ink: #0d1512;
+  --brand-light: #e8e2cf;
+  --brand-dark: #5f7a6c;
+  --grade-ink: #10121a;
+  --ins-1: #dfbd6c;
+  --ins-2: #d2cdbd;
+  --ins-3: #d09a62;
+  --ins-4: #9cc0ee;
+  --ins-5: #86dcb0;
+  --ins-6: #b4c0b9;
+  --ins-7: #b3a2e0;
+  --ins-8: #8a9a92;
+  --ins-ink: #0d1512;
+  --piece-b-stroke: #d8b56c;
+  --piece-gild: #d8b56c;
+  --rail-bg: rgba(8, 13, 11, 0.7);
+  --tabbar-bg: rgba(9, 14, 12, 0.97);
+  --overlay: rgba(4, 7, 6, 0.68);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.4);
+  --hover: rgba(238, 240, 230, 0.05);
+  /* theme-matched board: parchment and forest green, gold move highlight */
+  --sq-light: #ebe4cf;
+  --sq-dark: #4f7864;
+  --sq-hl: #e2c15a;
+  --sq-check: #ff6a3d;
+  --coord-light: #34463c;
+  --coord-dark: #ffffff;
+  --frame-a: #2c3a2f;
+  --frame-b: #111a14;
+  --frame-rim: #5a6f5f;
+  --frame-rim-2: #18221b;
+  /* royal palette: text-safe (4.5:1) on --panel and --panel-2 and over their own 12% tints */
+  --royal: #98b6ee;
+  --emerald: #74d6a6;
+  --amethyst: #c7abf0;
+  --burgundy: #f2949f;
+  --gold: #dfbd6c;
+  --silver: #c4ccd0;
+  color-scheme: dark;
 }
 
 /* ---------- Board palettes (override the theme-matched board; declared after the themes) ---------- */

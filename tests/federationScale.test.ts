@@ -11,7 +11,7 @@ import { FederationService } from '../src/app/federation';
 import { generateFederation } from '../src/federation/generator';
 import { createWorld, joinPlayer, makePlan, Ctx, RoundRecord, WorldState } from '../src/federation/world';
 import { runRoundHeadless } from '../src/federation/driver';
-import { NEW_FEDERATION_TOPOLOGY, PLAYER_ID, ROUNDS_PER_SEASON, TOPOLOGY_V1, TOPOLOGY_V2, populationOf, regionName, regionNamesOf, topologyOf } from '../src/federation/model';
+import { NEW_FEDERATION_TOPOLOGY, PLAYER_ID, ROUNDS_PER_SEASON, TOPOLOGY_V1, TOPOLOGY_V2, TOPOLOGY_V3, newFederationTopology, populationOf, regionName, regionNamesOf, topologyOf } from '../src/federation/model';
 import { leagueOrder, standings, type Game, type StandingRow } from '../src/federation/formats';
 import { playSelfplay } from '../src/engine/selfplay';
 
@@ -55,7 +55,12 @@ describe('federation topology', () => {
     expect(regionNamesOf(TOPOLOGY_V1)).toHaveLength(16);
     expect(regionNamesOf(TOPOLOGY_V2)).toHaveLength(32);
     expect(new Set(regionNamesOf(TOPOLOGY_V2)).size).toBe(32);
-    expect(regionName(40)).toBe('Region 41');
+    expect(regionName(80)).toBe('Region 81');
+    expect(new Set(regionNamesOf(TOPOLOGY_V3)).size).toBe(80);
+    expect(regionNamesOf(TOPOLOGY_V3).every(n => !/^Region \d/.test(n))).toBe(true);
+    expect(populationOf(TOPOLOGY_V3)).toBe(10240);
+    expect(newFederationTopology({ mobile: false })).toBe(TOPOLOGY_V3);
+    expect(newFederationTopology({ mobile: true })).toBe(TOPOLOGY_V3);
   });
 
   it('save compatibility: a stored 2,048 world (no topology field) loads, advances and rolls over a season with 16 regions', async () => {

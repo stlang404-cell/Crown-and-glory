@@ -1,0 +1,14 @@
+[2026-11-05T01:50:21.536Z] setup: advanced to round 16 in 82 s (own fixtures forfeited)
+[2026-11-05T01:50:22.894Z] PASS: 1. Live Crown Championship Round of 16 · classical 1 Eoric Wrenwell – Maden Oakworth: board, thinking clocks (0:00.0 / 0:00.0), players, odds (White $0.886), portfolio and evaluation graph visible; the view's revision 12.1, the ticket's revision and 1 published move(s) match the committed state
+[2026-11-05T01:50:22.894Z] PASS: 1b. While trading is open no move-quality label is shown (0); policy shown: "You see what every trader sees: published moves and the engine’s own evaluation. Move grades stay hidden until the marke…"
+[2026-11-05T01:50:23.090Z] PASS: 2. Bought 10 shares; portfolio panel shows 10 / 0 / 0 / 0 (committed 10/0/0/0, spent 8.99 ₵)
+[2026-11-05T01:50:24.349Z] PASS: 3. Move 2 published: revision 13.1 → 18.2, notation and evaluation graph updated (2 moves shown)
+[2026-11-05T01:50:24.355Z] PASS: 4. A trade quoted on revision 13.1 was rejected after the move: "Stale quote: the market moved (a new move or trade). Check the new price and try again."
+[2026-11-05T01:50:24.360Z] PASS: 4b. A duplicate step request for an already published ply was rejected: "Stale step: the game has moved on (ply 2, not 1). Wait for the board to update and try again."
+[2026-11-05T01:51:36.306Z] PASS: 5. Match finished (69 plies, 1-0); market settled on state 0; your 10/0/0/0 shares received 10.00 ₵ (expected 10.00); ledger total 0
+[2026-11-05T01:51:39.170Z] PASS: 6. Post-game analysis of all 69 plies by crown-search-2+crown-eval-4 (crown-grade-v3-experimental), requested only after settlement: {"best":61,"excellent":3,"inaccuracy":3,"great":2}; 69 labels in the notation
+[2026-11-05T01:51:40.663Z] PASS: 7. After restart the replay reopens: REPLAY · Recorded Game, 69 moves with labels, price history chart, final result
+[2026-11-05T01:51:43.139Z] PASS: 8. Phone 390 px: Board tab shows the 332 px board; tabs switch Board/Analysis/Trade; the match context strip is visible on every tab; no horizontal overflow
+[2026-11-05T01:51:43.828Z] PASS: 9. Offline (phone): the replay, labels and market history load from the installed app and IndexedDB (69 moves)
+[2026-11-05T01:51:43.875Z] console/page errors: 0
+[2026-11-05T01:51:43.876Z] M6 ARENA JOURNEY: 11/11 steps passed

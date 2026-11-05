@@ -1,0 +1,20 @@
+{
+ "id": "crown-length-1",
+ "c": [
+  0.44116,
+  -4.044853,
+  0.40224,
+  -0.795898,
+  -0.842403,
+  0.347849
+ ],
+ "levelMin": -1.75,
+ "levelMax": 1.25,
+ "gapMax": 1.5,
+ "fit": {
+  "trainGames": 2400,
+  "testGames": 800,
+  "heldOutLogLoss": 0.31435,
+  "baselineLogLoss": 0.32369
+ }
+}

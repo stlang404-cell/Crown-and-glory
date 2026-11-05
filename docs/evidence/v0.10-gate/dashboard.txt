@@ -1,0 +1,14 @@
+[2026-11-04T16:58:21.515Z] fresh: {"hash":"","current":"Dashboard","railFirst":"Dashboard","tabs":["Dashboard","Play","Federation","Exchange","Career","Settings"],"notFounded":true,"qm":true,"banner":1,"matchesEmpty":"Live Federation MatchesFeatured matches appear here once you found the Federation.Go to th","exchangeEmpty":"Crown ExchangeThe Exchange opens with the Federation. You start with $1,000 in fictional m","rating":"Rapid RatingCareerYour rating chart appears after your first rated Rapid game.Play a Rated","results":"Recent ResultsGamesRated GamesNo rated games yet. Your results appear here after each rate","vault":"0/131","grim":"0/55"}
+[2026-11-04T16:58:21.515Z] PASS 1: Landing page is the Dashboard (hash ""); rail starts with Dashboard; tabs Dashboard, Play, Federation, Exchange, Career, Settings
+[2026-11-04T16:58:21.517Z] PASS 2: Fresh career: identity banner once, Random Match, and clear empty states with actions (matches, exchange, rating, results, Vault 0/n, Grimoire 0/n)
+[2026-11-04T16:58:22.106Z] PASS 3: Play stays at #/play
+[2026-11-04T16:58:23.701Z] founded: {"hash":"#/dashboard","cards":2,"featured":2,"statuses":["upcoming","upcoming"],"firstCard":"UpcomingLeague · Region 1 · Division 1Elder Magister insigniaGasel Ravenholt2280 · Elder MagistervsElder Magister insigniaIsdan Mossstead228","trade":2,"qmDraw":true,"cash":"$1,000","cashState":"$1,000","markets":5,"events":["open:upcoming","challenger:upcoming","champ:upcoming"],"season":"Season 1 · Round 1/19 · League round 1","notFounded":false}
+[2026-11-04T16:58:23.701Z] PASS 4: Dashboard shows 2 live Federation match cards (of 2 featured) with prices, Trade buttons and the Random Match
+[2026-11-04T16:58:23.701Z] PASS 5: Exchange snapshot cash $1,000 matches saved state $1,000; 5 open markets; events open:upcoming, challenger:upcoming, champ:upcoming
+[2026-11-04T16:58:24.031Z] PASS 6: Watch opened the Live Arena at #/watch/1:1:league:0:1:f7
+[2026-11-04T16:58:24.745Z] PASS 7: Trade opened the market #/exchange/mk:1:1:league:0:1:f7 ("Gasel Ravenholt – Isdan Mossstead")
+[2026-11-04T16:58:24.867Z] PASS 8: Keyboard: Enter on a focused Watch button opens the Arena
+[2026-11-04T16:58:26.290Z] phone: {"tabs":["Dashboard","Play","Federation","Exchange","Career","Settings"],"current":"Dashboard","cols":1,"wide":[]}
+[2026-11-04T16:58:26.702Z] PASS 9: No horizontal overflow (desktop 0px, 390 px 0px); single column on phone; tabs Dashboard, Play, Federation, Exchange, Career, Settings
+[2026-11-04T16:58:26.732Z] PASS 10: No page or console errors (0)
+[2026-11-04T16:58:26.732Z] ALL CHECKS PASSED

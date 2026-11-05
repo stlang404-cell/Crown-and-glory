@@ -3,7 +3,7 @@
  * time control on the Play screen, always as a casual game (never rated, so assistance never reaches rated play).
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearPractice, peekPractice, practiceForLevel, requestPractice, sanitizePractice } from '../src/app/practice';
+import { clearPractice, mistakePuzzleId, peekPractice, practiceForLevel, requestMistakeDrill, requestPractice, sanitizePractice, takeMistakeDrill } from '../src/app/practice';
 import { LEVEL_PLAN, LEVELS, dailyPlan } from '../src/academy/grimoire';
 import { ROSTER, opponentSnapshot } from '../src/federation/roster';
 import { createGameRecord } from '../src/games/session';
@@ -47,5 +47,15 @@ describe('practice game from the learning plan', () => {
     });
     expect(rec.rated).toBe(false);
     expect(rec.mode).toBe('casual');
+  });
+});
+
+describe('mistake drill hand-off (v0.10 Game Review → Academy)', () => {
+  it('passes one mistake puzzle id once and rejects anything else', () => {
+    requestMistakeDrill(mistakePuzzleId('g-1', 7));
+    expect(takeMistakeDrill()).toBe('mk-g-1-7');
+    expect(takeMistakeDrill()).toBeNull();
+    requestMistakeDrill('pz-123');
+    expect(takeMistakeDrill()).toBeNull();
   });
 });
