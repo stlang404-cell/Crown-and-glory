@@ -119,34 +119,49 @@ async function device(kind) {
   put('transition', tr);
 
   // ---- move input on a casual untimed game vs the fastest beginner, then the replay of that game
-  await page.goto(url + '#/play');
-  await page.getByTestId('opp-beginner-L0d').click();
-  await page.getByRole('group', { name: 'Time control' }).getByRole('button', { name: 'Untimed' }).click();
-  await page.getByRole('group', { name: 'Colour' }).getByRole('button', { name: 'White' }).click();
-  await page.getByRole('button', { name: /Start match/i }).click();
-  await page.waitForSelector('[data-testid="match"]');
+  const newGame = async () => {
+    await page.goto(url + '#/play');
+    await page.getByTestId('opp-beginner-L0d').click();
+    await page.getByRole('group', { name: 'Time control' }).getByRole('button', { name: 'Untimed' }).click();
+    await page.getByRole('group', { name: 'Colour' }).getByRole('button', { name: 'White' }).click();
+    await page.getByRole('button', { name: /Start match/i }).click();
+    await page.waitForSelector('[data-testid="match"]');
+  };
+  await newGame();
   const mv = [];
   await page.evaluate(() => { window.__dom = []; window.__sync = []; });
-  for (let i = 0; i < RUNS * 4 && mv.length < RUNS; i++) {
-    const t = await page.waitForFunction(() => ['human', 'over'].includes(document.querySelector('[data-testid="match"]')?.getAttribute('data-turn')), null, { timeout: 30000 }).then(() => page.getAttribute('[data-testid="match"]', 'data-turn'));
-    if (t === 'over') break;
-    const ms = await page.evaluate(async () => {
-      // only the player's own pieces (White): selecting one never plays a move by itself
-      const sqs = [...document.querySelectorAll('[data-testid="match"] [data-square]')].filter(e => / white /.test(` ${e.getAttribute('aria-label')} `.replace(',', ' ')));
-      for (const s of sqs) {
-        s.click();
-        await new Promise(r => requestAnimationFrame(r));
-        const d = document.querySelector('[data-testid="match"] [data-square] .dot, [data-testid="match"] [data-square] .ring')?.closest('[data-square]');
-        if (d) return window.__measure('[data-testid="match"] .board', () => { const t = performance.now(); d.click(); (window.__sync ??= []).push(performance.now() - t); });
-      }
-      return -1;
-    });
-    if (ms >= 0) mv.push(ms);
+  // real pointer clicks (Playwright): the clock starts at the destination click's event timestamp (input time) and stops
+  // at the board's first DOM change plus two frames
+  for (let i = 0; i < RUNS * 3 && mv.length < RUNS; i++) {
+    const t = await page.waitForFunction(() => ['human', 'over'].includes(document.querySelector('[data-testid="match"]')?.getAttribute('data-turn')), null, { timeout: 30000 }).then(() => page.getAttribute('[data-testid="match"]', 'data-turn')).catch(() => 'timeout');
+    if (t === 'over') { await page.waitForTimeout(1500); await newGame(); continue; } // a finished game: start another
+    if (t !== 'human') break;
+    const own = await page.$$eval('[data-testid="match"] [data-square]', els => els.filter(e => /, white /.test(e.getAttribute('aria-label') ?? '')).map(e => e.getAttribute('data-square')));
+    let ms = null;
+    for (const from of own) {
+      await page.click(`[data-testid="match"] [data-square="${from}"]`);
+      const dests = await page.$$eval('[data-testid="match"] [data-square]', els => els.filter(e => /legal destination/.test(e.getAttribute('aria-label') ?? '')).map(e => e.getAttribute('data-square')));
+      if (!dests.length) continue;
+      await page.evaluate(() => {
+        const board = document.querySelector('[data-testid="match"] .board');
+        window.__mv = new Promise(res => {
+          let t0 = null, done = false;
+          const onClick = e => { t0 = e.timeStamp; };
+          board.addEventListener('click', onClick, true);
+          const obs = new MutationObserver(() => { if (t0 === null || done) return; done = true; obs.disconnect(); board.removeEventListener('click', onClick, true); requestAnimationFrame(() => requestAnimationFrame(() => res(performance.now() - t0))); });
+          obs.observe(board, { subtree: true, childList: true, attributes: true, characterData: true });
+          setTimeout(() => { if (!done) { done = true; obs.disconnect(); res(-1); } }, 10000);
+        });
+      });
+      await page.click(`[data-testid="match"] [data-square="${dests[0]}"]`);
+      if (await page.locator('.promo').count()) await page.locator('.promo button').first().click();
+      ms = await page.evaluate(() => window.__mv);
+      break;
+    }
+    if (ms !== null) mv.push(ms);
     await page.waitForTimeout(250);
   }
   put('moveInput', mv);
-  R.moveInput.syncMs = stats(await page.evaluate(() => window.__sync ?? []));
-  R.moveInput.domUpdatedMs = stats(await page.evaluate(() => window.__dom ?? []));
   R.moveInput.loadavg = loadavg();
   if (await page.getAttribute('[data-testid="match"]', 'data-turn') !== 'over') { await page.getByRole('button', { name: /Resign/ }).first().click(); await page.getByRole('button', { name: 'Yes, Resign' }).click(); }
   await page.waitForSelector('.result-overlay', { timeout: 20000 });

@@ -9,6 +9,7 @@ was executed in this session on the final build unless stated.
 | `npx tsc -b` | pass |
 | `npx vitest run` | **189 / 189** passed (25 files, incl. `tests/arena.test.ts`) |
 | `npm run build` | pass |
+| `node e2e/onboarding.mjs`, `e2e/a11y.mjs <url> after --strict`, `e2e/perf-budgets.mjs` (v1.0 package V: first-run guide; axe-core + keyboard/screen-reader checks on 30 screens at 1366 and 390 px; performance budgets, desktop and 4× phone proxy) | 16 / 16 PASS; a11y ALL PASS (0 axe violations); budgets: see docs/PERFORMANCE_BUDGETS.md (failures listed there) |
 | `node e2e/v5-journey.mjs <v0.4.0 dist>` — v0.5 acceptance (migration from the real v0.4.0 build, rollback, Sovereign Max provenance, cancellation, assistant and rated lock, exactly-once rating, canonical analysis, puzzles, Lab, cosmetics, Passport, export/import, restart, offline, accessibility) | **20 / 20 PASS**, 0 console errors — docs/evidence/v5/ |
 | `node e2e/m6-arena.mjs` — M6 Live Arena acceptance (championship match, trade, revision, stale trade, settlement, post-game analysis, restart, phone, offline) | **11 / 11 PASS**, 0 console errors — docs/evidence/m6-arena/ |
 | `node e2e/m4-journey.mjs <v0.3.0 dist>` — v0.4 28-step journey from a real v0.3.0 save | **28 / 28 PASS** (harness now dismisses M5 ceremonies like a player) — docs/evidence/m4/ |
