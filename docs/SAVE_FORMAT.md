@@ -221,3 +221,17 @@ Package V adds one meta-store record, `tour:state` (`crown-tour-1`, `src/app/onb
 record: the `tour:` prefix is carried in the backup `progress` array, restored put-if-absent into an empty career and
 merged put-if-absent into another career. Unknown or malformed values are sanitised on read (an absent record is a
 fresh guide). Older builds ignore it. Tests: `tests/onboarding.test.ts`.
+
+## v1.0 additive: Crownmaster Study Match (`crown-study-1`)
+No IndexedDB version change. A study game is an ordinary `games` record (id `study-…`) with `mode: 'casual'`, the
+`untimed` time control, `rated: false`, `pool: null`, `clocks: null`, `context.kind: 'study'` (new value) and
+`context.eventName` "Study — unrated · vs <opponent>". It carries one new optional field (not part of the checksum):
+
+| record | field | contents |
+|---|---|---|
+| study game | `study` | `{ schema: 'crown-study-1', aids: { hint, best, eval, feedback, takeback }, feedback[] }` — the aid switches and, per graded move of the learner, the standard analysis of that move (`ply`, `san`, `grade`, `loss`, `provisional`, `forced`, `depth`, `settingsId`, best/played engine lines in CCN and SAN, evaluations before/after, `fenBefore`). |
+
+New `assistance[].kind` values: `best-move` and `feedback` (study aids; every use is recorded, as for the casual
+assistant). Study games never get a rating event (`CrownDB.finalizeGame`), a permanent Played Like record
+(`needsRecord`), Vault facts (`vault/facts.eligible`), a Federation result or a market (`FederationService`).
+Tests: `tests/study.test.ts`; journey `e2e/study.mjs`.

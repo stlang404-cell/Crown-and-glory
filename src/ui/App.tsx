@@ -3,6 +3,8 @@ import type { AppServices } from '../app/services';
 import { PieceDefs } from './Pieces';
 import { BrandMark } from './Portrait';
 import { PlayScreen, MatchScreen } from './PlayScreen';
+import { StudyScreen } from './StudyScreen';
+import { isStudyId } from '../app/study';
 import { DashboardScreen } from './DashboardScreen';
 import { AnalysisScreen } from './AnalysisScreen';
 import { AnalysisPicker } from './AnalysisPicker';
@@ -77,7 +79,7 @@ const NAV: { id: View['name']; label: string; icon: Parameters<typeof Icon>[0]['
 /** The phone tab bar keeps Dashboard, the four most-used sections and Settings; Finance and the rest live in the side rail,
  *  the Dashboard's Exchange snapshot and the Federation/Career screens. */
 const TABS: View['name'][] = ['dashboard', 'play', 'world', 'exchange', 'profile', 'settings'];
-const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', exhibition: 'world', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
+const SECTION: Partial<Record<View['name'], View['name']>> = { replays: 'library', match: 'play', analysis: 'analyses', standings: 'world', tournaments: 'world', competitors: 'world', competitor: 'world', watch: 'world', exhibition: 'world', study: 'play', forecasts: 'exchange', news: 'world', heraldry: 'hall', grimoire: 'academy' };
 
 export function App({ services }: { services: AppServices }) {
   const [view, setView] = useState<View>(parseHash);
@@ -114,12 +116,13 @@ export function App({ services }: { services: AppServices }) {
         <main className="main" id="main">
           <UpdateNotice />
           {services.readOnly && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>Crown &amp; Calculation is open in another tab, so this tab is read-only to protect your saves. Close the other tab and reload this one to keep playing here.</div>}
-          {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="banner" screen="banner" onHome={() => go({ name: 'play' })}><IdentityBanner /></ScreenBoundary>}
-          {!['match', 'watch'].includes(view.name) && <ScreenBoundary key="trophy-ceremony" screen="trophy-ceremony" onHome={() => go({ name: 'play' })}><TrophyCeremony /></ScreenBoundary>}
+          {!['match', 'watch'].includes(view.name) && !(view.name === 'study' && view.gameId) && <ScreenBoundary key="banner" screen="banner" onHome={() => go({ name: 'play' })}><IdentityBanner /></ScreenBoundary>}
+          {!['match', 'watch'].includes(view.name) && !(view.name === 'study' && view.gameId) && <ScreenBoundary key="trophy-ceremony" screen="trophy-ceremony" onHome={() => go({ name: 'play' })}><TrophyCeremony /></ScreenBoundary>}
           <ScreenBoundary key={toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>
             {view.name === 'dashboard' && <DashboardScreen />}
             {view.name === 'play' && <PlayScreen />}
-            {view.name === 'match' && <MatchScreen key={view.gameId} gameId={view.gameId} />}
+            {view.name === 'match' && (isStudyId(view.gameId) ? <StudyScreen key={view.gameId} gameId={view.gameId} /> : <MatchScreen key={view.gameId} gameId={view.gameId} />)}
+            {view.name === 'study' && <StudyScreen key={view.gameId ?? ''} gameId={view.gameId} />}
             {view.name === 'analysis' && <AnalysisScreen key={view.gameId} gameId={view.gameId} initialPly={view.ply} />}
             {view.name === 'library' && <LibraryScreen />}
             {view.name === 'replays' && <ReplayLibrary />}
@@ -147,7 +150,7 @@ export function App({ services }: { services: AppServices }) {
             {view.name === 'ranks' && <RankScreen />}
           </ScreenBoundary>
           <CeremonyOverlay />
-          <ScreenBoundary key="vault-toast" screen="vault-toast" onHome={() => go({ name: 'play' })}><VaultToast hidden={['match', 'watch', 'vault'].includes(view.name)} /></ScreenBoundary>
+          <ScreenBoundary key="vault-toast" screen="vault-toast" onHome={() => go({ name: 'play' })}><VaultToast hidden={['match', 'watch', 'vault'].includes(view.name) || (view.name === 'study' && !!view.gameId)} /></ScreenBoundary>
           <ScreenBoundary key={'s' + toHash(view)} screen={view.name} onHome={() => go({ name: 'play' })}>{view.name === 'settings' && <SettingsScreen />}</ScreenBoundary>
         </main>
         <nav className="tabbar" aria-label="Main">

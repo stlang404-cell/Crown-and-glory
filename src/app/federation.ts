@@ -7,6 +7,7 @@
  * previous consistent state; retries are idempotent via journal ids and the round cursor.
  * The UI reads from this service and never mutates money, ratings or results directly.
  */
+import { isStudyGame } from './study';
 import { CrownDB, FederationStore } from '../storage/db';
 import { generateFederation, hashSeed, rng01 } from '../federation/generator';
 import { applyFoundingPersonas, applyNameMode } from '../federation/rosterPersonas';
@@ -603,7 +604,7 @@ export class FederationService {
   async recordPlayerGame(game: GameRecord): Promise<void> {
     return this.run(async () => {
       const fixtureId = game.context.fixtureId;
-      if (!fixtureId || !game.result) return;
+      if (!fixtureId || !game.result || game.context.kind !== 'federation' || isStudyGame(game)) return;
       const st = this.clone();
       const rec = copyData(st.rounds.get(`${st.world.season}:${st.world.round}`)!);
       const f = rec.fixtures.find(x => x.id === fixtureId) ?? takePostponed(st, rec, fixtureId);
@@ -846,6 +847,7 @@ export class FederationService {
   /** Why a game cannot carry a sandbox market, or null if it can. */
   static sandboxIneligible(g: GameRecord): string | null {
     if (g.mode === 'rated' || g.rated) return 'Rated games never carry markets';
+    if (isStudyGame(g)) return 'Study Matches never carry markets';
     if (g.context.kind !== 'quick-match') return 'Only casual quick matches (federation and training games are excluded)';
     // Training Hall sparring is created with context 'quick-match' but is a training game, not one started from Play or
     // Random Match (RULEBOOK §Sandbox; RULES_TRACEABILITY D10): it never carries a practice market.
