@@ -1,0 +1,11 @@
+[2026-11-05T18:58:01.390Z] PASS 1: Defaults: pool "Beginner Bands" (suggested label true), type "Rated"
+[2026-11-05T18:58:01.394Z] Beginner-band pool: 2123 active competitors rated under 800
+[2026-11-05T18:58:01.984Z] PASS 2: Card shows a real active beginner-band competitor: Masel Kingston 615 ±120 (roster: {"id":"c0238","rating":615,"rd":120,"status":"active"})
+[2026-11-05T18:58:02.230Z] PASS 3: 5 rerolls gave 6 different opponents; rerolls and Cancel created no game (0 → 0)
+[2026-11-05T18:58:02.596Z] PASS 4: Rated game created vs Kanis Hollowwell (snapshot rating 109, own calibrated profile fed-e193)
+[2026-11-05T18:58:04.825Z] PASS 5: One rating event (0 → -130, games 0 → 1); still 1 after reload
+[2026-11-05T18:58:05.538Z] PASS 6: Casual quick match: rating unchanged (-129.9), still 1 rating event
+[2026-11-05T18:58:05.669Z] PASS 7: Elite filter drew a 2,589 ±120 competitor
+[2026-11-05T18:58:06.304Z] PASS 8: Phone: card shown, horizontal overflow 0px
+[2026-11-05T18:58:06.304Z] PASS 9: No page errors (0)
+[2026-11-05T18:58:06.343Z] ALL CHECKS PASSED

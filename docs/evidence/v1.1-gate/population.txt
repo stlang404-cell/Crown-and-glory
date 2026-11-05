@@ -1,0 +1,11 @@
+PASS 1: Founding screen offers the Grand size by default: "Grand · 10,240 competitors, 80 regions (recommended here)"
+PASS 2: Founded through the UI in 408 ms: 10,240 competitors on record
+PASS 3: Round advanced in the real app: 2 featured engine game(s) 2304 ms, then the world simulation and commit 342 ms
+PASS 4-1366: Population analytics at 1366 px: 10 rating bands, overflow 0
+PASS 5-1366: Discover Competitors at 1366 px: 100 rows on a page, overflow 0
+PASS 4-390: Population analytics at 390 px: 10 rating bands, overflow 0
+PASS 5-390: Discover Competitors at 390 px: 100 rows on a page, overflow 0
+PASS 6: Name search "Has" across 10,240 competitors rendered in 61 ms (includes Playwright round trips)
+PASS 7: Next page starts at rank 101
+PASS 8: No page or console errors (0)
+ALL CHECKS PASSED

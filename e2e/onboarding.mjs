@@ -83,10 +83,10 @@ check(7, d2.step === 'federation' && /4 of 9/.test(d2.progress), `Progress is de
 
 // join the Federation → tournament hint; market tutorial on the Exchange
 await page.getByTestId('guide-cta').click();
-const fedHint = await page.getByTestId('tour-hint-federation').isVisible().catch(() => false);
+const fedHint = await page.getByTestId('tour-hint-federation').waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false);
 await page.getByRole('button', { name: 'Found the federation' }).click();
 await page.waitForSelector('[data-testid="my-fixtures"]', { timeout: 60000 });
-const tourHint = await page.getByTestId('tour-hint-tournament').isVisible().catch(() => false);
+const tourHint = await page.getByTestId('tour-hint-tournament').waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false);
 check(8, fedHint && tourHint, 'The Federation screen explains joining before it is founded and the first match/tournament after');
 await page.goto(url + '#/exchange');
 await page.waitForSelector('[data-testid="tour-hint-market"]', { timeout: 10000 }).catch(() => {});

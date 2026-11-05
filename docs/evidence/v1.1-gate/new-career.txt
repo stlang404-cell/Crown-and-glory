@@ -1,0 +1,20 @@
+[2026-11-05T19:03:26.428Z] PASS 1: Fresh profile is a new career: stored r 0, RD 350, 0 games
+[2026-11-05T19:03:26.429Z] PASS 2: Career Passport shows "0" with "±350 · Provisional"
+[2026-11-05T19:03:26.429Z] PASS 3: Identity banner: "Career Elo 0 ±350 · provisional" / "Rating Rating title: Wandless Wanderer · provisional"
+[2026-11-05T19:03:27.186Z] PASS 4: Play suggests the beginners and preselects one: "Bea FallowL0d First MovesBeginnerHarbor Gate Learners · Just"
+[2026-11-05T19:03:27.339Z] PASS 5: Match settings show your career Elo "0 · provisional"
+[2026-11-05T19:03:28.646Z] PASS layout Play desktop: Play desktop: horizontal overflow 0px, bottom gap 0px after scrolling 1470px of 2370px
+[2026-11-05T19:03:30.223Z] PASS 6: Victory vs Tam Orrell (302 ±52), score 1: Glicko-2 0 ±350 → 390.56 ±284.85 (stored 390.56)
+[2026-11-05T19:03:30.234Z] PASS 7: Result overlay: "Previous 0 → New 391 (+391) · provisional"
+[2026-11-05T19:03:30.595Z] PASS 8: After reload: career Elo 391, 1 rated game, 1 history row, · highest so far 391 (provisional)
+[2026-11-05T19:03:33.006Z] PASS layout Career Passport desktop: Career Passport desktop: horizontal overflow 0px, bottom gap 0px after scrolling 4415px of 5315px
+[2026-11-05T19:03:35.543Z] PASS layout Career Passport 390 px: Career Passport 390 px: horizontal overflow 0px, bottom gap 0px after scrolling 8112px of 8956px
+[2026-11-05T19:03:38.055Z] PASS layout Play 390 px: Play 390 px: horizontal overflow 0px, bottom gap 0px after scrolling 3812px of 4656px
+[2026-11-05T19:03:40.566Z] PASS layout Settings 390 px: Settings 390 px: horizontal overflow 0px, bottom gap 0px after scrolling 5749px of 6593px
+[2026-11-05T19:03:40.844Z] PASS 9: No confirm button before the backup has been exported
+[2026-11-05T19:03:40.914Z] PASS 10: Backup downloaded: crown-backup-2026-11-05-19-03-40-before-new-career.json (1 games, 1 rating event)
+[2026-11-05T19:03:40.920Z] PASS 11: Confirm stays disabled until acknowledged ("Backup exported: crown-backup-2026-11-05-19-03-40-before-new-career.json (1 games, 1 ratin…")
+[2026-11-05T19:03:44.368Z] PASS 12: New career: 0 (stored 0, 0 games), 0 games, 0 rating events, Federation none, archive archive:2026-11-05T19:03:40.903Z
+[2026-11-05T19:03:45.177Z] PASS 13: Settings lists the archived previous career
+[2026-11-05T19:03:45.177Z] PASS 14: No page errors (0)
+[2026-11-05T19:03:45.223Z] All checks passed

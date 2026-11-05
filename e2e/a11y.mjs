@@ -15,7 +15,7 @@
  * "<square>, <colour> <piece>"; move announcements in a polite live region, one per move; clocks not live (no spam).
  */
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const AXE = require.resolve('axe-core/axe.min.js');
@@ -28,6 +28,7 @@ const log = []; let failed = 0;
 const step = m => { const l = `[${new Date().toISOString()}] ${m}`; log.push(l); console.log(l); };
 const check = (id, ok, m) => { step(`${ok ? 'PASS' : 'FAIL'} ${id}: ${m}`); if (!ok) failed++; };
 
+rmSync(OUT + 'profile-' + label, { recursive: true, force: true }); // a fresh profile every run (a reused one carries an old federation)
 const ctx = await chromium.launchPersistentContext(OUT + 'profile-' + label, { viewport: { width: 1366, height: 900 }, reducedMotion: 'no-preference' });
 const page = ctx.pages()[0] ?? await ctx.newPage();
 const errors = [];

@@ -1,0 +1,82 @@
+[2026-11-05T19:27:17.059Z]   1366px dashboard: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:19.662Z]   1366px play: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:22.086Z]   1366px match: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:24.621Z]   1366px study: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:27.082Z]   1366px study-match: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:29.918Z]   1366px federation: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:32.478Z]   1366px standings: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:35.047Z]   1366px tournaments: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:38.855Z]   1366px competitors: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:41.342Z]   1366px competitor: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:43.824Z]   1366px population: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:27:46.463Z]   1366px watch: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:49.146Z]   1366px arena: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:51.768Z]   1366px exhibition: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:27:54.211Z]   1366px exchange: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:56.814Z]   1366px market: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:27:59.534Z]   1366px finance: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:02.001Z]   1366px forecasts: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:04.432Z]   1366px news: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:06.848Z]   1366px games: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:09.313Z]   1366px replays: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:11.682Z]   1366px analyses: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:28:14.306Z]   1366px analysis: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:16.722Z]   1366px academy: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:19.182Z]   1366px grimoire: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:21.998Z]   1366px career: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:24.993Z]   1366px rivals: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:27.448Z]   1366px hall: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:31.167Z]   1366px heraldry: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:28:35.497Z]   1366px vault: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:38.169Z]   1366px ranks: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:28:40.607Z]   1366px lab: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:28:43.259Z]   1366px settings: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:43.259Z] Keyboard-only game
+[2026-11-05T19:28:48.135Z] PASS kb-game: A full game is played with the keyboard only (19 moves by arrow keys + Enter, ended by keyboard resignation)
+[2026-11-05T19:28:48.135Z] PASS kb-result-focus: The result dialog receives keyboard focus
+[2026-11-05T19:28:48.135Z] PASS live-moves: Moves are announced in a polite live region once each (39 announcements for 19 player moves plus replies; 40 live mutations)
+[2026-11-05T19:28:48.514Z] PASS sq-names: Board squares carry screen-reader names ("e5, white pawn")
+[2026-11-05T19:28:48.609Z] PASS kb-promotion: Promotion chosen with the keyboard (focus moved to "Promote to queen"; move e5e6q, checkmate)
+[2026-11-05T19:28:48.609Z] PASS kb-promotion-mate: The keyboard-played promotion ends the game by checkmate (1-0)
+[2026-11-05T19:28:48.612Z] PASS clock-quiet: Clocks are not inside a live region (role="timer", no per-second announcements)
+[2026-11-05T19:28:51.826Z]   390px dashboard: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:54.439Z]   390px play: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:28:56.904Z]   390px match: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:28:59.457Z]   390px study: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:01.923Z]   390px study-match: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:04.632Z]   390px federation: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:07.148Z]   390px standings: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:09.685Z]   390px tournaments: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:13.196Z]   390px competitors: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:15.641Z]   390px competitor: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/37
+[2026-11-05T19:29:18.110Z]   390px population: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/36
+[2026-11-05T19:29:20.667Z]   390px watch: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:23.243Z]   390px arena: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:25.784Z]   390px exhibition: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:28.190Z]   390px exchange: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:30.690Z]   390px market: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:33.321Z]   390px finance: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:35.764Z]   390px forecasts: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:38.218Z]   390px news: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:40.613Z]   390px games: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:43.056Z]   390px replays: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:45.426Z]   390px analyses: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:47.973Z]   390px analysis: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:50.440Z]   390px academy: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/39
+[2026-11-05T19:29:52.883Z]   390px grimoire: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:29:55.812Z]   390px career: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:29:58.907Z]   390px rivals: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:30:01.393Z]   390px hall: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/37
+[2026-11-05T19:30:05.286Z]   390px heraldry: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:30:09.712Z]   390px vault: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:30:12.399Z]   390px ranks: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/37
+[2026-11-05T19:30:14.843Z]   390px lab: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/38
+[2026-11-05T19:30:17.482Z]   390px settings: axe 0 rules / 0 nodes (0 serious+critical) · h1 1 · skips 0 · small targets 0 · focus without ring 0/40
+[2026-11-05T19:30:23.523Z] PASS reduced-motion: prefers-reduced-motion: no running infinite animations
+[2026-11-05T19:30:23.581Z] SUMMARY 1366px: {"screens":33,"axeNodes":0,"axeSerious":0,"axeRules":[],"smallTargets":0,"focusNoRing":0,"headingSkips":0,"h1Problems":[]}
+[2026-11-05T19:30:23.581Z] SUMMARY 390px: {"screens":33,"axeNodes":0,"axeSerious":0,"axeRules":[],"smallTargets":0,"focusNoRing":0,"headingSkips":0,"h1Problems":[]}
+[2026-11-05T19:30:23.581Z] BY RULE: {}
+[2026-11-05T19:30:23.582Z] PASS strict-1366: 1366px: no serious/critical axe violations (0), small targets (0), focus without ring (0), heading skips (0), h1 problems (0)
+[2026-11-05T19:30:23.582Z] PASS strict-390: 390px: no serious/critical axe violations (0), small targets (0), focus without ring (0), heading skips (0), h1 problems (0)
+[2026-11-05T19:30:23.582Z] PASS errors: No page errors (0)
+[2026-11-05T19:30:23.583Z] ALL CHECKS PASSED

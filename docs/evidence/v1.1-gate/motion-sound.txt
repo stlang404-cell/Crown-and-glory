@@ -1,0 +1,12 @@
+[2026-11-05T18:57:26.508Z] PASS 1: Sound volume 40%, ceremonies off, piece speed Slow pressed=true after reload
+[2026-11-05T18:57:31.986Z] PASS 2: 14 plies (7 by the player): 14 slides, 28 capture-ghost frames; over 303 frames never an extra (0) or missing (0) piece
+[2026-11-05T18:57:31.986Z] PASS 3: Audio unlocked by the first tap (true); 14 move sounds for 14 plies (player and engine): ["move","move","move","move","move","move","move","capture","move","move","capture","capture","move","checkmate","check"]
+[2026-11-05T18:57:32.805Z] PASS 4: The game ended on the board; it played one result sound: ["defeat"]
+[2026-11-05T18:57:35.622Z] PASS 5: Replay autoplay to ply 5/14: 5 slides and 5 sounds
+[2026-11-05T18:57:36.918Z] PASS 6: Rapid scrubbing (9 key presses 33 ms apart) ended on ply 9/14 with 1 slide(s), 1 sound(s), 0 animations still running, 23 pieces drawn
+[2026-11-05T18:57:37.834Z] PASS 7: Stepping back slides the piece home (1) silently (0 sounds)
+[2026-11-05T18:57:39.757Z] PASS 8: With sound turned off, replay steps are silent
+[2026-11-05T18:57:42.187Z] PASS 9: Reduced motion: 0 slides over 3 steps; phone overflow 0px
+[2026-11-05T18:57:42.187Z] PASS 10: No page errors (0)
+[2026-11-05T18:57:42.224Z] video: /tmp/claude-0/-home-user-Crown-and-glory/9ccbf187-ad3a-5ceb-9d0a-54ee5dc4ab54/scratchpad/wt-gate/e2e/artifacts/motion-sound/play-and-replay.webm
+[2026-11-05T18:57:42.224Z] ALL CHECKS PASSED

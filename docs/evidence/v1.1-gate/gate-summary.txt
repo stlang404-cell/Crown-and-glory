@@ -1,0 +1,42 @@
+gate at 0d51d11 Version 1.1.0 (Grand Classical Update)
+TSC-OK
+ Test Files  78 passed (78)
+      Tests  871 passed (871)
+✓ built in 4.20s
+Release check passed: Crown & Calculation version 1.1.0 · commit 0d51d11 · built 2026-11-05T18:55:53.781Z · 11 precached files verified
+run exit 0 :: 1 pass / 0 fail :: [2026-11-05T18:56:09.010Z] PASS: rated-game acceptance journey completed (Gate G)
+offline exit 0 :: 1 pass / 0 fail :: PASS: offline play works in Chromium
+analysis-journey exit 0 :: 16 pass / 0 fail :: [2026-11-05T18:56:27.240Z] ALL CHECKS PASSED
+nav-audit exit 0 :: 6 pass / 0 fail :: [2026-11-05T18:57:23.971Z] ALL CHECKS PASSED
+motion-sound exit 0 :: 11 pass / 0 fail :: [2026-11-05T18:57:42.224Z] ALL CHECKS PASSED
+motion-extra exit 1 :: 0 pass / 0 fail :: Node.js v22.23.4
+quick-match exit 0 :: 10 pass / 0 fail :: [2026-11-05T18:58:06.343Z] ALL CHECKS PASSED
+vault exit 1 :: 13 pass / 2 fail :: [2026-11-05T18:58:25.001Z] 1 check(s) FAILED
+grimoire exit 0 :: 1 pass / 0 fail :: PASS: Grimoire journey
+dashboard exit 0 :: 11 pass / 0 fail :: [2026-11-05T18:58:49.100Z] ALL CHECKS PASSED
+practice exit 1 :: 0 pass / 1 fail :: FAIL: Rapid 5+3 not selected
+academy exit 0 :: 1 pass / 0 fail :: PASS: Academy journey
+replay-center exit 0 :: 17 pass / 0 fail :: [2026-11-05T19:00:36.705Z] REPLAY CENTER JOURNEY: 17/17 checks passed
+market-integrity exit 0 :: 10 pass / 0 fail :: [2026-11-05T19:00:42.305Z] ALL CHECKS PASSED
+population exit 0 :: 11 pass / 0 fail :: ALL CHECKS PASSED
+legacy exit 0 :: 13 pass / 0 fail :: [2026-11-05T19:03:23.216Z] ALL CHECKS PASSED
+new-career exit 0 :: 19 pass / 0 fail :: [2026-11-05T19:03:45.223Z] All checks passed
+federation-career exit 0 :: 12 pass / 0 fail :: ALL PASSED
+exhibition exit 0 :: 18 pass / 0 fail :: [2026-11-05T19:05:36.884Z] ALL PASS
+ranks exit 0 :: 27 pass / 0 fail :: ALL CHECKS PASSED
+finance exit 0 :: 9 pass / 0 fail :: ALL PASS
+onboarding exit 1 :: 15 pass / 2 fail :: [2026-11-05T19:05:57.352Z] 1 check(s) FAILED
+grand-classical exit 0 :: 35 pass / 0 fail :: [2026-11-05T19:07:01.152Z] All grand-classical checks passed
+study exit 0 :: 65 pass / 0 fail :: [2026-11-05T19:13:25.636Z] All study checks passed
+ai-arena exit 0 :: 17 pass / 0 fail :: [2026-11-05T19:13:45.515Z] ALL PASS
+nav-audit-375 exit 0 :: [2026-11-05T19:14:42.293Z] ALL CHECKS PASSED
+startup-race exit 0 :: PASS R0 4462: navigation during the first render (4462): the Career Passport is shown in 10/10 runs All checks passed 
+a11y-strict exit 1 :: Node.js v22.23.4
+m6-arena exit 0 :: [2026-11-05T19:17:10.512Z] M6 ARENA JOURNEY: 11/11 steps passed
+v5 exit 0 :: [2026-11-05T19:19:25.021Z] v0.5 JOURNEY: 20/20 steps passed
+pages-check exit 0 :: [2026-11-05T19:20:14.681Z] ALL CHECKS PASSED
+GATE10-DONE
+
+[exited with code 0]
+
+Re-run after journey fixes (same gated build 0d51d11): motion-extra 9/0, vault 15/0, practice pass, onboarding 17/0, a11y --strict 12/0 — all pass

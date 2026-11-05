@@ -1,0 +1,38 @@
+[2026-11-05T19:13:48.409Z]   fresh · Dashboard: ok — h1 "Dashboard", 2468 chars
+[2026-11-05T19:13:49.736Z]   fresh · Play: ok — h1 "Six Squares. Every Move Remembered.", 3784 chars
+[2026-11-05T19:13:51.099Z]   fresh · Federation: ok — h1 "The Six-Square Federation", 1799 chars
+[2026-11-05T19:13:52.397Z]   fresh · Exchange: ok — h1 "Crown Exchange", 328 chars
+[2026-11-05T19:13:53.682Z]   fresh · Finance: ok — h1 "Finance", 503 chars
+[2026-11-05T19:13:54.980Z]   fresh · Games: ok — h1 "Chess Library", 835 chars
+[2026-11-05T19:13:56.297Z]   fresh · Analysis: ok — h1 "Review a Game", 471 chars
+[2026-11-05T19:13:57.597Z]   fresh · Academy: ok — h1 "Crown Academy", 2499 chars
+[2026-11-05T19:13:58.897Z]   fresh · Career: ok — h1 "Career Passport", 4654 chars
+[2026-11-05T19:14:00.215Z]   fresh · Rivals: ok — h1 "Rivals", 502 chars
+[2026-11-05T19:14:01.512Z]   fresh · Hall of Fame: ok — h1 "Hall of Fame", 933 chars
+[2026-11-05T19:14:02.795Z]   fresh · Lab: ok — h1 "Chess Intelligence Lab", 3302 chars
+[2026-11-05T19:14:04.112Z]   fresh · Settings: ok — h1 "Settings", 5399 chars
+[2026-11-05T19:14:04.191Z] PASS 1: Fresh career: every navigation entry opens a working screen
+[2026-11-05T19:14:16.162Z]   populated · Dashboard: ok — h1 "Dashboard", 5774 chars
+[2026-11-05T19:14:17.462Z]   populated · Play: ok — h1 "Six Squares. Every Move Remembered.", 4104 chars
+[2026-11-05T19:14:18.797Z]   populated · Federation: ok — h1 "Season 1 · Round 2/19", 7105 chars
+[2026-11-05T19:14:20.115Z]   populated · Exchange: ok — h1 "Crown Exchange", 2937 chars
+[2026-11-05T19:14:21.463Z]   populated · Finance: ok — h1 "Finance", 7312 chars
+[2026-11-05T19:14:22.762Z]   populated · Games: ok — h1 "Chess Library", 1030 chars
+[2026-11-05T19:14:24.111Z]   populated · Analysis: ok — h1 "Review a Game", 540 chars
+[2026-11-05T19:14:25.411Z]   populated · Academy: ok — h1 "Crown Academy", 2539 chars
+[2026-11-05T19:14:26.712Z]   populated · Career: ok — h1 "Career Passport", 8134 chars
+[2026-11-05T19:14:28.083Z]   populated · Rivals: ok — h1 "Rivals", 6701 chars
+[2026-11-05T19:14:29.395Z]   populated · Hall of Fame: ok — h1 "Hall of Fame", 2279 chars
+[2026-11-05T19:14:30.718Z]   populated · Lab: ok — h1 "Chess Intelligence Lab", 3360 chars
+[2026-11-05T19:14:32.028Z]   populated · Settings: ok — h1 "Settings", 5539 chars
+[2026-11-05T19:14:32.105Z] PASS 2: Populated career: every navigation entry opens a working screen
+[2026-11-05T19:14:33.688Z] PASS 3: Reloading on the last screen keeps it working (5493 chars)
+[2026-11-05T19:14:35.401Z]   phone · Dashboard: ok — h1 "Dashboard", 5686 chars
+[2026-11-05T19:14:36.746Z]   phone · Play: ok — h1 "Six Squares. Every Move Remembered.", 4044 chars
+[2026-11-05T19:14:38.146Z]   phone · Federation: ok — h1 "Season 1 · Round 2/19", 6883 chars
+[2026-11-05T19:14:39.478Z]   phone · Exchange: ok — h1 "Crown Exchange", 2821 chars
+[2026-11-05T19:14:40.811Z]   phone · Career: ok — h1 "Career Passport", 8028 chars
+[2026-11-05T19:14:42.178Z]   phone · Settings: ok — h1 "Settings", 5476 chars
+[2026-11-05T19:14:42.269Z] PASS 4: Phone tab bar (375 px): every tab opens a working screen without overflow
+[2026-11-05T19:14:42.293Z] PASS 5: No page or console errors (0)
+[2026-11-05T19:14:42.293Z] ALL CHECKS PASSED

@@ -1,0 +1,6 @@
+Tactical puzzle solved by clicking the verified line: status=solved
+second puzzle loaded (solution starts e5f5); squares rendered: 36
+Solution reveal: status=failed
+Puzzle Rush first puzzle: playing; score chip: Score 1 · Strikes 0/3
+After restart: 3 stored attempts
+PASS: Academy journey

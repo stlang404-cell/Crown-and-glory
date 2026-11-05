@@ -37,7 +37,8 @@ await page.click('[data-testid="plan-practice-play"]');
 await page.waitForSelector('[data-testid="practice-preset"]');
 const pressed = async label => page.locator(`[aria-label="${label}"] button[aria-pressed="true"]`).allInnerTexts();
 const selectedOpp = await page.locator('.opp-card[aria-pressed="true"]').innerText();
-const tc = await pressed('Time control'), mode = await pressed('Mode');
+// v1.1: time controls are split into rated and casual groups (TimeControlPicker)
+const tc = [...await pressed('Rated time controls'), ...await pressed('Casual time controls')], mode = await pressed('Mode');
 step(`Play screen: opponent "${selectedOpp.split('\n')[0]}", time control ${tc.join(',')}, mode ${mode.join(',')}`);
 step(`Notice: ${await page.locator('[data-testid="practice-preset"]').innerText()}`);
 if (!/Dario Quill/.test(selectedOpp)) await fail('suggested opponent not selected');

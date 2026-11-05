@@ -153,7 +153,7 @@ check(7, gone === 0 && toastAgain === 0 && metaAfter.length === metaBefore.lengt
 // insignias reflect the rating state (one rated game: provisional, nothing collected)
 await page.goto(url + '#/vault'); await page.waitForSelector('[data-testid="vault"]');
 const ins = await page.evaluate(async () => {
-  const p = await window.__crown.db.ratingState('rapid');
+  const p = await window.__crown.db.careerRating(); // v1.1: the career pool (Long Classical)
   return { games: p.games, rd: Math.round(p.rd), collected: window.__crown.vault.facts.insignia.collected.length, ui: document.querySelector('[data-testid="vault-insignias"]')?.textContent,
     earnedInsignia: document.querySelectorAll('[data-testid="vault-item"][data-id^="insignia-"][data-state="earned"]').length,
     eventFirst: document.querySelector('[data-testid="vault-item"][data-id="event-first"]')?.dataset.state, earned: document.querySelector('[data-testid="vault-earned"]')?.textContent };

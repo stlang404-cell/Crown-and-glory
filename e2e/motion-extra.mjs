@@ -48,12 +48,14 @@ await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Cas
 await page.getByRole('button', { name: 'White', exact: true }).click();
 await page.getByRole('button', { name: /Start match/i }).click();
 await page.waitForSelector('[data-testid="match"]');
+// v1.1: leaving the match screen saves the game (pause on exit), so leave first, then edit the stored record
+await page.goto(url + '#/play'); await page.waitForTimeout(500);
 const gid = await page.evaluate(async () => {
   const g = (await window.__crown.db.unfinishedGames())[0];
   await window.__crown.saveGame({ ...g, initialFen: '5k/P5/6/6/6/K5 w - - 0 1', moves: [] });
   return g.id;
 });
-await page.goto(url + '#/play'); await page.goto(url + '#/match/' + encodeURIComponent(gid));
+await page.goto(url + '#/match/' + encodeURIComponent(gid));
 await page.waitForFunction(() => document.querySelector('[data-testid="match"]')?.getAttribute('data-fen')?.startsWith('5k/P5/'), null, { timeout: 15000 });
 await page.waitForFunction(() => document.querySelector('[data-testid="match"]')?.getAttribute('data-turn') === 'human', null, { timeout: 15000 });
 const s0 = (await sounds()).length;

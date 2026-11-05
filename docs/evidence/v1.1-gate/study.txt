@@ -1,0 +1,72 @@
+[2026-11-05T19:07:02.709Z] [w390] official state before: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":null}
+[2026-11-05T19:07:02.732Z] PASS w390-entry-dash: Dashboard has a Study Match link
+[2026-11-05T19:07:02.773Z] PASS w390-entry-academy: Academy has a Study Match link
+[2026-11-05T19:07:02.984Z] PASS w390-home: Study setup is labelled "Study — unrated"
+[2026-11-05T19:07:02.989Z] PASS w390-home-overflow: setup: no horizontal overflow (0 px)
+[2026-11-05T19:07:03.350Z] PASS w390-start: study match vs Bea Fallow (study-mw3x39pm-bs0ycy): header "Study — unrated", record {"mode":"casual","rated":false,"pool":null,"tc":"untimed","clocks":null,"ctx":"study"}
+[2026-11-05T19:07:03.352Z] PASS w390-no-clock: no clock is shown (untimed)
+[2026-11-05T19:07:03.461Z] PASS w390-hint: hint: "Engine hint (depth 6): consider moving the piece on c2." (highlighted square: c2)
+[2026-11-05T19:07:03.513Z] PASS w390-best: best move explanation: "Engine estimate, depth 6 — not a perfect analysis. Best move: c3 (evaluation +0.44). Engine line: c3 b4 d3 Na4 Nf3 c4. Along this line the material balance does not change."
+[2026-11-05T19:07:03.523Z] PASS w390-eval-on: evaluation bar shown: "Evaluation bar (Engine estimate, depth 6)"
+[2026-11-05T19:07:03.568Z] PASS w390-eval-off: evaluation bar hidden when the aid is switched off
+[2026-11-05T19:07:03.775Z] PASS w390-match-overflow: match: no horizontal overflow (0 px)
+[2026-11-05T19:07:05.804Z] PASS w390-feedback: feedback after a move: "★ b3: Best — expected-score loss 0.00 Standard analysis (std-d7), depth 7 — not a perfect analysis. Why?" (grade best)
+[2026-11-05T19:07:06.111Z] PASS w390-takeback: take back: 6 → 4 plies
+[2026-11-05T19:07:07.551Z] PASS w390-resume: reload + resume: 6 plies, 1 feedback entries, aids {"hint":true,"best":true,"eval":true,"feedback":true,"takeback":true}; aid uses recorded: evaluation,hint,best-move,evaluation,feedback,evaluation,evaluation,takeback
+[2026-11-05T19:07:07.551Z] PASS w390-uses-recorded: every aid use is recorded on the game
+[2026-11-05T19:07:07.800Z] PASS w390-result: result card: "Defeat 0-1 · Resignation · vs Bea Fallow Study — unrated No rating change. Study games never count toward ratings, Played Like records, the Vault, the Federatio"
+[2026-11-05T19:07:07.944Z] PASS w390-analysis-label: Match Analysis labelled "Study — unrated"
+[2026-11-05T19:10:07.984Z] PASS w390-analysis-pl: standard Match Analysis completed and shows Played Like
+[2026-11-05T19:10:08.124Z] PASS w390-analysis-overflow: analysis: no horizontal overflow (0 px)
+[2026-11-05T19:10:08.157Z] PASS w390-library: Game library row labelled "Study — unrated"
+[2026-11-05T19:10:08.169Z] [w390] official state after: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":null}; study game: {"pl":0,"ratingEventId":null,"sandbox":false}
+[2026-11-05T19:10:08.169Z] PASS w390-isolation: ratings, rating events, Played Like records, Vault facts, Federation stats and markets unchanged; no Played Like record and no market for the study game
+[2026-11-05T19:10:08.169Z] PASS w390-errors: no page errors (0)
+[2026-11-05T19:10:08.516Z] [w375] official state before: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":null}
+[2026-11-05T19:10:08.533Z] PASS w375-entry-dash: Dashboard has a Study Match link
+[2026-11-05T19:10:08.582Z] PASS w375-entry-academy: Academy has a Study Match link
+[2026-11-05T19:10:08.713Z] PASS w375-home: Study setup is labelled "Study — unrated"
+[2026-11-05T19:10:08.715Z] PASS w375-home-overflow: setup: no horizontal overflow (0 px)
+[2026-11-05T19:10:09.043Z] PASS w375-start: study match vs Bea Fallow (study-mw3x7906-xe8oek): header "Study — unrated", record {"mode":"casual","rated":false,"pool":null,"tc":"untimed","clocks":null,"ctx":"study"}
+[2026-11-05T19:10:09.045Z] PASS w375-no-clock: no clock is shown (untimed)
+[2026-11-05T19:10:09.217Z] PASS w375-hint: hint: "Engine hint (depth 6): consider moving the piece on c2." (highlighted square: c2)
+[2026-11-05T19:10:09.262Z] PASS w375-best: best move explanation: "Engine estimate, depth 6 — not a perfect analysis. Best move: c3 (evaluation +0.44). Engine line: c3 b4 d3 Na4 Nf3 c4. Along this line the material balance does not change."
+[2026-11-05T19:10:09.273Z] PASS w375-eval-on: evaluation bar shown: "Evaluation bar (Engine estimate, depth 6)"
+[2026-11-05T19:10:09.309Z] PASS w375-eval-off: evaluation bar hidden when the aid is switched off
+[2026-11-05T19:10:09.500Z] PASS w375-match-overflow: match: no horizontal overflow (0 px)
+[2026-11-05T19:10:11.489Z] PASS w375-feedback: feedback after a move: "★ axb4: Best — expected-score loss 0.00 Standard analysis (std-d7), depth 7 — not a perfect analysis. Why?" (grade best)
+[2026-11-05T19:10:11.801Z] PASS w375-takeback: take back: 6 → 4 plies
+[2026-11-05T19:10:12.873Z] PASS w375-resume: reload + resume: 6 plies, 1 feedback entries, aids {"hint":true,"best":true,"eval":true,"feedback":true,"takeback":true}; aid uses recorded: evaluation,hint,best-move,evaluation,feedback,evaluation,evaluation,takeback
+[2026-11-05T19:10:12.873Z] PASS w375-uses-recorded: every aid use is recorded on the game
+[2026-11-05T19:10:13.126Z] PASS w375-result: result card: "Defeat 0-1 · Resignation · vs Bea Fallow Study — unrated No rating change. Study games never count toward ratings, Played Like records, the Vault, the Federatio"
+[2026-11-05T19:10:13.279Z] PASS w375-analysis-label: Match Analysis labelled "Study — unrated"
+[2026-11-05T19:13:13.321Z] PASS w375-analysis-pl: standard Match Analysis completed and shows Played Like
+[2026-11-05T19:13:13.457Z] PASS w375-analysis-overflow: analysis: no horizontal overflow (0 px)
+[2026-11-05T19:13:13.493Z] PASS w375-library: Game library row labelled "Study — unrated"
+[2026-11-05T19:13:13.504Z] [w375] official state after: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":null}; study game: {"pl":0,"ratingEventId":null,"sandbox":false}
+[2026-11-05T19:13:13.504Z] PASS w375-isolation: ratings, rating events, Played Like records, Vault facts, Federation stats and markets unchanged; no Played Like record and no market for the study game
+[2026-11-05T19:13:13.504Z] PASS w375-errors: no page errors (0)
+[2026-11-05T19:13:14.326Z] [desktop] official state before: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":"null"}
+[2026-11-05T19:13:14.356Z] PASS desktop-entry-dash: Dashboard has a Study Match link
+[2026-11-05T19:13:14.412Z] PASS desktop-entry-academy: Academy has a Study Match link
+[2026-11-05T19:13:14.521Z] PASS desktop-home: Study setup is labelled "Study — unrated"
+[2026-11-05T19:13:15.133Z] PASS desktop-start: study match vs Bea Fallow (study-mw3xb8lg-xf24az): header "Study — unrated", record {"mode":"casual","rated":false,"pool":null,"tc":"untimed","clocks":null,"ctx":"study"}
+[2026-11-05T19:13:15.135Z] PASS desktop-no-clock: no clock is shown (untimed)
+[2026-11-05T19:13:15.276Z] PASS desktop-hint: hint: "Engine hint (depth 6): consider moving the piece on c2." (highlighted square: c2)
+[2026-11-05T19:13:15.320Z] PASS desktop-best: best move explanation: "Engine estimate, depth 6 — not a perfect analysis. Best move: c3 (evaluation +0.44). Engine line: c3 b4 d3 Na4 Nf3 c4. Along this line the material balance does not change."
+[2026-11-05T19:13:15.331Z] PASS desktop-eval-on: evaluation bar shown: "Evaluation bar (Engine estimate, depth 6)"
+[2026-11-05T19:13:15.374Z] PASS desktop-eval-off: evaluation bar hidden when the aid is switched off
+[2026-11-05T19:13:17.897Z] PASS desktop-feedback: feedback after a move: "★ a4: Best (provisional) — expected-score loss 0.00 Standard analysis (std-d7), depth 7 — not a perfect analysis. Why?" (grade best)
+[2026-11-05T19:13:18.443Z] PASS desktop-takeback: take back: 6 → 4 plies
+[2026-11-05T19:13:19.414Z] PASS desktop-resume: reload + resume: 6 plies, 1 feedback entries, aids {"hint":true,"best":true,"eval":true,"feedback":true,"takeback":true}; aid uses recorded: evaluation,hint,best-move,evaluation,feedback,evaluation,evaluation,takeback
+[2026-11-05T19:13:19.414Z] PASS desktop-uses-recorded: every aid use is recorded on the game
+[2026-11-05T19:13:19.549Z] PASS desktop-result: result card: "Defeat 0-1 · Resignation · vs Bea Fallow Study — unrated No rating change. Study games never count toward ratings, Played Like records, the Vault, the Federatio"
+[2026-11-05T19:13:19.686Z] PASS desktop-analysis-label: Match Analysis labelled "Study — unrated"
+[2026-11-05T19:13:20.482Z] PASS desktop-analysis-pl: standard Match Analysis completed and shows Played Like
+[2026-11-05T19:13:20.971Z] PASS desktop-library: Game library row labelled "Study — unrated"
+[2026-11-05T19:13:20.982Z] [desktop] official state after: {"ratingEvents":0,"ratings":"blitz:0.000/0 rapid:0.000/0 classical:0.000/0","plRecords":0,"vaultGames":0,"vaultAnalyses":0,"markets":0,"fedPlayer":"null"}; study game: {"pl":0,"ratingEventId":null,"sandbox":false}
+[2026-11-05T19:13:20.982Z] PASS desktop-isolation: ratings, rating events, Played Like records, Vault facts, Federation stats and markets unchanged; no Played Like record and no market for the study game
+[2026-11-05T19:13:25.390Z] PASS desktop-federation-opponent: Start Study Match vs Quth Marrmore: {"ctx":"study","rated":false,"profile":"fed-n2000000","style":"materialist","opp":"c2304"}; the competitor replied
+[2026-11-05T19:13:25.576Z] PASS desktop-pause: Pause & Save returns to the Study screen with the game listed under Resume
+[2026-11-05T19:13:25.576Z] PASS desktop-errors: no page errors (0)
+[2026-11-05T19:13:25.636Z] All study checks passed
