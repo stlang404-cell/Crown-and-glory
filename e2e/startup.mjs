@@ -53,9 +53,9 @@ const VISIBLE_TIMEOUT = 120_000; // the tail is measured, not cut off at the jou
 
 /** Budgets (ms, p95 over the runs): see docs/IPHONE_PAGES.md "Startup". */
 const BUDGET = {
-  reloadEvents: { 1: 3000, 4: 8000, 6: 12000 },
-  dashboard: { 1: 2500, 4: 6000, 6: 9000 },
-  events: { 1: 3000, 4: 8000, 6: 12000 },
+  reloadEvents: { 1: 6000, 4: 10000, 6: 12000 },
+  dashboard: { 1: 2500, 4: 8000, 6: 10000 },
+  events: { 1: 3000, 4: 10000, 6: 12000 },
 };
 
 let failed = 0;

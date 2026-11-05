@@ -93,6 +93,7 @@ function env(log: string[]) {
     afterPaint: () => new Promise<void>(r => { log.push('paint?'); paint = r; }),
     idle: () => new Promise<void>(r => { idles.push(r); }),
     setTimeout: f => { timers.push(f); return 0; },
+    delay: ms => { log.push(`quiet ${ms}`); return Promise.resolve(); },
     mark: n => log.push(n),
     onError: (s, err) => log.push(`error ${s}: ${(err as Error).message}`),
   };
@@ -132,6 +133,8 @@ describe('background start: after the first screen, fixed order, one idle step a
     await done;
     expect(ran).toEqual(['analysis', 'vault', 'legacy', 'playedLike', 'live']);
     expect(b.finished).toEqual(ran);
+    expect(log.indexOf('quiet 1000')).toBeGreaterThan(log.indexOf('paint?')); // a quiet second after the first paint …
+    expect(log.indexOf('quiet 1000')).toBeLessThan(log.indexOf('bg:start')); // … before any background step
     expect(log.filter(l => l.startsWith('bg:') && l.endsWith(':start'))).toEqual(['bg:start', 'bg:analysis:start', 'bg:vault:start', 'bg:legacy:start', 'bg:playedLike:start', 'bg:live:start']);
   });
 

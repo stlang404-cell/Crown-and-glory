@@ -6,7 +6,8 @@
  * whether or not the first screen had rendered. On a slow or loaded device (and a cold iPhone start is one) they ran
  * while the first screen was still loading the player's own records, competing for the main thread and IndexedDB.
  *
- * Now they run as one ordered queue that starts only once the first screen has been committed and painted, and each
+ * Now they run as one ordered queue that starts only once the first screen has been committed and painted (plus a
+ * quiet second for that screen), and each
  * step waits until no screen is loading its records (bounded) and for an idle moment (requestIdleCallback with a
  * deadline, else a short timeout) before it starts:
  *   1. analysis queue (its search runs in a worker)  2. Vault (incl. the crown-vault-2 back-fill)
@@ -26,6 +27,8 @@ export interface BackgroundEnv {
   /** Wait until no screen is loading its records (bounded). Optional. */
   foregroundIdle?(): Promise<void>;
   setTimeout(f: () => void, ms: number): unknown;
+  /** Wait `ms` (the quiet moment after the first paint). Optional: tests run without it. */
+  delay?(ms: number): Promise<void>;
   mark?(name: string): void;
   onError?(step: string, e: unknown): void;
 }
@@ -42,6 +45,7 @@ export const browserEnv = (mark?: (n: string) => void, foregroundIdle?: () => Pr
     requestAnimationFrame(() => setTimeout(res, 0));
   }),
   setTimeout: (f, ms) => setTimeout(f, ms),
+  delay: ms => new Promise<void>(res => setTimeout(res, ms)),
   mark,
   onError: (step, e) => console.error(`background start: ${step}`, e),
 });
@@ -54,7 +58,7 @@ export class BackgroundStart {
   /** Names of the steps that have finished (in order); for diagnostics and tests. */
   readonly finished: string[] = [];
 
-  constructor(private readonly env: BackgroundEnv, readonly opts: { idleTimeoutMs?: number; fallbackMs?: number } = {}) {}
+  constructor(private readonly env: BackgroundEnv, readonly opts: { idleTimeoutMs?: number; fallbackMs?: number; quietMs?: number } = {}) {}
 
   add(name: string, run: BackgroundStep['run']): this {
     if (this.started) throw new Error('background start: steps are fixed before it starts');
@@ -71,6 +75,8 @@ export class BackgroundStart {
     this.started = true;
     this.done = (async () => {
       await this.env.afterPaint();
+      // a quiet moment for the first screen (taps, its own record loads) before any background work begins
+      await this.env.delay?.(this.opts.quietMs ?? 1000);
       this.env.mark?.('bg:start');
       for (const s of this.steps) {
         if (this.stopped) return;
