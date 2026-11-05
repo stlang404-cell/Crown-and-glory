@@ -1,4 +1,5 @@
 import { AppServices } from '../app/services';
+import { TourHint, useMarkSeen } from './Onboarding';
 import { fmtCareerElo } from '../ratings/display';
 import { useEffect, useMemo, useState, KeyboardEvent } from 'react';
 import { useApp, useServices } from './App';
@@ -107,6 +108,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
   }, [auto, ply, total, speedIdx, variation]);
 
   // branching sandbox (never writes the saved game): declared before the loading returns to keep the hook order
+  useMarkSeen('analysis', game?.status === 'finalized');
   const sandbox = useSandbox({ initialFen: game?.initialFen ?? 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1', setupMoves: game?.setupMoves, mainline: game?.moves.map(m => m.ccn) ?? [] });
   const [sandboxOrigin, setSandboxOrigin] = useState(0);
 
@@ -268,15 +270,15 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
       <ReportStatus game={game} report={report} reports={reports} reportIdx={reportIdx} setReportIdx={setReportIdx} status={status} live={live} preset={preset} setPreset={setPreset} />
       {cur ? <MovePanel p={cur} onExplore={(c, label) => explore(ply - 1, c, label)} onRetry={retry} humanPov={humanPov} accuracyId={report?.methodology.accuracyId}
         onPractise={verifiedMistake ? () => { requestMistakeDrill(mistakePuzzleId(game.id, cur.ply)); go({ name: 'academy' }); } : undefined} /> : (
-        <div className="panel"><h3>{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h3><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
+        <div className="panel"><h2 className="h3">{ply === 0 ? 'Starting Position' : `Move ${Math.ceil(ply / 2)}`}</h2><p className="muted small">{ply === 0 ? 'Pick a move in the list or graph, or use the ← → keys.' : "This move hasn't been analysed yet."}</p></div>
       )}
       <div className="panel">
-        <h3>Moves</h3>
+        <h2 className="h3">Moves</h2>
         <NotationList label="Analysed move list" startsWithBlack={startsWithBlack} current={variation || inSandbox ? 0 : ply} onSelect={goPly}
           moves={game.moves.map((m, i) => { const pa = plies.find(p => p.ply === i + 1); return { san: m.san, grade: pa?.grade ?? null, provisional: pa?.gradeProvisional }; })} />
       </div>
       <div className="panel">
-        <div className="panel-title"><h3>Evaluation</h3><span className="small muted">Higher is better for White</span></div>
+        <div className="panel-title"><h2 className="h3">Evaluation</h2><span className="small muted">Higher is better for White</span></div>
         {plies.length ? <EvalGraph plies={plies} total={n} selected={ply} onSelect={goPly} accuracyId={report?.methodology.accuracyId} /> : <p className="muted">No evaluation yet. The graph appears as the analysis finishes.</p>}
         {turns.length > 0 && <div style={{ marginTop: 10 }}><TurningPointList points={turns} onSelect={goPly} current={ply} source="largest changes of White's expected score" /></div>}
       </div>
@@ -286,12 +288,13 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
 
   const summaryPanel = (
     <>
+      {game.status === 'finalized' && <TourHint step="replay" />}
       {report && report.status === 'complete' && (
         <PlayedLikeCard report={report} human={humanPov} humanName="You" oppName={opp.name} oppRating={opp.rating ?? null} event={event} onOpenMoves={() => { setTab('moves'); goPly(1); }} />
       )}
       {report && mine && theirs && (
         <div className="panel">
-          <div className="panel-title"><h3>Summary</h3><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
+          <div className="panel-title"><h2 className="h3">Summary</h2><span className="chip gold" title="Grades and accuracy are still being tuned">Experimental</span></div>
           <div className="grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
             <div className="stat"><span className="k">Your Accuracy</span><span className="v" data-testid="accuracy">{fmtAcc(mine.accuracy)}</span><span className="small muted">{mine.eligible} graded moves · {mine.forced} forced moves skipped</span></div>
             <div className="stat"><span className="k">{opp.name}</span><span className="v">{fmtAcc(theirs.accuracy)}</span><span className="small muted">{theirs.eligible} graded moves</span></div>
@@ -334,7 +337,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
       )}
       {report && report.recommendations.length > 0 && (
         <div className="panel">
-          <h3>Training Focus</h3>
+          <h2 className="h3">Training Focus</h2>
           {report.recommendations.slice(0, 3).map(r => (
             <div key={r.topic} className="coach" style={{ marginBottom: 8 }}>
               <strong>{r.label}</strong>
@@ -346,7 +349,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
       )}
       {event && (
         <div className="panel">
-          <h3>Rating Change</h3>
+          <h2 className="h3">Rating Change</h2>
           <div className={`delta ${event.delta >= 0 ? 'up' : 'down'}`}>{event.delta >= 0 ? '+' : ''}{event.delta.toFixed(1)}</div>
           <p className="small">{explainEvent(event)}</p>
           <details className="small">
@@ -356,7 +359,7 @@ export function AnalysisScreen({ gameId, initialPly }: { gameId: string; initial
         </div>
       )}
       {!(report && mine && theirs) && !(report && report.recommendations.length > 0) && !event && (
-        <div className="panel"><h3>Summary</h3><p className="muted small">The game summary appears when the analysis is complete.</p></div>
+        <div className="panel"><h2 className="h3">Summary</h2><p className="muted small">The game summary appears when the analysis is complete.</p></div>
       )}
     </>
   );
@@ -394,7 +397,7 @@ function ReportStatus({ game, report, reports, reportIdx, setReportIdx, status, 
   return (
     <div className="panel stack" data-testid="report-status">
       <div className="panel-title">
-        <h3>Match Analysis</h3>
+        <h2 className="h3">Match Analysis</h2>
         <span className={`chip ${status === 'complete' ? 'pos' : status === 'failed' ? 'neg' : 'info'}`} data-testid="analysis-status">{status ?? 'not analysed'}</span>
       </div>
       {live && (
@@ -439,7 +442,7 @@ function MovePanel({ p, onExplore, onRetry, onPractise, humanPov, accuracyId }: 
   return (
     <div className="panel stack" data-testid="move-panel">
       <div className="panel-title">
-        <h3 className="row" style={{ margin: 0 }}><GradeIcon grade={p.grade} provisional={p.gradeProvisional} /> {Math.ceil(p.ply / 2)}{p.color === 'white' ? '.' : '…'} {p.san}</h3>
+        <h2 className="h3 row" style={{ margin: 0 }}><GradeIcon grade={p.grade} provisional={p.gradeProvisional} /> {Math.ceil(p.ply / 2)}{p.color === 'white' ? '.' : '…'} {p.san}</h2>
         <span className="chip" data-testid="move-grade">{p.grade ? GRADE_LABEL[p.grade] : 'Ungraded'}{p.gradeProvisional ? ' (provisional)' : ''}</span>
       </div>
       {p.uncertainGrades && <div className="small notice warn">Between {p.uncertainGrades.map(g => GRADE_LABEL[g]).join(' and ')}: the verdict changed with deeper search.</div>}

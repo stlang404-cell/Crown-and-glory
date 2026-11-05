@@ -1,4 +1,5 @@
 import { CONTEMPORARY_DISCLOSURE, isContemporaryId, shownPersona } from '../federation/rosterPersonas';
+import { HelpTip, TourHint } from './Onboarding';
 import { fmtCareerElo } from '../ratings/display';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useApp, useServices } from './App';
@@ -111,6 +112,8 @@ export function PlayScreen() {
           <p className="muted" style={{ margin: 0 }}>Six-square chess against engine opponents. Every game is saved, rated games change your rating, and every finished game gets a full analysis.</p>
         </div>
       </section>
+      <TourHint step="first-game" />
+      <TourHint step="first-rated" />
       <QuickMatch />
       <div className="grid-3" style={{ marginBottom: 14 }} aria-label="Your improvement loop">
         {[
@@ -140,7 +143,7 @@ export function PlayScreen() {
       )}
       <div className="grid-2">
         <div className="panel">
-          <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span></div>
+          <div className="panel-title"><h2>Choose Your Opponent</h2><span className="chip info" title="Opponent ratings are measured from test games">Measured Ratings</span><HelpTip term="Career Elo" /></div>
           <div className="stack" role="radiogroup" aria-label="Opponent">
             {PLAY_OPPONENTS.map((o: PlayOpponent, i) => {
               const cal = opponentRating(o);
@@ -486,7 +489,7 @@ export function MatchScreen({ gameId }: { gameId: string }) {
   const movesPanel = (
     <>
       <div className="panel stack">
-        <div className="panel-title"><h3>Moves</h3>{rec.opening && <span className="small muted">{rec.opening.name}</span>}</div>
+        <div className="panel-title"><h2 className="h3">Moves</h2>{rec.opening && <span className="small muted">{rec.opening.name}</span>}</div>
         <NotationList label="Move list" startsWithBlack={startBlack} current={shownPly} onSelect={goPly} moves={rec.moves.map(m => ({ san: m.san }))} empty="Moves appear here as they are played." />
         {browsing && <div className="small muted">You are looking at an earlier position. Use Current Position to return to the game.</div>}
       </div>
@@ -618,8 +621,12 @@ function ResultOverlay({ final, onClose }: { final: { game: GameRecord; event: R
           white: { name: g.white.name, career: g.humanColor === 'white' ? (e ? Math.round(e.after.rating) : null) : g.white.rating ?? null },
           black: { name: g.black.name, career: g.humanColor === 'black' ? (e ? Math.round(e.after.rating) : null) : g.black.rating ?? null },
         }} />
-        <div className="row" style={{ justifyContent: 'center' }}>
-          <button className="btn primary" onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
+        {resultText(g) === 'Defeat' && (
+          <p className="small" data-testid="after-loss">Every loss is study material: the analysis marks the moves that cost the game, the Academy turns your analysed mistakes into puzzles, and a rematch swaps colours.</p>
+        )}
+        <div className="row" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="btn primary" autoFocus onClick={() => go({ name: 'analysis', gameId: g.id })}>View Analysis</button>
+          {resultText(g) !== 'Victory' && <button className="btn" data-testid="after-loss-practice" onClick={() => { onClose(); go({ name: 'academy' }); }}>Practise in the Academy</button>}
           {g.context.kind === 'federation'
             ? <button className="btn" data-testid="back-to-federation" onClick={() => { onClose(); go({ name: 'world' }); }}>Back to Federation</button>
             : <><button className="btn" onClick={rematch}>Rematch</button>

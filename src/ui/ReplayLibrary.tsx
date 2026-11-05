@@ -91,7 +91,7 @@ export function ReplayLibrary() {
           Upsets: the lower-rated side won with a rating gap of at least {UPSET_GAP} at game time. Dramatic swings: White's expected score changed by at least {Math.round(DRAMATIC_SWING * 100)} points between two moves (published engine evaluations for Federation games, your analysis for your games). Market moments: a recorded price moved by at least ${MARKET_MOVE.toFixed(2)} between two published moves. Rivalries: a rivalry of level Rival or above. Championship finals: Crown Championship and Club Weekend finals.
         </details>
         {rows === null && !error && <p className="muted" role="status">Loading replays…</p>}
-        {rows && view.length === 0 && <p className="muted" data-testid="replay-empty">{rows.length ? 'No replays match this filter.' : 'No recorded games yet. Finish a game, or watch a Federation match, and it appears here.'}</p>}
+        {rows && view.length === 0 && <p className="muted" data-testid="replay-empty">{rows.length ? 'No replays match this filter.' : <>No recorded games yet. Finish a game, or watch a Federation match, and it appears here. <button className="btn small" onClick={() => go({ name: 'play' })}>Play a Game</button> <button className="btn small ghost" onClick={() => go({ name: 'world' })}>Federation</button></>}</p>}
         {shown.length > 0 && (
           <ul className="replay-list">
             {shown.map(r => (

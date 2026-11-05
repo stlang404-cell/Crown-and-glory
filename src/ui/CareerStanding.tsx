@@ -72,7 +72,7 @@ export function CareerStanding({ rating, rd, games, peak }: { rating: number; rd
         <div className="stack">
           <h3 style={{ margin: 0 }}>Rivalries</h3>
           {riv.length === 0 ? <p className="small muted" style={{ margin: 0 }}>No recorded meetings yet.</p> : (
-            <ul className="small" style={{ margin: 0 }}>{riv.slice(0, 5).map(r => <li key={r.b}><button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: r.b })}>{fed.name(r.b)}</button> — {r.level} · {r.intensity}/100 · {r.w}–{r.d}–{r.l}</li>)}</ul>
+            <ul className="small" style={{ margin: 0 }}>{riv.slice(0, 5).map(r => <li key={r.b}><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: r.b })}>{fed.name(r.b)}</button> — {r.level} · {r.intensity}/100 · {r.w}–{r.d}–{r.l}</li>)}</ul>
           )}
           <h3 style={{ margin: '8px 0 0' }}>Significant Upsets</h3>
           {upsets.length === 0 ? <p className="small muted" style={{ margin: 0 }}>None yet. Beat someone rated 150 or more above you to record one.</p> : <ul className="small" style={{ margin: 0 }}>{upsets.map((u, i) => <li key={i}>{u.text} (S{u.season})</li>)}</ul>}

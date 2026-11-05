@@ -65,14 +65,14 @@ export function AcademyScreen() {
         <LearningPlan data={data} onPuzzles={ids => { setPlanIds(ids); setMode('tactics'); }} />
       </div>
       <div className="panel" style={{ marginBottom: 14 }}>
-        <div className="panel-title"><h3 style={{ margin: 0 }}>Recommended Next</h3><span className="chip gold">Adaptive</span></div>
+        <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Recommended Next</h2><span className="chip gold">Adaptive</span></div>
         <p className="small" style={{ margin: '0 0 8px' }}>{adaptive.basis}</p>
         <button className="btn primary" onClick={() => setMode('adaptive')}>Start Adaptive Training{adaptive.themes.length ? `: ${adaptive.themes.map(themeLabel).join(', ')}` : ''}</button>
       </div>
       <div className="grid-2">
         {(['tactics', 'rush', 'calculation', 'defense', 'endgame', 'mistakes', 'assessment'] as AcademyMode[]).map(m => (
           <div key={m} className="panel" data-testid={`mode-${m}`}>
-            <div className="panel-title"><h3 style={{ margin: 0 }}>{MODE_INFO[m].title}</h3><span className="chip">{count(m)} {m === 'mistakes' ? 'positions' : 'puzzles'}</span></div>
+            <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{MODE_INFO[m].title}</h2><span className="chip">{count(m)} {m === 'mistakes' ? 'positions' : 'puzzles'}</span></div>
             <p className="small muted">{MODE_INFO[m].blurb}</p>
             <button className="btn" disabled={count(m) === 0} onClick={() => setMode(m)}>
               {count(m) === 0 ? (m === 'mistakes' ? 'Play and Analyse Games First' : 'No Puzzles Yet') : m === 'rush' ? 'Start a 3-Minute Rush' : m === 'assessment' ? 'Take an Assessment' : 'Start'}
@@ -81,7 +81,7 @@ export function AcademyScreen() {
         ))}
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Train a Theme</h3>
+        <h2 className="h3">Train a Theme</h2>
         <div className="row">
           {themes.map(t => {
             const s = stats.get(t);
@@ -259,7 +259,7 @@ function PuzzlePlayer({ p, onDone, onNext, onPlayOut, reveal, autoNext }: {
       </div>
       <div className="side-col">
         <div className="panel stack" data-testid="puzzle-panel" data-puzzle={p.id} data-solution={p.solution.join(' ')} data-status={status}>
-          <div className="panel-title"><h3 style={{ margin: 0 }}>{orientation === 'white' ? 'White' : 'Black'} to Move</h3><span className="chip gold">Difficulty {p.difficulty}/5</span></div>
+          <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{orientation === 'white' ? 'White' : 'Black'} to Move</h2><span className="chip gold">Difficulty {p.difficulty}/5</span></div>
           <div><strong>{p.goal}</strong>{p.playerMoves > 1 && <span className="muted"> · {p.playerMoves} moves</span>}</div>
           <div className="row">{p.themes.slice(0, 4).map(t => <span key={t} className="chip">{themeLabel(t)}</span>)}</div>
           {status === 'wrong' && <div className="notice warn" role="status">That is not the best move. Look again{p.themes.includes('defensive') ? ' — what does your opponent threaten?' : ''}.</div>}
@@ -290,7 +290,7 @@ function GrimoireCard({ progress, onOpen }: { progress: GrimProgress; onOpen: ()
   const due = dueReviews(progress.attempts, new Date().toISOString()).length;
   return (
     <div className="panel" data-testid="academy-grimoire">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>The Sovereign’s Grimoire</h3><span className="chip gold">Lessons</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>The Sovereign’s Grimoire</h2><span className="chip gold">Lessons</span></div>
       <p className="small muted">The Academy’s textbook in six books: read each chapter, step through its boards and solve its exercises on the board. Missed exercises return for review.</p>
       <p className="small">{done} of {total} chapters complete{due ? ` · ${due} review${due > 1 ? 's' : ''} due` : ''}</p>
       <button className="btn primary" onClick={onOpen}>Open the Grimoire</button>
@@ -310,7 +310,7 @@ function LearningPlan({ data, onPuzzles }: { data: Data; onPuzzles: (ids: string
   const bookOf = (n: number) => GRIMOIRE_INDEX.books.find(b => b.number === n)?.title.split(' — ')[0] ?? `Book ${n}`;
   return (
     <div className="panel" data-testid="learning-plan">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Today’s Plan</h3><span className="chip">{LEVEL_LABEL[settings.level]} · {settings.minutes} min</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Today’s Plan</h2><span className="chip">{LEVEL_LABEL[settings.level]} · {settings.minutes} min</span></div>
       {editing ? (
         <div className="stack">
           <label className="small">Level{' '}

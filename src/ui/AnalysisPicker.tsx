@@ -1,3 +1,4 @@
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useState } from 'react';
 import { useApp, useServices } from './App';
 import { buildRows, type LibraryRow } from './LibraryScreen';
@@ -57,9 +58,9 @@ export function AnalysisPicker() {
         </div>
       )}
       {rows && rows.length > 0 && (
-        <div className="panel" style={{ padding: 0, overflowX: 'auto' }}>
+        <div className="panel" style={{ padding: 0, overflowX: 'auto' }} ref={scrollRegion('Games to analyse')}>
           <table className="table">
-            <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Moves</th><th>Analysis</th><th aria-label="Actions" /></tr></thead>
+            <thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Moves</th><th>Analysis</th><th><span className="sr-only">Actions</span></th></tr></thead>
             <tbody>
               {rows.map(r => {
                 const running = live?.gameId === r.game.id;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { GuideCard } from './Onboarding';
 import { HonourTag, RATING_TITLE_TOOLTIP } from './RankBadge';
 import { RankHeading } from './RankHeading';
 import { fmtCareerElo } from '../ratings/display';
@@ -200,6 +201,7 @@ export function DashboardScreen() {
           <button className="btn small" onClick={() => go({ name: 'world' })}><Icon name="world" /> Federation</button>
         </span>
       </div>
+      <GuideCard />
       {!st && (
         <div className="panel dash-found" data-testid="dash-not-founded">
           <div>

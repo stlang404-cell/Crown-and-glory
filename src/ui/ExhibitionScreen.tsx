@@ -8,6 +8,7 @@
  * career Elo comparison, the sandbox and lesson links. Exhibitions are archived apart from every official record
  * and never change ratings, standings, records, money, markets, achievements, titles, rivalries or the schedule.
  */
+import { scrollRegion } from './scrollRegion';
 import { RankBadge, TitleBadge } from './RankBadge';
 import { competitorRank } from '../federation/ranks';
 import type { FedTitle } from '../heraldry/catalog';
@@ -113,7 +114,7 @@ function CompetitorPicker({ side, selected, other, onSelect }: { side: Pov; sele
   const Side = side === 'white' ? 'White' : 'Black';
   return (
     <div className="panel stack" data-testid={`exh-picker-${side}`}>
-      <div className="panel-title"><h3 style={{ margin: 0 }}><span className={`mc-pip ${side}`} aria-hidden /> {Side}</h3>{selected && <button className="btn small ghost" onClick={() => onSelect(null)}>Clear</button>}</div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}><span className={`mc-pip ${side}`} aria-hidden /> {Side}</h2>{selected && <button className="btn small ghost" onClick={() => onSelect(null)}>Clear</button>}</div>
       {selected ? <SelectedCard c={selected} side={side} /> : <p className="small muted" style={{ margin: 0 }}>No competitor chosen yet.</p>}
       <input type="search" placeholder="Search by name" value={q} onChange={e => setQ(e.target.value)} aria-label={`Search competitors for ${Side}`} data-testid={`exh-search-${side}`} />
       <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
@@ -195,7 +196,7 @@ function ExhibitionHistory() {
   };
   return (
     <div className="panel stack" data-testid="exhibition-history" style={{ marginTop: 12 }}>
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Exhibition History</h3><button className="btn small ghost" onClick={() => go({ name: 'replays' })}>Replay Library</button></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Exhibition History</h2><button className="btn small ghost" onClick={() => go({ name: 'replays' })}>Replay Library</button></div>
       {rows === null ? <p className="small muted">Loading…</p> : rows.length === 0 ? <p className="small muted">No exhibitions yet.</p> : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} className="stack">
           {rows.map(g => (
@@ -337,7 +338,7 @@ function ExhibitionMatch({ id }: { id: string }) {
 
   const movesPanel = (
     <div className="panel stack" data-testid="exh-moves-panel">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Moves &amp; Evaluation</h3><span className="small muted mono">Move {ply} of {moves.length}</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Moves &amp; Evaluation</h2><span className="small muted mono">Move {ply} of {moves.length}</span></div>
       <LiveEvalGraph moves={moves} shown={moves.length} post={postCurve} onSelect={nav} ply={ply} turns={turns.map(t => t.ply)} />
       <div className="legend small" aria-hidden>
         <span><i style={{ background: 'var(--accent)' }} />Published evaluation (White's expected score)</span>
@@ -352,7 +353,7 @@ function ExhibitionMatch({ id }: { id: string }) {
 
   const studyPanel = (
     <div className="panel stack" data-testid="exh-study">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Study</h3><span className="chip gold">Unofficial</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Study</h2><span className="chip gold">Unofficial</span></div>
       {!finished ? <p className="small muted" style={{ margin: 0 }}>Match Analysis runs when the game is over. Use Skip to Result to finish it now.</p>
         : !reportReady ? (
           <div className="small" data-testid="exh-analysis-status">
@@ -408,7 +409,7 @@ function ExhibitionStudy({ g, report, turns, ply, onSelect, onPractise }: {
       <div className="small">Accuracy: {g.white.name} {report.summary.white.accuracy?.toFixed(1) ?? '—'} · {g.black.name} {report.summary.black.accuracy?.toFixed(1) ?? '—'}</div>
       <ExhibitionPlayedLike g={g} report={report} />
       <div className="stack" data-testid="exh-mistakes">
-        <h4 style={{ margin: 0 }}>Mistakes and Blunders</h4>
+        <h3 className="h4" style={{ margin: 0 }}>Mistakes and Blunders</h3>
         {bad.length === 0 ? <p className="small muted" style={{ margin: 0 }}>Neither side made a mistake or a blunder.</p> : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} className="stack">
             {bad.map(p => (
@@ -447,8 +448,8 @@ function EloComparison({ g, current }: { g: ExhibitionGame; current: (id: string
   };
   return (
     <div className="stack" data-testid="exh-elo">
-      <h4 style={{ margin: 0 }}>Career Elo Comparison</h4>
-      <div style={{ overflowX: 'auto' }}>
+      <h3 className="h4" style={{ margin: 0 }}>Career Elo Comparison</h3>
+      <div style={{ overflowX: 'auto' }} ref={scrollRegion('Career Elo comparison')}>
         <table className="small"><thead><tr><th>Competitor</th><th>At start</th><th>Now</th><th>Elo expectation</th><th>Score</th></tr></thead>
           <tbody>{row(g.white, e, score)}{row(g.black, 1 - e, score === null ? null : 1 - score)}</tbody></table>
       </div>

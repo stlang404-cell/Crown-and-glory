@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { HelpPanel } from './Onboarding';
 import { CURRENT_BUILD } from '../app/updates';
 import { DB_VERSION } from '../storage/db';
 import { RULES_VERSION } from '../rules/types';
@@ -104,6 +105,8 @@ export function SettingsScreen() {
           How quickly pieces slide to their new square{reduced ? ' (off while motion is reduced)' : ''}. Moves, clocks and markets never wait for an animation.
         </p>
       </section>
+
+      <HelpPanel />
 
       <SoundSettings />
 

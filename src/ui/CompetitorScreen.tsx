@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { scrollRegion } from './scrollRegion';
+import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { fmtCareerElo } from '../ratings/display';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -49,6 +50,22 @@ function personaMatches(sp: ShownPersona | null, identity: '' | 'persona' | 'his
   return !category || sp?.identity.category === category;
 }
 
+/** One roster row. Memoised: the live scheduler re-renders the screen about twice a second, and a page has 100 rows with
+ *  three emblems each; unchanged competitors (same record object) are not re-rendered (docs/PERFORMANCE_BUDGETS.md). */
+const CompetitorRow = memo(function CompetitorRow({ c, n, showNames, watched }: { c: Competitor; n: number; showNames: boolean; watched: boolean }) {
+  const { go } = useApp();
+  const sp = shownPersona(c, showNames);
+  return (
+              <tr className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
+                <td>{n}</td>
+                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}<TitleBadge title={c.fedTitle} abbr plain testId="competitor-row-title" />{watched && <span className="chip gold">★</span>}</span></td>
+                <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
+                <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
+                <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
+              </tr>
+  );
+});
+
 export function CompetitorsScreen() {
   const services = useServices();
   const { go } = useApp();
@@ -56,6 +73,7 @@ export function CompetitorsScreen() {
   const st = fed.state;
   const games = usePlayerGames();
   const [q, setQ] = useState('');
+  const dq = useDeferredValue(q);
   const [region, setRegion] = useState(-1);
   const [division, setDivision] = useState(0);
   const [minR, setMinR] = useState(0);
@@ -78,9 +96,9 @@ export function CompetitorsScreen() {
       favorites: new Set(st.extra.favorites ?? []),
     };
     // fast pass (app/discovery), then the persona and rating-band filters of the v0.10 roster browser
-    return filterCompetitors(st.competitors.values(), { q, region, division, minR, maxR, title, style, club, special }, sets)
+    return filterCompetitors(st.competitors.values(), { q: dq, region, division, minR, maxR, title, style, club, special }, sets)
       .filter(c => personaMatches(shownPersona(c, showNames), identity, category) && (band < 0 || (c.rating >= RATING_BANDS[band][0] && c.rating < RATING_BANDS[band][1] + 1)));
-  }, [st, q, region, division, minR, maxR, title, style, club, special, rivals, identity, category, band, showNames, services.revision]);
+  }, [st, dq, region, division, minR, maxR, title, style, club, special, rivals, identity, category, band, showNames, services.revision]);
   // any filter change returns to the first page; pageOf clamps a page past the end (after a round)
   useEffect(() => { setPage(0); }, [q, region, division, minR, maxR, title, style, club, special, identity, category, band]);
   const pg = pageOf(list, page);
@@ -109,19 +127,11 @@ export function CompetitorsScreen() {
         <select value={special} onChange={e => setSpecial(e.target.value as typeof special)} aria-label="Show"><option value="">Everyone</option><option value="featured">Featured Rivals</option><option value="rival">Your Rivals</option><option value="favorites">Followed</option><option value="watch">Watchlist ({st.extra.watchlist.length})</option><option value="titled">Event Champions</option><option value="upcoming">Playing This Round</option></select>
       </div>
       <p className="small muted" data-testid="persona-note" style={{ margin: '0 0 10px' }}>{PERSONA_NOTE}{showNames && <> {CONTEMPORARY_NOTE} <strong data-testid="persona-disclosure">{CONTEMPORARY_DISCLOSURE}</strong></>}</p>
-      <div className="panel" style={{ overflowX: 'auto' }}>
+      <div className="panel" style={{ overflowX: 'auto' }} ref={scrollRegion('Competitors table')}>
         <table>
           <thead><tr><th>#</th><th>Competitor</th><th className="hide-sm">Region</th><th title="Division and Competitive Rank (Circuit Grade)">Div · Rank</th><th>Rating</th><th className="hide-sm">Form</th><th className="hide-sm">Titles</th></tr></thead>
           <tbody>
-            {pg.rows.map((c, i) => { const sp = shownPersona(c, showNames); return (
-              <tr key={c.id} className="clickable" data-testid="competitor-row" onClick={() => go({ name: 'competitor', id: c.id })}>
-                <td>{pg.from + i + 1}</td>
-                <td><span className="row" style={{ gap: 8 }}><Emblem spec={personalEmblem(c.id, c.titles.length, c.fedTitle ?? null)} size="sm" title={`${c.name}'s insignia`} />{c.name}{sp && <span className="chip" data-testid={`persona-chip-${sp.kind}`} title={sp.kind === 'historical' ? 'Historical persona (fictional)' : CONTEMPORARY_DISCLOSURE} aria-label={sp.kind === 'historical' ? 'Historical persona (fictional)' : `Persona. ${CONTEMPORARY_DISCLOSURE}`}>Persona</span>}<TitleBadge title={c.fedTitle} abbr plain testId="competitor-row-title" />{st.extra.watchlist.includes(c.id) && <span className="chip gold">★</span>}</span></td>
-                <td className="hide-sm">{REGION_NAMES[c.region]}</td><td><span className="row" style={{ gap: 4, flexWrap: 'nowrap' }} data-testid="competitor-row-rank"><Emblem spec={divisionEmblem(c.division)} size="sm" title={divisionLabel(c.division)} /><RankBadge rank={competitorRank(c)} compact /></span></td>
-                <td className="mono">{fmtCareerElo(c.rating, { rd: c.rd })}</td>
-                <td className="hide-sm mono">{c.form || '—'}</td><td className="hide-sm">{c.titles.length || ''}</td>
-              </tr>
-            ); })}
+            {pg.rows.map((c, i) => <CompetitorRow key={c.id} c={c} n={pg.from + i + 1} showNames={showNames} watched={st.extra.watchlist.includes(c.id)} />)}
           </tbody>
         </table>
         {list.length > PAGE_SIZE && (
@@ -243,7 +253,7 @@ export function CompetitorScreen({ id }: { id: string }) {
       </div>
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel stack" data-testid="rivalry-panel">
-          <h3>Rivalry with You</h3>
+          <h2 className="h3">Rivalry with You</h2>
           {rivalry && rivalry.meetings > 0 ? <>
             <IntensityBar r={rivalry} />
             <ul className="small" style={{ margin: 0 }}>{rivalry.events.slice(0, 8).map((e, i) => <li key={i}>{e.text} <span className="muted">(+{e.points}, S{e.season})</span></li>)}</ul>
@@ -251,7 +261,7 @@ export function CompetitorScreen({ id }: { id: string }) {
           </> : <p className="small muted">No recorded meetings yet.</p>}
         </div>
         <div className="panel stack" data-testid="following-panel">
-          <h3>This Season</h3>
+          <h2 className="h3">This Season</h2>
           {current.map((x, i) => <div key={i} className="small">{x}</div>)}
           <div className="small" title={FED_TITLE_TOOLTIP}><strong>Federation Title:</strong> {c.fedTitle ?? 'None'} <HonourTag kind="title" />{progress.next ? <> · Next: <strong>{progress.next}</strong>: {progress.lines.join(' · ')}</> : null}</div>
           <div className="small muted">Norms: {(c.norms ?? []).length ? (c.norms ?? []).slice(-4).map(n => `${n.event} ${n.tpr}`).join(' · ') : 'None'}</div>
@@ -259,7 +269,7 @@ export function CompetitorScreen({ id }: { id: string }) {
       </div>
       {scouting && nextOpp && (
         <div className="panel" style={{ marginTop: 14, borderColor: 'var(--accent)' }} data-testid="dossier">
-          <h3>Scouting Dossier · Your Next Opponent</h3>
+          <h2 className="h3">Scouting Dossier · Your Next Opponent</h2>
           {competitorRank(c) && <div className="small" data-testid="dossier-rank" title={RANK_TOOLTIP}>Competitive Rank (Circuit Grade): <strong>{competitorRank(c)!.label}</strong> <HonourTag kind="rank" />{competitorHighestRank(c) && competitorHighestRank(c)!.step > competitorRank(c)!.step ? ` (highest ${competitorHighestRank(c)!.label})` : ''}. Standing score at the last checkpoint: {c.rank && c.rank[4] >= 0 ? (c.rank[4] / 10).toFixed(1) : '—'}.</div>}
           <div className="small" data-testid="dossier-fedtitle" title={FED_TITLE_TOOLTIP}>Federation Title: <strong>{c.fedTitle ?? 'none'}</strong> <HonourTag kind="title" /> <span className="muted">(permanent, earned by norms; separate from the rank)</span></div>
           <div className="small">Rating trend: {c.history.slice(-4).map(h => `S${h.season} ${fmtCareerElo(h.rating)}`).join(' → ') || 'First season'} → now {fmtCareerElo(c.rating)}. Form {c.form || '—'}. This season: {results.filter(r => r.season === season).reduce((s, r) => s + r.score, 0)} / {results.filter(r => r.season === season).length}. As White {pct(results.filter(r => r.color === 'white'))}, as Black {pct(results.filter(r => r.color === 'black'))}.</div>
@@ -268,33 +278,33 @@ export function CompetitorScreen({ id }: { id: string }) {
       )}
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <h3>Head-to-Head with You</h3>
+          <h2 className="h3">Head-to-Head with You</h2>
           {vsMe.length === 0 ? <p className="small muted">You have not met yet.</p> : <p>You {vsMe.reduce((s, r) => s + (1 - r.score), 0)} – {vsMe.reduce((s, r) => s + r.score, 0)} {c.name} ({vsMe.length} game{vsMe.length > 1 ? 's' : ''})</p>}
-          <h3>Rivalries</h3>
+          <h2 className="h3">Rivalries</h2>
           {topRivals.length === 0 ? <p className="small muted">No repeated opponents yet.</p> : (
-            <ul className="small">{topRivals.map(([o, v]) => <li key={o}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: o })}>{fed.name(o)}</button> — {v.score}/{v.n}</li>)}</ul>
+            <ul className="small">{topRivals.map(([o, v]) => <li key={o}><button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: o })}>{fed.name(o)}</button> — {v.score}/{v.n}</li>)}</ul>
           )}
-          <h3>Titles</h3>
+          <h2 className="h3">Titles</h2>
           {c.titles.length === 0 ? <p className="small muted">None yet.</p> : <ul className="small">{c.titles.map((t, i) => <li key={i}>{t.title}</li>)}</ul>}
         </div>
         <div className="panel">
-          <h3>Career by Season</h3>
+          <h2 className="h3">Career by Season</h2>
           {c.history.length === 0 ? <p className="small muted">First season in progress.</p> : (
             <table><thead><tr><th>Season</th><th>Division</th><th>Place</th><th>Pts</th><th>Rating</th></tr></thead>
               <tbody>{c.history.slice().reverse().map(h => <tr key={h.season}><td>{h.season}</td><td>{h.division} · {REGION_NAMES[h.region]}</td><td>{h.rank}</td><td>{h.points}</td><td>{fmtCareerElo(h.rating)}</td></tr>)}</tbody></table>
           )}
-          {c.milestones.length > 0 && <><h3>Milestones</h3><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
+          {c.milestones.length > 0 && <><h2 className="h3">Milestones</h2><ul className="small">{c.milestones.slice(-8).reverse().map((m, i) => <li key={i}>S{m.season} R{m.round}: {m.text}</li>)}</ul></>}
         </div>
       </div>
       <div className="panel" style={{ marginTop: 14 }}>
-        <h3>Recorded Games</h3>
+        <h2 className="h3">Recorded Games</h2>
         {games.world.length + games.mine.length === 0 ? <p className="small muted">No recorded games yet. Only featured matches and your own games are recorded move by move.</p> : (
           <ul className="small">
-            {games.world.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'watch', id: g.fixtureId })}>{fed.name(g.white)} – {fed.name(g.black)} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · Engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
-            {games.mine.map(g => <li key={g.id}><button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · Your rated game</span></li>)}
+            {games.world.map(g => <li key={g.id}><button className="btn ghost small inline-link" onClick={() => go({ name: 'watch', id: g.fixtureId })}>{fed.name(g.white)} – {fed.name(g.black)} {g.result}</button> <span className="muted">S{g.season} R{g.round} · {eventName(g.event)} · Engine game ({g.mode === 'watched-live' ? 'watched live' : 'played in background'})</span></li>)}
+            {games.mine.map(g => <li key={g.id}><button className="btn ghost small inline-link" onClick={() => go({ name: 'analysis', gameId: g.id })}>You vs {c.name} {g.result ?? ''}</button> <span className="muted">{g.context.eventName ?? 'Federation'} · Your rated game</span></li>)}
           </ul>
         )}
-        <h3>Recent Results</h3>
+        <h2 className="h3">Recent Results</h2>
         <table><thead><tr><th>S/R</th><th>Event</th><th>Opponent</th><th>Colour</th><th>Score</th><th className="hide-sm">Record</th></tr></thead>
           <tbody>{results.slice(0, 25).map((r, i) => <tr key={i}><td>{r.season}/{r.round}</td><td className="small">{eventName(r.event)}</td><td>{fed.name(r.opp)}</td><td>{r.color === 'white' ? 'White' : 'Black'}</td><td>{r.score === 1 ? 'W' : r.score === 0 ? 'L' : 'D'}</td><td className="hide-sm small muted">{r.tier === 3 ? 'Summary result' : r.tier === 2 ? 'Engine game' : 'Your game'}</td></tr>)}</tbody></table>
       </div>

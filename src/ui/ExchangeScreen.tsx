@@ -1,3 +1,5 @@
+import { scrollRegion } from './scrollRegion';
+import { HelpTip, TourHint } from './Onboarding';
 import { useMemo, useState } from 'react';
 import { fmtCareerElo } from '../ratings/display';
 import { useApp, useServices } from './App';
@@ -74,36 +76,37 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
         <h1 style={{ margin: 0 }}>Crown Exchange</h1>
         <span className="spacer" />
         <div className="seg" role="tablist" aria-label="Exchange sections">
-          {(['markets', 'forecasts', 'traders'] as const).map(t => <button key={t} role="tab" aria-pressed={tab === t} onClick={() => setTab(t)}>{t === 'markets' ? 'Markets' : t === 'forecasts' ? 'Forecasts' : 'Traders'}</button>)}
+          {(['markets', 'forecasts', 'traders'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{t === 'markets' ? 'Markets' : t === 'forecasts' ? 'Forecasts' : 'Traders'}</button>)}
         </div>
       </div>
-      <div className="notice" style={{ marginBottom: 12 }}>Trade on federation events you can't influence. Each share pays $1 if its outcome happens, and every market shows its rules before you trade. All money is fictional and can't be redeemed.</div>
+      <div className="notice" style={{ marginBottom: 12 }}>Trade on federation events you can't influence. Each share pays $1 if its outcome happens, and every market shows its rules before you trade. All money is fictional and can't be redeemed. <HelpTip term="Live Odds / price" label="a market price" /></div>
+      <TourHint step="market" />
       {tab === 'markets' && (
         <>
           <div className="grid-2">
             {groups.map(([key, label, ms]) => (
               <div key={key} className="panel" data-testid={`group-${key}`}>
-                <h3>{label}</h3>
-                {ms.length === 0 ? <p className="small muted">None open right now.</p> : <MarketTable markets={ms} mine={mine} />}
+                <h2 className="h3">{label}</h2>
+                {ms.length === 0 ? <p className="small muted">None open right now.</p> : <MarketTable markets={ms} mine={mine} label={`${label} markets`} />}
               </div>
             ))}
           </div>
           <div className="panel" style={{ marginTop: 14 }}>
-            <h3>Settled Markets</h3>
-            {settled.length === 0 ? <p className="small muted">No settled markets yet.</p> : <MarketTable markets={settled.slice(0, 80)} mine={mine} />}
+            <h2 className="h3">Settled Markets</h2>
+            {settled.length === 0 ? <p className="small muted">No settled markets yet.</p> : <MarketTable markets={settled.slice(0, 80)} mine={mine} label="Settled markets" />}
           </div>
         </>
       )}
       {tab === 'forecasts' && (
         <div className="panel stack">
-          <h3>Paper Forecasts</h3>
+          <h2 className="h3">Paper Forecasts</h2>
           <p className="small">Free practice with no money at stake. {sum.n === 0 ? 'No scored forecasts yet.' : <>Over {sum.n} resolved forecast{sum.n > 1 ? 's' : ''}, your Brier score is <strong>{sum.brier!.toFixed(3)}</strong> (lower is better){sum.priceBrier !== null && <> · market price {sum.priceBrier.toFixed(3)}</>}{sum.modelBrier !== null && <> · public forecast {sum.modelBrier.toFixed(3)}</>}.</>}</p>
           <button className="btn" onClick={() => go({ name: 'forecasts' })}>Open Forecasting</button>
         </div>
       )}
       {tab === 'traders' && (
         <div className="panel">
-          <h3>Other Traders</h3>
+          <h2 className="h3">Other Traders</h2>
           <p className="small muted">Computer traders funded by the federation. They trade through the same market maker as you, using only public information, and none is guaranteed to profit.</p>
           <table className="small"><thead><tr><th>Trader</th><th>Strategy</th><th>Wallet</th><th>At Risk</th></tr></thead>
             <tbody>{NPC_TRADERS.map(t => {
@@ -117,12 +120,12 @@ export function ExchangeScreen({ marketId }: { marketId?: string }) {
   );
 }
 
-function MarketTable({ markets, mine }: { markets: Market[]; mine: (m: Market) => Position | undefined }) {
+function MarketTable({ markets, mine, label = 'Markets table' }: { markets: Market[]; mine: (m: Market) => Position | undefined; label?: string }) {
   const { go } = useApp();
   const services = useServices();
   const suspended = (m: Market) => m.status === 'open' && !!services.fed.suspension(m.id);
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto' }} ref={scrollRegion(label)}>
       <table>
         <thead><tr><th>Market</th><th>Leading</th><th>Status</th><th className="hide-sm">You</th></tr></thead>
         <tbody>{markets.map(m => {
@@ -175,7 +178,7 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
   const held = pv.after?.holdings.find(h => h.claim === claim);
   return (
     <div className="panel stack" data-testid="ticket" data-revision={revision}>
-      <h3>Trade Ticket</h3>
+      <h2 className="h3">Trade Ticket</h2>
       {status.suspended && <div className="small notice warn" data-testid="ticket-suspended">{status.reason}</div>}
       {!canTrade && !status.suspended && <div className="small notice">{m.status === 'open' ? 'Trading isn’t available here.' : `${statusLabel(m.status)}: trading has ended.`}</div>}
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
@@ -205,6 +208,7 @@ export function TradeTicket({ m, compact = false }: { m: Market; compact?: boole
 /** Position, cost basis, P&L, scenarios and Close Position (exact proceeds preview). */
 export function PositionPanel({ m }: { m: Market }) {
   const services = useServices();
+  const { go } = useApp();
   const api = exchangeApi(services.fed, services.readOnly);
   const [confirm, setConfirm] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
@@ -219,7 +223,7 @@ export function PositionPanel({ m }: { m: Market }) {
   const sign = (x: number) => <span className={`mono ${x > 0 ? 'pos' : x < 0 ? 'neg' : ''}`}>{fmtMoneyDelta(x)}</span>;
   return (
     <div className="panel stack" data-testid="position-panel">
-      <h3>Your Position</h3>
+      <h2 className="h3">Your Position</h2>
       {msg && <div className={`notice small ${msg.kind === 'warn' ? 'warn' : ''}`} role="status">{msg.text}</div>}
       {!v || (!has && !v.spent) ? <p className="small muted">No shares in this market yet.</p> : (
         <div className="small stack" style={{ gap: 6 }}>
@@ -238,6 +242,7 @@ export function PositionPanel({ m }: { m: Market }) {
             </details>
           )}
           {m.status === 'settled' && <div>Market Settled · net {sign(v.received - v.spent)}</div>}
+          {m.status === 'settled' && (m.kind ?? 'match') === 'match' && m.fixtureId && <button className="btn small" data-testid="settled-replay" onClick={() => go({ name: 'watch', id: m.fixtureId! })}>Replay the Match with Its Recorded Odds</button>}
           {m.status === 'cancelled' && <div>Market VOID: refunded on its published cancellation terms · net {sign(v.received - v.spent)}</div>}
           {m.status === 'open' && has && (confirm
             ? <div className="row"><button className="btn primary small" data-testid="confirm-close" disabled={!status.tradable} onClick={close}>Confirm: Receive {fmtCrowns(v.exitValue)}</button><button className="btn small" onClick={() => setConfirm(false)}>Keep</button></div>
@@ -293,9 +298,9 @@ export function ForecastPanel({ m }: { m: Market }) {
   const total = Math.max(1, vals.reduce((a, x) => a + x, 0));
   return (
     <div className="panel stack" data-testid="forecast-panel">
-      <h3>Paper Forecast</h3>
+      <h2 className="h3">Paper Forecast</h2>
       <div className="small muted">Free practice, scored when the market resolves. Your numbers are scaled to add up to 100%.</div>
-      <div style={{ maxHeight: 260, overflow: 'auto' }}>
+      <div style={{ maxHeight: 260, overflow: 'auto' }} ref={scrollRegion('Paper forecast')}>
         {states.map((o, i) => (
           <label key={i} className="small row" style={{ justifyContent: 'space-between' }}>{o}
             <span className="row"><input type="number" min={0} max={100} value={vals[i]} disabled={m.status !== 'open'} onChange={e => { const v = [...vals]; v[i] = Math.max(0, Math.min(100, +e.target.value || 0)); setVals(v); }} style={{ width: 64 }} aria-label={`${o} forecast`} /><span className="mono" style={{ width: 44, textAlign: 'right' }}>{Math.round((100 * vals[i]) / total)}%</span></span>
@@ -335,8 +340,8 @@ function MarketScreen({ m }: { m: Market }) {
         <div className="stack">
           {kind === 'match' && <MatchResearch m={m} />}
           <div className="panel stack">
-            <h3>Live Odds</h3>
-            <div style={{ maxHeight: 420, overflow: 'auto' }}>
+            <h2 className="h3">Live Odds</h2>
+            <div style={{ maxHeight: 420, overflow: 'auto' }} ref={scrollRegion('Live odds history')}>
               <table className="small">
                 <thead><tr><th>Outcome</th><th>Forecast</th><th>Price</th><th>Difference</th></tr></thead>
                 <tbody>{claims.map((c, i) => ({ c, i })).sort((a, b) => (kind === 'bracket' ? 0 : cp[b.i] - cp[a.i])).map(({ c, i }) => (
@@ -354,7 +359,7 @@ function MarketScreen({ m }: { m: Market }) {
             <TradeHistory m={m} />
             <details className="small muted"><summary>Details</summary>Priced by an automated market maker (LMSR) over {states.length} outcomes · liquidity b = {m.b} · market maker subsidy {fmtCrowns(m.subsidy, 0)} (worst-case loss b·ln {states.length}) · prices from the {prices(m.q, m.b).length}-state inventory · {MICRO.toLocaleString('en')} µ = $1 · market revision {revisionOf(m)}.</details>
           </div>
-          {(analyst || kind !== 'match') && <div className="panel"><h3>Price History</h3><PriceChart m={m} /></div>}
+          {(analyst || kind !== 'match') && <div className="panel"><h2 className="h3">Price History</h2><PriceChart m={m} /></div>}
         </div>
         <div className="stack">
           <TradeTicket m={m} />
@@ -409,13 +414,13 @@ function MatchResearch({ m }: { m: Market }) {
   const fx = [...st.rounds.values()].flatMap(r => r.fixtures).find(f => f.id === m.fixtureId);
   return (
     <div className="panel stack">
-      <h3>Match Research</h3>
+      <h2 className="h3">Match Research</h2>
       {fx && <div className="small muted">{eventName(fx.event)}{fx.stage ? ` · ${fx.stage}` : ''} · Season {fx.season}, Round {fx.round}</div>}
       {[w, b].map((c, i) => (
         <div key={c.id} className="row" style={{ alignItems: 'flex-start' }}>
           <Portrait seed={c.portraitSeed} size={44} />
           <div style={{ flex: 1 }}>
-            <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button> <span className="muted small">({i === 0 ? 'White' : 'Black'})</span>
+            <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: c.id })}><strong>{c.name}</strong></button> <span className="muted small">({i === 0 ? 'White' : 'Black'})</span>
             <div className="small">{fmtCareerElo(c.rating, { rd: c.rd })} · form <span className="mono">{c.form || '—'}</span> · {c.stats.w}–{c.stats.d}–{c.stats.l} · {divisionLabel(c.division)}, {REGION_NAMES[c.region]}</div>
             <div className="small muted">Style: {isValidatedStyle(c.style) ? STYLE_LABEL[c.style] : 'Universal'}{c.titles.length ? ` · ${c.titles.length} ${c.titles.length === 1 ? 'title' : 'titles'}` : ''}</div>
           </div>

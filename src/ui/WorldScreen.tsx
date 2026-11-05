@@ -1,3 +1,5 @@
+import { scrollRegion } from './scrollRegion';
+import { TourHint } from './Onboarding';
 import { NeedsFederation } from './NeedsFederation';
 import { fmtCareerElo } from '../ratings/display';
 import { CompetitorElo } from './CareerElo';
@@ -57,6 +59,7 @@ export function WorldScreen() {
     return (
       <div>
         <h1>The Six-Square Federation</h1>
+        <TourHint step="federation" />
         <div className="panel stack" style={{ maxWidth: 760 }}>
           <p>Found a federation of <strong>{populationOf(size).toLocaleString('en')} AI competitors</strong> across {size.regions} regions and 8 divisions. You start in the Open Division of your home region with $1,000 (fictional money), at the Circuit Grade of <strong>Commoner III</strong>: climb the 48 steps to High Sovereign I through your results (<a href="#/ranks">rank guide</a>).</p>
           <details className="small"><summary>Details</summary>
@@ -116,9 +119,10 @@ export function WorldScreen() {
         <button className="btn small" onClick={() => go({ name: 'heraldry' })}>Heraldry</button>
       </div>
       {msg && <div className="notice warn" role="alert" style={{ marginBottom: 12 }}>{msg}</div>}
+      <TourHint step="tournament" />
       <div className="grid-2">
         <div className="panel stack" data-testid="my-fixtures">
-          <h3>Your Fixtures This Round</h3>
+          <h2 className="h3">Your Fixtures This Round</h2>
           {mine.length === 0 ? <p className="small muted">{w.round > LEAGUE_ROUNDS ? 'No games for you this round. The league has finished.' : 'You have played all your games this round.'}</p> : mine.map(f => {
             const opp = f.white === PLAYER_ID ? f.black : f.white;
             const c = st.competitors.get(opp)!;
@@ -126,7 +130,7 @@ export function WorldScreen() {
               <div key={f.id} className="row fixture-row" style={{ borderBottom: '1px solid var(--line)', paddingBottom: 8 }}>
                 <Portrait seed={c.portraitSeed} size={36} />
                 <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-                  <button className="btn ghost small" style={{ padding: 0 }} onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
+                  <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: opp })}>{c.name}</button>
                   <div className="small muted">{eventName(f.event)}{f.stage ? ` · ${f.stage}` : ''} · You play {f.white === PLAYER_ID ? 'White' : 'Black'} · {fmtCareerElo(c.rating, { rd: c.rd })} · Rapid 5+3, rated</div>
                   {f.postponedFrom !== undefined && <div className="small"><span className="chip neg" data-testid="postponed-chip">Postponed from round {f.postponedFrom}</span> <span className="muted">Play by the end of round {LEAGUE_ROUNDS}.</span></div>}
                 </div>
@@ -159,7 +163,7 @@ export function WorldScreen() {
           <div className="small muted">Advancing plays the round's other {((st.rounds.get(`${w.season}:${w.round}`)?.abstract.length) ?? 0).toLocaleString('en')} games (results only, no replays) and any featured games you haven't watched, then updates ratings and standings and settles markets.</div>
         </div>
         <div className="panel stack" data-testid="featured">
-          <h3>Featured Matches · Crown Exchange</h3>
+          <h2 className="h3">Featured Matches · Crown Exchange</h2>
           {featured.length === 0 ? <p className="small muted">No featured matches this round.</p> : featured.map(f => {
             const m = fed.marketFor(f.id);
             const p = m ? prices(m.q, m.b) : null;
@@ -182,11 +186,11 @@ export function WorldScreen() {
       <LiveNow />
       <div className="grid-2" style={{ marginTop: 14 }}>
         <div className="panel">
-          <div className="panel-title"><h3 style={{ margin: 0 }}>{myCircuit ? `${divisionLabel(myCircuit.division)} · ${REGION_NAMES[myCircuit.region]}` : 'Your Division'}</h3><button className="btn ghost small" onClick={() => go({ name: 'standings' })}>All Divisions</button></div>
+          <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{myCircuit ? `${divisionLabel(myCircuit.division)} · ${REGION_NAMES[myCircuit.region]}` : 'Your Division'}</h2><button className="btn ghost small" onClick={() => go({ name: 'standings' })}>All Divisions</button></div>
           <LeagueTableView rows={table} division={myCircuit?.division ?? DIVISIONS} />
         </div>
         <div className="panel stack">
-          <h3>Season Calendar</h3>
+          <h2 className="h3">Season Calendar</h2>
           <div className="small" data-testid="season-calendar">League: rounds 1–{LEAGUE_ROUNDS} · Federation Open & Challenger Open (Swiss): rounds {SWISS_ROUNDS[0]}–{SWISS_ROUNDS[SWISS_ROUNDS.length - 1]} · Club Weekend (club owners): rounds {CLUB_ROUNDS.join('–')} · Crown Championship: rounds {CHAMPIONSHIP_ROUNDS[0]}–{CHAMPIONSHIP_ROUNDS[CHAMPIONSHIP_ROUNDS.length - 1]}{v2 ? <> · Zonal Championships (Crown Division, {fmtCrowns(ZONAL_POOL, 0)} each): rounds {ZONAL_ROUNDS[0]}–{ZONAL_ROUNDS[ZONAL_ROUNDS.length - 1]} · Regional Cups (division champions, {fmtCrowns(CUP_POOL, 0)} each): rounds {CUP_ROUNDS[0]}–{CUP_ROUNDS[CUP_ROUNDS.length - 1]}</> : null} · At season end, the top two are promoted and the bottom two relegated. Circuit Grade checkpoints: after round 8 and at season end (<a href="#/ranks">rank guide</a>).</div>
           <div className="panel" style={{ background: 'transparent' }}>
             <strong>Your Next Matches</strong>
@@ -218,7 +222,7 @@ export function LeagueTableView({ rows, division }: { rows: ReturnType<typeof le
   const { go } = useApp();
   const fed = services.fed;
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto' }} ref={scrollRegion('Standings table')}>
       <table>
         <thead><tr><th>#</th><th>Competitor</th><th>Pts</th><th className="hide-sm">P</th><th className="hide-sm">W–D–L</th><th className="hide-sm">SB</th><th>Career Elo</th></tr></thead>
         <tbody>
@@ -263,7 +267,7 @@ export function StandingsScreen() {
         <div className="seg" role="group" aria-label="Division">{Array.from({ length: DIVISIONS }, (_, i) => i + 1).map(d => <button key={d} aria-pressed={division === d} onClick={() => setDivision(d)}>{d}</button>)}</div>
       </div>
       <div className="panel">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Insignia division={division} /> {divisionLabel(division)} · {REGION_NAMES[region]}</h3><span className="chip">Season {st.world.season}</span></div>
+        <div className="panel-title"><h2 style={{ margin: 0 }} className="h3 row"><Insignia division={division} /> {divisionLabel(division)} · {REGION_NAMES[region]}</h2><span className="chip">Season {st.world.season}</span></div>
         <LeagueTableView rows={rows} division={division} />
       </div>
     </div>
@@ -291,10 +295,10 @@ export function TournamentsScreen() {
           const rows = swissTable(sw, games);
           return (
             <div key={sw.event} className="panel" data-testid={`swiss-${sw.event}`}>
-              <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h3><span className="chip">{sw.rounds.length}/5 Rounds</span></div>
+              <div className="panel-title"><h2 style={{ margin: 0 }} className="h3 row"><Emblem spec={tournamentCrest(sw.event)} size="sm" title={`${sw.name} crest`} /> {sw.name}</h2><span className="chip">{sw.rounds.length}/5 Rounds</span></div>
               <div className="small muted" style={{ marginBottom: 6 }}>{sw.event === 'open' ? (t3 ? `Divisions 2–4 and invited players · Top ${8 - PATH_PLACES} qualify for the Crown Championship, plus ${PATH_PLACES} Crown Path places for the best invited entrants with at least ${PATH_MIN_POINTS} points · $1,500 in prizes` : 'Divisions 2–4 · Top 8 qualify for the Crown Championship · $1,500 in prizes') : `Divisions 5–8, plus you if registered · $600 in prizes${t3 ? ` · The ${CHALLENGER_INVITES === 1 ? 'winner is' : `top ${CHALLENGER_INVITES} are`} invited to next season's Federation Open` : ''}`}</div>
               <details className="small" style={{ marginBottom: 6 }}><summary>Details</summary>Swiss pairing with no rematches; a bye goes to the lowest-placed player who hasn't had one. BH-1: Buchholz Cut-1. Tiebreak order: points, Buchholz Cut-1, Buchholz, Sonneborn–Berger, seed.</details>
-              <div style={{ maxHeight: 340, overflow: 'auto' }}>
+              <div style={{ maxHeight: 340, overflow: 'auto' }} ref={scrollRegion(`${sw.name} standings`)}>
                 <table><thead><tr><th>#</th><th>Player</th><th>Pts</th><th className="hide-sm">BH-1</th><th>Elo</th></tr></thead>
                   <tbody>{rows.slice(0, 32).map((r, i) => <tr key={r.id} className="clickable" onClick={() => r.id !== PLAYER_ID && go({ name: 'competitor', id: r.id })} style={{ background: r.id === PLAYER_ID ? 'var(--accent-soft)' : undefined }}><td>{i + 1}</td><td>{fed.name(r.id)}</td><td>{r.points}</td><td className="hide-sm">{r.buchholzCut1}</td><td><CompetitorElo id={r.id} compact /></td></tr>)}</tbody></table>
               </div>
@@ -304,9 +308,9 @@ export function TournamentsScreen() {
         })}
       </div>
       <div className="panel" style={{ marginTop: 14 }} data-testid="championship">
-        <div className="panel-title"><h3 style={{ margin: 0 }} className="row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h3><span className="chip gold">$8,000 Prize Fund</span></div>
+        <div className="panel-title"><h2 style={{ margin: 0 }} className="h3 row"><Emblem spec={tournamentCrest('champ')} size="md" title="Crown Championship crest" /> Crown Championship</h2><span className="chip gold">$8,000 Prize Fund</span></div>
         {!champ ? <div className="small muted"><p>The 16-player bracket is drawn after league round {LEAGUE_ROUNDS}: {rulesOf(st.plan) >= RULES_V2 ? 'last season\'s zonal champions and the best regional Crown Division winners (8 places)' : 'the 8 best regional Crown Division winners'} and {t3 ? `the top ${8 - PATH_PLACES} of the Federation Open, plus ${PATH_PLACES} Crown Path places for its best invited entrants with at least ${PATH_MIN_POINTS} of 5` : 'the top 8 of the Federation Open'}.</p><details><summary>Details</summary>Matches are two games. If level, a rapid pair is played, then a blitz pair, then the higher seed advances. A level final produces joint champions.</details></div> : (
-          <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }}>
+          <div className="row" style={{ alignItems: 'flex-start', gap: 16, overflowX: 'auto' }} ref={scrollRegion('Championship bracket')}>
             {champ.stages.map(sg => (
               <div key={sg.label} style={{ minWidth: 200 }}>
                 <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{sg.label} · Round {sg.round}</div>
@@ -326,7 +330,7 @@ export function TournamentsScreen() {
       </div>
       {st.plan.club && (
         <div className="panel" style={{ marginTop: 14 }}>
-          <h3>Club Weekend</h3>
+          <h2 className="h3">Club Weekend</h2>
           <Bracket ko={st.plan.club} testId="bracket-club" />
         </div>
       )}
@@ -351,7 +355,7 @@ function CupsPanel() {
   const ko = cups.find(k => k.name === sel) ?? mine;
   return (
     <div className="panel" style={{ marginTop: 14 }} data-testid="cups">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Zonal Championships &amp; Regional Cups</h3>{cups.length > 0 && (
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Zonal Championships &amp; Regional Cups</h2>{cups.length > 0 && (
         <select aria-label="Choose an event" value={ko?.name ?? ''} onChange={e => setSel(e.target.value)} style={{ maxWidth: '100%' }}>
           {cups.map(k => <option key={k.name} value={k.name}>{koTitle(k)}{k.qualifiers.includes(PLAYER_ID) ? ' (you)' : ''}</option>)}
         </select>)}</div>
@@ -373,7 +377,7 @@ function HallOfChampions() {
   if (!champs.length) return null;
   return (
     <div className="panel" style={{ marginTop: 14 }}>
-      <h3>Hall of Champions</h3>
+      <h2 className="h3">Hall of Champions</h2>
       <ul className="small">{champs.sort((a, b) => b.season - a.season).map((c, i) => <li key={i}>S{c.season} · {c.title.replace(/ S\d+$/, '')}: <strong>{c.name}</strong></li>)}</ul>
     </div>
   );

@@ -214,3 +214,10 @@ gains an optional `career` (covered by `payloadSha256`); a backup without it rep
 empty career adopts the backup's origin. Start New Career clears every store of `crown-calculation` in one transaction
 after a full backup was exported; a copy of that backup is kept in a separate database `crown-calculation-archive`
 (store `backups`, key `archive:<exportedAt>`, the exact file text) when storage allows. Older builds ignore the record.
+
+## v1.0: first-run guide (no schema change)
+Package V adds one meta-store record, `tour:state` (`crown-tour-1`, `src/app/onboarding.ts`):
+`{ v: 1, dismissed, ack: { <step>: iso }, seen: { analysis?: iso }, restarts }`. It is learning progress, not a career
+record: the `tour:` prefix is carried in the backup `progress` array, restored put-if-absent into an empty career and
+merged put-if-absent into another career. Unknown or malformed values are sanitised on read (an absent record is a
+fresh guide). Older builds ignore it. Tests: `tests/onboarding.test.ts`.

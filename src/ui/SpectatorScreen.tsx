@@ -297,7 +297,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
 
   const tournament = (
     <div className="small arena-tournament" data-testid="arena-tournament">
-      <h4 style={{ margin: 0 }}>Tournament</h4>
+      <h3 className="h4" style={{ margin: 0 }}>Tournament</h3>
       <div>{eventName(fixture.event)}{fixture.stage ? ` · ${fixture.stage}` : ''} · Season {fixture.season} · Round {fixture.round}</div>
       {w && b && <div className="muted">{w.name}: {divisionLabel(w.division)} · {b.name}: {divisionLabel(b.division)}</div>}
       {fixture.result !== null && allRevealed && <div className="muted">Recorded result: {fixture.result === 1 ? '1-0' : fixture.result === 0 ? '0-1' : '½-½'}</div>}
@@ -306,7 +306,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
 
   const forecast = market && (
     <div className="stack" data-testid="arena-forecast">
-      <div className="panel-title"><h4 style={{ margin: 0 }}>Model Forecast</h4><span className="small muted">{ODDS_ID} · information, not the price</span></div>
+      <div className="panel-title"><h3 className="h4" style={{ margin: 0 }}>Model Forecast</h3><span className="small muted">{ODDS_ID} · information, not the price</span></div>
       <table className="small arena-forecast"><thead><tr><th>Forecast</th>{claims.map(c => <th key={c.label}>{c.label}</th>)}</tr></thead><tbody>
         {model && <tr><td>{inPlay ? 'Live' : `After move ${atPly?.point?.ply ?? 0}`}</td>{claimModel(market, model).map((x, i) => <td key={i} className="mono" data-testid={`model-${i}`}>{(x * 100).toFixed(1)}%</td>)}</tr>}
         <tr><td>Pre-match</td>{claimModel(market, [market.forecast.w, market.forecast.d, market.forecast.l]).map((x, i) => <td key={i} className="mono">{(x * 100).toFixed(0)}%</td>)}</tr>
@@ -316,7 +316,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
 
   const analysisPanel = (
     <div className="panel stack" data-testid="arena-analysis">
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Moves &amp; Evaluation</h3><span className="small muted mono">Move {ply} of {revealed}</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Moves &amp; Evaluation</h2><span className="small muted mono">Move {ply} of {revealed}</span></div>
       <EvalGraph moves={moves} shown={revealed} post={postCurve} onSelect={nav} ply={ply} turns={turns.map(t => t.ply)} />
       <div className="legend small" aria-hidden>
         <span><i style={{ background: 'var(--accent)' }} />Live evaluation (White's expected score)</span>
@@ -347,7 +347,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   // the recorded market at the shown move (replays, and earlier moves while live): recorded data only
   const history = market && timeline && (!marketTradable || ply < revealed) && (
     <div className="panel stack" data-testid="arena-history" data-ply={atPly?.point?.ply ?? ''}>
-      <div className="panel-title"><h3 style={{ margin: 0 }}>Market at This Move</h3><span className="chip">Recorded</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>Market at This Move</h2><span className="chip">Recorded</span></div>
       {timeline.points.length === 0 ? (
         <p className="small muted" style={{ margin: 0 }} data-testid="arena-history-none">No in-play prices were recorded for this match (it wasn’t traded during the game). Historical prices are never reconstructed.</p>
       ) : atPly && (
@@ -389,7 +389,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
 
   const marketPanel = market ? (
     <div className="panel stack" data-testid="arena-market" data-revision={revisionOf(market)}>
-      <div className="panel-title"><h3 style={{ margin: 0 }}>{marketTradable ? 'Live Odds' : 'Market'}</h3><span className={`chip ${market.status === 'open' ? 'pos' : market.status === 'settled' ? 'info' : ''}`}>{statusLabel(market.status)}{market.status === 'settled' && allRevealed ? ` · ${OUTCOMES[market.result!]}` : ''}</span></div>
+      <div className="panel-title"><h2 className="h3" style={{ margin: 0 }}>{marketTradable ? 'Live Odds' : 'Market'}</h2><span className={`chip ${market.status === 'open' ? 'pos' : market.status === 'settled' ? 'info' : ''}`}>{statusLabel(market.status)}{market.status === 'settled' && allRevealed ? ` · ${OUTCOMES[market.result!]}` : ''}</span></div>
       <div className="arena-odds">
         {claimPrices(market).map((x, i) => {
           const d = marketTradable ? priceDelta?.[i] : undefined;
@@ -427,7 +427,7 @@ export function SpectatorScreen({ fixtureId }: { fixtureId: string }) {
   };
   const portfolioPanel = (
     <div className="panel stack" data-testid="arena-portfolio">
-      <h3 style={{ margin: 0 }}>Your Position</h3>
+      <h2 className="h3" style={{ margin: 0 }}>Your Position</h2>
       {market && pos ? (
         <>
           <div className="arena-pos">

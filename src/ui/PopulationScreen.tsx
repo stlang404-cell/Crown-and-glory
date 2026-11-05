@@ -3,6 +3,7 @@
  * distribution, mean and median, your percentile, top competitors, the strongest of each division and the rating
  * movement over the seasons stored in competitors' histories (src/app/population.ts).
  */
+import { scrollRegion } from './scrollRegion';
 import { useEffect, useMemo, useState } from 'react';
 import { NeedsFederation } from './NeedsFederation';
 import { useApp, useServices } from './App';
@@ -46,7 +47,7 @@ export function PopulationScreen() {
         <div className="panel stat" data-testid="player-percentile"><span className="k">Your Percentile</span><span className="v mono">{stats.playerPercentile === null ? '—' : `${stats.playerPercentile.toFixed(1)}%`}</span><span className="small muted">{mine === null ? (prov ? `Your career Elo ${displayElo(prov.rating)} is provisional; your percentile appears once it is established (${gamesToEstablish(prov.games)} more rated games at least, ±100).` : 'Play a rated rapid game to get a rating.') : `Your rating ${fmt(mine)} is above ${stats.playerPercentile!.toFixed(1)}% of active competitors.`}</span></div>
       </div>
       <section className="panel stack" data-testid="rating-bands">
-        <h3 style={{ margin: 0 }}>Rating Distribution</h3>
+        <h2 className="h3" style={{ margin: 0 }}>Rating Distribution</h2>
         <svg viewBox={`0 0 ${W} 220`} role="img" aria-label="Active competitors per rating band" style={{ width: '100%', height: 'auto', maxHeight: 260 }}>
           {stats.bands.map((n, i) => {
             const bw = (W - 20) / stats.bands.length, h = (n / maxBand) * 160;
@@ -60,25 +61,25 @@ export function PopulationScreen() {
           })}
           <line x1="10" x2={W - 10} y1="180" y2="180" style={{ stroke: 'var(--line-strong)' }} />
         </svg>
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ overflowX: 'auto' }} ref={scrollRegion('Rating bands table')}>
           <table className="small"><thead><tr><th>Band</th><th>Competitors</th><th>Share</th></tr></thead>
             <tbody>{stats.bands.map((n, i) => <tr key={i}><td>{RATING_BANDS[i].label}</td><td className="mono">{fmt(n)}</td><td className="mono">{stats.active ? ((100 * n) / stats.active).toFixed(1) : '0.0'}%</td></tr>)}</tbody></table>
         </div>
       </section>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12, marginTop: 12 }}>
         <section className="panel" data-testid="top-competitors">
-          <h3>Top Competitors</h3>
+          <h2 className="h3">Top Competitors</h2>
           <table className="small"><thead><tr><th>#</th><th>Competitor</th><th>Rating</th></tr></thead>
             <tbody>{stats.top.map((c, i) => <tr key={c.id} className="clickable" onClick={() => go({ name: 'competitor', id: c.id })}><td>{i + 1}</td><td>{c.name}<div className="muted">{divisionLabel(c.division)} · {regionName(c.region)}</div></td><td className="mono">{fmt(c.rating)}</td></tr>)}</tbody></table>
         </section>
         <section className="panel" data-testid="strongest-per-division">
-          <h3>Strongest in Each Division</h3>
+          <h2 className="h3">Strongest in Each Division</h2>
           <table className="small"><thead><tr><th>Division</th><th>Competitor</th><th>Rating</th></tr></thead>
             <tbody>{stats.strongestPerDivision.map((c, i) => <tr key={i} className={c ? 'clickable' : ''} onClick={() => c && go({ name: 'competitor', id: c.id })}><td>{divisionLabel(i + 1)}</td><td>{c ? <>{c.name}<div className="muted">{regionName(c.region)}</div></> : '—'}</td><td className="mono">{c ? fmt(c.rating) : ''}</td></tr>)}</tbody></table>
         </section>
       </div>
       <section className="panel stack" style={{ marginTop: 12 }} data-testid="rating-movement">
-        <h3 style={{ margin: 0 }}>Rating Movement over Seasons</h3>
+        <h2 className="h3" style={{ margin: 0 }}>Rating Movement over Seasons</h2>
         {seasons.length === 0 ? <p className="small muted">The first season is still running. Season-end ratings appear here after each season.</p> : (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Mean and median rating at the end of each season and now" style={{ width: '100%', height: 'auto', maxHeight: 180 }}>
@@ -87,7 +88,7 @@ export function PopulationScreen() {
               {pts.map((p, i) => <text key={p.label} x={x(i)} y={H - 2} textAnchor="middle" style={{ fill: 'var(--muted)', fontSize: 10 }}>{p.label}</text>)}
             </svg>
             <div className="small muted">Solid: mean. Dashed: median. Season points use the rating stored at each season's end (competitors in the leagues that season).</div>
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto' }} ref={scrollRegion('Rating movement table')}>
               <table className="small"><thead><tr><th>Season</th><th>Competitors</th><th>Mean</th><th>Median</th>{RATING_BANDS.map(b => <th key={b.label} className="hide-sm">{b.label}</th>)}</tr></thead>
                 <tbody>{seasons.map(s => <tr key={s.season}><td>{s.season}</td><td className="mono">{fmt(s.count)}</td><td className="mono">{fmt(s.mean)}</td><td className="mono">{fmt(s.median)}</td>{s.bands.map((n, i) => <td key={i} className="hide-sm mono">{fmt(n)}</td>)}</tr>)}</tbody></table>
             </div>

@@ -2,6 +2,7 @@
  * The player's season in the shared Federation (v0.11): upcoming matches, standing, qualification opportunities and
  * knockout brackets. Used by the Dashboard, the Federation screen and Tournaments. Reads src/app/career.ts only.
  */
+import { scrollRegion } from './scrollRegion';
 import { useState } from 'react';
 import { useApp, useServices } from './App';
 import { PLAYER_ID, divisionLabel, regionName } from '../federation/model';
@@ -30,7 +31,7 @@ export function UpcomingMatches({ limit = 6 }: { limit?: number }) {
         <li key={m.key} className="row small" data-testid="career-match" data-status={m.status} style={{ gap: 8, padding: '4px 0', borderBottom: '1px solid var(--line)' }}>
           <span className={`chip ${m.status === 'play-now' ? 'gold' : m.status === 'postponed' ? 'neg' : ''}`}>{m.status === 'play-now' ? 'Play Now' : m.status === 'postponed' ? 'Postponed' : m.status === 'scheduled' ? `Round ${m.round}` : `Round ${m.round}`}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <strong>{m.opponent ? <button className="btn ghost small" style={{ padding: 0, minHeight: 0 }} onClick={() => go({ name: 'competitor', id: m.opponent! })}>{services.fed.name(m.opponent)}</button> : 'Opponent to be paired'}</strong>
+            <strong>{m.opponent ? <button className="btn ghost small inline-link" onClick={() => go({ name: 'competitor', id: m.opponent! })}>{services.fed.name(m.opponent)}</button> : 'Opponent to be paired'}</strong>
             {m.opponent && <span className="mono muted"> {Math.round(services.fed.ratingOf(m.opponent))}</span>}
             <div className="muted">{m.eventName} · {m.note}{m.colour ? ` · you play ${m.colour}` : ''}</div>
           </span>
@@ -94,7 +95,7 @@ export function Bracket({ ko, testId }: { ko: KoState; testId?: string }) {
   const fed = services.fed;
   return (
     <div data-testid={testId ?? 'bracket'} data-event={ko.name}>
-      <div className="row" style={{ alignItems: 'flex-start', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+      <div className="row" style={{ alignItems: 'flex-start', gap: 12, overflowX: 'auto', paddingBottom: 4 }} ref={scrollRegion('Bracket')}>
         {ko.stages.map(sg => (
           <div key={sg.label} style={{ minWidth: 170 }}>
             <div className="small" style={{ color: 'var(--accent)', fontWeight: 700 }}>{sg.label} · Round {sg.round}</div>
@@ -103,7 +104,7 @@ export function Bracket({ ko, testId }: { ko: KoState; testId?: string }) {
                 {[m.a, m.b].map(id => (
                   <div key={id} className="row small" style={{ fontWeight: m.winner === id || m.joint ? 700 : 400, gap: 4 }}>
                     <span className="muted mono">{m.a === id ? m.seedA : m.seedB}</span>
-                    <button className="btn ghost small" style={{ padding: 0, minHeight: 0, fontWeight: 'inherit' }} disabled={id === PLAYER_ID} onClick={() => go({ name: 'competitor', id })}>{fed.name(id)}</button>
+                    <button className="btn ghost small inline-link" style={{ fontWeight: 'inherit' }} disabled={id === PLAYER_ID} onClick={() => go({ name: 'competitor', id })}>{fed.name(id)}</button>
                     <span className="mono muted">{id === PLAYER_ID ? '' : Math.round(fed.ratingOf(id))}</span>
                     <span className="spacer" /><span className="mono">{m.games.length ? koScore(m, id) : ''}</span>
                   </div>
