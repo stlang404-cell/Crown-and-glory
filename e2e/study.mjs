@@ -114,8 +114,9 @@ async function journey(name, viewport, opts = {}) {
   await page.click('[data-testid="study-hint"]');
   await page.waitForSelector('[data-testid="study-hint-text"]', { timeout: 30000 });
   const hint = await page.locator('[data-testid="study-hint-text"]').innerText();
-  const hl = await page.$$eval('[data-testid="study-match"] [data-square].hl, [data-testid="study-match"] [data-square].highlight, [data-testid="study-match"] [data-square][data-highlight]', els => els.length);
-  check(`${name}-hint`, /Engine hint \(depth \d+\): consider moving the piece on [a-f][1-6]\./.test(hint), `hint: "${hint}" (highlighted squares: ${hl})`);
+  const hl = await page.$$eval('[data-testid="study-match"] [data-square].sel', els => els.map(e => e.getAttribute('data-square')));
+  const hintSq = (hint.match(/on ([a-f][1-6])\./) ?? [])[1];
+  check(`${name}-hint`, /Engine hint \(depth \d+\): consider moving the piece on [a-f][1-6]\./.test(hint) && hl.length === 1 && hl[0] === hintSq, `hint: "${hint}" (highlighted square: ${hl.join(',')})`);
   // best move + why
   await page.click('[data-testid="study-best"]');
   await page.waitForSelector('[data-testid="study-best-text"]', { timeout: 30000 });
