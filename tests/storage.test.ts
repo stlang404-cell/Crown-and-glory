@@ -5,14 +5,18 @@ import { CrownDB } from '../src/storage/db';
 import { exportBundle, importBundle, validateBundle, ImportError } from '../src/storage/backup';
 import { gameChecksum } from '../src/storage/checksum';
 import { GameSession, createGameRecord } from '../src/games/session';
+import { CAREER_POOL } from '../src/ratings/pools';
 import { TIME_CONTROLS } from '../src/games/types';
 import { replayLedger } from '../src/ratings/ledger';
 
 const human = { kind: 'human' as const, id: 'player', name: 'You', rating: 1500, rd: 350 };
 const engine = { kind: 'engine' as const, id: 'ai-1', name: 'AI', rating: 1400, rd: 60, engine: { profileId: 'L3', level: 3, levelsId: 'x', searchId: 's', evalId: 'e', calibrationId: 'cal', style: 'standard' } };
 
-function finishedGame(id: string, mode: 'rated' | 'casual' = 'rated') {
-  const s = new GameSession(createGameRecord({ id, mode, timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' }));
+/** A finished game: Classical 60+60 (the career pool) by default; `legacy` builds a pre-v1.1 rated Rapid 5+3 record. */
+function finishedGame(id: string, mode: 'rated' | 'casual' = 'rated', legacy = false) {
+  const rec = createGameRecord({ id, mode, timeControl: legacy ? TIME_CONTROLS.rapid : TIME_CONTROLS.classical60, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' });
+  if (legacy && mode === 'rated') Object.assign(rec, { mode: 'rated', rated: true, pool: 'rapid' });
+  const s = new GameSession(rec);
   s.start(0);
   for (const m of ['c2c3', 'c5c4', 'e1f3', 'e6f4']) s.applyMove(m, 1, 'T');
   s.resign(1, 2, '2026-11-03T00:10:00Z');
@@ -31,12 +35,12 @@ describe('storage', () => {
     await Promise.all([1, 2, 3].map(() => db.finalizeGame(g, { checksum, nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 })));
     expect(a.alreadyFinalized).toBe(false);
     expect(b.alreadyFinalized).toBe(true);
-    const events = await db.ratingEvents('rapid');
+    const events = await db.ratingEvents(CAREER_POOL);
     expect(events).toHaveLength(1);
-    const state = await db.ratingState('rapid');
+    const state = await db.ratingState(CAREER_POOL);
     expect(state.games).toBe(1);
     expect(state.rating).toBeGreaterThan(0); // a fresh profile is a new career: it starts at 0 (docs/CAREER_RATING.md)
-    expect(replayLedger('rapid', events).rating).toBe(state.rating);
+    expect(replayLedger(CAREER_POOL, events).rating).toBe(state.rating);
     expect((await db.getGame('g1'))?.status).toBe('finalized');
     expect((await db.allJobs()).map(j => j.id)).toEqual(['job:g1:std-d7']);
     await expect(db.saveGame({ ...g, result: '0-1' })).rejects.toThrow(/immutable/);
@@ -69,7 +73,7 @@ describe('storage', () => {
     const r = await importBundle(fresh, bundle);
     expect(r.mode).toBe('restore');
     expect((await fresh.allGames()).map(g => g.id).sort()).toEqual(['a', 'b', 'c']);
-    expect((await fresh.ratingState('rapid')).rating).toBe((await db.ratingState('rapid')).rating);
+    expect((await fresh.ratingState(CAREER_POOL)).rating).toBe((await db.ratingState(CAREER_POOL)).rating);
     // importing again merges nothing new
     const again = await importBundle(fresh, bundle);
     expect(again.mode).toBe('merge');
@@ -123,7 +127,7 @@ describe('schema migration v1 → v2', () => {
   it('upgrades a v1 database without touching existing games or ratings', async () => {
     const f = new IDBFactory();
     const v1 = await CrownDB.open(f, 'crown-calculation', 1);
-    const g = finishedGame('m1');
+    const g = finishedGame('m1', 'rated', true);
     await v1.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
     expect([...v1.db.objectStoreNames]).not.toContain('attempts');
     const before = await v1.ratingState('rapid');
@@ -141,7 +145,7 @@ describe('schema migration v2 → v3 (federation)', () => {
   it('adds the federation and economy stores without touching games, ratings or Academy data', async () => {
     const f = new IDBFactory();
     const v2 = await CrownDB.open(f, 'crown-calculation', 2);
-    const g = finishedGame('m2');
+    const g = finishedGame('m2', 'rated', true);
     await v2.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
     await v2.put('attempts', { id: 'a1', puzzleId: 'p', at: 'T' });
     const before = await v2.ratingState('rapid');
@@ -159,7 +163,7 @@ describe('schema migration v3 → v4 (live games, contracts)', () => {
   it('adds liveGames and contracts without touching games, ratings or federation stores', async () => {
     const f = new IDBFactory();
     const v3 = await CrownDB.open(f, 'crown-calculation', 3);
-    const g = finishedGame('m3');
+    const g = finishedGame('m3', 'rated', true);
     await v3.finalizeGame(g, { checksum: await gameChecksum(g), nowIso: 'N', analysisSettingsId: 'std-d7', humanScore: 1 });
     await v3.commit([{ store: 'journal', put: [{ id: 'j1', at: 'T', kind: 'mint', memo: '', lines: [] }] }, { store: 'world', put: [{ key: 'world', season: 2, round: 7 }] }]);
     const before = await v3.ratingState('rapid');

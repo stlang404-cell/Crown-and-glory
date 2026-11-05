@@ -10,6 +10,7 @@ import { gameChecksum } from '../src/storage/checksum';
 import { backfillPlayedLike, recordPlayedLike } from '../src/storage/playedLikeStore';
 import { GameSession, createGameRecord } from '../src/games/session';
 import { TIME_CONTROLS, type GameRecord } from '../src/games/types';
+import { CAREER_POOL } from '../src/ratings/pools';
 import { PLAYED_LIKE_ID, playedLike, type PlayedLike } from '../src/analysis/playedLike';
 import { ADEQUATE_MOVES, PL_RECORD_SCHEMA, confidenceOf, playedLikeCareer, playedLikeStats, upsertRecord, type PlayedLikeGameRecord } from '../src/analysis/playedLikeRecords';
 import type { LitePly } from '../src/analysis/playedLikeFeatures';
@@ -19,7 +20,7 @@ const human = { kind: 'human' as const, id: 'player', name: 'You', rating: 1500,
 const engine = { kind: 'engine' as const, id: 'ai-7', name: 'Mira Vell', rating: 1400, rd: 60, engine: { profileId: 'L3', level: 3, levelsId: 'x', searchId: 's', evalId: 'e', calibrationId: 'cal', style: 'standard' } };
 
 function finishedGame(id: string, at = '2026-11-03T00:10:00Z') {
-  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.rapid, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' }));
+  const s = new GameSession(createGameRecord({ id, mode: 'rated', timeControl: TIME_CONTROLS.classical60, humanColor: 'white', human, engine, engineSeed: 1, nowIso: '2026-11-03T00:00:00Z' }));
   s.start(0);
   for (const m of ['c2c3', 'c5c4', 'e1f3', 'e6f4']) s.applyMove(m, 1, 'T');
   s.resign(1, 2, at); // ends 1-0: a win for the player (White)
@@ -59,8 +60,8 @@ describe('Played Like records in the save', () => {
     const g = (await db.getGame('g1'))!;
     expect(g.playedLike).toHaveLength(1);
     const r = g.playedLike![0];
-    expect(r).toMatchObject({ schema: PL_RECORD_SCHEMA, modelId: PLAYED_LIKE_ID, gameId: 'g1', at: '2026-11-03T00:10:00Z', pov: 'white', opponent: { id: 'ai-7', name: 'Mira Vell' }, result: 1, pool: 'rapid' });
-    const ev = (await db.ratingEvents('rapid'))[0];
+    expect(r).toMatchObject({ schema: PL_RECORD_SCHEMA, modelId: PLAYED_LIKE_ID, gameId: 'g1', at: '2026-11-03T00:10:00Z', pov: 'white', opponent: { id: 'ai-7', name: 'Mira Vell' }, result: 1, pool: CAREER_POOL });
+    const ev = (await db.ratingEvents(CAREER_POOL))[0];
     expect(r.career).toEqual({ before: Math.round(ev.before.rating), after: Math.round(ev.after.rating), rd: Math.round(ev.after.rd) });
     expect(r.estimate).toEqual(playedLike(report('g1'), 'white'));
     expect(r.confidence).toBe(confidenceOf(r.estimate));
