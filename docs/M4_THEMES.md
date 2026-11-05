@@ -1,5 +1,10 @@
 # M4 visual identity: themes, board palettes and accessibility
 
+> **v1.0 update (package U):** the themes were retuned to the royal palette (royal blue, emerald, amethyst,
+> burgundy, gold, silver), Obsidian is now "Obsidian & Burgundy" (gold accent, burgundy buttons), Midnight uses
+> royal-blue buttons, and a fourth theme, **Emerald & Gold** (`emerald`), was added. Theme ids are unchanged. The
+> contrast audit below is historical; the current gate is `tests/contrast.test.ts` (see docs/DESIGN_SYSTEM.md).
+
 Crown & Calculation now ships three complete colour themes and an independent board palette. Every screen
 reads its colours from CSS custom properties, so the theme applies to the shell, panels, chips, charts,
 insignia, the brand mark, clocks, focus rings and the board without per-screen code.

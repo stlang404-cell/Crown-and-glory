@@ -4,7 +4,9 @@
  * trophy's family reads from its outline and its standing from its finish. No downloaded images.
  */
 import type { TrophyKind, Tier } from '../legacy/trophies';
+import { useId } from 'react';
 import { TINCTURES } from '../heraldry/charges';
+import { MetalGradient } from './Emblem';
 
 /** Body silhouettes per kind (filled with the tier metal). */
 export const TROPHY_ART: Record<TrophyKind, string> = {
@@ -31,14 +33,17 @@ export const TROPHY_ART: Record<TrophyKind, string> = {
 };
 
 const METAL: Record<Tier, string> = { 1: TINCTURES.bronze, 2: TINCTURES.argent, 3: TINCTURES.or, 4: TINCTURES.or, 5: TINCTURES.or };
+const METAL_ID: Record<Tier, 'or' | 'argent' | 'bronze'> = { 1: 'bronze', 2: 'argent', 3: 'or', 4: 'or', 5: 'or' };
 
 export function TrophyArt({ kind, tier, size = 56, title }: { kind: TrophyKind; tier: Tier; size?: number; title: string }) {
   const small = size < 32;
+  const uid = useId().replace(/:/g, '');
   return (
     <svg className={`trophy-art tier-${tier}`} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title || `${kind.replace(/-/g, ' ')} trophy`} data-kind={kind} data-tier={tier}>
       <title>{title}</title>
       {tier >= 5 && !small && <path d="M6 44C2 32 4 18 12 10L14 12C8 20 7 32 10 42ZM58 44C62 32 60 18 52 10L50 12C56 20 57 32 54 42Z" fill={TINCTURES.vert} opacity={0.9} />}
-      <path d={TROPHY_ART[kind]} fill={METAL[tier]} fillRule="evenodd" stroke="var(--her-outline, #111318)" strokeWidth={small ? 2.2 : 1.4} strokeLinejoin="round" />
+      {!small && <defs><MetalGradient id={`m${uid}`} metal={METAL_ID[tier]} /></defs>}
+      <path d={TROPHY_ART[kind]} fill={small ? METAL[tier] : `url(#m${uid})`} fillRule="evenodd" stroke="var(--her-outline, #111318)" strokeWidth={small ? 2.2 : 1.4} strokeLinejoin="round" />
       {tier >= 4 && !small && <rect x={29} y={kind === 'seasonal-banner' ? 17 : kind === 'medal' ? 35 : 16} width={6} height={6} transform={`rotate(45 32 ${kind === 'seasonal-banner' ? 20 : kind === 'medal' ? 38 : 19})`} fill={tier >= 5 ? TINCTURES.gules : TINCTURES.purpure} stroke="var(--her-outline, #111318)" strokeWidth={0.8} />}
       {!small && <rect x={kind === 'seasonal-banner' ? 20 : 30} y={kind === 'seasonal-banner' ? 11 : 12} width={3} height={3} fill="var(--her-shine, #fff8e6)" opacity={0.75} />}
     </svg>

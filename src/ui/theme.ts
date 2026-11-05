@@ -6,9 +6,10 @@
  */
 
 export const THEMES = [
-  { id: 'obsidian', name: 'Obsidian & Crimson', blurb: 'Graphite surfaces, ivory type, crimson highlights and cool steel accents.', scheme: 'dark', meta: '#111318', swatches: ['#111318', '#252932', '#f2ede3', '#ea8592', '#8ea7c1'] },
-  { id: 'midnight', name: 'Midnight & Gold', blurb: 'The original federation look: deep navy ink with brass and gold.', scheme: 'dark', meta: '#10151e', swatches: ['#10151e', '#222d3d', '#f1ebdd', '#d8b56c', '#8fc3ee'] },
-  { id: 'ivory', name: 'Ivory & Slate', blurb: 'A light theme: warm paper, slate ink and oxblood details for daylight play.', scheme: 'light', meta: '#f2efe8', swatches: ['#f2efe8', '#fcfbf8', '#1c2129', '#34567c', '#8c3445'] },
+  { id: 'obsidian', name: 'Obsidian & Burgundy', blurb: 'The royal default: graphite and ink, burgundy banners, gold leaf and silver steel.', scheme: 'dark', meta: '#111318', swatches: ['#111318', '#252932', '#f2ede3', '#962a3f', '#e2c074', '#c3cad4'] },
+  { id: 'midnight', name: 'Midnight & Gold', blurb: 'Deep navy ink with royal-blue banners, gold and amethyst.', scheme: 'dark', meta: '#10151e', swatches: ['#10151e', '#222d3d', '#f1ebdd', '#3762bb', '#d8b56c', '#b9a2e8'] },
+  { id: 'emerald', name: 'Emerald & Gold', blurb: 'Forest-dark surfaces, emerald banners and gold, on a green tournament board.', scheme: 'dark', meta: '#0d1512', swatches: ['#0d1512', '#1b2a22', '#eef0e6', '#1c7650', '#dfbd6c', '#c4ccd0'] },
+  { id: 'ivory', name: 'Ivory & Slate', blurb: 'A light theme: warm parchment, slate ink, royal blue and burgundy details for daylight play.', scheme: 'light', meta: '#f2efe8', swatches: ['#f2efe8', '#fcfbf8', '#1c2129', '#284a8a', '#8a2b3e', '#74520f'] },
 ] as const;
 
 export const BOARDS = [
