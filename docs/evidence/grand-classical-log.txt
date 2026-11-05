@@ -1,35 +1,35 @@
-[2026-11-05T18:23:49.879Z] PASS 375-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
-[2026-11-05T18:23:50.154Z] PASS 375-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
-[2026-11-05T18:23:50.285Z] PASS 375-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
-[2026-11-05T18:23:51.574Z] PASS 375-4: Remembered after reload: Eternal Crown 240+120
-[2026-11-05T18:23:51.576Z] PASS layout 375 Play: 375 px: no horizontal overflow true; clocks 
-[2026-11-05T18:23:51.864Z] PASS 375-5: Rated game at Eternal Crown 240+120 in pool classical-long; clock shows 3:59:59; strip "Eternal Crown 240+120+120 s per moveLong ClassicalYour clock is running"
-[2026-11-05T18:23:52.270Z] PASS layout 375 match: 375 px: no horizontal overflow true; clocks "4:03:59", "4:03:59"
-[2026-11-05T18:23:58.289Z] PASS 375-6: Hidden for 4 s: clock 4:03:57 → 4:03:57, saved {"whiteMs":14637896.000000002,"blackMs":14639934.1} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
-[2026-11-05T18:24:00.506Z] PASS 375-7: Visible again: resumes from 4:03:57 → 4:03:55 after ~2 s ("Resumed · your clock running")
-[2026-11-05T18:24:08.025Z] PASS 375-8: Reopened after 5 s closed: saved 14634 s, shown 4:03:54 (no time charged while away); 4 moves kept
-[2026-11-05T18:24:08.176Z] PASS 375-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
-[2026-11-05T18:24:09.370Z] PASS 390-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
-[2026-11-05T18:24:09.633Z] PASS 390-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
-[2026-11-05T18:24:09.852Z] PASS 390-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
-[2026-11-05T18:24:11.282Z] PASS 390-4: Remembered after reload: Grand Classical 90+60
-[2026-11-05T18:24:11.283Z] PASS layout 390 Play: 390 px: no horizontal overflow true; clocks 
-[2026-11-05T18:24:11.500Z] PASS 390-5: Rated game at Grand Classical 90+60 in pool classical-long; clock shows 1:29:59; strip "Grand Classical 90+60+60 s per moveLong ClassicalYour clock is running"
-[2026-11-05T18:24:11.725Z] PASS layout 390 match: 390 px: no horizontal overflow true; clocks "1:31:59", "1:31:59"
-[2026-11-05T18:24:17.735Z] PASS 390-6: Hidden for 4 s: clock 1:31:58 → 1:31:58, saved {"whiteMs":5518075,"blackMs":5519956} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
-[2026-11-05T18:24:19.946Z] PASS 390-7: Visible again: resumes from 1:31:58 → 1:31:55 after ~2 s ("Resumed · your clock running")
-[2026-11-05T18:24:27.471Z] PASS 390-8: Reopened after 5 s closed: saved 5515 s, shown 1:31:54 (no time charged while away); 4 moves kept
-[2026-11-05T18:24:27.620Z] PASS 390-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
-[2026-11-05T18:24:28.807Z] PASS desktop-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
-[2026-11-05T18:24:29.065Z] PASS desktop-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
-[2026-11-05T18:24:29.214Z] PASS desktop-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
-[2026-11-05T18:24:30.543Z] PASS desktop-4: Remembered after reload: Classical 60+60
-[2026-11-05T18:24:30.545Z] PASS layout desktop Play: 1366 px: no horizontal overflow true; clocks 
-[2026-11-05T18:24:30.784Z] FAIL desktop-5: Rated game at Classical 60+60 in pool classical-long; clock shows 59:59; strip "Classical 60+60+60 s per moveLong ClassicalYour clock is running"
-[2026-11-05T18:24:31.041Z] PASS layout desktop match: 1366 px: no horizontal overflow true; clocks "1:01:59", "1:01:59"
-[2026-11-05T18:24:37.349Z] PASS desktop-6: Hidden for 4 s: clock 1:01:57 → 1:01:57, saved {"whiteMs":3717764.5,"blackMs":3719946.8} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
-[2026-11-05T18:24:39.557Z] PASS desktop-7: Visible again: resumes from 1:01:57 → 1:01:55 after ~2 s ("Resumed · your clock running")
-[2026-11-05T18:24:47.020Z] PASS desktop-8: Reopened after 5 s closed: saved 3714 s, shown 1:01:53 (no time charged while away); 4 moves kept
-[2026-11-05T18:24:50.227Z] PASS desktop-9: Second tab is read-only (notice 1); its clock does not run (1:01:54 → 1:01:54)
-[2026-11-05T18:24:51.353Z] PASS desktop-10: Offline reload mid-game: 6 moves kept, clock 3774 s saved → 1:02:53 shown (charged at most up to the last heartbeat)
-[2026-11-05T18:24:51.577Z] PASS desktop-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
+[2026-11-05T18:37:30.763Z] PASS 375-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
+[2026-11-05T18:37:31.001Z] PASS 375-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
+[2026-11-05T18:37:31.119Z] PASS 375-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
+[2026-11-05T18:37:32.400Z] PASS 375-4: Remembered after reload: Eternal Crown 240+120
+[2026-11-05T18:37:32.403Z] PASS layout 375 Play: 375 px: no horizontal overflow true; clocks 
+[2026-11-05T18:37:32.602Z] PASS 375-5: Rated game at Eternal Crown 240+120 in pool classical-long; clock shows 3:59:59; strip "Eternal Crown 240+120+120 s per moveLong ClassicalYour clock is running"
+[2026-11-05T18:37:32.950Z] PASS layout 375 match: 375 px: no horizontal overflow true; clocks "4:03:59", "4:03:59"
+[2026-11-05T18:37:39.003Z] PASS 375-6: Hidden for 4 s: clock 4:03:57 → 4:03:57, saved {"whiteMs":14637952.1,"blackMs":14639934.2} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
+[2026-11-05T18:37:41.222Z] PASS 375-7: Visible again: resumes from 4:03:57 → 4:03:55 after ~2 s ("Resumed · your clock running")
+[2026-11-05T18:37:48.870Z] PASS 375-8: Reopened after 5 s closed: saved 14635 s, shown 4:03:54 (no time charged while away); 4 moves kept
+[2026-11-05T18:37:49.067Z] PASS 375-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
+[2026-11-05T18:37:50.538Z] PASS 390-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
+[2026-11-05T18:37:50.817Z] PASS 390-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
+[2026-11-05T18:37:51.039Z] PASS 390-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
+[2026-11-05T18:37:52.512Z] PASS 390-4: Remembered after reload: Grand Classical 90+60
+[2026-11-05T18:37:52.514Z] PASS layout 390 Play: 390 px: no horizontal overflow true; clocks 
+[2026-11-05T18:37:52.825Z] PASS 390-5: Rated game at Grand Classical 90+60 in pool classical-long; clock shows 1:29:59; strip "Grand Classical 90+60+60 s per moveLong ClassicalYour clock is running"
+[2026-11-05T18:37:53.122Z] PASS layout 390 match: 390 px: no horizontal overflow true; clocks "1:31:59", "1:31:59"
+[2026-11-05T18:37:59.176Z] PASS 390-6: Hidden for 4 s: clock 1:31:57 → 1:31:57, saved {"whiteMs":5517979.800000001,"blackMs":5519922.199999999} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
+[2026-11-05T18:38:01.400Z] PASS 390-7: Visible again: resumes from 1:31:57 → 1:31:55 after ~2 s ("Resumed · your clock running")
+[2026-11-05T18:38:09.065Z] PASS 390-8: Reopened after 5 s closed: saved 5515 s, shown 1:31:54 (no time charged while away); 4 moves kept
+[2026-11-05T18:38:09.233Z] PASS 390-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
+[2026-11-05T18:38:10.715Z] PASS desktop-1: Default control: Classical 60+60 · Rated · Long Classical · "60 minutes per player, plus 60 seconds after every completed move."
+[2026-11-05T18:38:11.019Z] PASS desktop-2: Presets: Extended Rapid 30+30 (Rated · Long Classical); Classical 60+60 (Rated · Long Classical); Grand Classical 90+60 (Rated · Long Classical); Crownmaster 120+90 (Rated · Long Classical); Marathon 180+120 (Rated · Long Classical); Eternal Crown 240+120 (Rated · Long Classical)
+[2026-11-05T18:38:11.196Z] PASS desktop-3: Custom 45+0 "Casual only", Custom 45+30 "Rated · Long Classical"; Rapid 5+3 is casual only (Rated disabled: true)
+[2026-11-05T18:38:12.552Z] PASS desktop-4: Remembered after reload: Classical 60+60
+[2026-11-05T18:38:12.554Z] PASS layout desktop Play: 1366 px: no horizontal overflow true; clocks 
+[2026-11-05T18:38:12.838Z] PASS desktop-5: Rated game at Classical 60+60 in pool classical-long; clock shows 59:59; strip "Classical 60+60+60 s per moveLong ClassicalYour clock is running"
+[2026-11-05T18:38:13.221Z] PASS layout desktop match: 1366 px: no horizontal overflow true; clocks "1:01:59", "1:01:59"
+[2026-11-05T18:38:19.632Z] PASS desktop-6: Hidden for 4 s: clock 1:01:57 → 1:01:57, saved {"whiteMs":3717556.9000000004,"blackMs":3719916.9} (status paused, pauses reload,visibility), status "Paused · clocks stopped"
+[2026-11-05T18:38:21.848Z] PASS desktop-7: Visible again: resumes from 1:01:57 → 1:01:55 after ~2 s ("Resumed · your clock running")
+[2026-11-05T18:38:29.484Z] PASS desktop-8: Reopened after 5 s closed: saved 3714 s, shown 1:01:53 (no time charged while away); 4 moves kept
+[2026-11-05T18:38:32.865Z] PASS desktop-9: Second tab is read-only (notice 1); its clock does not run (1:01:54 → 1:01:54)
+[2026-11-05T18:38:34.101Z] PASS desktop-10: Offline reload mid-game: 6 moves kept, clock 3774 s saved → 1:02:53 shown (charged at most up to the last heartbeat)
+[2026-11-05T18:38:34.562Z] PASS desktop-11: Resigned: 1 rating event (pools classical-long), duplicate finalization → 1; career Elo 0 ±343; Rapid untouched (0 games); overlay "Career Elo (Long Classical) · ±343"
