@@ -253,7 +253,7 @@ describe('RecordsReloader', () => {
     const r = new RecordsReloader(async () => String(version), async () => { const v = version; await new Promise(res => setTimeout(res, 5)); applied.push(v); });
     const stream = setInterval(() => { version++; void r.request(); }, 1);
     void r.request();
-    await new Promise(res => setTimeout(res, 60));
+    await until(() => applied.length >= 3); // loads keep completing while the stream goes on
     clearInterval(stream);
     await r.request();
     expect(applied.length).toBeGreaterThanOrEqual(3);
@@ -358,6 +358,11 @@ function queue(db: CrownDB, E: ReturnType<typeof env>, hooks: { afterPlayedLike?
     .add('live', () => {});
   return b;
 }
+/** Wait (on real time, bounded) until a condition holds: no fixed sleeps, so a loaded machine cannot fail the test. */
+async function until(cond: () => boolean, maxMs = 30_000) {
+  const t0 = Date.now();
+  while (!cond()) { if (Date.now() - t0 > maxMs) throw new Error('condition not reached'); await new Promise(r => setTimeout(r, 5)); }
+}
 async function runAll(b: BackgroundStart, E: ReturnType<typeof env>) {
   const done = b.firstScreen();
   await E.paint();
@@ -377,8 +382,8 @@ describe('a reload in the middle of the background back-fills loses nothing and 
     const b1 = queue(db, E1);
     const done = b1.firstScreen();
     await E1.paint();
-    await E1.idle(); await new Promise(r => setTimeout(r, 20)); // legacy back-fill completes
-    await E1.idle(); await new Promise(r => setTimeout(r, 20)); // Played Like back-fill: fails after 4 records
+    await E1.idle(); await until(() => b1.finished.includes('legacy')); // legacy back-fill completes
+    await E1.idle(); await until(() => b1.finished.includes('playedLike')); // Played Like back-fill: fails after 4 records
     b1.stop(); await E1.idle(); await done;
     const awards1 = await loadAwards(db);
     const partial = (await db.allGames()).filter(g => g.playedLike?.length).map(g => g.id).sort();

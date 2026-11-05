@@ -13,7 +13,7 @@ import { backfillPlayedLike as backfillPlayedLikeIn, recordPlayedLike as recordP
 import { GRADING_ID } from '../analysis/methodology';
 import type { AnalysisReport, AnalysisSettings, PlyAnalysis } from '../analysis/types';
 import type { GameRecord } from '../games/types';
-import type { RatingEvent } from '../ratings/ledger';
+import type { PoolState, RatingEvent } from '../ratings/ledger';
 import { FederationService } from './federation';
 import { VaultService } from '../vault/service';
 import { LegacyService } from '../legacy/service';
@@ -80,6 +80,8 @@ export class AppServices {
   /** Set while a new career replaces this one: no more background writes. */
   private closing = false;
   revision = 0;
+  /** The rating states and ledger as read at boot, valid while `revision` is unchanged (ProfileScreen's first render). */
+  ownRatings: { states: PoolState[]; events: RatingEvent[]; revision: number } | null = null;
   /** Ordered background start after the first screen (App reports it; src/app/backgroundStart.ts). */
   readonly background = new BackgroundStart(browserEnv(mark, () => whenForegroundIdle(3000)));
 
@@ -101,7 +103,12 @@ export class AppServices {
     // scheduled-game commits arrive several times a second: re-render at most twice a second for them
     let pending: ReturnType<typeof setTimeout> | null = null;
     s.fed.onLiveChange = () => { if (!pending) pending = setTimeout(() => { pending = null; s.notify(); }, 500); };
-    await phase('fed:load', () => s.fed.load());
+    // the player's own rating data is read alongside the Federation (one short transaction), so the Career Passport's
+    // first render already has it instead of queueing a read behind the first screen's other work
+    await Promise.all([
+      phase('fed:load', () => s.fed.load()),
+      db.careerRatings().then(r => { s.ownRatings = { ...r, revision: s.revision }; }, () => {}),
+    ]);
     mark('fed:ensure:start');
     if (!s.readOnly) await s.fed.reconcilePlayerGames().catch(e => console.error('federation reconcile', e));
     if (!s.readOnly) await s.fed.ensureSeasonMarkets().catch(e => console.error('season markets', e));

@@ -3,13 +3,15 @@
  * Production build served by scripts/serve.mjs; Chromium only (a proxy for, not a measurement of, an iPhone).
  *
  *   npx vite build && node scripts/serve.mjs --dir dist --port 4460 &
- *   node e2e/startup.mjs http://127.0.0.1:4460/ [--mode all|reload|budget] [--runs 20] [--parallel 4]
+ *   node e2e/startup.mjs http://127.0.0.1:4460/ [--mode all|race|reload|budget] [--runs 20] [--parallel 4]
  *        [--throttle 1,4,6] [--budget-parallel 1] [--fixture <dir>] [--out <file.json>] [--no-assert]
  *   A/B (before/after a change; runs alternate so background load hits both alike):
  *   node e2e/startup.mjs http://127.0.0.1:4502/ http://127.0.0.1:4503/ --labels before,after …
  * Defaults: 20 runs per build per scenario. The populated-career fixture is built once per port (a few minutes) in
  * $TMPDIR/crown-startup-fixture-<port> and reused; delete it to rebuild.
  *
+ * race: the lost-navigation race forced deterministically (hash change between the first commit and the App's
+ *   hashchange subscription): the Career Passport must be shown (`--race-runs`, default 10 per build).
  * reload: the e2e/new-career.mjs moment where the flake was seen — a fresh career plays a rated game (scripted robot),
  *   the page reloads at once (the game's background analysis is running), then the Career Passport must list the
  *   rating event. Every run is a fresh profile; `--parallel` runs at once; `--throttle` cycles CDP CPU throttling.
@@ -150,6 +152,36 @@ const phaseSummary = runs => {
 const report = { urls: URLS, labels: LABELS, at: new Date().toISOString(), reload: null, budget: null };
 
 const groups = (runs, f) => LABELS.flatMap(l => THROTTLES.map(t => ({ label: l, throttle: t, s: stats(runs.filter(r => r.ok && r.label === l && r.throttle === t).map(f).filter(x => Number.isFinite(x))) })));
+
+/** The lost-navigation race made deterministic: the hash moves to #/profile right after <App>'s first commit, before
+ *  React runs its effects (where the App subscribes to hashchange). Before v1.0 the screen stayed on the old view for
+ *  good — the "rating event never visible after the reload" flake; now the App re-reads the hash when it subscribes. */
+async function raceRun(base) {
+  const dir = mkdtempSync(join(tmpdir(), 'crown-race-'));
+  const { ctx, page } = await launch(dir);
+  try {
+    await ctx.addInitScript(() => {
+      if (!sessionStorage.getItem('crown-race')) return;
+      const mo = new MutationObserver(() => { if (document.querySelector('#root .app')) { mo.disconnect(); location.hash = '#/profile'; } });
+      document.addEventListener('DOMContentLoaded', () => mo.observe(document.getElementById('root'), { childList: true, subtree: true }));
+    });
+    await page.goto(base + '#/play'); await page.waitForFunction(() => window.__crown);
+    await page.evaluate(() => sessionStorage.setItem('crown-race', '1'));
+    await page.reload(); await page.waitForFunction(() => window.__crown);
+    const shown = await page.waitForSelector('[data-testid="current-rating"]', { timeout: 10_000 }).then(() => true, () => false);
+    return { label: labelOf(base), shown, hash: await page.evaluate(() => location.hash) };
+  } finally { await ctx.close().catch(() => {}); rmSync(dir, { recursive: true, force: true }); }
+}
+
+if (MODE === 'all' || MODE === 'race') {
+  const n = +opt('race-runs', 10);
+  const runs = await pool(n * URLS.length, Math.min(PARALLEL, 2), i => raceRun(URLS[i % URLS.length]));
+  report.race = runs;
+  for (const l of LABELS) {
+    const mine = runs.filter(r => r.label === l);
+    check(`R0 ${l}`, mine.every(r => r.shown && r.hash === '#/profile'), `navigation during the first render (${l}): the Career Passport is shown in ${mine.filter(r => r.shown).length}/${mine.length} runs`);
+  }
+}
 
 if (MODE === 'all' || MODE === 'reload') {
   console.log(`reload scenario: ${RUNS} runs per build (${LABELS.join(' / ')}), ${PARALLEL} in parallel, CPU throttling ${THROTTLES.join('/')}×`);
