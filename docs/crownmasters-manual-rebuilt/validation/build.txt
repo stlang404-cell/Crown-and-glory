@@ -1,0 +1,11 @@
+Fontconfig error: No writable cache directories
+Error producing PDF.
+! Undefined control sequence.
+l.127 \hypersetup
+
+Traceback (most recent call last):
+  File "/workspace/Crown-and-glory/docs/crownmasters-manual-rebuilt/source/build.py", line 142, in <module>
+    subprocess.run(['pandoc',str(R/'source/print.md'),'--resource-path='+str(R),'--pdf-engine=xelatex','--toc','--toc-depth=2','--top-level-division=chapter','-V','documentclass=report','-V','papersize=a4','-V','geometry:margin=20mm','-V','mainfont=DejaVu Serif','-V','sansfont=DejaVu Sans','-V','monofont=DejaVu Sans Mono','-V','fontsize=10pt','--include-in-header',str(R/'source/header.tex'),'-o',str(R/'Crownmasters-Manual.pdf')],check=True)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['pandoc', 'docs/crownmasters-manual-rebuilt/source/print.md', '--resource-path=docs/crownmasters-manual-rebuilt', '--pdf-engine=xelatex', '--toc', '--toc-depth=2', '--top-level-division=chapter', '-V', 'documentclass=report', '-V', 'papersize=a4', '-V', 'geometry:margin=20mm', '-V', 'mainfont=DejaVu Serif', '-V', 'sansfont=DejaVu Sans', '-V', 'monofont=DejaVu Sans Mono', '-V', 'fontsize=10pt', '--include-in-header', 'docs/crownmasters-manual-rebuilt/source/header.tex', '-o', 'docs/crownmasters-manual-rebuilt/Crownmasters-Manual.pdf']' returned non-zero exit status 43.
