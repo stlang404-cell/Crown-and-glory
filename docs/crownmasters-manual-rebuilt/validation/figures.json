@@ -1,0 +1,3714 @@
+[
+  {
+    "id": "01-1",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\ncaption: The starting position. Kings face each other on d1 and d6, queens on c1 and c6. Only ranks 3 and 4 lie between the pawns.\n```",
+    "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+    "caption": "The starting position. Kings face each other on d1 and d6, queens on c1 and c6. Only ranks 3 and 4 lie between the pawns.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "caption": "The starting position. Kings face each other on d1 and d6, queens on c1 and c6. Only ranks 3 and 4 lie between the pawns."
+    }
+  },
+  {
+    "id": "01-2",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Nd3 Nd4\nshow: after\ncaption: After 1. Nd3 Nd4. White's e1-knight jumped to d3; Black's e6-knight jumped to d4.\n```",
+    "fen": "rnqk1r/pppppp/3n2/3N2/PPPPPP/RNQK1R w - - 2 2",
+    "caption": "After 1. Nd3 Nd4. White's e1-knight jumped to d3; Black's e6-knight jumped to d4.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Nd3 Nd4",
+      "show": "after",
+      "caption": "After 1. Nd3 Nd4. White's e1-knight jumped to d3; Black's e6-knight jumped to d4."
+    }
+  },
+  {
+    "id": "01-3",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Nf3 c4\nshow: after\ncaption: Exercise 2 — the position after the two moves. Check your answer below.\n```",
+    "fen": "rnqknr/pp1ppp/2p3/5N/PPPPPP/RNQK1R w - - 0 2",
+    "caption": "Exercise 2 — the position after the two moves. Check your answer below.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Nf3 c4",
+      "show": "after",
+      "caption": "Exercise 2 — the position after the two moves. Check your answer below."
+    }
+  },
+  {
+    "id": "01-4",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/2n3/6/3R2/5K w - - 0 1\ncaption: Exercise 3 — name each piece and its square.\n```",
+    "fen": "k5/6/2n3/6/3R2/5K w - - 0 1",
+    "caption": "Exercise 3 — name each piece and its square.",
+    "fields": {
+      "fen": "k5/6/2n3/6/3R2/5K w - - 0 1",
+      "caption": "Exercise 3 — name each piece and its square."
+    }
+  },
+  {
+    "id": "01-5",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/6/2Q3/6/5K w - - 0 1\ncaption: The queen on c3 has 19 moves: 10 along the c-file and 3rd rank, and 9 along the two diagonals.\n```",
+    "fen": "k5/6/6/2Q3/6/5K w - - 0 1",
+    "caption": "The queen on c3 has 19 moves: 10 along the c-file and 3rd rank, and 9 along the two diagonals.",
+    "fields": {
+      "fen": "k5/6/6/2Q3/6/5K w - - 0 1",
+      "caption": "The queen on c3 has 19 moves: 10 along the c-file and 3rd rank, and 9 along the two diagonals."
+    }
+  },
+  {
+    "id": "01-6",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/6/2R3/6/5K w - - 0 1\ncaption: A rook on c3: 10 moves, exactly as on any other square of an empty board.\n```",
+    "fen": "k5/6/6/2R3/6/5K w - - 0 1",
+    "caption": "A rook on c3: 10 moves, exactly as on any other square of an empty board.",
+    "fields": {
+      "fen": "k5/6/6/2R3/6/5K w - - 0 1",
+      "caption": "A rook on c3: 10 moves, exactly as on any other square of an empty board."
+    }
+  },
+  {
+    "id": "01-7",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 4k1/6/6/6/6/Q4K w - - 0 1\ncaption: A queen in the corner a1 reaches 14 squares here (15 if her own king were not standing on f1).\n```",
+    "fen": "4k1/6/6/6/6/Q4K w - - 0 1",
+    "caption": "A queen in the corner a1 reaches 14 squares here (15 if her own king were not standing on f1).",
+    "fields": {
+      "fen": "4k1/6/6/6/6/Q4K w - - 0 1",
+      "caption": "A queen in the corner a1 reaches 14 squares here (15 if her own king were not standing on f1)."
+    }
+  },
+  {
+    "id": "01-8",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/1p2n1/6/2R1P1/5K w - - 0 1\ncaption: Worked example — count the rook's moves.\n```",
+    "fen": "k5/6/1p2n1/6/2R1P1/5K w - - 0 1",
+    "caption": "Worked example — count the rook's moves.",
+    "fields": {
+      "fen": "k5/6/1p2n1/6/2R1P1/5K w - - 0 1",
+      "caption": "Worked example — count the rook's moves."
+    }
+  },
+  {
+    "id": "01-9",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/1p2n1/6/2Q1P1/5K w - - 0 1\ncaption: Guided exercise — the queen on c2.\n```",
+    "fen": "k5/6/1p2n1/6/2Q1P1/5K w - - 0 1",
+    "caption": "Guided exercise — the queen on c2.",
+    "fields": {
+      "fen": "k5/6/1p2n1/6/2Q1P1/5K w - - 0 1",
+      "caption": "Guided exercise — the queen on c2."
+    }
+  },
+  {
+    "id": "01-10",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/1r4/6/6/K5 w - - 0 1\ncaption: Exercise 1 — the cornered king.\n```",
+    "fen": "k5/6/1r4/6/6/K5 w - - 0 1",
+    "caption": "Exercise 1 — the cornered king.",
+    "fields": {
+      "fen": "k5/6/1r4/6/6/K5 w - - 0 1",
+      "caption": "Exercise 1 — the cornered king."
+    }
+  },
+  {
+    "id": "01-11",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/6/2N3/6/5K w - - 0 1\ncaption: A knight on c3 has 8 moves: b1, d1, a2, e2, a4, e4, b5, d5. All are light squares; c3 is dark.\n```",
+    "fen": "k5/6/6/2N3/6/5K w - - 0 1",
+    "caption": "A knight on c3 has 8 moves: b1, d1, a2, e2, a4, e4, b5, d5. All are light squares; c3 is dark.",
+    "fields": {
+      "fen": "k5/6/6/2N3/6/5K w - - 0 1",
+      "caption": "A knight on c3 has 8 moves: b1, d1, a2, e2, a4, e4, b5, d5. All are light squares; c3 is dark."
+    }
+  },
+  {
+    "id": "01-12",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/6/6/6/N4K w - - 0 1\ncaption: The same knight in the corner a1 has only 2 moves: b3 and c2.\n```",
+    "fen": "k5/6/6/6/6/N4K w - - 0 1",
+    "caption": "The same knight in the corner a1 has only 2 moves: b3 and c2.",
+    "fields": {
+      "fen": "k5/6/6/6/6/N4K w - - 0 1",
+      "caption": "The same knight in the corner a1 has only 2 moves: b3 and c2."
+    }
+  },
+  {
+    "id": "01-13",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/6/2p3/1P1P2/6/5K w - - 0 1\ncaption: White pawns on b3 and d3, a Black pawn on c4.\n```",
+    "fen": "k5/6/2p3/1P1P2/6/5K w - - 0 1",
+    "caption": "White pawns on b3 and d3, a Black pawn on c4.",
+    "fields": {
+      "fen": "k5/6/2p3/1P1P2/6/5K w - - 0 1",
+      "caption": "White pawns on b3 and d3, a Black pawn on c4."
+    }
+  },
+  {
+    "id": "01-14",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1q1P1k/6/P5/6/K5 w - - 0 1\nline: d6=N+\nclaim: best d6=N+\ncaption: The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5.\n```",
+    "fen": "6/1q1P1k/6/P5/6/K5 w - - 0 1",
+    "caption": "The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5.",
+    "fields": {
+      "fen": "6/1q1P1k/6/P5/6/K5 w - - 0 1",
+      "line": "d6=N+",
+      "claim": "best d6=N+",
+      "caption": "The engine's choice is to promote to a knight with check, forking the king on f5 and the queen on b5."
+    }
+  },
+  {
+    "id": "01-15",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/4p1/6/3N2/6/5K w - - 0 1\ncaption: Worked example — the knight on d3.\n```",
+    "fen": "k5/4p1/6/3N2/6/5K w - - 0 1",
+    "caption": "Worked example — the knight on d3.",
+    "fields": {
+      "fen": "k5/4p1/6/3N2/6/5K w - - 0 1",
+      "caption": "Worked example — the knight on d3."
+    }
+  },
+  {
+    "id": "01-16",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: r2k2/p2n2/1p4/1P1Q2/P5/3K2 w - - 3 25\nclaim: puzzle pz-cfbmy9\ncaption: Academy puzzle pz-cfbmy9. White to move. Which Black piece is hanging?\n```",
+    "fen": "r2k2/p2n2/1p4/1P1Q2/P5/3K2 w - - 3 25",
+    "caption": "Academy puzzle pz-cfbmy9. White to move. Which Black piece is hanging?",
+    "fields": {
+      "fen": "r2k2/p2n2/1p4/1P1Q2/P5/3K2 w - - 3 25",
+      "claim": "puzzle pz-cfbmy9",
+      "caption": "Academy puzzle pz-cfbmy9. White to move. Which Black piece is hanging?"
+    }
+  },
+  {
+    "id": "01-17",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/2p3/3n2/1N4/6/3R1K w - - 0 1\ncaption: The knight on d4 is attacked twice (Nb3, Rd1) and defended once (pawn c5).\n```",
+    "fen": "5k/2p3/3n2/1N4/6/3R1K w - - 0 1",
+    "caption": "The knight on d4 is attacked twice (Nb3, Rd1) and defended once (pawn c5).",
+    "fields": {
+      "fen": "5k/2p3/3n2/1N4/6/3R1K w - - 0 1",
+      "caption": "The knight on d4 is attacked twice (Nb3, Rd1) and defended once (pawn c5)."
+    }
+  },
+  {
+    "id": "01-18",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/2p3/3n2/1N4/6/3R1K w - - 0 1\nline: Nxd4 cxd4 Rxd4\nshow: after\ncaption: Correct order: knight takes, pawn takes back, rook takes. White gave a knight and won a knight and a pawn.\n```",
+    "fen": "5k/6/3R2/6/6/5K b - - 0 2",
+    "caption": "Correct order: knight takes, pawn takes back, rook takes. White gave a knight and won a knight and a pawn.",
+    "fields": {
+      "fen": "5k/2p3/3n2/1N4/6/3R1K w - - 0 1",
+      "line": "Nxd4 cxd4 Rxd4",
+      "show": "after",
+      "caption": "Correct order: knight takes, pawn takes back, rook takes. White gave a knight and won a knight and a pawn."
+    }
+  },
+  {
+    "id": "01-19",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/2p3/3n2/1N4/6/3R1K w - - 0 1\nline: Rxd4 cxd4 Nxd4\nshow: after\ncaption: Wrong order: White gave a rook (5) and won only a knight and a pawn (about 4).\n```",
+    "fen": "5k/6/3N2/6/6/5K b - - 0 2",
+    "caption": "Wrong order: White gave a rook (5) and won only a knight and a pawn (about 4).",
+    "fields": {
+      "fen": "5k/2p3/3n2/1N4/6/3R1K w - - 0 1",
+      "line": "Rxd4 cxd4 Nxd4",
+      "show": "after",
+      "caption": "Wrong order: White gave a rook (5) and won only a knight and a pawn (about 4)."
+    }
+  },
+  {
+    "id": "01-20",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: q2k2/2n1p1/1Q1pr1/3N2/2PP1P/3K1R w - - 2 14\nclaim: puzzle pz-kqfffd\ncaption: Academy puzzle pz-kqfffd. White to move and win material.\n```",
+    "fen": "q2k2/2n1p1/1Q1pr1/3N2/2PP1P/3K1R w - - 2 14",
+    "caption": "Academy puzzle pz-kqfffd. White to move and win material.",
+    "fields": {
+      "fen": "q2k2/2n1p1/1Q1pr1/3N2/2PP1P/3K1R w - - 2 14",
+      "claim": "puzzle pz-kqfffd",
+      "caption": "Academy puzzle pz-kqfffd. White to move and win material."
+    }
+  },
+  {
+    "id": "01-21",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2Q3/6/p2n1p/P3k1/6/2K3 b - - 0 32\nclaim: puzzle pz-1u23ob3\ncaption: Academy puzzle pz-1u23ob3. Black to move. Is any White piece hanging?\n```",
+    "fen": "2Q3/6/p2n1p/P3k1/6/2K3 b - - 0 32",
+    "caption": "Academy puzzle pz-1u23ob3. Black to move. Is any White piece hanging?",
+    "fields": {
+      "fen": "2Q3/6/p2n1p/P3k1/6/2K3 b - - 0 32",
+      "claim": "puzzle pz-1u23ob3",
+      "caption": "Academy puzzle pz-1u23ob3. Black to move. Is any White piece hanging?"
+    }
+  },
+  {
+    "id": "01-22",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/r2n2/1p4/2p2P/P1Nr2/R3KR b - - 0 29\nclaim: puzzle pz-1xa5t37\ncaption: Exercise 1 (pz-1xa5t37). Black to move and win material.\n```",
+    "fen": "2k3/r2n2/1p4/2p2P/P1Nr2/R3KR b - - 0 29",
+    "caption": "Exercise 1 (pz-1xa5t37). Black to move and win material.",
+    "fields": {
+      "fen": "2k3/r2n2/1p4/2p2P/P1Nr2/R3KR b - - 0 29",
+      "claim": "puzzle pz-1xa5t37",
+      "caption": "Exercise 1 (pz-1xa5t37). Black to move and win material."
+    }
+  },
+  {
+    "id": "01-23",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2qr2/1r2kp/1R4/2p3/P1Q1PP/4KR b - - 2 16\nclaim: puzzle pz-1c8fjp0\ncaption: Exercise 2 (pz-1c8fjp0). Black to move and win material.\n```",
+    "fen": "2qr2/1r2kp/1R4/2p3/P1Q1PP/4KR b - - 2 16",
+    "caption": "Exercise 2 (pz-1c8fjp0). Black to move and win material.",
+    "fields": {
+      "fen": "2qr2/1r2kp/1R4/2p3/P1Q1PP/4KR b - - 2 16",
+      "claim": "puzzle pz-1c8fjp0",
+      "caption": "Exercise 2 (pz-1c8fjp0). Black to move and win material."
+    }
+  },
+  {
+    "id": "01-24",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 3k1r/p2q2/3Q1p/2PP1N/1rNK1P/6 w - - 0 19\nclaim: puzzle pz-ra3qk4\ncaption: Exercise 3 (pz-ra3qk4). White to move and win material.\n```",
+    "fen": "3k1r/p2q2/3Q1p/2PP1N/1rNK1P/6 w - - 0 19",
+    "caption": "Exercise 3 (pz-ra3qk4). White to move and win material.",
+    "fields": {
+      "fen": "3k1r/p2q2/3Q1p/2PP1N/1rNK1P/6 w - - 0 19",
+      "claim": "puzzle pz-ra3qk4",
+      "caption": "Exercise 3 (pz-ra3qk4). White to move and win material."
+    }
+  },
+  {
+    "id": "01-25",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1\nline: Rd5+\nshow: after\ncaption: Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available.\n```",
+    "fen": "5k/3r2/1N4/R5/2P1P1/3K2 w - - 1 2",
+    "caption": "Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available.",
+    "fields": {
+      "fen": "5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1",
+      "line": "Rd5+",
+      "show": "after",
+      "caption": "Black has just played Rd5+. White is in check from the rook on d5, and all three escapes are available."
+    }
+  },
+  {
+    "id": "01-26",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/q5/6/6/6/3K2 b - - 0 1\nline: Qd2+\nshow: after\ncaption: Black's queen has just checked from d2, right next to White's king.\n```",
+    "fen": "5k/6/6/6/3q2/3K2 w - - 1 2",
+    "caption": "Black's queen has just checked from d2, right next to White's king.",
+    "fields": {
+      "fen": "5k/q5/6/6/6/3K2 b - - 0 1",
+      "line": "Qd2+",
+      "show": "after",
+      "caption": "Black's queen has just checked from d2, right next to White's king."
+    }
+  },
+  {
+    "id": "01-27",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/q5/6/5n/6/3K2 b - - 0 1\nline: Qd2#\nclaim: checkmate\nshow: after\ncaption: The same queen check, but the knight on f3 now defends d2. The king cannot capture, cannot flee and cannot block. Checkmate.\n```",
+    "fen": "5k/6/6/5n/3q2/3K2 w - - 1 2",
+    "caption": "The same queen check, but the knight on f3 now defends d2. The king cannot capture, cannot flee and cannot block. Checkmate.",
+    "fields": {
+      "fen": "5k/q5/6/5n/6/3K2 b - - 0 1",
+      "line": "Qd2#",
+      "claim": "checkmate",
+      "show": "after",
+      "caption": "The same queen check, but the knight on f3 now defends d2. The king cannot capture, cannot flee and cannot block. Checkmate."
+    }
+  },
+  {
+    "id": "01-28",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/6/4n1/6/PPP3/1K4 b - - 0 1\nline: Nc3+\nshow: after\ncaption: Guided exercise. Black's knight has just checked from c3. List every legal move for White.\n```",
+    "fen": "5k/6/6/2n3/PPP3/1K4 w - - 1 2",
+    "caption": "Guided exercise. Black's knight has just checked from c3. List every legal move for White.",
+    "fields": {
+      "fen": "5k/6/4n1/6/PPP3/1K4 b - - 0 1",
+      "line": "Nc3+",
+      "show": "after",
+      "caption": "Guided exercise. Black's knight has just checked from c3. List every legal move for White."
+    }
+  },
+  {
+    "id": "01-29",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: q1k3/6/6/6/2PP2/2KR2 b - - 0 1\nline: Qa3+\nshow: after\ncaption: Exercise 1. After Black's Qa3+, how many legal moves does White have?\n```",
+    "fen": "2k3/6/6/q5/2PP2/2KR2 w - - 1 2",
+    "caption": "Exercise 1. After Black's Qa3+, how many legal moves does White have?",
+    "fields": {
+      "fen": "q1k3/6/6/6/2PP2/2KR2 b - - 0 1",
+      "line": "Qa3+",
+      "show": "after",
+      "caption": "Exercise 1. After Black's Qa3+, how many legal moves does White have?"
+    }
+  },
+  {
+    "id": "01-30",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: r4k/6/6/6/PP4/3K2 b - - 0 1\nline: Rd6+\nshow: after\ncaption: Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is Kd2 illegal?\n```",
+    "fen": "3r1k/6/6/6/PP4/3K2 w - - 1 2",
+    "caption": "Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is Kd2 illegal?",
+    "fields": {
+      "fen": "r4k/6/6/6/PP4/3K2 b - - 0 1",
+      "line": "Rd6+",
+      "show": "after",
+      "caption": "Exercise 2. After Black's Rd6+, list all of White's legal moves. Why is Kd2 illegal?"
+    }
+  },
+  {
+    "id": "01-31",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1\nline: Rd5+ Nd3\nshow: after\ncaption: Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?\n```",
+    "fen": "5k/3r2/6/R2N2/2P1P1/3K2 b - - 2 2",
+    "caption": "Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?",
+    "fields": {
+      "fen": "5k/4r1/1N4/R5/2P1P1/3K2 b - - 0 1",
+      "line": "Rd5+ Nd3",
+      "show": "after",
+      "caption": "Exercise 3. White blocked with Nd3 instead of capturing. Is Black's rook now attacking anything new? Is White's knight safe?"
+    }
+  },
+  {
+    "id": "01-32",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 3k2/6/3K2/6/6/Q5 w - - 0 1\nline: Qa6#\nclaim: mate-in-1\ncaption: King and queen mate. The kings face each other on d6 and d4; the queen checks along the 6th rank.\n```",
+    "fen": "3k2/6/3K2/6/6/Q5 w - - 0 1",
+    "caption": "King and queen mate. The kings face each other on d6 and d4; the queen checks along the 6th rank.",
+    "fields": {
+      "fen": "3k2/6/3K2/6/6/Q5 w - - 0 1",
+      "line": "Qa6#",
+      "claim": "mate-in-1",
+      "caption": "King and queen mate. The kings face each other on d6 and d4; the queen checks along the 6th rank."
+    }
+  },
+  {
+    "id": "01-33",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 1k4/6/1K4/3R2/6/6 w - - 0 1\nline: Rd6#\nclaim: only-mate-in-1\ncaption: King and rook mate, the same picture: the kings face each other on b6 and b4, and the rook checks along the edge.\n```",
+    "fen": "1k4/6/1K4/3R2/6/6 w - - 0 1",
+    "caption": "King and rook mate, the same picture: the kings face each other on b6 and b4, and the rook checks along the edge.",
+    "fields": {
+      "fen": "1k4/6/1K4/3R2/6/6 w - - 0 1",
+      "line": "Rd6#",
+      "claim": "only-mate-in-1",
+      "caption": "King and rook mate, the same picture: the kings face each other on b6 and b4, and the rook checks along the edge."
+    }
+  },
+  {
+    "id": "01-34",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/4Q1/1k4/6/2K3/6 w - - 0 1\nline: Qd5\nclaim: only-mate-in-3\ncaption: White mates in 3, and Qd5 (a knight's move from b4) is the only first move that does it. Proven by trying every defence.\n```",
+    "fen": "6/4Q1/1k4/6/2K3/6 w - - 0 1",
+    "caption": "White mates in 3, and Qd5 (a knight's move from b4) is the only first move that does it. Proven by trying every defence.",
+    "fields": {
+      "fen": "6/4Q1/1k4/6/2K3/6 w - - 0 1",
+      "line": "Qd5",
+      "claim": "only-mate-in-3",
+      "caption": "White mates in 3, and Qd5 (a knight's move from b4) is the only first move that does it. Proven by trying every defence."
+    }
+  },
+  {
+    "id": "01-35",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/3Q2/k5/6/2K3/6 w - - 0 1\nline: Kc3\nclaim: only-mate-in-2\ncaption: Mate in 2. The quiet king move Kc3 is the only move that forces it.\n```",
+    "fen": "6/3Q2/k5/6/2K3/6 w - - 0 1",
+    "caption": "Mate in 2. The quiet king move Kc3 is the only move that forces it.",
+    "fields": {
+      "fen": "6/3Q2/k5/6/2K3/6 w - - 0 1",
+      "line": "Kc3",
+      "claim": "only-mate-in-2",
+      "caption": "Mate in 2. The quiet king move Kc3 is the only move that forces it."
+    }
+  },
+  {
+    "id": "01-36",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/3Q2/6/k1K3/6/6 w - - 0 1\nline: Qa5#\nclaim: mate-in-1\ncaption: Mate in 1. Both Qa5# and Qb3# work here.\n```",
+    "fen": "6/3Q2/6/k1K3/6/6 w - - 0 1",
+    "caption": "Mate in 1. Both Qa5# and Qb3# work here.",
+    "fields": {
+      "fen": "6/3Q2/6/k1K3/6/6 w - - 0 1",
+      "line": "Qa5#",
+      "claim": "mate-in-1",
+      "caption": "Mate in 1. Both Qa5# and Qb3# work here."
+    }
+  },
+  {
+    "id": "01-37",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/2k3/6/6/Q2K2 w - - 0 1\nline: Kc2 Kb4 Qc3+ Ka4 Qe5 Kb4 Qd5 Ka4 Kc3 Ka3 Qa5#\nclaim: checkmate\ncaption: From the centre to mate in eleven half-moves: king up, queen boxes, king closes in, mate on the a-file.\n```",
+    "fen": "6/6/2k3/6/6/Q2K2 w - - 0 1",
+    "caption": "From the centre to mate in eleven half-moves: king up, queen boxes, king closes in, mate on the a-file.",
+    "fields": {
+      "fen": "6/6/2k3/6/6/Q2K2 w - - 0 1",
+      "line": "Kc2 Kb4 Qc3+ Ka4 Qe5 Kb4 Qd5 Ka4 Kc3 Ka3 Qa5#",
+      "claim": "checkmate",
+      "caption": "From the centre to mate in eleven half-moves: king up, queen boxes, king closes in, mate on the a-file."
+    }
+  },
+  {
+    "id": "01-38",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/3R2/1K4/6/6/6 w - - 0 1\nline: Rd3\nclaim: mate-in-2\ncaption: Mate in 2. The rook confines the king to the 6th rank; a waiting move along the d-file (Rd1, Rd2, Rd3 or Rd4) forces the king to b6, where Rd6 is mate.\n```",
+    "fen": "2k3/3R2/1K4/6/6/6 w - - 0 1",
+    "caption": "Mate in 2. The rook confines the king to the 6th rank; a waiting move along the d-file (Rd1, Rd2, Rd3 or Rd4) forces the king to b6, where Rd6 is mate.",
+    "fields": {
+      "fen": "2k3/3R2/1K4/6/6/6 w - - 0 1",
+      "line": "Rd3",
+      "claim": "mate-in-2",
+      "caption": "Mate in 2. The rook confines the king to the 6th rank; a waiting move along the d-file (Rd1, Rd2, Rd3 or Rd4) forces the king to b6, where Rd6 is mate."
+    }
+  },
+  {
+    "id": "01-39",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/2k3/6/6/R2K2 w - - 0 1\nline: Kc2 Kd4 Ra4+ Kc5 Kc3 Kd5 Rd4+ Kc5 Rd3 Kb5 Rd5+ Kc6 Kc4 Kb6 Kb4 Kc6 Rd3 Kb6 Rd6#\nclaim: checkmate\ncaption: A whole king-and-rook mate as the engine plays it: cut off, approach, check the king back, wait, and mate on the 6th rank.\n```",
+    "fen": "6/6/2k3/6/6/R2K2 w - - 0 1",
+    "caption": "A whole king-and-rook mate as the engine plays it: cut off, approach, check the king back, wait, and mate on the 6th rank.",
+    "fields": {
+      "fen": "6/6/2k3/6/6/R2K2 w - - 0 1",
+      "line": "Kc2 Kd4 Ra4+ Kc5 Kc3 Kd5 Rd4+ Kc5 Rd3 Kb5 Rd5+ Kc6 Kc4 Kb6 Kb4 Kc6 Rd3 Kb6 Rd6#",
+      "claim": "checkmate",
+      "caption": "A whole king-and-rook mate as the engine plays it: cut off, approach, check the king back, wait, and mate on the 6th rank."
+    }
+  },
+  {
+    "id": "01-40",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/R5/2K3/6/6/6 w - - 0 1\nline: Kd5 Kf5 Ra4 Kf6 Rf4#\nclaim: only-mate-in-3\ncaption: White mates in 3, and only the king move Kd5 achieves it. Proven exhaustively; the line shows the forced play.\n```",
+    "fen": "5k/R5/2K3/6/6/6 w - - 0 1",
+    "caption": "White mates in 3, and only the king move Kd5 achieves it. Proven exhaustively; the line shows the forced play.",
+    "fields": {
+      "fen": "5k/R5/2K3/6/6/6 w - - 0 1",
+      "line": "Kd5 Kf5 Ra4 Kf6 Rf4#",
+      "claim": "only-mate-in-3",
+      "caption": "White mates in 3, and only the king move Kd5 achieves it. Proven exhaustively; the line shows the forced play."
+    }
+  },
+  {
+    "id": "01-41",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 3R2/6/6/3K1k/6/6 w - - 0 1\nclaim: only-mate-in-1\ncaption: Guided exercise. White to move and mate in 1. There is only one way.\n```",
+    "fen": "3R2/6/6/3K1k/6/6 w - - 0 1",
+    "caption": "Guided exercise. White to move and mate in 1. There is only one way.",
+    "fields": {
+      "fen": "3R2/6/6/3K1k/6/6 w - - 0 1",
+      "claim": "only-mate-in-1",
+      "caption": "Guided exercise. White to move and mate in 1. There is only one way."
+    }
+  },
+  {
+    "id": "01-42",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/R5/6/4K1/6/4k1 w - - 0 1\nclaim: only-mate-in-1\ncaption: Exercise 1. Mate in 1.\n```",
+    "fen": "6/R5/6/4K1/6/4k1 w - - 0 1",
+    "caption": "Exercise 1. Mate in 1.",
+    "fields": {
+      "fen": "6/R5/6/4K1/6/4k1 w - - 0 1",
+      "claim": "only-mate-in-1",
+      "caption": "Exercise 1. Mate in 1."
+    }
+  },
+  {
+    "id": "01-43",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/2K2k/6/6/4Q1 w - - 0 1\nclaim: only-mate-in-2\ncaption: Exercise 2. King and queen: mate in 2. The first move is quiet.\n```",
+    "fen": "6/6/2K2k/6/6/4Q1 w - - 0 1",
+    "caption": "Exercise 2. King and queen: mate in 2. The first move is quiet.",
+    "fields": {
+      "fen": "6/6/2K2k/6/6/4Q1 w - - 0 1",
+      "claim": "only-mate-in-2",
+      "caption": "Exercise 2. King and queen: mate in 2. The first move is quiet."
+    }
+  },
+  {
+    "id": "01-44",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/3R2/k5/3K2/6 w - - 0 1\nclaim: only-mate-in-2\ncaption: Exercise 3. King and rook: mate in 2. The first move is quiet.\n```",
+    "fen": "6/6/3R2/k5/3K2/6 w - - 0 1",
+    "caption": "Exercise 3. King and rook: mate in 2. The first move is quiet.",
+    "fields": {
+      "fen": "6/6/3R2/k5/3K2/6 w - - 0 1",
+      "claim": "only-mate-in-2",
+      "caption": "Exercise 3. King and rook: mate in 2. The first move is quiet."
+    }
+  },
+  {
+    "id": "01-45",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1Q4/6/2K3/6/k5 w - - 0 1\nline: Qb3\nclaim: stalemate\ncaption: The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw.\n```",
+    "fen": "6/1Q4/6/2K3/6/k5 w - - 0 1",
+    "caption": "The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw.",
+    "fields": {
+      "fen": "6/1Q4/6/2K3/6/k5 w - - 0 1",
+      "line": "Qb3",
+      "claim": "stalemate",
+      "caption": "The trap. Qb3 looks like it tightens the net, but the Black king on a1 has no legal move and is not in check: stalemate, a draw."
+    }
+  },
+  {
+    "id": "01-46",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1Q4/6/2K3/6/k5 w - - 0 1\nline: Qb2#\nclaim: only-mate-in-1\ncaption: The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3.\n```",
+    "fen": "6/1Q4/6/2K3/6/k5 w - - 0 1",
+    "caption": "The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3.",
+    "fields": {
+      "fen": "6/1Q4/6/2K3/6/k5 w - - 0 1",
+      "line": "Qb2#",
+      "claim": "only-mate-in-1",
+      "caption": "The same position. Qb2# is the only mate: the queen stands next to the king, protected by White's king on c3."
+    }
+  },
+  {
+    "id": "01-47",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1r4/1P4/1K2Q1/6/5k b - - 0 1\nline: Rxb4+\nclaim: best Rxb4+\ncaption: Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook.\n```",
+    "fen": "6/1r4/1P4/1K2Q1/6/5k b - - 0 1",
+    "caption": "Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook.",
+    "fields": {
+      "fen": "6/1r4/1P4/1K2Q1/6/5k b - - 0 1",
+      "line": "Rxb4+",
+      "claim": "best Rxb4+",
+      "caption": "Black is a queen down, but the king on f1 has no legal move. The engine's choice: Rxb4+, offering the rook."
+    }
+  },
+  {
+    "id": "01-48",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1r4/1P4/1K2Q1/6/5k b - - 0 1\nline: Rxb4+ Kxb4\nclaim: stalemate\nshow: after\ncaption: If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking.\n```",
+    "fen": "6/6/1K4/4Q1/6/5k b - - 0 2",
+    "caption": "If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking.",
+    "fields": {
+      "fen": "6/1r4/1P4/1K2Q1/6/5k b - - 0 1",
+      "line": "Rxb4+ Kxb4",
+      "claim": "stalemate",
+      "show": "after",
+      "caption": "If White's king takes the rook, Black has no legal move and is not in check: stalemate. If the king walks away instead, the rook keeps checking."
+    }
+  },
+  {
+    "id": "01-49",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/2P3/2K3/6/6/6 b - - 0 1\nclaim: stalemate\ncaption: Black to move has no legal move. Stalemate.\n```",
+    "fen": "2k3/2P3/2K3/6/6/6 b - - 0 1",
+    "caption": "Black to move has no legal move. Stalemate.",
+    "fields": {
+      "fen": "2k3/2P3/2K3/6/6/6 b - - 0 1",
+      "claim": "stalemate",
+      "caption": "Black to move has no legal move. Stalemate."
+    }
+  },
+  {
+    "id": "01-50",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5Q/6/6/6/k5/2K3 w - - 0 1\nclaim: only-mate-in-1\ncaption: Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?\n```",
+    "fen": "5Q/6/6/6/k5/2K3 w - - 0 1",
+    "caption": "Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?",
+    "fields": {
+      "fen": "5Q/6/6/6/k5/2K3 w - - 0 1",
+      "claim": "only-mate-in-1",
+      "caption": "Guided exercise. White mates in 1. One natural queen move would stalemate instead. Which?"
+    }
+  },
+  {
+    "id": "01-51",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 3Q2/6/4K1/6/5k/6 w - - 0 1\nclaim: only-mate-in-3\ncaption: Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it.\n```",
+    "fen": "3Q2/6/4K1/6/5k/6 w - - 0 1",
+    "caption": "Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it.",
+    "fields": {
+      "fen": "3Q2/6/4K1/6/5k/6 w - - 0 1",
+      "claim": "only-mate-in-3",
+      "caption": "Exercise 1. Mate in 3. First find the queen move that stalemates at once, and avoid it."
+    }
+  },
+  {
+    "id": "01-52",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2K2k/1r4/4QP/6/6/6 b - - 0 1\nclaim: best Rc5+\ncaption: Exercise 2. Black is lost on material. Find the engine's saving idea.\n```",
+    "fen": "2K2k/1r4/4QP/6/6/6 b - - 0 1",
+    "caption": "Exercise 2. Black is lost on material. Find the engine's saving idea.",
+    "fields": {
+      "fen": "2K2k/1r4/4QP/6/6/6 b - - 0 1",
+      "claim": "best Rc5+",
+      "caption": "Exercise 2. Black is lost on material. Find the engine's saving idea."
+    }
+  },
+  {
+    "id": "01-53",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 4k1/3ppp/6/6/6/R2K2 w - - 0 1\nline: Ra6#\nclaim: only-mate-in-1\ncaption: Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank.\n```",
+    "fen": "4k1/3ppp/6/6/6/R2K2 w - - 0 1",
+    "caption": "Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank.",
+    "fields": {
+      "fen": "4k1/3ppp/6/6/6/R2K2 w - - 0 1",
+      "line": "Ra6#",
+      "claim": "only-mate-in-1",
+      "caption": "Back-rank mate. The Black king on e6 is walled in by its own pawns on d5, e5 and f5. Ra6 checks along the 6th rank."
+    }
+  },
+  {
+    "id": "01-54",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: K5/6/6/5k/1R4/R5 w - - 0 1\nline: Ra3+ Ke4 Rb4+ Ke5 Ra5+ Ke6 Rb6#\nclaim: checkmate\ncaption: The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated.\n```",
+    "fen": "K5/6/6/5k/1R4/R5 w - - 0 1",
+    "caption": "The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated.",
+    "fields": {
+      "fen": "K5/6/6/5k/1R4/R5 w - - 0 1",
+      "line": "Ra3+ Ke4 Rb4+ Ke5 Ra5+ Ke6 Rb6#",
+      "claim": "checkmate",
+      "caption": "The two-rook ladder. One rook guards a rank, the other checks on the next rank; then they swap roles. The king is pushed up to the 6th rank and mated."
+    }
+  },
+  {
+    "id": "01-55",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26\nclaim: puzzle pz-21w88z\ncaption: Academy puzzle pz-21w88z. Black to move. Free material and a mate.\n```",
+    "fen": "2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26",
+    "caption": "Academy puzzle pz-21w88z. Black to move. Free material and a mate.",
+    "fields": {
+      "fen": "2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26",
+      "claim": "puzzle pz-21w88z",
+      "caption": "Academy puzzle pz-21w88z. Black to move. Free material and a mate."
+    }
+  },
+  {
+    "id": "01-56",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26\nline: Rxc3 Ke1 Qxc2 e4 Qe2#\nclaim: mate-in-3\ncaption: Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown).\n```",
+    "fen": "2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26",
+    "caption": "Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown).",
+    "fields": {
+      "fen": "2k3/1p2p1/pPr1q1/P1Q1Pp/2P2P/3K1R b - - 0 26",
+      "line": "Rxc3 Ke1 Qxc2 e4 Qe2#",
+      "claim": "mate-in-3",
+      "caption": "Proof: after Rxc3, every White defence loses to Qxc2 and a queen mate (one line shown)."
+    }
+  },
+  {
+    "id": "01-57",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: k5/p3q1/P5/1PR2P/5K/6 w - - 0 32\nclaim: puzzle pz-1olai4r\ncaption: Academy puzzle pz-1olai4r. White to move and mate in 1.\n```",
+    "fen": "k5/p3q1/P5/1PR2P/5K/6 w - - 0 32",
+    "caption": "Academy puzzle pz-1olai4r. White to move and mate in 1.",
+    "fields": {
+      "fen": "k5/p3q1/P5/1PR2P/5K/6 w - - 0 32",
+      "claim": "puzzle pz-1olai4r",
+      "caption": "Academy puzzle pz-1olai4r. White to move and mate in 1."
+    }
+  },
+  {
+    "id": "01-58",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: r2k2/1R1p2/p1nN1r/5P/5K/4R1 w - - 0 20\nclaim: puzzle pz-ewndyc\ncaption: Exercise 1 (pz-ewndyc). White to move and mate in 1.\n```",
+    "fen": "r2k2/1R1p2/p1nN1r/5P/5K/4R1 w - - 0 20",
+    "caption": "Exercise 1 (pz-ewndyc). White to move and mate in 1.",
+    "fields": {
+      "fen": "r2k2/1R1p2/p1nN1r/5P/5K/4R1 w - - 0 20",
+      "claim": "puzzle pz-ewndyc",
+      "caption": "Exercise 1 (pz-ewndyc). White to move and mate in 1."
+    }
+  },
+  {
+    "id": "01-59",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: r2kn1/pR1p2/2PN1r/5P/5K/6 w - - 0 21\nclaim: puzzle pz-1lq92r\ncaption: Exercise 2 (pz-1lq92r). White to move and mate in 1.\n```",
+    "fen": "r2kn1/pR1p2/2PN1r/5P/5K/6 w - - 0 21",
+    "caption": "Exercise 2 (pz-1lq92r). White to move and mate in 1.",
+    "fields": {
+      "fen": "r2kn1/pR1p2/2PN1r/5P/5K/6 w - - 0 21",
+      "claim": "puzzle pz-1lq92r",
+      "caption": "Exercise 2 (pz-1lq92r). White to move and mate in 1."
+    }
+  },
+  {
+    "id": "01-60",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61\nclaim: puzzle pz-1muyn8j\ncaption: Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something.\n```",
+    "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+    "caption": "Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something.",
+    "fields": {
+      "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+      "claim": "puzzle pz-1muyn8j",
+      "caption": "Exercise 3 (pz-1muyn8j). White to move and mate in 3. Start by taking something."
+    }
+  },
+  {
+    "id": "01-61",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61\nline: Qxe4+ Kd6 Qd5#\nclaim: mate-in-3\ncaption: Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#.\n```",
+    "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+    "caption": "Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#.",
+    "fields": {
+      "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+      "line": "Qxe4+ Kd6 Qd5#",
+      "claim": "mate-in-3",
+      "caption": "Proof of the mate in 3, with one line: 1. Qxe4+ Kd6 2. Qd5#."
+    }
+  },
+  {
+    "id": "01-62",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: c3 f4 d3 c4 d4 exd4 Nf3 d3 b3 dxe2+ Kxe2\nshow: after\ncaption: A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it.\n```",
+    "fen": "rnqknr/pp1p2/2p2p/1PP2N/P3KP/RNQ2R b - - 0 6",
+    "caption": "A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "c3 f4 d3 c4 d4 exd4 Nf3 d3 b3 dxe2+ Kxe2",
+      "show": "after",
+      "caption": "A line the Academy engine likes from the start. Black's e-pawn captures on d4, steps to d3 and captures on e2 with check: one step from promotion on move 5. White must take it."
+    }
+  },
+  {
+    "id": "01-63",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/5k/1P4/6/5K w - - 0 1\nline: b4 Ke5 b5 Kd6 b6=Q+\nclaim: best b4\ncaption: White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's \"square\", so the pawn promotes.\n```",
+    "fen": "6/6/5k/1P4/6/5K w - - 0 1",
+    "caption": "White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's \"square\", so the pawn promotes.",
+    "fields": {
+      "fen": "6/6/5k/1P4/6/5K w - - 0 1",
+      "line": "b4 Ke5 b5 Kd6 b6=Q+",
+      "claim": "best b4",
+      "caption": "White to move. The pawn on b3 needs three moves. Black's king on f4 is outside the pawn's \"square\", so the pawn promotes."
+    }
+  },
+  {
+    "id": "01-64",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/6/5k/1P4/6/5K b - - 0 1\nline: Ke3 b4 Kd4 b5 Kc5 b6=Q+ Kxb6\nshow: after\ncaption: Black to move: the king enters the square with Ke3 and wins the pawn.\n```",
+    "fen": "1k4/6/6/6/6/5K w - - 0 5",
+    "caption": "Black to move: the king enters the square with Ke3 and wins the pawn.",
+    "fields": {
+      "fen": "6/6/5k/1P4/6/5K b - - 0 1",
+      "line": "Ke3 b4 Kd4 b5 Kc5 b6=Q+ Kxb6",
+      "show": "after",
+      "caption": "Black to move: the king enters the square with Ke3 and wins the pawn."
+    }
+  },
+  {
+    "id": "01-65",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1P4/k5/6/K5/6 w - - 0 1\nline: b6=Q\nclaim: stalemate\ncaption: The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate.\n```",
+    "fen": "6/1P4/k5/6/K5/6 w - - 0 1",
+    "caption": "The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate.",
+    "fields": {
+      "fen": "6/1P4/k5/6/K5/6 w - - 0 1",
+      "line": "b6=Q",
+      "claim": "stalemate",
+      "caption": "The careless promotion b6=Q leaves the Black king on a4 with no legal move: stalemate."
+    }
+  },
+  {
+    "id": "01-66",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/1P4/k5/6/K5/6 w - - 0 1\nline: b6=R\nclaim: best b6=R\ncaption: The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6).\n```",
+    "fen": "6/1P4/k5/6/K5/6 w - - 0 1",
+    "caption": "The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6).",
+    "fields": {
+      "fen": "6/1P4/k5/6/K5/6 w - - 0 1",
+      "line": "b6=R",
+      "claim": "best b6=R",
+      "caption": "The engine's choice is b6=R. The rook does not cover the diagonal a5–b6, so Black keeps a legal move, and king and rook win (Chapter 6)."
+    }
+  },
+  {
+    "id": "01-67",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5R/6/6/2p3/1k4/3K2 b - - 0 46\nclaim: puzzle pz-c0qvzm\ncaption: Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1.\n```",
+    "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+    "caption": "Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1.",
+    "fields": {
+      "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+      "claim": "puzzle pz-c0qvzm",
+      "caption": "Academy puzzle pz-c0qvzm. Black to move. The pawn on c3 is two steps from c1."
+    }
+  },
+  {
+    "id": "01-68",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/p3Pr/k5/4K1/6/6 w - - 0 33\nclaim: puzzle pz-12j3cmu\ncaption: Academy puzzle pz-12j3cmu. White to move and win.\n```",
+    "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+    "caption": "Academy puzzle pz-12j3cmu. White to move and win.",
+    "fields": {
+      "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+      "claim": "puzzle pz-12j3cmu",
+      "caption": "Academy puzzle pz-12j3cmu. White to move and win."
+    }
+  },
+  {
+    "id": "01-69",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 5k/6/1Pp1P1/2K3/p5/6 b - - 0 36\nclaim: puzzle pz-1cphbbp\ncaption: Exercise 1 (pz-1cphbbp). Black to move and win.\n```",
+    "fen": "5k/6/1Pp1P1/2K3/p5/6 b - - 0 36",
+    "caption": "Exercise 1 (pz-1cphbbp). Black to move and win.",
+    "fields": {
+      "fen": "5k/6/1Pp1P1/2K3/p5/6 b - - 0 36",
+      "claim": "puzzle pz-1cphbbp",
+      "caption": "Exercise 1 (pz-1cphbbp). Black to move and win."
+    }
+  },
+  {
+    "id": "01-70",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 6/rP2k1/3p1p/6/2N1P1/4K1 w - - 0 25\nclaim: puzzle pz-13ahfji\ncaption: Exercise 2 (pz-13ahfji). White to move and win.\n```",
+    "fen": "6/rP2k1/3p1p/6/2N1P1/4K1 w - - 0 25",
+    "caption": "Exercise 2 (pz-13ahfji). White to move and win.",
+    "fields": {
+      "fen": "6/rP2k1/3p1p/6/2N1P1/4K1 w - - 0 25",
+      "claim": "puzzle pz-13ahfji",
+      "caption": "Exercise 2 (pz-13ahfji). White to move and win."
+    }
+  },
+  {
+    "id": "01-71",
+    "file": "01-book-i-apprentice.md",
+    "block": "```crown\nfen: 3K2/2P3/3k2/6/2n3/6 w - - 0 52\nclaim: puzzle pz-1ftvz6i\ncaption: Exercise 3 (pz-1ftvz6i). White to move and win.\n```",
+    "fen": "3K2/2P3/3k2/6/2n3/6 w - - 0 52",
+    "caption": "Exercise 3 (pz-1ftvz6i). White to move and win.",
+    "fields": {
+      "fen": "3K2/2P3/3k2/6/2n3/6 w - - 0 52",
+      "claim": "puzzle pz-1ftvz6i",
+      "caption": "Exercise 3 (pz-1ftvz6i). White to move and win."
+    }
+  },
+  {
+    "id": "02-1",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k1r/rp1np1/p2P1p/P1R2P/1P1NPq/2KR2 w - - 0 17\nclaim: puzzle pz-11z7k92\ncaption: Academy puzzle pz-11z7k92. White to move. One knight jump attacks three pieces.\n```",
+    "fen": "3k1r/rp1np1/p2P1p/P1R2P/1P1NPq/2KR2 w - - 0 17",
+    "caption": "Academy puzzle pz-11z7k92. White to move. One knight jump attacks three pieces.",
+    "fields": {
+      "fen": "3k1r/rp1np1/p2P1p/P1R2P/1P1NPq/2KR2 w - - 0 17",
+      "claim": "puzzle pz-11z7k92",
+      "caption": "Academy puzzle pz-11z7k92. White to move. One knight jump attacks three pieces."
+    }
+  },
+  {
+    "id": "02-2",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2qk2/pppnpp/6/6/PPQ1P1/R2K1R b - - 0 1\nline: Ne3+\nclaim: best Ne3+\ncaption: The engine's choice. With White's d- and f-pawns gone, e3 is unguarded: Ne3+ forks the king on d1, the queen on c2 and the rook on f1.\n```",
+    "fen": "2qk2/pppnpp/6/6/PPQ1P1/R2K1R b - - 0 1",
+    "caption": "The engine's choice. With White's d- and f-pawns gone, e3 is unguarded: Ne3+ forks the king on d1, the queen on c2 and the rook on f1.",
+    "fields": {
+      "fen": "2qk2/pppnpp/6/6/PPQ1P1/R2K1R b - - 0 1",
+      "line": "Ne3+",
+      "claim": "best Ne3+",
+      "caption": "The engine's choice. With White's d- and f-pawns gone, e3 is unguarded: Ne3+ forks the king on d1, the queen on c2 and the rook on f1."
+    }
+  },
+  {
+    "id": "02-3",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/3p1r/1p3P/1n4/2Q1K1/r4R b - - 2 28\nclaim: puzzle pz-6vlr5l\ncaption: Academy puzzle pz-6vlr5l. Black to move. The knight on b3 is attacked by the queen.\n```",
+    "fen": "3k2/3p1r/1p3P/1n4/2Q1K1/r4R b - - 2 28",
+    "caption": "Academy puzzle pz-6vlr5l. Black to move. The knight on b3 is attacked by the queen.",
+    "fields": {
+      "fen": "3k2/3p1r/1p3P/1n4/2Q1K1/r4R b - - 2 28",
+      "claim": "puzzle pz-6vlr5l",
+      "caption": "Academy puzzle pz-6vlr5l. Black to move. The knight on b3 is attacked by the queen."
+    }
+  },
+  {
+    "id": "02-4",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 4k1/1r3p/6/P1QPq1/2K1P1/6 w - - 0 32\nclaim: puzzle pz-12a8lx9\ncaption: Academy puzzle pz-12a8lx9. White to move and win material with a queen fork.\n```",
+    "fen": "4k1/1r3p/6/P1QPq1/2K1P1/6 w - - 0 32",
+    "caption": "Academy puzzle pz-12a8lx9. White to move and win material with a queen fork.",
+    "fields": {
+      "fen": "4k1/1r3p/6/P1QPq1/2K1P1/6 w - - 0 32",
+      "claim": "puzzle pz-12a8lx9",
+      "caption": "Academy puzzle pz-12a8lx9. White to move and win material with a queen fork."
+    }
+  },
+  {
+    "id": "02-5",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 4n1/N3k1/P3p1/K3Pp/3r1P/6 w - - 0 25\nclaim: puzzle pz-1tc3h8s\ncaption: Exercise 1 (pz-1tc3h8s). White to move and win material.\n```",
+    "fen": "4n1/N3k1/P3p1/K3Pp/3r1P/6 w - - 0 25",
+    "caption": "Exercise 1 (pz-1tc3h8s). White to move and win material.",
+    "fields": {
+      "fen": "4n1/N3k1/P3p1/K3Pp/3r1P/6 w - - 0 25",
+      "claim": "puzzle pz-1tc3h8s",
+      "caption": "Exercise 1 (pz-1tc3h8s). White to move and win material."
+    }
+  },
+  {
+    "id": "02-6",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2qk1r/2nn1p/rp1P2/P1pp2/Q1P2P/RNK1NR b - - 0 11\nclaim: puzzle pz-vdu64q\ncaption: Exercise 2 (pz-vdu64q). Black to move. Even a pawn can fork.\n```",
+    "fen": "2qk1r/2nn1p/rp1P2/P1pp2/Q1P2P/RNK1NR b - - 0 11",
+    "caption": "Exercise 2 (pz-vdu64q). Black to move. Even a pawn can fork.",
+    "fields": {
+      "fen": "2qk1r/2nn1p/rp1P2/P1pp2/Q1P2P/RNK1NR b - - 0 11",
+      "claim": "puzzle pz-vdu64q",
+      "caption": "Exercise 2 (pz-vdu64q). Black to move. Even a pawn can fork."
+    }
+  },
+  {
+    "id": "02-7",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2Q3/4k1/3ppp/N2n2/P1KPq1/R2R2 b - - 0 21\nclaim: puzzle pz-5popuw\ncaption: Exercise 3 (pz-5popuw). Black to move and win material.\n```",
+    "fen": "2Q3/4k1/3ppp/N2n2/P1KPq1/R2R2 b - - 0 21",
+    "caption": "Exercise 3 (pz-5popuw). Black to move and win material.",
+    "fields": {
+      "fen": "2Q3/4k1/3ppp/N2n2/P1KPq1/R2R2 b - - 0 21",
+      "claim": "puzzle pz-5popuw",
+      "caption": "Exercise 3 (pz-5popuw). Black to move and win material."
+    }
+  },
+  {
+    "id": "02-8",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/p2n1p/6/2P3/6/3R1K w - - 0 1\nline: c4\nclaim: best c4\ncaption: The engine's choice. The knight on d5 is pinned to the king on d6 by the rook on d1. c3-c4 attacks it with a pawn.\n```",
+    "fen": "3k2/p2n1p/6/2P3/6/3R1K w - - 0 1",
+    "caption": "The engine's choice. The knight on d5 is pinned to the king on d6 by the rook on d1. c3-c4 attacks it with a pawn.",
+    "fields": {
+      "fen": "3k2/p2n1p/6/2P3/6/3R1K w - - 0 1",
+      "line": "c4",
+      "claim": "best c4",
+      "caption": "The engine's choice. The knight on d5 is pinned to the king on d6 by the rook on d1. c3-c4 attacks it with a pawn."
+    }
+  },
+  {
+    "id": "02-9",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1k2r1/p4p/Ppr3/6/4NP/R3KR b - - 0 19\nclaim: puzzle pz-1tnry0q\ncaption: Academy puzzle pz-1tnry0q. Black to move and win material.\n```",
+    "fen": "1k2r1/p4p/Ppr3/6/4NP/R3KR b - - 0 19",
+    "caption": "Academy puzzle pz-1tnry0q. Black to move and win material.",
+    "fields": {
+      "fen": "1k2r1/p4p/Ppr3/6/4NP/R3KR b - - 0 19",
+      "claim": "puzzle pz-1tnry0q",
+      "caption": "Academy puzzle pz-1tnry0q. Black to move and win material."
+    }
+  },
+  {
+    "id": "02-10",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/1p3p/3q2/6/4KP/R5 w - - 0 1\nline: Rd1\nclaim: best Rd1\ncaption: Guided exercise. White to move. The engine's choice wins the queen. Find it.\n```",
+    "fen": "3k2/1p3p/3q2/6/4KP/R5 w - - 0 1",
+    "caption": "Guided exercise. White to move. The engine's choice wins the queen. Find it.",
+    "fields": {
+      "fen": "3k2/1p3p/3q2/6/4KP/R5 w - - 0 1",
+      "line": "Rd1",
+      "claim": "best Rd1",
+      "caption": "Guided exercise. White to move. The engine's choice wins the queen. Find it."
+    }
+  },
+  {
+    "id": "02-11",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2r2r/p2k1p/p2ppQ/P2q2/1P1N1P/1R1K1R b - - 1 14\nclaim: puzzle pz-rs9hk9\ncaption: Exercise 1 (pz-rs9hk9). Black to move and win material. Look for a pinned White piece.\n```",
+    "fen": "2r2r/p2k1p/p2ppQ/P2q2/1P1N1P/1R1K1R b - - 1 14",
+    "caption": "Exercise 1 (pz-rs9hk9). Black to move and win material. Look for a pinned White piece.",
+    "fields": {
+      "fen": "2r2r/p2k1p/p2ppQ/P2q2/1P1N1P/1R1K1R b - - 1 14",
+      "claim": "puzzle pz-rs9hk9",
+      "caption": "Exercise 1 (pz-rs9hk9). Black to move and win material. Look for a pinned White piece."
+    }
+  },
+  {
+    "id": "02-12",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 5r/Nknn1p/1p3P/3RP1/2P1K1/6 w - - 0 24\nclaim: puzzle pz-1djzh9p\ncaption: Exercise 2 (pz-1djzh9p). White to move. A capture that also creates a pin.\n```",
+    "fen": "5r/Nknn1p/1p3P/3RP1/2P1K1/6 w - - 0 24",
+    "caption": "Exercise 2 (pz-1djzh9p). White to move. A capture that also creates a pin.",
+    "fields": {
+      "fen": "5r/Nknn1p/1p3P/3RP1/2P1K1/6 w - - 0 24",
+      "claim": "puzzle pz-1djzh9p",
+      "caption": "Exercise 2 (pz-1djzh9p). White to move. A capture that also creates a pin."
+    }
+  },
+  {
+    "id": "02-13",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/p2n1p/6/2P3/6/3R1K w - - 0 1\nline: c4 Kc5\nshow: after\ncaption: Exercise 3. After 1. c4 Black tries 1...Kc5, attacking the pawn and unpinning the knight. What should White play, and why does the knight still fall?\n```",
+    "fen": "6/p1kn1p/2P3/6/6/3R1K w - - 1 2",
+    "caption": "Exercise 3. After 1. c4 Black tries 1...Kc5, attacking the pawn and unpinning the knight. What should White play, and why does the knight still fall?",
+    "fields": {
+      "fen": "3k2/p2n1p/6/2P3/6/3R1K w - - 0 1",
+      "line": "c4 Kc5",
+      "show": "after",
+      "caption": "Exercise 3. After 1. c4 Black tries 1...Kc5, attacking the pawn and unpinning the knight. What should White play, and why does the knight still fall?"
+    }
+  },
+  {
+    "id": "02-14",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23\nclaim: puzzle pz-qn6wq1\ncaption: Academy puzzle pz-qn6wq1. Black to move. King and rook share the 1st rank.\n```",
+    "fen": "6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23",
+    "caption": "Academy puzzle pz-qn6wq1. Black to move. King and rook share the 1st rank.",
+    "fields": {
+      "fen": "6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23",
+      "claim": "puzzle pz-qn6wq1",
+      "caption": "Academy puzzle pz-qn6wq1. Black to move. King and rook share the 1st rank."
+    }
+  },
+  {
+    "id": "02-15",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1Q4/6/6/1Kp1p1/4k1/2r3 b - - 0 61\nclaim: puzzle pz-1jx5lpm\ncaption: Academy puzzle pz-1jx5lpm. Black to move. Black has only a rook and two pawns against a queen.\n```",
+    "fen": "1Q4/6/6/1Kp1p1/4k1/2r3 b - - 0 61",
+    "caption": "Academy puzzle pz-1jx5lpm. Black to move. Black has only a rook and two pawns against a queen.",
+    "fields": {
+      "fen": "1Q4/6/6/1Kp1p1/4k1/2r3 b - - 0 61",
+      "claim": "puzzle pz-1jx5lpm",
+      "caption": "Academy puzzle pz-1jx5lpm. Black to move. Black has only a rook and two pawns against a queen."
+    }
+  },
+  {
+    "id": "02-16",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 4q1/Q4p/2k3/6/6/5K w - - 0 1\nline: Qa2+\nclaim: best Qa2+\ncaption: Guided exercise. White to move. The engine's choice is a diagonal skewer. Only a queen can do this here.\n```",
+    "fen": "4q1/Q4p/2k3/6/6/5K w - - 0 1",
+    "caption": "Guided exercise. White to move. The engine's choice is a diagonal skewer. Only a queen can do this here.",
+    "fields": {
+      "fen": "4q1/Q4p/2k3/6/6/5K w - - 0 1",
+      "line": "Qa2+",
+      "claim": "best Qa2+",
+      "caption": "Guided exercise. White to move. The engine's choice is a diagonal skewer. Only a queen can do this here."
+    }
+  },
+  {
+    "id": "02-17",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r2kn1/5q/1pP1R1/6/2P1K1/RN3r w - - 0 16\nclaim: puzzle pz-rgmywv\ncaption: Exercise 1 (pz-rgmywv). White to move. Two checks in a row.\n```",
+    "fen": "r2kn1/5q/1pP1R1/6/2P1K1/RN3r w - - 0 16",
+    "caption": "Exercise 1 (pz-rgmywv). White to move. Two checks in a row.",
+    "fields": {
+      "fen": "r2kn1/5q/1pP1R1/6/2P1K1/RN3r w - - 0 16",
+      "claim": "puzzle pz-rgmywv",
+      "caption": "Exercise 1 (pz-rgmywv). White to move. Two checks in a row."
+    }
+  },
+  {
+    "id": "02-18",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/2k3/3p2/2n1pP/r1R1P1/2K2R b - - 2 24\nclaim: puzzle pz-w6ajb8\ncaption: Exercise 2 (pz-w6ajb8). Black to move and win material.\n```",
+    "fen": "6/2k3/3p2/2n1pP/r1R1P1/2K2R b - - 2 24",
+    "caption": "Exercise 2 (pz-w6ajb8). Black to move and win material.",
+    "fields": {
+      "fen": "6/2k3/3p2/2n1pP/r1R1P1/2K2R b - - 2 24",
+      "claim": "puzzle pz-w6ajb8",
+      "caption": "Exercise 2 (pz-w6ajb8). Black to move and win material."
+    }
+  },
+  {
+    "id": "02-19",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: R5/6/4k1/6/K5/4q1 w - - 0 1\nclaim: best Re6+\ncaption: Exercise 3. White to move. The engine's choice wins the queen.\n```",
+    "fen": "R5/6/4k1/6/K5/4q1 w - - 0 1",
+    "caption": "Exercise 3. White to move. The engine's choice wins the queen.",
+    "fields": {
+      "fen": "R5/6/4k1/6/K5/4q1 w - - 0 1",
+      "claim": "best Re6+",
+      "caption": "Exercise 3. White to move. The engine's choice wins the queen."
+    }
+  },
+  {
+    "id": "02-20",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20\nclaim: puzzle pz-ephpsb\ncaption: Academy puzzle pz-ephpsb. White to move. The knight on b1 blocks White's own rook.\n```",
+    "fen": "6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20",
+    "caption": "Academy puzzle pz-ephpsb. White to move. The knight on b1 blocks White's own rook.",
+    "fields": {
+      "fen": "6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20",
+      "claim": "puzzle pz-ephpsb",
+      "caption": "Academy puzzle pz-ephpsb. White to move. The knight on b1 blocks White's own rook."
+    }
+  },
+  {
+    "id": "02-21",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rn1k2/p1Nq2/3p2/QP3r/2PP1P/R2K2 w - - 1 13\nclaim: puzzle pz-10qk93h\ncaption: Academy puzzle pz-10qk93h. White to move. The knight on c5 is attacked by the queen on d5.\n```",
+    "fen": "rn1k2/p1Nq2/3p2/QP3r/2PP1P/R2K2 w - - 1 13",
+    "caption": "Academy puzzle pz-10qk93h. White to move. The knight on c5 is attacked by the queen on d5.",
+    "fields": {
+      "fen": "rn1k2/p1Nq2/3p2/QP3r/2PP1P/R2K2 w - - 1 13",
+      "claim": "puzzle pz-10qk93h",
+      "caption": "Academy puzzle pz-10qk93h. White to move. The knight on c5 is attacked by the queen on d5."
+    }
+  },
+  {
+    "id": "02-22",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8\nclaim: puzzle pz-p05pjm\ncaption: Academy puzzle pz-p05pjm. Black to move. The knight on d5 blocks Black's queen.\n```",
+    "fen": "r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8",
+    "caption": "Academy puzzle pz-p05pjm. Black to move. The knight on d5 blocks Black's queen.",
+    "fields": {
+      "fen": "r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8",
+      "claim": "puzzle pz-p05pjm",
+      "caption": "Academy puzzle pz-p05pjm. Black to move. The knight on d5 blocks Black's queen."
+    }
+  },
+  {
+    "id": "02-23",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/6/1q4/3N2/6/3R1K w - - 0 1\nclaim: best Nxb4+\ncaption: Exercise 1. White to move. The engine's choice is a discovered check.\n```",
+    "fen": "3k2/6/1q4/3N2/6/3R1K w - - 0 1",
+    "caption": "Exercise 1. White to move. The engine's choice is a discovered check.",
+    "fields": {
+      "fen": "3k2/6/1q4/3N2/6/3R1K w - - 0 1",
+      "claim": "best Nxb4+",
+      "caption": "Exercise 1. White to move. The engine's choice is a discovered check."
+    }
+  },
+  {
+    "id": "02-24",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9\nclaim: puzzle pz-1gfzv5k\ncaption: Exercise 2 (pz-1gfzv5k). Black to move. Find the only move that holds.\n```",
+    "fen": "r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9",
+    "caption": "Exercise 2 (pz-1gfzv5k). Black to move. Find the only move that holds.",
+    "fields": {
+      "fen": "r1q1kr/pn1ppp/R5/2PP2/1PNN1P/2QK1R b - - 0 9",
+      "claim": "puzzle pz-1gfzv5k",
+      "caption": "Exercise 2 (pz-1gfzv5k). Black to move. Find the only move that holds."
+    }
+  },
+  {
+    "id": "02-25",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/1QPq1p/3p1k/1p1P2/5P/5K w - - 1 22\nclaim: puzzle pz-1tmu932\ncaption: Exercise 3 (pz-1tmu932). White to move. A pawn is the front piece.\n```",
+    "fen": "6/1QPq1p/3p1k/1p1P2/5P/5K w - - 1 22",
+    "caption": "Exercise 3 (pz-1tmu932). White to move. A pawn is the front piece.",
+    "fields": {
+      "fen": "6/1QPq1p/3p1k/1p1P2/5P/5K w - - 1 22",
+      "claim": "puzzle pz-1tmu932",
+      "caption": "Exercise 3 (pz-1tmu932). White to move. A pawn is the front piece."
+    }
+  },
+  {
+    "id": "02-26",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2rk2/5p/p4n/P1N3/RPr2P/3K1R b - - 6 17\nclaim: puzzle pz-19qx3hv\ncaption: Academy puzzle pz-19qx3hv. Black to move. The rook on a2 is defended by the knight on c3.\n```",
+    "fen": "2rk2/5p/p4n/P1N3/RPr2P/3K1R b - - 6 17",
+    "caption": "Academy puzzle pz-19qx3hv. Black to move. The rook on a2 is defended by the knight on c3.",
+    "fields": {
+      "fen": "2rk2/5p/p4n/P1N3/RPr2P/3K1R b - - 6 17",
+      "claim": "puzzle pz-19qx3hv",
+      "caption": "Academy puzzle pz-19qx3hv. Black to move. The rook on a2 is defended by the knight on c3."
+    }
+  },
+  {
+    "id": "02-27",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1r2k1/3ppp/6/6/1n2PP/1RR1K1 w - - 0 1\nline: Rxb2\nclaim: best Rxb2\ncaption: The engine's choice. The rook on b6 defends the knight on b2 and also guards the 6th rank against a back-rank mate.\n```",
+    "fen": "1r2k1/3ppp/6/6/1n2PP/1RR1K1 w - - 0 1",
+    "caption": "The engine's choice. The rook on b6 defends the knight on b2 and also guards the 6th rank against a back-rank mate.",
+    "fields": {
+      "fen": "1r2k1/3ppp/6/6/1n2PP/1RR1K1 w - - 0 1",
+      "line": "Rxb2",
+      "claim": "best Rxb2",
+      "caption": "The engine's choice. The rook on b6 defends the knight on b2 and also guards the 6th rank against a back-rank mate."
+    }
+  },
+  {
+    "id": "02-28",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1r2k1/3ppp/6/6/1n2PP/1RR1K1 w - - 0 1\nline: Rxb2 Rxb2 Rc6#\nclaim: checkmate\nshow: after\ncaption: If Black recaptures, the 6th rank is unguarded and Rc6 is mate: the king on e6 is walled in by its own pawns.\n```",
+    "fen": "2R1k1/3ppp/6/6/1r2PP/4K1 b - - 1 2",
+    "caption": "If Black recaptures, the 6th rank is unguarded and Rc6 is mate: the king on e6 is walled in by its own pawns.",
+    "fields": {
+      "fen": "1r2k1/3ppp/6/6/1n2PP/1RR1K1 w - - 0 1",
+      "line": "Rxb2 Rxb2 Rc6#",
+      "claim": "checkmate",
+      "show": "after",
+      "caption": "If Black recaptures, the 6th rank is unguarded and Rc6 is mate: the king on e6 is walled in by its own pawns."
+    }
+  },
+  {
+    "id": "02-29",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1n1knQ/5R/1q4/1p4/4K1/6 w - - 0 16\nclaim: puzzle pz-e6r29g\ncaption: Academy puzzle pz-e6r29g. White to move. The knight on e6 is defended only by the king.\n```",
+    "fen": "1n1knQ/5R/1q4/1p4/4K1/6 w - - 0 16",
+    "caption": "Academy puzzle pz-e6r29g. White to move. The knight on e6 is defended only by the king.",
+    "fields": {
+      "fen": "1n1knQ/5R/1q4/1p4/4K1/6 w - - 0 16",
+      "claim": "puzzle pz-e6r29g",
+      "caption": "Academy puzzle pz-e6r29g. White to move. The knight on e6 is defended only by the king."
+    }
+  },
+  {
+    "id": "02-30",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/6/3p2/2p1P1/r5/2R2K w - - 0 27\nline: exd4\nclaim: best exd4\ncaption: Guided exercise. White to move. The engine's choice wins the c3-pawn safely. Why not 1. Rxc3 at once?\n```",
+    "fen": "3k2/6/3p2/2p1P1/r5/2R2K w - - 0 27",
+    "caption": "Guided exercise. White to move. The engine's choice wins the c3-pawn safely. Why not 1. Rxc3 at once?",
+    "fields": {
+      "fen": "3k2/6/3p2/2p1P1/r5/2R2K w - - 0 27",
+      "line": "exd4",
+      "claim": "best exd4",
+      "caption": "Guided exercise. White to move. The engine's choice wins the c3-pawn safely. Why not 1. Rxc3 at once?"
+    }
+  },
+  {
+    "id": "02-31",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1k1rr1/pp2N1/6/6/PPP3/1K2R1 b - - 0 1\nclaim: best Rxe5\ncaption: Exercise 1. Black to move. The engine's choice exploits an overloaded White rook.\n```",
+    "fen": "1k1rr1/pp2N1/6/6/PPP3/1K2R1 b - - 0 1",
+    "caption": "Exercise 1. Black to move. The engine's choice exploits an overloaded White rook.",
+    "fields": {
+      "fen": "1k1rr1/pp2N1/6/6/PPP3/1K2R1 b - - 0 1",
+      "claim": "best Rxe5",
+      "caption": "Exercise 1. Black to move. The engine's choice exploits an overloaded White rook."
+    }
+  },
+  {
+    "id": "02-32",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r2knr/2qp1p/p5/N3QP/PP1K2/R3R1 w - - 1 14\nclaim: puzzle pz-40ozeh\ncaption: Exercise 2 (pz-40ozeh). White to move. The knight on e6 is defended by the king. Chase the defender.\n```",
+    "fen": "r2knr/2qp1p/p5/N3QP/PP1K2/R3R1 w - - 1 14",
+    "caption": "Exercise 2 (pz-40ozeh). White to move. The knight on e6 is defended by the king. Chase the defender.",
+    "fields": {
+      "fen": "r2knr/2qp1p/p5/N3QP/PP1K2/R3R1 w - - 1 14",
+      "claim": "puzzle pz-40ozeh",
+      "caption": "Exercise 2 (pz-40ozeh). White to move. The knight on e6 is defended by the king. Chase the defender."
+    }
+  },
+  {
+    "id": "02-33",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2rkn1/q5/1r4/2Q2p/1P1N1P/3KR1 w - - 0 15\nclaim: puzzle pz-11cihvv\ncaption: Exercise 3 (pz-11cihvv). White to move. White's queen is attacked by the rook on c6. Find the only move that holds.\n```",
+    "fen": "2rkn1/q5/1r4/2Q2p/1P1N1P/3KR1 w - - 0 15",
+    "caption": "Exercise 3 (pz-11cihvv). White to move. White's queen is attacked by the rook on c6. Find the only move that holds.",
+    "fields": {
+      "fen": "2rkn1/q5/1r4/2Q2p/1P1N1P/3KR1 w - - 0 15",
+      "claim": "puzzle pz-11cihvv",
+      "caption": "Exercise 3 (pz-11cihvv). White to move. White's queen is attacked by the rook on c6. Find the only move that holds."
+    }
+  },
+  {
+    "id": "02-34",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1k1rr1/pp2N1/6/6/PPP3/1K2R1 b - - 0 1\nline: Rxe5 Rxe5 Rd1#\nclaim: checkmate\nshow: after\ncaption: Exercise 1, the punishment if White recaptures.\n```",
+    "fen": "1k4/pp2R1/6/6/PPP3/1K1r2 w - - 1 3",
+    "caption": "Exercise 1, the punishment if White recaptures.",
+    "fields": {
+      "fen": "1k1rr1/pp2N1/6/6/PPP3/1K2R1 b - - 0 1",
+      "line": "Rxe5 Rxe5 Rd1#",
+      "claim": "checkmate",
+      "show": "after",
+      "caption": "Exercise 1, the punishment if White recaptures."
+    }
+  },
+  {
+    "id": "02-35",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2qkr1/2pn2/3p1n/Np1P1P/1P1Q1R/2K1N1 b - - 0 14\nclaim: puzzle pz-uyo7nn\ncaption: Academy puzzle pz-uyo7nn. Black to move. A knight on d3 would attack the king on c1, but the White queen on d2 is not on one of its squares.\n```",
+    "fen": "2qkr1/2pn2/3p1n/Np1P1P/1P1Q1R/2K1N1 b - - 0 14",
+    "caption": "Academy puzzle pz-uyo7nn. Black to move. A knight on d3 would attack the king on c1, but the White queen on d2 is not on one of its squares.",
+    "fields": {
+      "fen": "2qkr1/2pn2/3p1n/Np1P1P/1P1Q1R/2K1N1 b - - 0 14",
+      "claim": "puzzle pz-uyo7nn",
+      "caption": "Academy puzzle pz-uyo7nn. Black to move. A knight on d3 would attack the king on c1, but the White queen on d2 is not on one of its squares."
+    }
+  },
+  {
+    "id": "02-36",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rn3R/4k1/p5/6/1PKN2/6 w - - 2 25\nclaim: puzzle pz-1ng565a\ncaption: Academy puzzle pz-1ng565a. White to move. Rook and knight against rook and knight.\n```",
+    "fen": "rn3R/4k1/p5/6/1PKN2/6 w - - 2 25",
+    "caption": "Academy puzzle pz-1ng565a. White to move. Rook and knight against rook and knight.",
+    "fields": {
+      "fen": "rn3R/4k1/p5/6/1PKN2/6 w - - 2 25",
+      "claim": "puzzle pz-1ng565a",
+      "caption": "Academy puzzle pz-1ng565a. White to move. Rook and knight against rook and knight."
+    }
+  },
+  {
+    "id": "02-37",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r5/1N2k1/pP1qp1/P3np/Q1P2P/R3K1 b - - 0 21\nclaim: puzzle pz-m2gpo4\ncaption: Academy puzzle pz-m2gpo4. Black to move. Which White piece guards the rook on a1?\n```",
+    "fen": "r5/1N2k1/pP1qp1/P3np/Q1P2P/R3K1 b - - 0 21",
+    "caption": "Academy puzzle pz-m2gpo4. Black to move. Which White piece guards the rook on a1?",
+    "fields": {
+      "fen": "r5/1N2k1/pP1qp1/P3np/Q1P2P/R3K1 b - - 0 21",
+      "claim": "puzzle pz-m2gpo4",
+      "caption": "Academy puzzle pz-m2gpo4. Black to move. Which White piece guards the rook on a1?"
+    }
+  },
+  {
+    "id": "02-38",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r2kn1/p5/3qR1/2N2p/1r1N1P/R2K2 w - - 0 17\nclaim: puzzle pz-1f5g8cf\ncaption: Exercise 1 (pz-1f5g8cf). White to move. Start with a capture, then look for a knight fork.\n```",
+    "fen": "r2kn1/p5/3qR1/2N2p/1r1N1P/R2K2 w - - 0 17",
+    "caption": "Exercise 1 (pz-1f5g8cf). White to move. Start with a capture, then look for a knight fork.",
+    "fields": {
+      "fen": "r2kn1/p5/3qR1/2N2p/1r1N1P/R2K2 w - - 0 17",
+      "claim": "puzzle pz-1f5g8cf",
+      "caption": "Exercise 1 (pz-1f5g8cf). White to move. Start with a capture, then look for a knight fork."
+    }
+  },
+  {
+    "id": "02-39",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rnq3/p3k1/2Prp1/PP1n2/2NN2/R2K1R w - - 0 14\nclaim: puzzle pz-mmr0yt\ncaption: Exercise 2 (pz-mmr0yt, difficulty 4). White to move. Find the only move that holds. Lure the king.\n```",
+    "fen": "rnq3/p3k1/2Prp1/PP1n2/2NN2/R2K1R w - - 0 14",
+    "caption": "Exercise 2 (pz-mmr0yt, difficulty 4). White to move. Find the only move that holds. Lure the king.",
+    "fields": {
+      "fen": "rnq3/p3k1/2Prp1/PP1n2/2NN2/R2K1R w - - 0 14",
+      "claim": "puzzle pz-mmr0yt",
+      "caption": "Exercise 2 (pz-mmr0yt, difficulty 4). White to move. Find the only move that holds. Lure the king."
+    }
+  },
+  {
+    "id": "02-40",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2qk2/pppnpp/6/6/PPQ1P1/R2K1R b - - 0 1\nline: Ne3+ Kd2 Nxc2\nshow: after\ncaption: Exercise 3. Review the fork from Chapter 1: after Ne3+ Kd2 Nxc2, what has the check achieved that a plain attack on the queen would not?\n```",
+    "fen": "2qk2/ppp1pp/6/6/PPnKP1/R4R w - - 0 3",
+    "caption": "Exercise 3. Review the fork from Chapter 1: after Ne3+ Kd2 Nxc2, what has the check achieved that a plain attack on the queen would not?",
+    "fields": {
+      "fen": "2qk2/pppnpp/6/6/PPQ1P1/R2K1R b - - 0 1",
+      "line": "Ne3+ Kd2 Nxc2",
+      "show": "after",
+      "caption": "Exercise 3. Review the fork from Chapter 1: after Ne3+ Kd2 Nxc2, what has the check achieved that a plain attack on the queen would not?"
+    }
+  },
+  {
+    "id": "02-41",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 5k/4pp/6/4P1/P1PK1P/n5 w - - 0 1\nline: Kc1 Ke6 Kb1 Kd5 Kxa1\nshow: after\ncaption: The Black knight has captured on a1 and is trapped there. Its two squares are b3 (attacked by the a2- and c2-pawns) and c2 (a pawn defended by White's king). White's king simply walks over and takes it.\n```",
+    "fen": "6/3kpp/6/4P1/P1P2P/K5 b - - 0 3",
+    "caption": "The Black knight has captured on a1 and is trapped there. Its two squares are b3 (attacked by the a2- and c2-pawns) and c2 (a pawn defended by White's king). White's king simply walks over and takes it.",
+    "fields": {
+      "fen": "5k/4pp/6/4P1/P1PK1P/n5 w - - 0 1",
+      "line": "Kc1 Ke6 Kb1 Kd5 Kxa1",
+      "show": "after",
+      "caption": "The Black knight has captured on a1 and is trapped there. Its two squares are b3 (attacked by the a2- and c2-pawns) and c2 (a pawn defended by White's king). White's king simply walks over and takes it."
+    }
+  },
+  {
+    "id": "02-42",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1kr2r/q5/p2P2/PpnQPp/3P1P/R3KR b - - 2 57\nclaim: puzzle pz-1k2b7wn\ncaption: Academy puzzle pz-1k2b7wn. Black to move. Black is under pressure; find the only move that holds. Look at White's rook on a1.\n```",
+    "fen": "1kr2r/q5/p2P2/PpnQPp/3P1P/R3KR b - - 2 57",
+    "caption": "Academy puzzle pz-1k2b7wn. Black to move. Black is under pressure; find the only move that holds. Look at White's rook on a1.",
+    "fields": {
+      "fen": "1kr2r/q5/p2P2/PpnQPp/3P1P/R3KR b - - 2 57",
+      "claim": "puzzle pz-1k2b7wn",
+      "caption": "Academy puzzle pz-1k2b7wn. Black to move. Black is under pressure; find the only move that holds. Look at White's rook on a1."
+    }
+  },
+  {
+    "id": "02-43",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 4R1/p4p/n2P2/5k/1P1P2/2K3 w - - 0 1\nline: b3\nshow: after\ncaption: Guided exercise. After 1. b3, which squares can the Black knight on a4 go to, and what attacks each of them?\n```",
+    "fen": "4R1/p4p/n2P2/1P3k/3P2/2K3 b - - 0 1",
+    "caption": "Guided exercise. After 1. b3, which squares can the Black knight on a4 go to, and what attacks each of them?",
+    "fields": {
+      "fen": "4R1/p4p/n2P2/5k/1P1P2/2K3 w - - 0 1",
+      "line": "b3",
+      "show": "after",
+      "caption": "Guided exercise. After 1. b3, which squares can the Black knight on a4 go to, and what attacks each of them?"
+    }
+  },
+  {
+    "id": "02-44",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: n4k/4pp/6/2N3/P2NK1/r5 w - - 0 1\nclaim: best Nb3\ncaption: Exercise 1. Black's rook has just captured on a1. White to move: the engine's choice traps and wins it.\n```",
+    "fen": "n4k/4pp/6/2N3/P2NK1/r5 w - - 0 1",
+    "caption": "Exercise 1. Black's rook has just captured on a1. White to move: the engine's choice traps and wins it.",
+    "fields": {
+      "fen": "n4k/4pp/6/2N3/P2NK1/r5 w - - 0 1",
+      "claim": "best Nb3",
+      "caption": "Exercise 1. Black's rook has just captured on a1. White to move: the engine's choice traps and wins it."
+    }
+  },
+  {
+    "id": "02-45",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 5k/4pp/6/4P1/P3KP/n5 b - - 0 1\ncaption: Exercise 2. Compare with the illustrated example: White's c-pawn is missing and the king stands on e2. Is the Black knight on a1 still trapped?\n```",
+    "fen": "5k/4pp/6/4P1/P3KP/n5 b - - 0 1",
+    "caption": "Exercise 2. Compare with the illustrated example: White's c-pawn is missing and the king stands on e2. Is the Black knight on a1 still trapped?",
+    "fields": {
+      "fen": "5k/4pp/6/4P1/P3KP/n5 b - - 0 1",
+      "caption": "Exercise 2. Compare with the illustrated example: White's c-pawn is missing and the king stands on e2. Is the Black knight on a1 still trapped?"
+    }
+  },
+  {
+    "id": "02-46",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rn1k2/p4p/1P4/2N3/4PP/5K w - - 0 1\nclaim: best b5\ncaption: Exercise 3. White to move. Black's rook on a6 has no legal move at all. The engine's choice exploits it.\n```",
+    "fen": "rn1k2/p4p/1P4/2N3/4PP/5K w - - 0 1",
+    "caption": "Exercise 3. White to move. Black's rook on a6 has no legal move at all. The engine's choice exploits it.",
+    "fields": {
+      "fen": "rn1k2/p4p/1P4/2N3/4PP/5K w - - 0 1",
+      "claim": "best b5",
+      "caption": "Exercise 3. White to move. Black's rook on a6 has no legal move at all. The engine's choice exploits it."
+    }
+  },
+  {
+    "id": "02-47",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rnr3/1k1ppp/pP4/P2P2/4nP/2RKNR w - - 0 12\nline: Rxc6\nclaim: best Rxc6\ncaption: The engine's choice. Black's knight has just captured on e2. The natural recapture Kxe2? loses a rook. First Rxc6!\n```",
+    "fen": "rnr3/1k1ppp/pP4/P2P2/4nP/2RKNR w - - 0 12",
+    "caption": "The engine's choice. Black's knight has just captured on e2. The natural recapture Kxe2? loses a rook. First Rxc6!",
+    "fields": {
+      "fen": "rnr3/1k1ppp/pP4/P2P2/4nP/2RKNR w - - 0 12",
+      "line": "Rxc6",
+      "claim": "best Rxc6",
+      "caption": "The engine's choice. Black's knight has just captured on e2. The natural recapture Kxe2? loses a rook. First Rxc6!"
+    }
+  },
+  {
+    "id": "02-48",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1k4/3n2/1P2Q1/4P1/6/qN2K1 w - - 0 30\nclaim: puzzle pz-tef4fw\ncaption: Academy puzzle pz-tef4fw. White to move. The knight on d5 is undefended. So is White's knight on b1.\n```",
+    "fen": "1k4/3n2/1P2Q1/4P1/6/qN2K1 w - - 0 30",
+    "caption": "Academy puzzle pz-tef4fw. White to move. The knight on d5 is undefended. So is White's knight on b1.",
+    "fields": {
+      "fen": "1k4/3n2/1P2Q1/4P1/6/qN2K1 w - - 0 30",
+      "claim": "puzzle pz-tef4fw",
+      "caption": "Academy puzzle pz-tef4fw. White to move. The knight on d5 is undefended. So is White's knight on b1."
+    }
+  },
+  {
+    "id": "02-49",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2kN1r/2p2p/1r1p1n/4QP/P1PKP1/2R1NR b - - 0 13\nclaim: best dxe3+\ncaption: Guided exercise. Black to move. White's knight has just captured on d6. Recapture, or first something better? (The engine's choice.)\n```",
+    "fen": "2kN1r/2p2p/1r1p1n/4QP/P1PKP1/2R1NR b - - 0 13",
+    "caption": "Guided exercise. Black to move. White's knight has just captured on d6. Recapture, or first something better? (The engine's choice.)",
+    "fields": {
+      "fen": "2kN1r/2p2p/1r1p1n/4QP/P1PKP1/2R1NR b - - 0 13",
+      "claim": "best dxe3+",
+      "caption": "Guided exercise. Black to move. White's knight has just captured on d6. Recapture, or first something better? (The engine's choice.)"
+    }
+  },
+  {
+    "id": "02-50",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2rk1r/p3pp/2pq2/N1Q3/P2PPP/3K1R w - - 0 11\nclaim: best Nb5+\ncaption: Exercise 1. White to move. Black's queen on d4 attacks White's queen. Do not trade at once (the engine's choice).\n```",
+    "fen": "2rk1r/p3pp/2pq2/N1Q3/P2PPP/3K1R w - - 0 11",
+    "caption": "Exercise 1. White to move. Black's queen on d4 attacks White's queen. Do not trade at once (the engine's choice).",
+    "fields": {
+      "fen": "2rk1r/p3pp/2pq2/N1Q3/P2PPP/3K1R w - - 0 11",
+      "claim": "best Nb5+",
+      "caption": "Exercise 1. White to move. Black's queen on d4 attacks White's queen. Do not trade at once (the engine's choice)."
+    }
+  },
+  {
+    "id": "02-51",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: r1qknr/ppp1pp/2n3/NPp3/P2PPP/R1QKNR w - - 0 4\nclaim: best bxc4\ncaption: Exercise 2. White to move. A Black pawn has just captured on c3. Before recapturing, deal with the knight on c4 (the engine's choice).\n```",
+    "fen": "r1qknr/ppp1pp/2n3/NPp3/P2PPP/R1QKNR w - - 0 4",
+    "caption": "Exercise 2. White to move. A Black pawn has just captured on c3. Before recapturing, deal with the knight on c4 (the engine's choice).",
+    "fields": {
+      "fen": "r1qknr/ppp1pp/2n3/NPp3/P2PPP/R1QKNR w - - 0 4",
+      "claim": "best bxc4",
+      "caption": "Exercise 2. White to move. A Black pawn has just captured on c3. Before recapturing, deal with the knight on c4 (the engine's choice)."
+    }
+  },
+  {
+    "id": "02-52",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: Qn2k1/5r/1q1p1p/1P3P/4PK/2R3 w - - 0 20\nclaim: puzzle pz-19zizr9\ncaption: Exercise 3 (pz-19zizr9). White to move. The knight on b6 is attacked by the queen but defended by Black's queen.\n```",
+    "fen": "Qn2k1/5r/1q1p1p/1P3P/4PK/2R3 w - - 0 20",
+    "caption": "Exercise 3 (pz-19zizr9). White to move. The knight on b6 is attacked by the queen but defended by Black's queen.",
+    "fields": {
+      "fen": "Qn2k1/5r/1q1p1p/1P3P/4PK/2R3 w - - 0 20",
+      "claim": "puzzle pz-19zizr9",
+      "caption": "Exercise 3 (pz-19zizr9). White to move. The knight on b6 is attacked by the queen but defended by Black's queen."
+    }
+  },
+  {
+    "id": "02-53",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: rn1rk1/p5/1q2Pp/1P1p2/1Q1P2/RN1K1R w - - 0 16\nclaim: puzzle pz-lvixyc\ncaption: Academy puzzle pz-lvixyc. White to move. The Black king on e6 is short of squares.\n```",
+    "fen": "rn1rk1/p5/1q2Pp/1P1p2/1Q1P2/RN1K1R w - - 0 16",
+    "caption": "Academy puzzle pz-lvixyc. White to move. The Black king on e6 is short of squares.",
+    "fields": {
+      "fen": "rn1rk1/p5/1q2Pp/1P1p2/1Q1P2/RN1K1R w - - 0 16",
+      "claim": "puzzle pz-lvixyc",
+      "caption": "Academy puzzle pz-lvixyc. White to move. The Black king on e6 is short of squares."
+    }
+  },
+  {
+    "id": "02-54",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: k1r3/pp1N2/4N1/4Q1/6/4K1 w - - 0 1\nline: Qb6+ Rxb6 Nc5#\nclaim: only-mate-in-2\ncaption: White mates in 2, and only the queen sacrifice Qb6+ does it. Proven by trying every defence.\n```",
+    "fen": "k1r3/pp1N2/4N1/4Q1/6/4K1 w - - 0 1",
+    "caption": "White mates in 2, and only the queen sacrifice Qb6+ does it. Proven by trying every defence.",
+    "fields": {
+      "fen": "k1r3/pp1N2/4N1/4Q1/6/4K1 w - - 0 1",
+      "line": "Qb6+ Rxb6 Nc5#",
+      "claim": "only-mate-in-2",
+      "caption": "White mates in 2, and only the queen sacrifice Qb6+ does it. Proven by trying every defence."
+    }
+  },
+  {
+    "id": "02-55",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20\nclaim: puzzle pz-10qaias\ncaption: Academy puzzle pz-10qaias. Black to move and mate in 3.\n```",
+    "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+    "caption": "Academy puzzle pz-10qaias. Black to move and mate in 3.",
+    "fields": {
+      "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+      "claim": "puzzle pz-10qaias",
+      "caption": "Academy puzzle pz-10qaias. Black to move and mate in 3."
+    }
+  },
+  {
+    "id": "02-56",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20\nline: Qe5+ Kf3 Qe2+ Kf4 Nd5#\nclaim: mate-in-3\ncaption: Proof by exhaustive search: Black mates in 3 against every defence (the longest line shown).\n```",
+    "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+    "caption": "Proof by exhaustive search: Black mates in 3 against every defence (the longest line shown).",
+    "fields": {
+      "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+      "line": "Qe5+ Kf3 Qe2+ Kf4 Nd5#",
+      "claim": "mate-in-3",
+      "caption": "Proof by exhaustive search: Black mates in 3 against every defence (the longest line shown)."
+    }
+  },
+  {
+    "id": "02-57",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1k4/6/1q4/1n4/2n1PP/3R1K b - - 0 1\nclaim: only-mate-in-2\ncaption: Guided exercise. Black to move and mate in 2. You have seen this idea before, from the other side of the board.\n```",
+    "fen": "1k4/6/1q4/1n4/2n1PP/3R1K b - - 0 1",
+    "caption": "Guided exercise. Black to move and mate in 2. You have seen this idea before, from the other side of the board.",
+    "fields": {
+      "fen": "1k4/6/1q4/1n4/2n1PP/3R1K b - - 0 1",
+      "claim": "only-mate-in-2",
+      "caption": "Guided exercise. Black to move and mate in 2. You have seen this idea before, from the other side of the board."
+    }
+  },
+  {
+    "id": "02-58",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/3nkp/p3p1/4P1/2r2P/1R2KR b - - 0 25\nclaim: puzzle pz-mxl0mu\ncaption: Exercise 1 (pz-mxl0mu). Black to move. A quiet knight move threatens mate and attacks a rook.\n```",
+    "fen": "6/3nkp/p3p1/4P1/2r2P/1R2KR b - - 0 25",
+    "caption": "Exercise 1 (pz-mxl0mu). Black to move. A quiet knight move threatens mate and attacks a rook.",
+    "fields": {
+      "fen": "6/3nkp/p3p1/4P1/2r2P/1R2KR b - - 0 25",
+      "claim": "puzzle pz-mxl0mu",
+      "caption": "Exercise 1 (pz-mxl0mu). Black to move. A quiet knight move threatens mate and attacks a rook."
+    }
+  },
+  {
+    "id": "02-59",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: k5/p3q1/P5/1PR2P/5K/6 w - - 0 32\nline: Rc6#\nclaim: only-mate-in-1\ncaption: Exercise 2 (review of pz-1olai4r). Why does the queen on e5 fail to defend against this rook mate?\n```",
+    "fen": "k5/p3q1/P5/1PR2P/5K/6 w - - 0 32",
+    "caption": "Exercise 2 (review of pz-1olai4r). Why does the queen on e5 fail to defend against this rook mate?",
+    "fields": {
+      "fen": "k5/p3q1/P5/1PR2P/5K/6 w - - 0 32",
+      "line": "Rc6#",
+      "claim": "only-mate-in-1",
+      "caption": "Exercise 2 (review of pz-1olai4r). Why does the queen on e5 fail to defend against this rook mate?"
+    }
+  },
+  {
+    "id": "02-60",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61\nline: Qxe4+ Kb6 Qd5 Ka6 Qb5#\nclaim: mate-in-3\ncaption: Exercise 3. After 1. Qxe4+ Kb6, find a quiet queen move that leaves the king one square, then mate.\n```",
+    "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+    "caption": "Exercise 3. After 1. Qxe4+ Kb6, find a quiet queen move that leaves the king one square, then mate.",
+    "fields": {
+      "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+      "line": "Qxe4+ Kb6 Qd5 Ka6 Qb5#",
+      "claim": "mate-in-3",
+      "caption": "Exercise 3. After 1. Qxe4+ Kb6, find a quiet queen move that leaves the king one square, then mate."
+    }
+  },
+  {
+    "id": "02-61",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k2/4p1/4Pp/1p1K1P/p2P2/5R b - - 1 77\nclaim: puzzle pz-l1g2cx\ncaption: Academy puzzle pz-l1g2cx. Black to move. Black has two pawns on the a- and b-files; White has a rook.\n```",
+    "fen": "3k2/4p1/4Pp/1p1K1P/p2P2/5R b - - 1 77",
+    "caption": "Academy puzzle pz-l1g2cx. Black to move. Black has two pawns on the a- and b-files; White has a rook.",
+    "fields": {
+      "fen": "3k2/4p1/4Pp/1p1K1P/p2P2/5R b - - 1 77",
+      "claim": "puzzle pz-l1g2cx",
+      "caption": "Academy puzzle pz-l1g2cx. Black to move. Black has two pawns on the a- and b-files; White has a rook."
+    }
+  },
+  {
+    "id": "02-62",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3r2/1p1P1k/p2R2/P1KN1p/4pp/6 b - - 3 27\nclaim: puzzle pz-oy1e4\ncaption: Academy puzzle pz-oy1e4. Black to move. Black has two pawns on the 2nd rank, e2 and f2.\n```",
+    "fen": "3r2/1p1P1k/p2R2/P1KN1p/4pp/6 b - - 3 27",
+    "caption": "Academy puzzle pz-oy1e4. Black to move. Black has two pawns on the 2nd rank, e2 and f2.",
+    "fields": {
+      "fen": "3r2/1p1P1k/p2R2/P1KN1p/4pp/6 b - - 3 27",
+      "claim": "puzzle pz-oy1e4",
+      "caption": "Academy puzzle pz-oy1e4. Black to move. Black has two pawns on the 2nd rank, e2 and f2."
+    }
+  },
+  {
+    "id": "02-63",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 5r/pPk3/2P3/3R2/PK2p1/1N4 b - - 0 23\nclaim: puzzle pz-1rz0zpd\ncaption: Academy puzzle pz-1rz0zpd. Black to move. Is the e-pawn's promotion square guarded?\n```",
+    "fen": "5r/pPk3/2P3/3R2/PK2p1/1N4 b - - 0 23",
+    "caption": "Academy puzzle pz-1rz0zpd. Black to move. Is the e-pawn's promotion square guarded?",
+    "fields": {
+      "fen": "5r/pPk3/2P3/3R2/PK2p1/1N4 b - - 0 23",
+      "claim": "puzzle pz-1rz0zpd",
+      "caption": "Academy puzzle pz-1rz0zpd. Black to move. Is the e-pawn's promotion square guarded?"
+    }
+  },
+  {
+    "id": "02-64",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27\nclaim: puzzle pz-1td3for\ncaption: Exercise 1 (pz-1td3for). White to move. The c4-pawn is attacked by the knight. Find the only move that holds.\n```",
+    "fen": "1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27",
+    "caption": "Exercise 1 (pz-1td3for). White to move. The c4-pawn is attacked by the knight. Find the only move that holds.",
+    "fields": {
+      "fen": "1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27",
+      "claim": "puzzle pz-1td3for",
+      "caption": "Exercise 1 (pz-1td3for). White to move. The c4-pawn is attacked by the knight. Find the only move that holds."
+    }
+  },
+  {
+    "id": "02-65",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1Q2n1/rP3k/6/2RPP1/p5/2K3 b - - 0 28\nclaim: puzzle pz-12s9mp\ncaption: Exercise 2 (pz-12s9mp). Black to move. Black's rook on a5 is attacked by the queen. Find the only move that holds.\n```",
+    "fen": "1Q2n1/rP3k/6/2RPP1/p5/2K3 b - - 0 28",
+    "caption": "Exercise 2 (pz-12s9mp). Black to move. Black's rook on a5 is attacked by the queen. Find the only move that holds.",
+    "fields": {
+      "fen": "1Q2n1/rP3k/6/2RPP1/p5/2K3 b - - 0 28",
+      "claim": "puzzle pz-12s9mp",
+      "caption": "Exercise 2 (pz-12s9mp). Black to move. Black's rook on a5 is attacked by the queen. Find the only move that holds."
+    }
+  },
+  {
+    "id": "02-66",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/1QPq1p/3p1k/1p1P2/5P/5K w - - 1 22\nline: c6=Q Qxb5 Qxb5\nshow: after\ncaption: Exercise 3 (review of pz-1tmu932 from Chapter 4). After c6=Q Qxb5 Qxb5, count the material. What did the promotion gain?\n```",
+    "fen": "6/1Q3p/3p1k/1p1P2/5P/5K b - - 0 23",
+    "caption": "Exercise 3 (review of pz-1tmu932 from Chapter 4). After c6=Q Qxb5 Qxb5, count the material. What did the promotion gain?",
+    "fields": {
+      "fen": "6/1QPq1p/3p1k/1p1P2/5P/5K w - - 1 22",
+      "line": "c6=Q Qxb5 Qxb5",
+      "show": "after",
+      "caption": "Exercise 3 (review of pz-1tmu932 from Chapter 4). After c6=Q Qxb5 Qxb5, count the material. What did the promotion gain?"
+    }
+  },
+  {
+    "id": "02-67",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1r1k1r/p3p1/n2PPp/P4P/R1P1q1/Q1KRN1 b - - 0 19\nclaim: puzzle pz-1vh7cy4\ncaption: Academy puzzle pz-1vh7cy4. Black to move. The knight on e1 is guarded only by the rook on d1.\n```",
+    "fen": "1r1k1r/p3p1/n2PPp/P4P/R1P1q1/Q1KRN1 b - - 0 19",
+    "caption": "Academy puzzle pz-1vh7cy4. Black to move. The knight on e1 is guarded only by the rook on d1.",
+    "fields": {
+      "fen": "1r1k1r/p3p1/n2PPp/P4P/R1P1q1/Q1KRN1 b - - 0 19",
+      "claim": "puzzle pz-1vh7cy4",
+      "caption": "Academy puzzle pz-1vh7cy4. Black to move. The knight on e1 is guarded only by the rook on d1."
+    }
+  },
+  {
+    "id": "02-68",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 3k1r/1qpp1p/2n3/Q3P1/P2NnP/1R1K1R b - - 7 16\nclaim: puzzle pz-z3smsm\ncaption: Academy puzzle pz-z3smsm. Black to move. Both queens are attacked.\n```",
+    "fen": "3k1r/1qpp1p/2n3/Q3P1/P2NnP/1R1K1R b - - 7 16",
+    "caption": "Academy puzzle pz-z3smsm. Black to move. Both queens are attacked.",
+    "fields": {
+      "fen": "3k1r/1qpp1p/2n3/Q3P1/P2NnP/1R1K1R b - - 7 16",
+      "claim": "puzzle pz-z3smsm",
+      "caption": "Academy puzzle pz-z3smsm. Black to move. Both queens are attacked."
+    }
+  },
+  {
+    "id": "02-69",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24\nclaim: puzzle pz-am6uu4\ncaption: Academy puzzle pz-am6uu4. Black to move. List every Black check first.\n```",
+    "fen": "6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24",
+    "caption": "Academy puzzle pz-am6uu4. Black to move. List every Black check first.",
+    "fields": {
+      "fen": "6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24",
+      "claim": "puzzle pz-am6uu4",
+      "caption": "Academy puzzle pz-am6uu4. Black to move. List every Black check first."
+    }
+  },
+  {
+    "id": "02-70",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1q2nk/1p1p2/3Pp1/1P2N1/4P1/1N1K2 w - - 0 20\nclaim: puzzle pz-1sicldm\ncaption: Exercise 1 (pz-1sicldm). White to move and win material.\n```",
+    "fen": "1q2nk/1p1p2/3Pp1/1P2N1/4P1/1N1K2 w - - 0 20",
+    "caption": "Exercise 1 (pz-1sicldm). White to move and win material.",
+    "fields": {
+      "fen": "1q2nk/1p1p2/3Pp1/1P2N1/4P1/1N1K2 w - - 0 20",
+      "claim": "puzzle pz-1sicldm",
+      "caption": "Exercise 1 (pz-1sicldm). White to move and win material."
+    }
+  },
+  {
+    "id": "02-71",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 5r/2k3/6/1P3P/3Nn1/1K4 w - - 0 36\nclaim: puzzle pz-14bci3z\ncaption: Exercise 2 (pz-14bci3z). White to move and win material.\n```",
+    "fen": "5r/2k3/6/1P3P/3Nn1/1K4 w - - 0 36",
+    "caption": "Exercise 2 (pz-14bci3z). White to move and win material.",
+    "fields": {
+      "fen": "5r/2k3/6/1P3P/3Nn1/1K4 w - - 0 36",
+      "claim": "puzzle pz-14bci3z",
+      "caption": "Exercise 2 (pz-14bci3z). White to move and win material."
+    }
+  },
+  {
+    "id": "02-72",
+    "file": "02-book-ii-duelist.md",
+    "block": "```crown\nfen: 1r2nr/1pq1k1/pR2Pn/N1p1QR/P1N3/4K1 w - - 4 16\nclaim: puzzle pz-uo80c3\ncaption: Exercise 3 (pz-uo80c3, difficulty 3). White to move. Calculate the forcing line to its quiet end.\n```",
+    "fen": "1r2nr/1pq1k1/pR2Pn/N1p1QR/P1N3/4K1 w - - 4 16",
+    "caption": "Exercise 3 (pz-uo80c3, difficulty 3). White to move. Calculate the forcing line to its quiet end.",
+    "fields": {
+      "fen": "1r2nr/1pq1k1/pR2Pn/N1p1QR/P1N3/4K1 w - - 4 16",
+      "claim": "puzzle pz-uo80c3",
+      "caption": "Exercise 3 (pz-uo80c3, difficulty 3). White to move. Calculate the forcing line to its quiet end."
+    }
+  },
+  {
+    "id": "03-1",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\ncaption: The starting position. Ten legal moves: six pawn steps and four knight jumps. The rooks, queen and king are locked in, and both rooks are undefended.\n```",
+    "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+    "caption": "The starting position. Ten legal moves: six pawn steps and four knight jumps. The rooks, queen and king are locked in, and both rooks are undefended.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "caption": "The starting position. Ten legal moves: six pawn steps and four knight jumps. The rooks, queen and king are locked in, and both rooks are undefended."
+    }
+  },
+  {
+    "id": "03-2",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Nc3 b4\nshow: after\ncaption: After 1. Nc3 b4. One pawn step and the knight must move again. The engine's main line continues 2. Nb1, back home.\n```",
+    "fen": "rnqknr/p1pppp/1p4/2N3/PPPPPP/R1QKNR w - - 0 2",
+    "caption": "After 1. Nc3 b4. One pawn step and the knight must move again. The engine's main line continues 2. Nb1, back home.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Nc3 b4",
+      "show": "after",
+      "caption": "After 1. Nc3 b4. One pawn step and the knight must move again. The engine's main line continues 2. Nb1, back home."
+    }
+  },
+  {
+    "id": "03-3",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: c3 b4 d3 bxc3 Nxc3 Na4 Nxa4 Qxa4+ b3 Qb5\nshow: after\ncaption: Engine self-play, depth 11: 1. c3 b4 2. d3 bxc3 3. Nxc3 Na4 4. Nxa4 Qxa4+ 5. b3 Qb5. Pawns first, knights only when they can land safely or trade.\n```",
+    "fen": "r2knr/pqpppp/6/1P1P2/P3PP/R1QKNR w - - 1 6",
+    "caption": "Engine self-play, depth 11: 1. c3 b4 2. d3 bxc3 3. Nxc3 Na4 4. Nxa4 Qxa4+ 5. b3 Qb5. Pawns first, knights only when they can land safely or trade.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "c3 b4 d3 bxc3 Nxc3 Na4 Nxa4 Qxa4+ b3 Qb5",
+      "show": "after",
+      "caption": "Engine self-play, depth 11: 1. c3 b4 2. d3 bxc3 3. Nxc3 Na4 4. Nxa4 Qxa4+ 5. b3 Qb5. Pawns first, knights only when they can land safely or trade."
+    }
+  },
+  {
+    "id": "03-4",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/3P2/PPP1PP/RNQKNR b - - 0 1\ncaption: After 1. d3. Black to move. Is 1...Nc4 a developing move or a gift?\n```",
+    "fen": "rnqknr/pppppp/6/3P2/PPP1PP/RNQKNR b - - 0 1",
+    "caption": "After 1. d3. Black to move. Is 1...Nc4 a developing move or a gift?",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/3P2/PPP1PP/RNQKNR b - - 0 1",
+      "caption": "After 1. d3. Black to move. Is 1...Nc4 a developing move or a gift?"
+    }
+  },
+  {
+    "id": "03-5",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/N5/PPPPPP/R1QKNR b - - 1 1\ncaption: Exercise 2. After 1. Na3, Black to move.\n```",
+    "fen": "rnqknr/pppppp/6/N5/PPPPPP/R1QKNR b - - 1 1",
+    "caption": "Exercise 2. After 1. Na3, Black to move.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/N5/PPPPPP/R1QKNR b - - 1 1",
+      "caption": "Exercise 2. After 1. Na3, Black to move."
+    }
+  },
+  {
+    "id": "03-6",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/2ppNp/pp2pP/6/PPPPP1/RNQK1R b - - 1 4\nclaim: puzzle pz-llphgz\ncaption: Exercise 3 (Academy puzzle pz-llphgz). Black to move.\n```",
+    "fen": "rnqknr/2ppNp/pp2pP/6/PPPPP1/RNQK1R b - - 1 4",
+    "caption": "Exercise 3 (Academy puzzle pz-llphgz). Black to move.",
+    "fields": {
+      "fen": "rnqknr/2ppNp/pp2pP/6/PPPPP1/RNQK1R b - - 1 4",
+      "claim": "puzzle pz-llphgz",
+      "caption": "Exercise 3 (Academy puzzle pz-llphgz). Black to move."
+    }
+  },
+  {
+    "id": "03-7",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1k1r/1pqppp/pNp3/P1P2P/1P1PP1/RNK2R w - - 1 7\nclaim: puzzle pz-1rhuqma\ncaption: Exercise 4 (Academy puzzle pz-1rhuqma). White to move.\n```",
+    "fen": "rn1k1r/1pqppp/pNp3/P1P2P/1P1PP1/RNK2R w - - 1 7",
+    "caption": "Exercise 4 (Academy puzzle pz-1rhuqma). White to move.",
+    "fields": {
+      "fen": "rn1k1r/1pqppp/pNp3/P1P2P/1P1PP1/RNK2R w - - 1 7",
+      "claim": "puzzle pz-1rhuqma",
+      "caption": "Exercise 4 (Academy puzzle pz-1rhuqma). White to move."
+    }
+  },
+  {
+    "id": "03-8",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: d3 c4 dxc4 d4 c3 dxc3 bxc3\nshow: after\ncaption: An illustrative sequence: 1. d3 c4 2. dxc4 d4 3. c3 dxc3 4. bxc3. Both d-pawns have left the d-file; the kings now face each other down an open file, and either queen can reach it in one move.\n```",
+    "fen": "rnqknr/pp2pp/2P3/2P3/P3PP/RNQKNR b - - 0 4",
+    "caption": "An illustrative sequence: 1. d3 c4 2. dxc4 d4 3. c3 dxc3 4. bxc3. Both d-pawns have left the d-file; the kings now face each other down an open file, and either queen can reach it in one move.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "d3 c4 dxc4 d4 c3 dxc3 bxc3",
+      "show": "after",
+      "caption": "An illustrative sequence: 1. d3 c4 2. dxc4 d4 3. c3 dxc3 4. bxc3. Both d-pawns have left the d-file; the kings now face each other down an open file, and either queen can reach it in one move."
+    }
+  },
+  {
+    "id": "03-9",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 1r4/3kpp/2p1q1/3P2/4P1/2QK1R b - - 0 16\nclaim: puzzle pz-y788ac\ncaption: Academy puzzle pz-y788ac. Black to move. White's king on d1 has the queen on c1 beside it and a pawn on e2 in front. Black's queen is on e4.\n```",
+    "fen": "1r4/3kpp/2p1q1/3P2/4P1/2QK1R b - - 0 16",
+    "caption": "Academy puzzle pz-y788ac. Black to move. White's king on d1 has the queen on c1 beside it and a pawn on e2 in front. Black's queen is on e4.",
+    "fields": {
+      "fen": "1r4/3kpp/2p1q1/3P2/4P1/2QK1R b - - 0 16",
+      "claim": "puzzle pz-y788ac",
+      "caption": "Academy puzzle pz-y788ac. Black to move. White's king on d1 has the queen on c1 beside it and a pawn on e2 in front. Black's queen is on e4."
+    }
+  },
+  {
+    "id": "03-10",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r1k1qr/2nn1p/ppN3/1P2P1/2PNR1/R1Q1K1 w - - 4 17\nclaim: puzzle pz-1743ej5\ncaption: Exercise 2 (Academy puzzle pz-1743ej5). White to move.\n```",
+    "fen": "r1k1qr/2nn1p/ppN3/1P2P1/2PNR1/R1Q1K1 w - - 4 17",
+    "caption": "Exercise 2 (Academy puzzle pz-1743ej5). White to move.",
+    "fields": {
+      "fen": "r1k1qr/2nn1p/ppN3/1P2P1/2PNR1/R1Q1K1 w - - 4 17",
+      "claim": "puzzle pz-1743ej5",
+      "caption": "Exercise 2 (Academy puzzle pz-1743ej5). White to move."
+    }
+  },
+  {
+    "id": "03-11",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2k1r/ppp1pp/3p1n/1PN1Pq/PNPP1P/R1Q1KR b - - 2 6\nclaim: puzzle pz-1xooynn\ncaption: Exercise 3 (Academy puzzle pz-1xooynn). Black to move.\n```",
+    "fen": "r2k1r/ppp1pp/3p1n/1PN1Pq/PNPP1P/R1Q1KR b - - 2 6",
+    "caption": "Exercise 3 (Academy puzzle pz-1xooynn). Black to move.",
+    "fields": {
+      "fen": "r2k1r/ppp1pp/3p1n/1PN1Pq/PNPP1P/R1Q1KR b - - 2 6",
+      "claim": "puzzle pz-1xooynn",
+      "caption": "Exercise 3 (Academy puzzle pz-1xooynn). Black to move."
+    }
+  },
+  {
+    "id": "03-12",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: d3 c4\nshow: after\ncaption: After 1. d3 c4. The two pawns attack each other: White can play dxc4, Black can play ...cxd3. The question of the centre is asked on move one.\n```",
+    "fen": "rnqknr/pp1ppp/2p3/3P2/PPP1PP/RNQKNR w - - 0 2",
+    "caption": "After 1. d3 c4. The two pawns attack each other: White can play dxc4, Black can play ...cxd3. The question of the centre is asked on move one.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "d3 c4",
+      "show": "after",
+      "caption": "After 1. d3 c4. The two pawns attack each other: White can play dxc4, Black can play ...cxd3. The question of the centre is asked on move one."
+    }
+  },
+  {
+    "id": "03-13",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: d3 c4 c3 cxd3 Nxd3\nshow: after\ncaption: 1. d3 c4 2. c3 cxd3 3. Nxd3. White's pawn on c3 controls b4 and d4; the knight on d3 eyes b4, c5, e5 and f4. Black's c-pawn has been traded for White's d-pawn.\n```",
+    "fen": "rnqknr/pp1ppp/6/2PN2/PP2PP/RNQK1R b - - 0 3",
+    "caption": "1. d3 c4 2. c3 cxd3 3. Nxd3. White's pawn on c3 controls b4 and d4; the knight on d3 eyes b4, c5, e5 and f4. Black's c-pawn has been traded for White's d-pawn.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "d3 c4 c3 cxd3 Nxd3",
+      "show": "after",
+      "caption": "1. d3 c4 2. c3 cxd3 3. Nxd3. White's pawn on c3 controls b4 and d4; the knight on d3 eyes b4, c5, e5 and f4. Black's c-pawn has been traded for White's d-pawn."
+    }
+  },
+  {
+    "id": "03-14",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r1q1kr/p3pp/2p2n/2P1P1/P2NP1/R1Q1KR b - - 0 9\nclaim: puzzle pz-1x6nwkp\ncaption: Exercise 2 (Academy puzzle pz-1x6nwkp). Black to move.\n```",
+    "fen": "r1q1kr/p3pp/2p2n/2P1P1/P2NP1/R1Q1KR b - - 0 9",
+    "caption": "Exercise 2 (Academy puzzle pz-1x6nwkp). Black to move.",
+    "fields": {
+      "fen": "r1q1kr/p3pp/2p2n/2P1P1/P2NP1/R1Q1KR b - - 0 9",
+      "claim": "puzzle pz-1x6nwkp",
+      "caption": "Exercise 2 (Academy puzzle pz-1x6nwkp). Black to move."
+    }
+  },
+  {
+    "id": "03-15",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2knr/pp1npp/2qp2/PNP2P/1PN1P1/R1QK1R w - - 4 9\nclaim: puzzle pz-12d9mta\ncaption: Exercise 3 (Academy puzzle pz-12d9mta). White to move.\n```",
+    "fen": "r2knr/pp1npp/2qp2/PNP2P/1PN1P1/R1QK1R w - - 4 9",
+    "caption": "Exercise 3 (Academy puzzle pz-12d9mta). White to move.",
+    "fields": {
+      "fen": "r2knr/pp1npp/2qp2/PNP2P/1PN1P1/R1QK1R w - - 4 9",
+      "claim": "puzzle pz-12d9mta",
+      "caption": "Exercise 3 (Academy puzzle pz-12d9mta). White to move."
+    }
+  },
+  {
+    "id": "03-16",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqk1r/p1n1pp/3p2/QP1N2/P2PPP/2RK1R b - - 0 8\nclaim: puzzle pz-7no048\ncaption: Exercise 4 (Academy puzzle pz-7no048). Black to move.\n```",
+    "fen": "rnqk1r/p1n1pp/3p2/QP1N2/P2PPP/2RK1R b - - 0 8",
+    "caption": "Exercise 4 (Academy puzzle pz-7no048). Black to move.",
+    "fields": {
+      "fen": "rnqk1r/p1n1pp/3p2/QP1N2/P2PPP/2RK1R b - - 0 8",
+      "claim": "puzzle pz-7no048",
+      "caption": "Exercise 4 (Academy puzzle pz-7no048). Black to move."
+    }
+  },
+  {
+    "id": "03-17",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Na3 b4 Nb1\nshow: after\ncaption: 1. Na3 b4 2. Nb1. White has spent two moves to return to the start; Black has a pawn on b4 for free and it is Black's move. That is a tempo gained by a threat.\n```",
+    "fen": "rnqknr/p1pppp/1p4/6/PPPPPP/RNQKNR b - - 1 2",
+    "caption": "1. Na3 b4 2. Nb1. White has spent two moves to return to the start; Black has a pawn on b4 for free and it is Black's move. That is a tempo gained by a threat.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Na3 b4 Nb1",
+      "show": "after",
+      "caption": "1. Na3 b4 2. Nb1. White has spent two moves to return to the start; Black has a pawn on b4 for free and it is Black's move. That is a tempo gained by a threat."
+    }
+  },
+  {
+    "id": "03-18",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8\nclaim: puzzle pz-p05pjm\ncaption: Academy puzzle pz-p05pjm. Black to move. White's king stands on e2; Black's knight on d5 and pawn on e3 are close by.\n```",
+    "fen": "r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8",
+    "caption": "Academy puzzle pz-p05pjm. Black to move. White's king stands on e2; Black's knight on d5 and pawn on e3 are close by.",
+    "fields": {
+      "fen": "r1qk1r/1ppn1p/p2p2/N2PpN/PPP1KP/R1Q2R b - - 0 8",
+      "claim": "puzzle pz-p05pjm",
+      "caption": "Academy puzzle pz-p05pjm. Black to move. White's king stands on e2; Black's knight on d5 and pawn on e3 are close by."
+    }
+  },
+  {
+    "id": "03-19",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r1qknr/1ppn2/p2p1p/P2P1N/1PPNP1/R1QK1R b - - 2 7\nclaim: puzzle pz-sxwkr\ncaption: Guided exercise (Academy puzzle pz-sxwkr). Black to move.\n```",
+    "fen": "r1qknr/1ppn2/p2p1p/P2P1N/1PPNP1/R1QK1R b - - 2 7",
+    "caption": "Guided exercise (Academy puzzle pz-sxwkr). Black to move.",
+    "fields": {
+      "fen": "r1qknr/1ppn2/p2p1p/P2P1N/1PPNP1/R1QK1R b - - 2 7",
+      "claim": "puzzle pz-sxwkr",
+      "caption": "Guided exercise (Academy puzzle pz-sxwkr). Black to move."
+    }
+  },
+  {
+    "id": "03-20",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqkn1/p3r1/3N2/1Pp2N/P1PP1P/R2K1R w - - 0 11\nclaim: puzzle pz-72t10s\ncaption: Exercise 2 (Academy puzzle pz-72t10s). White to move.\n```",
+    "fen": "rnqkn1/p3r1/3N2/1Pp2N/P1PP1P/R2K1R w - - 0 11",
+    "caption": "Exercise 2 (Academy puzzle pz-72t10s). White to move.",
+    "fields": {
+      "fen": "rnqkn1/p3r1/3N2/1Pp2N/P1PP1P/R2K1R w - - 0 11",
+      "claim": "puzzle pz-72t10s",
+      "caption": "Exercise 2 (Academy puzzle pz-72t10s). White to move."
+    }
+  },
+  {
+    "id": "03-21",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 3knr/r3p1/2qp1p/5N/1QPPPP/3K1R w - - 0 9\nclaim: puzzle pz-5bgv1i\ncaption: Exercise 3 (Academy puzzle pz-5bgv1i). White to move.\n```",
+    "fen": "3knr/r3p1/2qp1p/5N/1QPPPP/3K1R w - - 0 9",
+    "caption": "Exercise 3 (Academy puzzle pz-5bgv1i). White to move.",
+    "fields": {
+      "fen": "3knr/r3p1/2qp1p/5N/1QPPPP/3K1R w - - 0 9",
+      "claim": "puzzle pz-5bgv1i",
+      "caption": "Exercise 3 (Academy puzzle pz-5bgv1i). White to move."
+    }
+  },
+  {
+    "id": "03-22",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 3k2/2pp1p/P5/2P1PP/2P3/3K2 w - - 0 1\ncaption: A gallery of structures. White: a4 is isolated AND passed; c2 and c3 are doubled and isolated; e3 and f3 form a phalanx. Black: c5 and d5 form a phalanx; f5 is isolated.\n```",
+    "fen": "3k2/2pp1p/P5/2P1PP/2P3/3K2 w - - 0 1",
+    "caption": "A gallery of structures. White: a4 is isolated AND passed; c2 and c3 are doubled and isolated; e3 and f3 form a phalanx. Black: c5 and d5 form a phalanx; f5 is isolated.",
+    "fields": {
+      "fen": "3k2/2pp1p/P5/2P1PP/2P3/3K2 w - - 0 1",
+      "caption": "A gallery of structures. White: a4 is isolated AND passed; c2 and c3 are doubled and isolated; e3 and f3 form a phalanx. Black: c5 and d5 form a phalanx; f5 is isolated."
+    }
+  },
+  {
+    "id": "03-23",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21\nclaim: puzzle pz-1h5x471\ncaption: Academy puzzle pz-1h5x471. White to move. Black's f3-pawn is two steps from f1; White's d4-pawn is passed too.\n```",
+    "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+    "caption": "Academy puzzle pz-1h5x471. White to move. Black's f3-pawn is two steps from f1; White's d4-pawn is passed too.",
+    "fields": {
+      "fen": "r4r/1p4/3Pk1/pPP2p/P2K2/1RN3 w - - 0 21",
+      "claim": "puzzle pz-1h5x471",
+      "caption": "Academy puzzle pz-1h5x471. White to move. Black's f3-pawn is two steps from f1; White's d4-pawn is passed too."
+    }
+  },
+  {
+    "id": "03-24",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 1n4/1Nk2p/p4P/Pp1P2/1P4/2K3 w - - 1 21\nclaim: puzzle pz-9gpef8\ncaption: Exercise 2 (Academy puzzle pz-9gpef8). White to move.\n```",
+    "fen": "1n4/1Nk2p/p4P/Pp1P2/1P4/2K3 w - - 1 21",
+    "caption": "Exercise 2 (Academy puzzle pz-9gpef8). White to move.",
+    "fields": {
+      "fen": "1n4/1Nk2p/p4P/Pp1P2/1P4/2K3 w - - 1 21",
+      "claim": "puzzle pz-9gpef8",
+      "caption": "Exercise 2 (Academy puzzle pz-9gpef8). White to move."
+    }
+  },
+  {
+    "id": "03-25",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 3knr/4N1/Pp1p2/4Pp/2P2P/3KR1 b - - 0 17\nclaim: puzzle pz-j9v9yp\ncaption: Exercise 3 (Academy puzzle pz-j9v9yp). Black to move.\n```",
+    "fen": "3knr/4N1/Pp1p2/4Pp/2P2P/3KR1 b - - 0 17",
+    "caption": "Exercise 3 (Academy puzzle pz-j9v9yp). Black to move.",
+    "fields": {
+      "fen": "3knr/4N1/Pp1p2/4Pp/2P2P/3KR1 b - - 0 17",
+      "claim": "puzzle pz-j9v9yp",
+      "caption": "Exercise 3 (Academy puzzle pz-j9v9yp). Black to move."
+    }
+  },
+  {
+    "id": "03-26",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r1qknr/pp1n2/4p1/P5/1PP3/RNQKNR w - - 0 7\nclaim: puzzle pz-1cm516w\ncaption: Academy puzzle pz-1cm516w. White to move. The f-file is open; Rf1 and Rf6 face each other, and neither is defended.\n```",
+    "fen": "r1qknr/pp1n2/4p1/P5/1PP3/RNQKNR w - - 0 7",
+    "caption": "Academy puzzle pz-1cm516w. White to move. The f-file is open; Rf1 and Rf6 face each other, and neither is defended.",
+    "fields": {
+      "fen": "r1qknr/pp1n2/4p1/P5/1PP3/RNQKNR w - - 0 7",
+      "claim": "puzzle pz-1cm516w",
+      "caption": "Academy puzzle pz-1cm516w. White to move. The f-file is open; Rf1 and Rf6 face each other, and neither is defended."
+    }
+  },
+  {
+    "id": "03-27",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1k2/1p3p/p2N2/2P3/P4P/R2K2 w - - 0 1\ncaption: White's knight on d4 is defended by the c3-pawn, and no Black pawn can ever attack d4 (there are no Black pawns on the c- or e-files). The engine's trace flags it as an outpost — and adds nothing for it, because the outpost weight is zero.\n```",
+    "fen": "rn1k2/1p3p/p2N2/2P3/P4P/R2K2 w - - 0 1",
+    "caption": "White's knight on d4 is defended by the c3-pawn, and no Black pawn can ever attack d4 (there are no Black pawns on the c- or e-files). The engine's trace flags it as an outpost — and adds nothing for it, because the outpost weight is zero.",
+    "fields": {
+      "fen": "rn1k2/1p3p/p2N2/2P3/P4P/R2K2 w - - 0 1",
+      "caption": "White's knight on d4 is defended by the c3-pawn, and no Black pawn can ever attack d4 (there are no Black pawns on the c- or e-files). The engine's trace flags it as an outpost — and adds nothing for it, because the outpost weight is zero."
+    }
+  },
+  {
+    "id": "03-28",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1knr/1qpppp/1p4/5P/1PPPP1/RNQKNR w - - 0 4\nclaim: puzzle pz-1alc6nh\ncaption: Guided exercise (Academy puzzle pz-1alc6nh). White to move.\n```",
+    "fen": "rn1knr/1qpppp/1p4/5P/1PPPP1/RNQKNR w - - 0 4",
+    "caption": "Guided exercise (Academy puzzle pz-1alc6nh). White to move.",
+    "fields": {
+      "fen": "rn1knr/1qpppp/1p4/5P/1PPPP1/RNQKNR w - - 0 4",
+      "claim": "puzzle pz-1alc6nh",
+      "caption": "Guided exercise (Academy puzzle pz-1alc6nh). White to move."
+    }
+  },
+  {
+    "id": "03-29",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqkn1/1ppp1r/4pp/1PP3/1Q1PPP/RN1KNR b - - 0 6\nclaim: puzzle pz-1kvvn1q\ncaption: Exercise 2 (Academy puzzle pz-1kvvn1q). Black to move.\n```",
+    "fen": "rnqkn1/1ppp1r/4pp/1PP3/1Q1PPP/RN1KNR b - - 0 6",
+    "caption": "Exercise 2 (Academy puzzle pz-1kvvn1q). Black to move.",
+    "fields": {
+      "fen": "rnqkn1/1ppp1r/4pp/1PP3/1Q1PPP/RN1KNR b - - 0 6",
+      "claim": "puzzle pz-1kvvn1q",
+      "caption": "Exercise 2 (Academy puzzle pz-1kvvn1q). Black to move."
+    }
+  },
+  {
+    "id": "03-30",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/ppppp1/6/P2PP1/1PPN2/R1QKNR b - - 0 5\nclaim: puzzle pz-54922z\ncaption: Exercise 3 (Academy puzzle pz-54922z). Black to move.\n```",
+    "fen": "rnqknr/ppppp1/6/P2PP1/1PPN2/R1QKNR b - - 0 5",
+    "caption": "Exercise 3 (Academy puzzle pz-54922z). Black to move.",
+    "fields": {
+      "fen": "rnqknr/ppppp1/6/P2PP1/1PPN2/R1QKNR b - - 0 5",
+      "claim": "puzzle pz-54922z",
+      "caption": "Exercise 3 (Academy puzzle pz-54922z). Black to move."
+    }
+  },
+  {
+    "id": "03-31",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rnqknr/1pppp1/p5/3PP1/PPP1K1/RNQ1NR b - - 0 4\nclaim: puzzle pz-1m7xdw8\ncaption: Exercise 4 (Academy puzzle pz-1m7xdw8). Black to move.\n```",
+    "fen": "rnqknr/1pppp1/p5/3PP1/PPP1K1/RNQ1NR b - - 0 4",
+    "caption": "Exercise 4 (Academy puzzle pz-1m7xdw8). Black to move.",
+    "fields": {
+      "fen": "rnqknr/1pppp1/p5/3PP1/PPP1K1/RNQ1NR b - - 0 4",
+      "claim": "puzzle pz-1m7xdw8",
+      "caption": "Exercise 4 (Academy puzzle pz-1m7xdw8). Black to move."
+    }
+  },
+  {
+    "id": "03-32",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1knr/pppppp/6/6/PPPPPP/2QKNR w - - 0 1\ncaption: Method C, queen against rook and knight. White has kept the queen but lost the a1-rook and b1-knight; Black has lost the queen. Depth 12: +166 for White here (+134 with the first move's value removed).\n```",
+    "fen": "rn1knr/pppppp/6/6/PPPPPP/2QKNR w - - 0 1",
+    "caption": "Method C, queen against rook and knight. White has kept the queen but lost the a1-rook and b1-knight; Black has lost the queen. Depth 12: +166 for White here (+134 with the first move's value removed).",
+    "fields": {
+      "fen": "rn1knr/pppppp/6/6/PPPPPP/2QKNR w - - 0 1",
+      "caption": "Method C, queen against rook and knight. White has kept the queen but lost the a1-rook and b1-knight; Black has lost the queen. Depth 12: +166 for White here (+134 with the first move's value removed)."
+    }
+  },
+  {
+    "id": "03-33",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2k1r/pp1n1p/2pnq1/2Q1P1/PP4/RN1KNR w - - 1 8\nclaim: puzzle pz-epqhdh\ncaption: Academy puzzle pz-epqhdh. White to move. Black's knight on d4 and queen on e4 press against White's king; White's queen is on c3.\n```",
+    "fen": "r2k1r/pp1n1p/2pnq1/2Q1P1/PP4/RN1KNR w - - 1 8",
+    "caption": "Academy puzzle pz-epqhdh. White to move. Black's knight on d4 and queen on e4 press against White's king; White's queen is on c3.",
+    "fields": {
+      "fen": "r2k1r/pp1n1p/2pnq1/2Q1P1/PP4/RN1KNR w - - 1 8",
+      "claim": "puzzle pz-epqhdh",
+      "caption": "Academy puzzle pz-epqhdh. White to move. Black's knight on d4 and queen on e4 press against White's king; White's queen is on c3."
+    }
+  },
+  {
+    "id": "03-34",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2knr/p1pnpp/2P3/Pq4/2NQPP/R2KNR b - - 0 8\nclaim: puzzle pz-1ieweog\ncaption: Exercise 2 (Academy puzzle pz-1ieweog). Black to move.\n```",
+    "fen": "r2knr/p1pnpp/2P3/Pq4/2NQPP/R2KNR b - - 0 8",
+    "caption": "Exercise 2 (Academy puzzle pz-1ieweog). Black to move.",
+    "fields": {
+      "fen": "r2knr/p1pnpp/2P3/Pq4/2NQPP/R2KNR b - - 0 8",
+      "claim": "puzzle pz-1ieweog",
+      "caption": "Exercise 2 (Academy puzzle pz-1ieweog). Black to move."
+    }
+  },
+  {
+    "id": "03-35",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16\nclaim: puzzle pz-1pw6dp5\ncaption: Exercise 3 (Academy puzzle pz-1pw6dp5). White to move.\n```",
+    "fen": "4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16",
+    "caption": "Exercise 3 (Academy puzzle pz-1pw6dp5). White to move.",
+    "fields": {
+      "fen": "4kr/p1Q2p/2nrpP/Pq2N1/4P1/R1K2R w - - 1 16",
+      "claim": "puzzle pz-1pw6dp5",
+      "caption": "Exercise 3 (Academy puzzle pz-1pw6dp5). White to move."
+    }
+  },
+  {
+    "id": "03-36",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2k1r/1p2pp/p1n3/2P3/PP3P/R1NK1R w - - 0 1\ncaption: A planning position. Rooks and a knight each, four pawns each. Black's knight on c4 attacks b2. White to move.\n```",
+    "fen": "r2k1r/1p2pp/p1n3/2P3/PP3P/R1NK1R w - - 0 1",
+    "caption": "A planning position. Rooks and a knight each, four pawns each. Black's knight on c4 attacks b2. White to move.",
+    "fields": {
+      "fen": "r2k1r/1p2pp/p1n3/2P3/PP3P/R1NK1R w - - 0 1",
+      "caption": "A planning position. Rooks and a knight each, four pawns each. Black's knight on c4 attacks b2. White to move."
+    }
+  },
+  {
+    "id": "03-37",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2k1r/1p2pp/p1n3/2P3/PP3P/R1NK1R w - - 0 1\nline: Kc2 e4 Ne2 Kc5 Rfe1\nshow: after\ncaption: The king plan (engine line at depth 12): 1. Kc2 e4 2. Ne2 Kc5 3. Rfe1. White's king guards b2 and connects the rooks; after ...e4 the d4-square is free of Black pawn control and the knight heads there.\n```",
+    "fen": "r4r/1pk2p/p1n1p1/2P3/PPK1NP/R3R1 b - - 3 3",
+    "caption": "The king plan (engine line at depth 12): 1. Kc2 e4 2. Ne2 Kc5 3. Rfe1. White's king guards b2 and connects the rooks; after ...e4 the d4-square is free of Black pawn control and the knight heads there.",
+    "fields": {
+      "fen": "r2k1r/1p2pp/p1n3/2P3/PP3P/R1NK1R w - - 0 1",
+      "line": "Kc2 e4 Ne2 Kc5 Rfe1",
+      "show": "after",
+      "caption": "The king plan (engine line at depth 12): 1. Kc2 e4 2. Ne2 Kc5 3. Rfe1. White's king guards b2 and connects the rooks; after ...e4 the d4-square is free of Black pawn control and the knight heads there."
+    }
+  },
+  {
+    "id": "03-38",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1k1r/pq2pp/1p1p1n/P5/1PPNPP/RNQK1R w - - 1 8\nclaim: puzzle pz-qcmiyc\ncaption: Academy puzzle pz-qcmiyc. White to move. Black's queen on b5 and knight on f4 look at e2.\n```",
+    "fen": "rn1k1r/pq2pp/1p1p1n/P5/1PPNPP/RNQK1R w - - 1 8",
+    "caption": "Academy puzzle pz-qcmiyc. White to move. Black's queen on b5 and knight on f4 look at e2.",
+    "fields": {
+      "fen": "rn1k1r/pq2pp/1p1p1n/P5/1PPNPP/RNQK1R w - - 1 8",
+      "claim": "puzzle pz-qcmiyc",
+      "caption": "Academy puzzle pz-qcmiyc. White to move. Black's queen on b5 and knight on f4 look at e2."
+    }
+  },
+  {
+    "id": "03-39",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r4r/1p2kp/pP2qn/N1Pp2/1P1P2/R1QKR1 b - - 4 11\nclaim: puzzle pz-1hgyd7o\ncaption: Guided exercise (Academy puzzle pz-1hgyd7o). Black to move.\n```",
+    "fen": "r4r/1p2kp/pP2qn/N1Pp2/1P1P2/R1QKR1 b - - 4 11",
+    "caption": "Guided exercise (Academy puzzle pz-1hgyd7o). Black to move.",
+    "fields": {
+      "fen": "r4r/1p2kp/pP2qn/N1Pp2/1P1P2/R1QKR1 b - - 4 11",
+      "claim": "puzzle pz-1hgyd7o",
+      "caption": "Guided exercise (Academy puzzle pz-1hgyd7o). Black to move."
+    }
+  },
+  {
+    "id": "03-40",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 1n2n1/q1p1kr/1pQp1p/3PpP/PKN1P1/R3R1 w - - 3 18\nclaim: puzzle pz-1uj8f9i\ncaption: Exercise 2 (Academy puzzle pz-1uj8f9i). White to move.\n```",
+    "fen": "1n2n1/q1p1kr/1pQp1p/3PpP/PKN1P1/R3R1 w - - 3 18",
+    "caption": "Exercise 2 (Academy puzzle pz-1uj8f9i). White to move.",
+    "fields": {
+      "fen": "1n2n1/q1p1kr/1pQp1p/3PpP/PKN1P1/R3R1 w - - 3 18",
+      "claim": "puzzle pz-1uj8f9i",
+      "caption": "Exercise 2 (Academy puzzle pz-1uj8f9i). White to move."
+    }
+  },
+  {
+    "id": "03-41",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: rn1k1r/1qpp1p/3np1/pP1PP1/PQPN1P/R2K1R w - - 0 8\nclaim: puzzle pz-elm8pn\ncaption: Exercise 3 (Academy puzzle pz-elm8pn). White to move.\n```",
+    "fen": "rn1k1r/1qpp1p/3np1/pP1PP1/PQPN1P/R2K1R w - - 0 8",
+    "caption": "Exercise 3 (Academy puzzle pz-elm8pn). White to move.",
+    "fields": {
+      "fen": "rn1k1r/1qpp1p/3np1/pP1PP1/PQPN1P/R2K1R w - - 0 8",
+      "claim": "puzzle pz-elm8pn",
+      "caption": "Exercise 3 (Academy puzzle pz-elm8pn). White to move."
+    }
+  },
+  {
+    "id": "03-42",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 3kr1/6/3K2/3P2/6/4R1 w - - 0 1\nline: Rxe6+ Kxe6\nshow: after\nclaim: tablebase win-in-9\ncaption: A conversion choice. White traded rooks with 1. Rxe6+ Kxe6, reaching a king-and-pawn ending that is won with certainty: proven by exhaustive enumeration (mate in 9 more moves with best play).\n```",
+    "fen": "4k1/6/3K2/3P2/6/6 w - - 0 2",
+    "caption": "A conversion choice. White traded rooks with 1. Rxe6+ Kxe6, reaching a king-and-pawn ending that is won with certainty: proven by exhaustive enumeration (mate in 9 more moves with best play).",
+    "fields": {
+      "fen": "3kr1/6/3K2/3P2/6/4R1 w - - 0 1",
+      "line": "Rxe6+ Kxe6",
+      "show": "after",
+      "claim": "tablebase win-in-9",
+      "caption": "A conversion choice. White traded rooks with 1. Rxe6+ Kxe6, reaching a king-and-pawn ending that is won with certainty: proven by exhaustive enumeration (mate in 9 more moves with best play)."
+    }
+  },
+  {
+    "id": "03-43",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: 6/1kq3/np1p2/1R1P2/2PKpr/1Q2R1 b - - 1 22\nclaim: puzzle pz-15sshpo\ncaption: Academy puzzle pz-15sshpo. Black to move. Black is under pressure, but White's pieces on b3, b1 and e1 are loosely placed.\n```",
+    "fen": "6/1kq3/np1p2/1R1P2/2PKpr/1Q2R1 b - - 1 22",
+    "caption": "Academy puzzle pz-15sshpo. Black to move. Black is under pressure, but White's pieces on b3, b1 and e1 are loosely placed.",
+    "fields": {
+      "fen": "6/1kq3/np1p2/1R1P2/2PKpr/1Q2R1 b - - 1 22",
+      "claim": "puzzle pz-15sshpo",
+      "caption": "Academy puzzle pz-15sshpo. Black to move. Black is under pressure, but White's pieces on b3, b1 and e1 are loosely placed."
+    }
+  },
+  {
+    "id": "03-44",
+    "file": "03-book-iii-strategist.md",
+    "block": "```crown\nfen: r2knr/1qpnpp/p5/Pp1NPP/1PQP2/RN2KR w - - 0 9\nclaim: puzzle pz-1elydfs\ncaption: Exercise 2 (Academy puzzle pz-1elydfs). White to move.\n```",
+    "fen": "r2knr/1qpnpp/p5/Pp1NPP/1PQP2/RN2KR w - - 0 9",
+    "caption": "Exercise 2 (Academy puzzle pz-1elydfs). White to move.",
+    "fields": {
+      "fen": "r2knr/1qpnpp/p5/Pp1NPP/1PQP2/RN2KR w - - 0 9",
+      "claim": "puzzle pz-1elydfs",
+      "caption": "Exercise 2 (Academy puzzle pz-1elydfs). White to move."
+    }
+  },
+  {
+    "id": "04-1",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 5k/R5/3K2/1P4/P5/6 w - - 3 27\nline: Ke4 Ke6 Ra6#\nclaim: only-mate-in-2\ncaption: From an engine game. White to move: the only mate in two is the quiet king move 1. Ke4. No check, no capture — the king takes e5 and f5 away, and Black's king must walk into the rook's sixth-rank mate.\n```",
+    "fen": "5k/R5/3K2/1P4/P5/6 w - - 3 27",
+    "caption": "From an engine game. White to move: the only mate in two is the quiet king move 1. Ke4. No check, no capture — the king takes e5 and f5 away, and Black's king must walk into the rook's sixth-rank mate.",
+    "fields": {
+      "fen": "5k/R5/3K2/1P4/P5/6 w - - 3 27",
+      "line": "Ke4 Ke6 Ra6#",
+      "claim": "only-mate-in-2",
+      "caption": "From an engine game. White to move: the only mate in two is the quiet king move 1. Ke4. No check, no capture — the king takes e5 and f5 away, and Black's king must walk into the rook's sixth-rank mate."
+    }
+  },
+  {
+    "id": "04-2",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: rk2n1/2R3/2p1N1/4Q1/P1P1P1/1n2K1 w - - 1 18\nline: Rxc4+ Kb5 Qb3+ Ka5 Qb4#\nclaim: only-mate-in-3\ncaption: White to move mates in three, and only by 1. Rxc4+. The line played: 1. Rxc4+ Kb5 2. Qb3+ Ka5 3. Qb4#.\n```",
+    "fen": "rk2n1/2R3/2p1N1/4Q1/P1P1P1/1n2K1 w - - 1 18",
+    "caption": "White to move mates in three, and only by 1. Rxc4+. The line played: 1. Rxc4+ Kb5 2. Qb3+ Ka5 3. Qb4#.",
+    "fields": {
+      "fen": "rk2n1/2R3/2p1N1/4Q1/P1P1P1/1n2K1 w - - 1 18",
+      "line": "Rxc4+ Kb5 Qb3+ Ka5 Qb4#",
+      "claim": "only-mate-in-3",
+      "caption": "White to move mates in three, and only by 1. Rxc4+. The line played: 1. Rxc4+ Kb5 2. Qb3+ Ka5 3. Qb4#."
+    }
+  },
+  {
+    "id": "04-3",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1nk1n1/r2pp1/6/Np1NP1/3P1K/R5 w - - 2 15\nclaim: puzzle pz-rz4qge\ncaption: Guided exercise (Academy puzzle pz-rz4qge). White to move.\n```",
+    "fen": "1nk1n1/r2pp1/6/Np1NP1/3P1K/R5 w - - 2 15",
+    "caption": "Guided exercise (Academy puzzle pz-rz4qge). White to move.",
+    "fields": {
+      "fen": "1nk1n1/r2pp1/6/Np1NP1/3P1K/R5 w - - 2 15",
+      "claim": "puzzle pz-rz4qge",
+      "caption": "Guided exercise (Academy puzzle pz-rz4qge). White to move."
+    }
+  },
+  {
+    "id": "04-4",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/4RR/1k4/1Pp1P1/2P1n1/1K4 w - - 3 34\nclaim: only-mate-in-2\ncaption: Exercise 1 (from an engine game). White to move: mate in two.\n```",
+    "fen": "6/4RR/1k4/1Pp1P1/2P1n1/1K4 w - - 3 34",
+    "caption": "Exercise 1 (from an engine game). White to move: mate in two.",
+    "fields": {
+      "fen": "6/4RR/1k4/1Pp1P1/2P1n1/1K4 w - - 3 34",
+      "claim": "only-mate-in-2",
+      "caption": "Exercise 1 (from an engine game). White to move: mate in two."
+    }
+  },
+  {
+    "id": "04-5",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: q2k1r/2n3/1n1p1p/1Pp2R/2PPP1/1NQK2 w - - 0 13\nclaim: puzzle pz-1ojk9ut\ncaption: Exercise 2 (Academy puzzle pz-1ojk9ut). White to move.\n```",
+    "fen": "q2k1r/2n3/1n1p1p/1Pp2R/2PPP1/1NQK2 w - - 0 13",
+    "caption": "Exercise 2 (Academy puzzle pz-1ojk9ut). White to move.",
+    "fields": {
+      "fen": "q2k1r/2n3/1n1p1p/1Pp2R/2PPP1/1NQK2 w - - 0 13",
+      "claim": "puzzle pz-1ojk9ut",
+      "caption": "Exercise 2 (Academy puzzle pz-1ojk9ut). White to move."
+    }
+  },
+  {
+    "id": "04-6",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: rn1k2/p1q1pr/3p2/QP4/2PP1P/R2KR1 w - - 0 12\nclaim: puzzle pz-taj1mu\ncaption: Exercise 3 (Academy puzzle pz-taj1mu). White to move.\n```",
+    "fen": "rn1k2/p1q1pr/3p2/QP4/2PP1P/R2KR1 w - - 0 12",
+    "caption": "Exercise 3 (Academy puzzle pz-taj1mu). White to move.",
+    "fields": {
+      "fen": "rn1k2/p1q1pr/3p2/QP4/2PP1P/R2KR1 w - - 0 12",
+      "claim": "puzzle pz-taj1mu",
+      "caption": "Exercise 3 (Academy puzzle pz-taj1mu). White to move."
+    }
+  },
+  {
+    "id": "04-7",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: rn1k2/p1qp1r/4p1/QP4/2PP1P/R2KR1 w - - 0 12\nclaim: puzzle pz-1qqoidw\ncaption: Exercise 4 (Academy puzzle pz-1qqoidw). White to move.\n```",
+    "fen": "rn1k2/p1qp1r/4p1/QP4/2PP1P/R2KR1 w - - 0 12",
+    "caption": "Exercise 4 (Academy puzzle pz-1qqoidw). White to move.",
+    "fields": {
+      "fen": "rn1k2/p1qp1r/4p1/QP4/2PP1P/R2KR1 w - - 0 12",
+      "claim": "puzzle pz-1qqoidw",
+      "caption": "Exercise 4 (Academy puzzle pz-1qqoidw). White to move."
+    }
+  },
+  {
+    "id": "04-8",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: r4k/1RR2p/2P1pP/P1PpP1/3P1K/6 w - - 3 28\nline: Rxf5+ Ke6 Rbe5+ Kd6 Rf6#\nclaim: only-mate-in-3\ncaption: From an engine game. White mates in three, and only by 1. Rxf5+. Two rooks drive the king along the sixth rank: 1. Rxf5+ Ke6 2. Rbe5+ Kd6 3. Rf6#.\n```",
+    "fen": "r4k/1RR2p/2P1pP/P1PpP1/3P1K/6 w - - 3 28",
+    "caption": "From an engine game. White mates in three, and only by 1. Rxf5+. Two rooks drive the king along the sixth rank: 1. Rxf5+ Ke6 2. Rbe5+ Kd6 3. Rf6#.",
+    "fields": {
+      "fen": "r4k/1RR2p/2P1pP/P1PpP1/3P1K/6 w - - 3 28",
+      "line": "Rxf5+ Ke6 Rbe5+ Kd6 Rf6#",
+      "claim": "only-mate-in-3",
+      "caption": "From an engine game. White mates in three, and only by 1. Rxf5+. Two rooks drive the king along the sixth rank: 1. Rxf5+ Ke6 2. Rbe5+ Kd6 3. Rf6#."
+    }
+  },
+  {
+    "id": "04-9",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35\nclaim: puzzle pz-culn07\ncaption: Academy puzzle pz-culn07. White to move. The engine announces mate.\n```",
+    "fen": "3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35",
+    "caption": "Academy puzzle pz-culn07. White to move. The engine announces mate.",
+    "fields": {
+      "fen": "3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35",
+      "claim": "puzzle pz-culn07",
+      "caption": "Academy puzzle pz-culn07. White to move. The engine announces mate."
+    }
+  },
+  {
+    "id": "04-10",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: r2k2/pp1p1r/2qP1n/P4N/2QK1P/R3NR b - - 2 14\nclaim: puzzle pz-t9swgq\ncaption: Guided exercise (Academy puzzle pz-t9swgq). Black to move.\n```",
+    "fen": "r2k2/pp1p1r/2qP1n/P4N/2QK1P/R3NR b - - 2 14",
+    "caption": "Guided exercise (Academy puzzle pz-t9swgq). Black to move.",
+    "fields": {
+      "fen": "r2k2/pp1p1r/2qP1n/P4N/2QK1P/R3NR b - - 2 14",
+      "claim": "puzzle pz-t9swgq",
+      "caption": "Guided exercise (Academy puzzle pz-t9swgq). Black to move."
+    }
+  },
+  {
+    "id": "04-11",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1Q4/3pr1/P1p1k1/5p/3K1P/1RR3 w - - 3 24\nclaim: only-mate-in-3\ncaption: Exercise 1 (from an engine game). White to move: mate in three.\n```",
+    "fen": "1Q4/3pr1/P1p1k1/5p/3K1P/1RR3 w - - 3 24",
+    "caption": "Exercise 1 (from an engine game). White to move: mate in three.",
+    "fields": {
+      "fen": "1Q4/3pr1/P1p1k1/5p/3K1P/1RR3 w - - 3 24",
+      "claim": "only-mate-in-3",
+      "caption": "Exercise 1 (from an engine game). White to move: mate in three."
+    }
+  },
+  {
+    "id": "04-12",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: r3k1/1pP3/1P3R/pNQ1pK/P2n1N/6 w - - 1 24\nclaim: only-mate-in-3\ncaption: Exercise 2 (from an engine game). White to move: mate in three.\n```",
+    "fen": "r3k1/1pP3/1P3R/pNQ1pK/P2n1N/6 w - - 1 24",
+    "caption": "Exercise 2 (from an engine game). White to move: mate in three.",
+    "fields": {
+      "fen": "r3k1/1pP3/1P3R/pNQ1pK/P2n1N/6 w - - 1 24",
+      "claim": "only-mate-in-3",
+      "caption": "Exercise 2 (from an engine game). White to move: mate in three."
+    }
+  },
+  {
+    "id": "04-13",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1n1k2/5R/1r2P1/p2p2/3P2/2RK2 w - - 0 29\nclaim: puzzle pz-1xogykc\ncaption: Exercise 3 (Academy puzzle pz-1xogykc). White to move.\n```",
+    "fen": "1n1k2/5R/1r2P1/p2p2/3P2/2RK2 w - - 0 29",
+    "caption": "Exercise 3 (Academy puzzle pz-1xogykc). White to move.",
+    "fields": {
+      "fen": "1n1k2/5R/1r2P1/p2p2/3P2/2RK2 w - - 0 29",
+      "claim": "puzzle pz-1xogykc",
+      "caption": "Exercise 3 (Academy puzzle pz-1xogykc). White to move."
+    }
+  },
+  {
+    "id": "04-14",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: rnk2r/pNnq1p/2p3/2PpQ1/PP2PP/R2K1R w - - 3 11\nclaim: puzzle pz-1uhg8w8\ncaption: Academy puzzle pz-1uhg8w8. White to move. White's knight on b5 is attacked by Black's king, and Black's pawn on d3 eyes e2. Find the only move that holds.\n```",
+    "fen": "rnk2r/pNnq1p/2p3/2PpQ1/PP2PP/R2K1R w - - 3 11",
+    "caption": "Academy puzzle pz-1uhg8w8. White to move. White's knight on b5 is attacked by Black's king, and Black's pawn on d3 eyes e2. Find the only move that holds.",
+    "fields": {
+      "fen": "rnk2r/pNnq1p/2p3/2PpQ1/PP2PP/R2K1R w - - 3 11",
+      "claim": "puzzle pz-1uhg8w8",
+      "caption": "Academy puzzle pz-1uhg8w8. White to move. White's knight on b5 is attacked by Black's king, and Black's pawn on d3 eyes e2. Find the only move that holds."
+    }
+  },
+  {
+    "id": "04-15",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11\nclaim: puzzle pz-bus7cm\ncaption: Academy puzzle pz-bus7cm. White to move. Black's pawn on c3 threatens to take on b2 and crown; White's position is collapsing.\n```",
+    "fen": "rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11",
+    "caption": "Academy puzzle pz-bus7cm. White to move. Black's pawn on c3 threatens to take on b2 and crown; White's position is collapsing.",
+    "fields": {
+      "fen": "rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11",
+      "claim": "puzzle pz-bus7cm",
+      "caption": "Academy puzzle pz-bus7cm. White to move. Black's pawn on c3 threatens to take on b2 and crown; White's position is collapsing."
+    }
+  },
+  {
+    "id": "04-16",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/4R1/K5/6/6/3kq1 w - - 0 35\nclaim: puzzle pz-1w5drbc\ncaption: Guided exercise (Academy puzzle pz-1w5drbc). White to move.\n```",
+    "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+    "caption": "Guided exercise (Academy puzzle pz-1w5drbc). White to move.",
+    "fields": {
+      "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+      "claim": "puzzle pz-1w5drbc",
+      "caption": "Guided exercise (Academy puzzle pz-1w5drbc). White to move."
+    }
+  },
+  {
+    "id": "04-17",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/4R1/K5/6/6/3kq1 w - - 0 35\nline: Rxe1+ Kxe1\nclaim: bare-kings\nshow: after\ncaption: After 35. Rxe1+ Kxe1: bare kings, an automatic draw under crown-adj-1.\n```",
+    "fen": "6/6/K5/6/6/4k1 w - - 0 36",
+    "caption": "After 35. Rxe1+ Kxe1: bare kings, an automatic draw under crown-adj-1.",
+    "fields": {
+      "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+      "line": "Rxe1+ Kxe1",
+      "claim": "bare-kings",
+      "show": "after",
+      "caption": "After 35. Rxe1+ Kxe1: bare kings, an automatic draw under crown-adj-1."
+    }
+  },
+  {
+    "id": "04-18",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: r5/1p1P2/6/1P1K2/1k4/q2R2 w - - 0 33\nclaim: puzzle pz-1e3gsvq\ncaption: Exercise 1 (Academy puzzle pz-1e3gsvq). White to move.\n```",
+    "fen": "r5/1p1P2/6/1P1K2/1k4/q2R2 w - - 0 33",
+    "caption": "Exercise 1 (Academy puzzle pz-1e3gsvq). White to move.",
+    "fields": {
+      "fen": "r5/1p1P2/6/1P1K2/1k4/q2R2 w - - 0 33",
+      "claim": "puzzle pz-1e3gsvq",
+      "caption": "Exercise 1 (Academy puzzle pz-1e3gsvq). White to move."
+    }
+  },
+  {
+    "id": "04-19",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22\nclaim: puzzle pz-3rc51e\ncaption: Exercise 2 (Academy puzzle pz-3rc51e). Black to move.\n```",
+    "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
+    "caption": "Exercise 2 (Academy puzzle pz-3rc51e). Black to move.",
+    "fields": {
+      "fen": "1Q3r/5P/p2nk1/6/1P4/3K1R b - - 0 22",
+      "claim": "puzzle pz-3rc51e",
+      "caption": "Exercise 2 (Academy puzzle pz-3rc51e). Black to move."
+    }
+  },
+  {
+    "id": "04-20",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 4k1/4pr/3p2/6/2PPRP/1rQK2 b - - 1 17\nclaim: puzzle pz-gbfcab\ncaption: Exercise 3 (Academy puzzle pz-gbfcab). Black to move.\n```",
+    "fen": "4k1/4pr/3p2/6/2PPRP/1rQK2 b - - 1 17",
+    "caption": "Exercise 3 (Academy puzzle pz-gbfcab). Black to move.",
+    "fields": {
+      "fen": "4k1/4pr/3p2/6/2PPRP/1rQK2 b - - 1 17",
+      "claim": "puzzle pz-gbfcab",
+      "caption": "Exercise 3 (Academy puzzle pz-gbfcab). Black to move."
+    }
+  },
+  {
+    "id": "04-21",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 2q3/1p1k1p/1p1n1Q/r4P/P3rR/2RK2 w - - 0 20\nclaim: puzzle pz-34jbi3\ncaption: Exercise 4 (Academy puzzle pz-34jbi3). White to move.\n```",
+    "fen": "2q3/1p1k1p/1p1n1Q/r4P/P3rR/2RK2 w - - 0 20",
+    "caption": "Exercise 4 (Academy puzzle pz-34jbi3). White to move.",
+    "fields": {
+      "fen": "2q3/1p1k1p/1p1n1Q/r4P/P3rR/2RK2 w - - 0 20",
+      "claim": "puzzle pz-34jbi3",
+      "caption": "Exercise 4 (Academy puzzle pz-34jbi3). White to move."
+    }
+  },
+  {
+    "id": "04-22",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/3k2/6/3K2/3P2/6 w - - 0 1\nclaim: tablebase draw\ncaption: Opposition, White to move. Kings on d3 and d5, pawn on d2. Evidence (exhaustive enumeration): with White to move this is a draw — White must give way.\n```",
+    "fen": "6/3k2/6/3K2/3P2/6 w - - 0 1",
+    "caption": "Opposition, White to move. Kings on d3 and d5, pawn on d2. Evidence (exhaustive enumeration): with White to move this is a draw — White must give way.",
+    "fields": {
+      "fen": "6/3k2/6/3K2/3P2/6 w - - 0 1",
+      "claim": "tablebase draw",
+      "caption": "Opposition, White to move. Kings on d3 and d5, pawn on d2. Evidence (exhaustive enumeration): with White to move this is a draw — White must give way."
+    }
+  },
+  {
+    "id": "04-23",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/3k2/6/3K2/3P2/6 b - - 0 1\nclaim: tablebase loss-in-12\ncaption: The same position with Black to move. Evidence (exhaustive enumeration): White wins (mate in 12 with best play), because Black's king must step aside and White's king reaches a key square (c4, d4 or e4).\n```",
+    "fen": "6/3k2/6/3K2/3P2/6 b - - 0 1",
+    "caption": "The same position with Black to move. Evidence (exhaustive enumeration): White wins (mate in 12 with best play), because Black's king must step aside and White's king reaches a key square (c4, d4 or e4).",
+    "fields": {
+      "fen": "6/3k2/6/3K2/3P2/6 b - - 0 1",
+      "claim": "tablebase loss-in-12",
+      "caption": "The same position with Black to move. Evidence (exhaustive enumeration): White wins (mate in 12 with best play), because Black's king must step aside and White's king reaches a key square (c4, d4 or e4)."
+    }
+  },
+  {
+    "id": "04-24",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3k2/6/6/3K2/3P2/6 w - - 0 1\nclaim: tablebase win-in-11\ncaption: White to move. Black's king on d6, White's on d3, pawn on d2. Evidence (exhaustive enumeration): White wins with 1. Kc4, 1. Kd4 or 1. Ke4 — each reaches a key square. With Black to move, only 1...Kd5! (taking the opposition) draws.\n```",
+    "fen": "3k2/6/6/3K2/3P2/6 w - - 0 1",
+    "caption": "White to move. Black's king on d6, White's on d3, pawn on d2. Evidence (exhaustive enumeration): White wins with 1. Kc4, 1. Kd4 or 1. Ke4 — each reaches a key square. With Black to move, only 1...Kd5! (taking the opposition) draws.",
+    "fields": {
+      "fen": "3k2/6/6/3K2/3P2/6 w - - 0 1",
+      "claim": "tablebase win-in-11",
+      "caption": "White to move. Black's king on d6, White's on d3, pawn on d2. Evidence (exhaustive enumeration): White wins with 1. Kc4, 1. Kd4 or 1. Ke4 — each reaches a key square. With Black to move, only 1...Kd5! (taking the opposition) draws."
+    }
+  },
+  {
+    "id": "04-25",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/6/pk4/6/1K4 w - - 14 66\nclaim: puzzle pz-1og62nt\ncaption: Guided exercise (Academy puzzle pz-1og62nt). White to move. Black's pawn is on a3, Black's king on b3, White's king on b1.\n```",
+    "fen": "6/6/6/pk4/6/1K4 w - - 14 66",
+    "caption": "Guided exercise (Academy puzzle pz-1og62nt). White to move. Black's pawn is on a3, Black's king on b3, White's king on b1.",
+    "fields": {
+      "fen": "6/6/6/pk4/6/1K4 w - - 14 66",
+      "claim": "puzzle pz-1og62nt",
+      "caption": "Guided exercise (Academy puzzle pz-1og62nt). White to move. Black's pawn is on a3, Black's king on b3, White's king on b1."
+    }
+  },
+  {
+    "id": "04-26",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/3p2/3P1K/1kP3/6 w - - 3 37\nclaim: puzzle pz-lw0zln\ncaption: Exercise 1 (Academy puzzle pz-lw0zln). White to move.\n```",
+    "fen": "6/6/3p2/3P1K/1kP3/6 w - - 3 37",
+    "caption": "Exercise 1 (Academy puzzle pz-lw0zln). White to move.",
+    "fields": {
+      "fen": "6/6/3p2/3P1K/1kP3/6 w - - 3 37",
+      "claim": "puzzle pz-lw0zln",
+      "caption": "Exercise 1 (Academy puzzle pz-lw0zln). White to move."
+    }
+  },
+  {
+    "id": "04-27",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/6/N1kPpP/1p4/3K2 b - - 0 27\nclaim: puzzle pz-58b8es\ncaption: Exercise 2 (Academy puzzle pz-58b8es). Black to move.\n```",
+    "fen": "6/6/6/N1kPpP/1p4/3K2 b - - 0 27",
+    "caption": "Exercise 2 (Academy puzzle pz-58b8es). Black to move.",
+    "fields": {
+      "fen": "6/6/6/N1kPpP/1p4/3K2 b - - 0 27",
+      "claim": "puzzle pz-58b8es",
+      "caption": "Exercise 2 (Academy puzzle pz-58b8es). Black to move."
+    }
+  },
+  {
+    "id": "04-28",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3k2/6/p1PP2/P3Pp/1K4/6 b - - 0 28\nclaim: puzzle pz-fhy0fo\ncaption: Exercise 3 (Academy puzzle pz-fhy0fo). Black to move.\n```",
+    "fen": "3k2/6/p1PP2/P3Pp/1K4/6 b - - 0 28",
+    "caption": "Exercise 3 (Academy puzzle pz-fhy0fo). Black to move.",
+    "fields": {
+      "fen": "3k2/6/p1PP2/P3Pp/1K4/6 b - - 0 28",
+      "claim": "puzzle pz-fhy0fo",
+      "caption": "Exercise 3 (Academy puzzle pz-fhy0fo). Black to move."
+    }
+  },
+  {
+    "id": "04-29",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 5R/6/6/2p3/1k4/3K2 b - - 0 46\nclaim: puzzle pz-c0qvzm\ncaption: Exercise 4 (Academy puzzle pz-c0qvzm). Black to move.\n```",
+    "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+    "caption": "Exercise 4 (Academy puzzle pz-c0qvzm). Black to move.",
+    "fields": {
+      "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+      "claim": "puzzle pz-c0qvzm",
+      "caption": "Exercise 4 (Academy puzzle pz-c0qvzm). Black to move."
+    }
+  },
+  {
+    "id": "04-30",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3k2/6/3K2/6/6/R5 w - - 0 1\nline: Ra6#\nclaim: mate-in-1\ncaption: The basic rook mate. Kings on d4 and d6; the rook mates on the sixth rank because White's king covers c5, d5 and e5.\n```",
+    "fen": "3k2/6/3K2/6/6/R5 w - - 0 1",
+    "caption": "The basic rook mate. Kings on d4 and d6; the rook mates on the sixth rank because White's king covers c5, d5 and e5.",
+    "fields": {
+      "fen": "3k2/6/3K2/6/6/R5 w - - 0 1",
+      "line": "Ra6#",
+      "claim": "mate-in-1",
+      "caption": "The basic rook mate. Kings on d4 and d6; the rook mates on the sixth rank because White's king covers c5, d5 and e5."
+    }
+  },
+  {
+    "id": "04-31",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 4k1/R5/6/1P2K1/P5/6 w - - 1 26\nline: Kd4 Kf6 Ke4 Ke6 Ra6#\nclaim: only-mate-in-3\ncaption: From an engine game. The rook already cuts Black's king off on the sixth rank (it stands on a5, guarding the fifth). White mates in three with two quiet king moves: 1. Kd4 Kf6 2. Ke4 Ke6 3. Ra6#.\n```",
+    "fen": "4k1/R5/6/1P2K1/P5/6 w - - 1 26",
+    "caption": "From an engine game. The rook already cuts Black's king off on the sixth rank (it stands on a5, guarding the fifth). White mates in three with two quiet king moves: 1. Kd4 Kf6 2. Ke4 Ke6 3. Ra6#.",
+    "fields": {
+      "fen": "4k1/R5/6/1P2K1/P5/6 w - - 1 26",
+      "line": "Kd4 Kf6 Ke4 Ke6 Ra6#",
+      "claim": "only-mate-in-3",
+      "caption": "From an engine game. The rook already cuts Black's king off on the sixth rank (it stands on a5, guarding the fifth). White mates in three with two quiet king moves: 1. Kd4 Kf6 2. Ke4 Ke6 3. Ra6#."
+    }
+  },
+  {
+    "id": "04-32",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/6/6/2k3/KR4 w - - 0 1\nclaim: tablebase win-in-12\ncaption: Evidence (exhaustive enumeration): the longest king-and-rook win on 6×6 — White mates in 12 moves with best play. Every legal position of this ending is won in 12 moves or fewer, well inside the 100-halfmove limit.\n```",
+    "fen": "6/6/6/6/2k3/KR4 w - - 0 1",
+    "caption": "Evidence (exhaustive enumeration): the longest king-and-rook win on 6×6 — White mates in 12 moves with best play. Every legal position of this ending is won in 12 moves or fewer, well inside the 100-halfmove limit.",
+    "fields": {
+      "fen": "6/6/6/6/2k3/KR4 w - - 0 1",
+      "claim": "tablebase win-in-12",
+      "caption": "Evidence (exhaustive enumeration): the longest king-and-rook win on 6×6 — White mates in 12 moves with best play. Every legal position of this ending is won in 12 moves or fewer, well inside the 100-halfmove limit."
+    }
+  },
+  {
+    "id": "04-33",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/5K/6/4k1/3r2/6 b - - 11 45\nline: Kd4 Kf6 Kd5 Kf5 Rf2#\nclaim: only-mate-in-3\ncaption: Black to move mates in three: 1...Kd4 2. Kf6 Kd5 3. Kf5 Rf2#. White's king is already on the edge file; Black's king approaches in opposition and the rook mates along the f-file.\n```",
+    "fen": "6/5K/6/4k1/3r2/6 b - - 11 45",
+    "caption": "Black to move mates in three: 1...Kd4 2. Kf6 Kd5 3. Kf5 Rf2#. White's king is already on the edge file; Black's king approaches in opposition and the rook mates along the f-file.",
+    "fields": {
+      "fen": "6/5K/6/4k1/3r2/6 b - - 11 45",
+      "line": "Kd4 Kf6 Kd5 Kf5 Rf2#",
+      "claim": "only-mate-in-3",
+      "caption": "Black to move mates in three: 1...Kd4 2. Kf6 Kd5 3. Kf5 Rf2#. White's king is already on the edge file; Black's king approaches in opposition and the rook mates along the f-file."
+    }
+  },
+  {
+    "id": "04-34",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/4R1/6/1K1k2/4p1/6 b - - 1 38\nclaim: puzzle pz-1sosh8a\ncaption: Guided exercise (Academy puzzle pz-1sosh8a). Black to move.\n```",
+    "fen": "6/4R1/6/1K1k2/4p1/6 b - - 1 38",
+    "caption": "Guided exercise (Academy puzzle pz-1sosh8a). Black to move.",
+    "fields": {
+      "fen": "6/4R1/6/1K1k2/4p1/6 b - - 1 38",
+      "claim": "puzzle pz-1sosh8a",
+      "caption": "Guided exercise (Academy puzzle pz-1sosh8a). Black to move."
+    }
+  },
+  {
+    "id": "04-35",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3R2/6/PK4/N4k/4R1/6 w - - 1 44\nclaim: only-mate-in-2\ncaption: Exercise 1 (from an engine game). White to move: mate in two.\n```",
+    "fen": "3R2/6/PK4/N4k/4R1/6 w - - 1 44",
+    "caption": "Exercise 1 (from an engine game). White to move: mate in two.",
+    "fields": {
+      "fen": "3R2/6/PK4/N4k/4R1/6 w - - 1 44",
+      "claim": "only-mate-in-2",
+      "caption": "Exercise 1 (from an engine game). White to move: mate in two."
+    }
+  },
+  {
+    "id": "04-36",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23\nclaim: puzzle pz-qn6wq1\ncaption: Exercise 2 (Academy puzzle pz-qn6wq1). Black to move.\n```",
+    "fen": "6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23",
+    "caption": "Exercise 2 (Academy puzzle pz-qn6wq1). Black to move.",
+    "fields": {
+      "fen": "6/2knN1/3p2/1P1P1P/r5/2K2R b - - 2 23",
+      "claim": "puzzle pz-qn6wq1",
+      "caption": "Exercise 2 (Academy puzzle pz-qn6wq1). Black to move."
+    }
+  },
+  {
+    "id": "04-37",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/2n3/p4P/3pk1/1r4/3KNR w - - 0 22\nclaim: puzzle pz-1qt9loi\ncaption: Exercise 3 (Academy puzzle pz-1qt9loi). White to move.\n```",
+    "fen": "6/2n3/p4P/3pk1/1r4/3KNR w - - 0 22",
+    "caption": "Exercise 3 (Academy puzzle pz-1qt9loi). White to move.",
+    "fields": {
+      "fen": "6/2n3/p4P/3pk1/1r4/3KNR w - - 0 22",
+      "claim": "puzzle pz-1qt9loi",
+      "caption": "Exercise 3 (Academy puzzle pz-1qt9loi). White to move."
+    }
+  },
+  {
+    "id": "04-38",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 2nk2/6/3K2/6/6/5R w - - 0 1\nclaim: tablebase draw\ncaption: Rook against knight, knight beside its king. Evidence (exhaustive enumeration): with White to move, a draw.\n```",
+    "fen": "2nk2/6/3K2/6/6/5R w - - 0 1",
+    "caption": "Rook against knight, knight beside its king. Evidence (exhaustive enumeration): with White to move, a draw.",
+    "fields": {
+      "fen": "2nk2/6/3K2/6/6/5R w - - 0 1",
+      "claim": "tablebase draw",
+      "caption": "Rook against knight, knight beside its king. Evidence (exhaustive enumeration): with White to move, a draw."
+    }
+  },
+  {
+    "id": "04-39",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: n2k2/6/6/3K2/6/5R w - - 0 1\nclaim: tablebase win-in-10\ncaption: The same material with the knight stranded in the corner, away from its king. Evidence (exhaustive enumeration): White wins (mate in 10).\n```",
+    "fen": "n2k2/6/6/3K2/6/5R w - - 0 1",
+    "caption": "The same material with the knight stranded in the corner, away from its king. Evidence (exhaustive enumeration): White wins (mate in 10).",
+    "fields": {
+      "fen": "n2k2/6/6/3K2/6/5R w - - 0 1",
+      "claim": "tablebase win-in-10",
+      "caption": "The same material with the knight stranded in the corner, away from its king. Evidence (exhaustive enumeration): White wins (mate in 10)."
+    }
+  },
+  {
+    "id": "04-40",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/3k2/5p/3Pp1/1p1NP1/4K1 w - - 0 24\nclaim: puzzle pz-1ce067n\ncaption: Academy puzzle pz-1ce067n. White to move. White's knight on d2 is attacked by the e3-pawn, and Black's b2-pawn wants to crown on b1.\n```",
+    "fen": "6/3k2/5p/3Pp1/1p1NP1/4K1 w - - 0 24",
+    "caption": "Academy puzzle pz-1ce067n. White to move. White's knight on d2 is attacked by the e3-pawn, and Black's b2-pawn wants to crown on b1.",
+    "fields": {
+      "fen": "6/3k2/5p/3Pp1/1p1NP1/4K1 w - - 0 24",
+      "claim": "puzzle pz-1ce067n",
+      "caption": "Academy puzzle pz-1ce067n. White to move. White's knight on d2 is attacked by the e3-pawn, and Black's b2-pawn wants to crown on b1."
+    }
+  },
+  {
+    "id": "04-41",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/1K4/2n3/1k4/3q2/6 b - - 7 50\nline: Qd5+ Ka6 Qa5#\nclaim: only-mate-in-2\ncaption: From an engine game. Black to move mates in two: 1...Qd5+ 2. Ka6 Qa5#. Black's king on b3, knight on c4 and queen work together against White's king on b5.\n```",
+    "fen": "6/1K4/2n3/1k4/3q2/6 b - - 7 50",
+    "caption": "From an engine game. Black to move mates in two: 1...Qd5+ 2. Ka6 Qa5#. Black's king on b3, knight on c4 and queen work together against White's king on b5.",
+    "fields": {
+      "fen": "6/1K4/2n3/1k4/3q2/6 b - - 7 50",
+      "line": "Qd5+ Ka6 Qa5#",
+      "claim": "only-mate-in-2",
+      "caption": "From an engine game. Black to move mates in two: 1...Qd5+ 2. Ka6 Qa5#. Black's king on b3, knight on c4 and queen work together against White's king on b5."
+    }
+  },
+  {
+    "id": "04-42",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/6/2Kp2/4kp/5N w - - 4 66\nclaim: puzzle pz-10kdeu\ncaption: Exercise 1 (Academy puzzle pz-10kdeu). White to move.\n```",
+    "fen": "6/6/6/2Kp2/4kp/5N w - - 4 66",
+    "caption": "Exercise 1 (Academy puzzle pz-10kdeu). White to move.",
+    "fields": {
+      "fen": "6/6/6/2Kp2/4kp/5N w - - 4 66",
+      "claim": "puzzle pz-10kdeu",
+      "caption": "Exercise 1 (Academy puzzle pz-10kdeu). White to move."
+    }
+  },
+  {
+    "id": "04-43",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/6/2kp1p/5N/1p1K2/6 w - - 0 56\nclaim: puzzle pz-1kyexec\ncaption: Exercise 2 (Academy puzzle pz-1kyexec). White to move.\n```",
+    "fen": "6/6/2kp1p/5N/1p1K2/6 w - - 0 56",
+    "caption": "Exercise 2 (Academy puzzle pz-1kyexec). White to move.",
+    "fields": {
+      "fen": "6/6/2kp1p/5N/1p1K2/6 w - - 0 56",
+      "claim": "puzzle pz-1kyexec",
+      "caption": "Exercise 2 (Academy puzzle pz-1kyexec). White to move."
+    }
+  },
+  {
+    "id": "04-44",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/1kp3/p5/4K1/P3nr/3R2 b - - 0 22\nclaim: puzzle pz-1s6cykg\ncaption: Exercise 3 (Academy puzzle pz-1s6cykg). Black to move.\n```",
+    "fen": "6/1kp3/p5/4K1/P3nr/3R2 b - - 0 22",
+    "caption": "Exercise 3 (Academy puzzle pz-1s6cykg). Black to move.",
+    "fields": {
+      "fen": "6/1kp3/p5/4K1/P3nr/3R2 b - - 0 22",
+      "claim": "puzzle pz-1s6cykg",
+      "caption": "Exercise 3 (Academy puzzle pz-1s6cykg). Black to move."
+    }
+  },
+  {
+    "id": "04-45",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 3K2/2P3/3k2/6/2n3/6 w - - 0 52\nclaim: puzzle pz-1ftvz6i\ncaption: Exercise 4 (Academy puzzle pz-1ftvz6i). White to move.\n```",
+    "fen": "3K2/2P3/3k2/6/2n3/6 w - - 0 52",
+    "caption": "Exercise 4 (Academy puzzle pz-1ftvz6i). White to move.",
+    "fields": {
+      "fen": "3K2/2P3/3k2/6/2n3/6 w - - 0 52",
+      "claim": "puzzle pz-1ftvz6i",
+      "caption": "Exercise 4 (Academy puzzle pz-1ftvz6i). White to move."
+    }
+  },
+  {
+    "id": "04-46",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: Q5/2k3/6/3K1N/4p1/6 w - - 0 25\nclaim: only-mate-in-3\ncaption: Exercise 5. White to move: mate in three.\n```",
+    "fen": "Q5/2k3/6/3K1N/4p1/6 w - - 0 25",
+    "caption": "Exercise 5. White to move: mate in three.",
+    "fields": {
+      "fen": "Q5/2k3/6/3K1N/4p1/6 w - - 0 25",
+      "claim": "only-mate-in-3",
+      "caption": "Exercise 5. White to move: mate in three."
+    }
+  },
+  {
+    "id": "04-47",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: k5/6/1K4/6/6/3Q2 w - - 0 1\nline: Qd4\nclaim: stalemate\nshow: after\ncaption: The trap. 1. Qd4?? looks like it tightens the net, but Black's king on a6 has no legal move and is not in check: stalemate, a draw.\n```",
+    "fen": "k5/6/1K1Q2/6/6/6 b - - 1 1",
+    "caption": "The trap. 1. Qd4?? looks like it tightens the net, but Black's king on a6 has no legal move and is not in check: stalemate, a draw.",
+    "fields": {
+      "fen": "k5/6/1K4/6/6/3Q2 w - - 0 1",
+      "line": "Qd4",
+      "claim": "stalemate",
+      "show": "after",
+      "caption": "The trap. 1. Qd4?? looks like it tightens the net, but Black's king on a6 has no legal move and is not in check: stalemate, a draw."
+    }
+  },
+  {
+    "id": "04-48",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: k5/6/1K4/6/6/3Q2 w - - 0 1\nline: Qd6#\nclaim: checkmate\nshow: after\ncaption: The right move from the same position: 1. Qd6#. The queen checks along the sixth rank; the king on b4 covers a5 and b5.\n```",
+    "fen": "k2Q2/6/1K4/6/6/6 b - - 1 1",
+    "caption": "The right move from the same position: 1. Qd6#. The queen checks along the sixth rank; the king on b4 covers a5 and b5.",
+    "fields": {
+      "fen": "k5/6/1K4/6/6/3Q2 w - - 0 1",
+      "line": "Qd6#",
+      "claim": "checkmate",
+      "show": "after",
+      "caption": "The right move from the same position: 1. Qd6#. The queen checks along the sixth rank; the king on b4 covers a5 and b5."
+    }
+  },
+  {
+    "id": "04-49",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: R5/6/1p2k1/5p/1PP3/K5 b - - 7 32\nclaim: puzzle pz-rmet01\ncaption: Academy puzzle pz-rmet01. Black to move. Black has two pawns for nothing against a rook, but White's king is far away.\n```",
+    "fen": "R5/6/1p2k1/5p/1PP3/K5 b - - 7 32",
+    "caption": "Academy puzzle pz-rmet01. Black to move. Black has two pawns for nothing against a rook, but White's king is far away.",
+    "fields": {
+      "fen": "R5/6/1p2k1/5p/1PP3/K5 b - - 7 32",
+      "claim": "puzzle pz-rmet01",
+      "caption": "Academy puzzle pz-rmet01. Black to move. Black has two pawns for nothing against a rook, but White's king is far away."
+    }
+  },
+  {
+    "id": "04-50",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: k5/6/K5/6/6/2Q3 w - - 0 1\nline: Qc6#\nclaim: only-mate-in-1\ncaption: Guided exercise. White to move. (Solution shown: 1. Qc6#.)\n```",
+    "fen": "k5/6/K5/6/6/2Q3 w - - 0 1",
+    "caption": "Guided exercise. White to move. (Solution shown: 1. Qc6#.)",
+    "fields": {
+      "fen": "k5/6/K5/6/6/2Q3 w - - 0 1",
+      "line": "Qc6#",
+      "claim": "only-mate-in-1",
+      "caption": "Guided exercise. White to move. (Solution shown: 1. Qc6#.)"
+    }
+  },
+  {
+    "id": "04-51",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1n2k1/2r3/pN4/2R3/5P/2K3 w - - 0 29\nclaim: puzzle pz-b8tld2\ncaption: Academy puzzle pz-b8tld2. White to move. Black's rook on c5 stands undefended in front of White's rook.\n```",
+    "fen": "1n2k1/2r3/pN4/2R3/5P/2K3 w - - 0 29",
+    "caption": "Academy puzzle pz-b8tld2. White to move. Black's rook on c5 stands undefended in front of White's rook.",
+    "fields": {
+      "fen": "1n2k1/2r3/pN4/2R3/5P/2K3 w - - 0 29",
+      "claim": "puzzle pz-b8tld2",
+      "caption": "Academy puzzle pz-b8tld2. White to move. Black's rook on c5 stands undefended in front of White's rook."
+    }
+  },
+  {
+    "id": "04-52",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20\nclaim: puzzle pz-ephpsb\ncaption: Academy puzzle pz-ephpsb. White to move. Black's rook on a1 and White's rook on f1 stand on the same rank, with only White's knight on b1 between them.\n```",
+    "fen": "6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20",
+    "caption": "Academy puzzle pz-ephpsb. White to move. Black's rook on a1 and White's rook on f1 stand on the same rank, with only White's knight on b1 between them.",
+    "fields": {
+      "fen": "6/1kPp1r/6/1K3p/5P/rN3R w - - 0 20",
+      "claim": "puzzle pz-ephpsb",
+      "caption": "Academy puzzle pz-ephpsb. White to move. Black's rook on a1 and White's rook on f1 stand on the same rank, with only White's knight on b1 between them."
+    }
+  },
+  {
+    "id": "04-53",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 5k/6/1Pp1P1/2K3/p5/6 b - - 0 36\nclaim: puzzle pz-1cphbbp\ncaption: Guided exercise (Academy puzzle pz-1cphbbp). Black to move.\n```",
+    "fen": "5k/6/1Pp1P1/2K3/p5/6 b - - 0 36",
+    "caption": "Guided exercise (Academy puzzle pz-1cphbbp). Black to move.",
+    "fields": {
+      "fen": "5k/6/1Pp1P1/2K3/p5/6 b - - 0 36",
+      "claim": "puzzle pz-1cphbbp",
+      "caption": "Guided exercise (Academy puzzle pz-1cphbbp). Black to move."
+    }
+  },
+  {
+    "id": "04-54",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27\nclaim: puzzle pz-1td3for\ncaption: Exercise 1 (Academy puzzle pz-1td3for). White to move.\n```",
+    "fen": "1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27",
+    "caption": "Exercise 1 (Academy puzzle pz-1td3for). White to move.",
+    "fields": {
+      "fen": "1n2k1/5p/p1P2r/3K2/6/6 w - - 0 27",
+      "claim": "puzzle pz-1td3for",
+      "caption": "Exercise 1 (Academy puzzle pz-1td3for). White to move."
+    }
+  },
+  {
+    "id": "04-55",
+    "file": "04-book-iv-master.md",
+    "block": "```crown\nfen: 6/p3Pr/k5/4K1/6/6 w - - 0 33\nclaim: puzzle pz-12j3cmu\ncaption: Exercise 2 (Academy puzzle pz-12j3cmu). White to move.\n```",
+    "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+    "caption": "Exercise 2 (Academy puzzle pz-12j3cmu). White to move.",
+    "fields": {
+      "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+      "claim": "puzzle pz-12j3cmu",
+      "caption": "Exercise 2 (Academy puzzle pz-12j3cmu). White to move."
+    }
+  },
+  {
+    "id": "05-1",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 3k2/K5/1p3R/4Q1/3Np1/1r1n2 w - - 0 1\nline: Qd4+ Kc6 Rf6#\nclaim: only-mate-in-2\ncaption: White to move. Ten checks are available; exactly one mates in two.\n```",
+    "fen": "3k2/K5/1p3R/4Q1/3Np1/1r1n2 w - - 0 1",
+    "caption": "White to move. Ten checks are available; exactly one mates in two.",
+    "fields": {
+      "fen": "3k2/K5/1p3R/4Q1/3Np1/1r1n2 w - - 0 1",
+      "line": "Qd4+ Kc6 Rf6#",
+      "claim": "only-mate-in-2",
+      "caption": "White to move. Ten checks are available; exactly one mates in two."
+    }
+  },
+  {
+    "id": "05-2",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 3k2/6/3N1p/1R2p1/2R3/4K1 w - - 0 1\nline: Rb5 e2 Rc6#\nclaim: only-mate-in-2\ncaption: White to move and mate in two. Four checks are available, and all of them fail.\n```",
+    "fen": "3k2/6/3N1p/1R2p1/2R3/4K1 w - - 0 1",
+    "caption": "White to move and mate in two. Four checks are available, and all of them fail.",
+    "fields": {
+      "fen": "3k2/6/3N1p/1R2p1/2R3/4K1 w - - 0 1",
+      "line": "Rb5 e2 Rc6#",
+      "claim": "only-mate-in-2",
+      "caption": "White to move and mate in two. Four checks are available, and all of them fail."
+    }
+  },
+  {
+    "id": "05-3",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: Q2r2/6/K4k/1pN1p1/6/1n2R1 w - - 0 1\nclaim: only-mate-in-2\ncaption: White to move and mate in two. Six checks are available.\n```",
+    "fen": "Q2r2/6/K4k/1pN1p1/6/1n2R1 w - - 0 1",
+    "caption": "White to move and mate in two. Six checks are available.",
+    "fields": {
+      "fen": "Q2r2/6/K4k/1pN1p1/6/1n2R1 w - - 0 1",
+      "claim": "only-mate-in-2",
+      "caption": "White to move and mate in two. Six checks are available."
+    }
+  },
+  {
+    "id": "05-4",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20\nclaim: mate-in-3\ncaption: Exercise V.1.1. Black to move. White's king has wandered to e3.\n```",
+    "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+    "caption": "Exercise V.1.1. Black to move. White's king has wandered to e3.",
+    "fields": {
+      "fen": "2r1k1/pq4/6/2nPK1/P1P3/2Q1NR b - - 0 20",
+      "claim": "mate-in-3",
+      "caption": "Exercise V.1.1. Black to move. White's king has wandered to e3."
+    }
+  },
+  {
+    "id": "05-5",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 2k3/6/p1KQr1/P5/6/6 w - - 19 61\nclaim: mate-in-3\ncaption: Exercise V.1.2. White to move. Count the king's squares before you calculate.\n```",
+    "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+    "caption": "Exercise V.1.2. White to move. Count the king's squares before you calculate.",
+    "fields": {
+      "fen": "2k3/6/p1KQr1/P5/6/6 w - - 19 61",
+      "claim": "mate-in-3",
+      "caption": "Exercise V.1.2. White to move. Count the king's squares before you calculate."
+    }
+  },
+  {
+    "id": "05-6",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35\nclaim: puzzle pz-culn07\ncaption: Exercise V.1.3. White to move. Two rooks against an exposed king on the sixth rank.\n```",
+    "fen": "3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35",
+    "caption": "Exercise V.1.3. White to move. Two rooks against an exposed king on the sixth rank.",
+    "fields": {
+      "fen": "3k1r/1R4/1KPn1p/2nppP/6/R5 w - - 2 35",
+      "claim": "puzzle pz-culn07",
+      "caption": "Exercise V.1.3. White to move. Two rooks against an exposed king on the sixth rank."
+    }
+  },
+  {
+    "id": "05-7",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24\nline: Qe4+ Qxe4+ Kxe4\nclaim: puzzle pz-am6uu4\ncaption: Black to move. The queens can come off, but is the pawn ending won?\n```",
+    "fen": "6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24",
+    "caption": "Black to move. The queens can come off, but is the pawn ending won?",
+    "fields": {
+      "fen": "6/3Q1p/1p1P1k/6/3PK1/1q4 b - - 0 24",
+      "line": "Qe4+ Qxe4+ Kxe4",
+      "claim": "puzzle pz-am6uu4",
+      "caption": "Black to move. The queens can come off, but is the pawn ending won?"
+    }
+  },
+  {
+    "id": "05-8",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 5R/6/6/2p3/1k4/3K2 b - - 0 46\nline: c2+ Ke2 c1=Q\nclaim: puzzle pz-c0qvzm\ncaption: Black to move. A rook against a pawn that is two steps from promotion.\n```",
+    "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+    "caption": "Black to move. A rook against a pawn that is two steps from promotion.",
+    "fields": {
+      "fen": "5R/6/6/2p3/1k4/3K2 b - - 0 46",
+      "line": "c2+ Ke2 c1=Q",
+      "claim": "puzzle pz-c0qvzm",
+      "caption": "Black to move. A rook against a pawn that is two steps from promotion."
+    }
+  },
+  {
+    "id": "05-9",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 4kr/3p1p/q2pp1/Pp2PP/1QrP2/RN1KR1 w - - 1 15\nclaim: puzzle pz-19v5xks\ncaption: White to move. White's queen on b2 and king on d1 are under pressure. Simplify or suffer?\n```",
+    "fen": "4kr/3p1p/q2pp1/Pp2PP/1QrP2/RN1KR1 w - - 1 15",
+    "caption": "White to move. White's queen on b2 and king on d1 are under pressure. Simplify or suffer?",
+    "fields": {
+      "fen": "4kr/3p1p/q2pp1/Pp2PP/1QrP2/RN1KR1 w - - 1 15",
+      "claim": "puzzle pz-19v5xks",
+      "caption": "White to move. White's queen on b2 and king on d1 are under pressure. Simplify or suffer?"
+    }
+  },
+  {
+    "id": "05-10",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: r1q1kr/1p1np1/1Q1p1p/NP1P1P/P2P2/R2K1R w - - 2 10\nclaim: puzzle pz-ifalpv\ncaption: Exercise V.2.1. White to move. Which trade keeps White's position together?\n```",
+    "fen": "r1q1kr/1p1np1/1Q1p1p/NP1P1P/P2P2/R2K1R w - - 2 10",
+    "caption": "Exercise V.2.1. White to move. Which trade keeps White's position together?",
+    "fields": {
+      "fen": "r1q1kr/1p1np1/1Q1p1p/NP1P1P/P2P2/R2K1R w - - 2 10",
+      "claim": "puzzle pz-ifalpv",
+      "caption": "Exercise V.2.1. White to move. Which trade keeps White's position together?"
+    }
+  },
+  {
+    "id": "05-11",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 6/p3Pr/k5/4K1/6/6 w - - 0 33\nclaim: puzzle pz-12j3cmu\ncaption: Exercise V.2.2. White to move. The simplest win is often the most direct.\n```",
+    "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+    "caption": "Exercise V.2.2. White to move. The simplest win is often the most direct.",
+    "fields": {
+      "fen": "6/p3Pr/k5/4K1/6/6 w - - 0 33",
+      "claim": "puzzle pz-12j3cmu",
+      "caption": "Exercise V.2.2. White to move. The simplest win is often the most direct."
+    }
+  },
+  {
+    "id": "05-12",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Nf3 Nf4\nshow: after\ncaption: After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional).\n```",
+    "fen": "rnqk1r/pppppp/5n/5N/PPPPPP/RNQK1R w - - 2 2",
+    "caption": "After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional).",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Nf3 Nf4",
+      "show": "after",
+      "caption": "After 1.Nf3 Nf4: knight moves score well with both opening repertoires (Tactical and Positional)."
+    }
+  },
+  {
+    "id": "05-13",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 6/4R1/K5/6/6/3kq1 w - - 0 35\nline: Rxe1+ Kxe1\nclaim: bare-kings\ncaption: White to move (Academy puzzle pz-1w5drbc). A rook against a queen. One move holds.\n```",
+    "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+    "caption": "White to move (Academy puzzle pz-1w5drbc). A rook against a queen. One move holds.",
+    "fields": {
+      "fen": "6/4R1/K5/6/6/3kq1 w - - 0 35",
+      "line": "Rxe1+ Kxe1",
+      "claim": "bare-kings",
+      "caption": "White to move (Academy puzzle pz-1w5drbc). A rook against a queen. One move holds."
+    }
+  },
+  {
+    "id": "05-14",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 3N2/p5/3k1p/2n1pP/P1K1P1/6 w - - 0 25\nline: Nf5+ Kc4 Nd6+ Kd4 Nf5+\nclaim: puzzle pz-1qogh9k\ncaption: White to move. Black's king and knight are centralised. Can White's knight hold the game?\n```",
+    "fen": "3N2/p5/3k1p/2n1pP/P1K1P1/6 w - - 0 25",
+    "caption": "White to move. Black's king and knight are centralised. Can White's knight hold the game?",
+    "fields": {
+      "fen": "3N2/p5/3k1p/2n1pP/P1K1P1/6 w - - 0 25",
+      "line": "Nf5+ Kc4 Nd6+ Kd4 Nf5+",
+      "claim": "puzzle pz-1qogh9k",
+      "caption": "White to move. Black's king and knight are centralised. Can White's knight hold the game?"
+    }
+  },
+  {
+    "id": "05-15",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 3k1r/2Nnpp/2qn2/Q4P/2PP2/3K1R w - - 7 16\nclaim: puzzle pz-r2s0tz\ncaption: White to move. Find the only move that holds, and the drawing mechanism.\n```",
+    "fen": "3k1r/2Nnpp/2qn2/Q4P/2PP2/3K1R w - - 7 16",
+    "caption": "White to move. Find the only move that holds, and the drawing mechanism.",
+    "fields": {
+      "fen": "3k1r/2Nnpp/2qn2/Q4P/2PP2/3K1R w - - 7 16",
+      "claim": "puzzle pz-r2s0tz",
+      "caption": "White to move. Find the only move that holds, and the drawing mechanism."
+    }
+  },
+  {
+    "id": "05-16",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: 4K1/5P/5k/r5/4R1/6 b - - 22 50\nclaim: puzzle pz-j2j4tm\ncaption: Exercise V.5.1. Black to move. White's f5-pawn wants to promote on f6.\n```",
+    "fen": "4K1/5P/5k/r5/4R1/6 b - - 22 50",
+    "caption": "Exercise V.5.1. Black to move. White's f5-pawn wants to promote on f6.",
+    "fields": {
+      "fen": "4K1/5P/5k/r5/4R1/6 b - - 22 50",
+      "claim": "puzzle pz-j2j4tm",
+      "caption": "Exercise V.5.1. Black to move. White's f5-pawn wants to promote on f6."
+    }
+  },
+  {
+    "id": "05-17",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11\nclaim: puzzle pz-bus7cm\ncaption: Exercise V.5.2. White to move. Black's pawns on c3 and c4 cramp White. A queen check starts the defence.\n```",
+    "fen": "rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11",
+    "caption": "Exercise V.5.2. White to move. Black's pawns on c3 and c4 cramp White. A queen check starts the defence.",
+    "fields": {
+      "fen": "rnqkr1/pp4/n1pP2/P1p2N/1P3P/R1QK1R w - - 0 11",
+      "claim": "puzzle pz-bus7cm",
+      "caption": "Exercise V.5.2. White to move. Black's pawns on c3 and c4 cramp White. A queen check starts the defence."
+    }
+  },
+  {
+    "id": "05-18",
+    "file": "05-book-v-sovereign.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: Nc3 e4\nshow: after\ncaption: Nc3 e4 — the most Black-favoured book line (−74 for White at Fairy-Stockfish depth 10).\n```",
+    "fen": "rnqknr/pppp1p/4p1/2N3/PPPPPP/R1QKNR w - - 0 2",
+    "caption": "Nc3 e4 — the most Black-favoured book line (−74 for White at Fairy-Stockfish depth 10).",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "Nc3 e4",
+      "show": "after",
+      "caption": "Nc3 e4 — the most Black-favoured book line (−74 for White at Fairy-Stockfish depth 10)."
+    }
+  },
+  {
+    "id": "06-1",
+    "file": "06-book-vi-oracle.md",
+    "block": "```crown\nfen: NK4/2p1Rr/1Q2p1/5k/6/3n2 w - - 0 1\nline: Qxe4+\nclaim: only-mate-in-2\ncaption: White to move. Here the result is certain: there is a forced mate in two.\n```",
+    "fen": "NK4/2p1Rr/1Q2p1/5k/6/3n2 w - - 0 1",
+    "caption": "White to move. Here the result is certain: there is a forced mate in two.",
+    "fields": {
+      "fen": "NK4/2p1Rr/1Q2p1/5k/6/3n2 w - - 0 1",
+      "line": "Qxe4+",
+      "claim": "only-mate-in-2",
+      "caption": "White to move. Here the result is certain: there is a forced mate in two."
+    }
+  },
+  {
+    "id": "06-2",
+    "file": "06-book-vi-oracle.md",
+    "block": "```crown\nfen: rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1\nline: a3 f4\nshow: after\ncaption: After 1.a3 f4, one of the book's dead-level openings (0 cp at Fairy-Stockfish depth 10). Most of the game is still to be played.\n```",
+    "fen": "rnqknr/ppppp1/5p/P5/1PPPPP/RNQKNR w - - 0 2",
+    "caption": "After 1.a3 f4, one of the book's dead-level openings (0 cp at Fairy-Stockfish depth 10). Most of the game is still to be played.",
+    "fields": {
+      "fen": "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1",
+      "line": "a3 f4",
+      "show": "after",
+      "caption": "After 1.a3 f4, one of the book's dead-level openings (0 cp at Fairy-Stockfish depth 10). Most of the game is still to be played."
+    }
+  },
+  {
+    "id": "puzzle-1",
+    "fen": "5k/6/5K/2N3/R5/6 w - - 0 1",
+    "caption": "Puzzle 1. White to move."
+  },
+  {
+    "id": "puzzle-2",
+    "fen": "6/4N1/2R3/4K1/6/5k w - - 0 1",
+    "caption": "Puzzle 2. White to move."
+  },
+  {
+    "id": "puzzle-3",
+    "fen": "6/6/1Q4/6/3p2/K1k3 w - - 0 1",
+    "caption": "Puzzle 3. White to move."
+  },
+  {
+    "id": "puzzle-4",
+    "fen": "k1KQ2/6/6/4p1/6/6 w - - 0 1",
+    "caption": "Puzzle 4. White to move."
+  },
+  {
+    "id": "puzzle-5",
+    "fen": "6/p5/2K3/k5/6/4Q1 w - - 0 1",
+    "caption": "Puzzle 5. White to move."
+  },
+  {
+    "id": "puzzle-6",
+    "fen": "6/4R1/6/6/2NK1k/6 w - - 0 1",
+    "caption": "Puzzle 6. White to move."
+  },
+  {
+    "id": "puzzle-7",
+    "fen": "k5/6/K1N3/6/6/3R2 w - - 0 1",
+    "caption": "Puzzle 7. White to move."
+  },
+  {
+    "id": "puzzle-8",
+    "fen": "5k/6/4K1/6/5p/1Q4 w - - 0 1",
+    "caption": "Puzzle 8. White to move."
+  },
+  {
+    "id": "puzzle-9",
+    "fen": "5k/6/5K/6/Q4p/6 w - - 0 1",
+    "caption": "Puzzle 9. White to move."
+  },
+  {
+    "id": "puzzle-10",
+    "fen": "2k3/6/1K4/6/Q2p2/6 w - - 0 1",
+    "caption": "Puzzle 10. White to move."
+  },
+  {
+    "id": "puzzle-11",
+    "fen": "1k4/3p2/QK4/6/6/6 w - - 0 1",
+    "caption": "Puzzle 11. White to move."
+  },
+  {
+    "id": "puzzle-12",
+    "fen": "6/1N4/6/1R4/6/k1K3 w - - 0 1",
+    "caption": "Puzzle 12. White to move."
+  },
+  {
+    "id": "puzzle-13",
+    "fen": "6/6/2pQ2/4K1/6/4k1 w - - 0 1",
+    "caption": "Puzzle 13. White to move."
+  },
+  {
+    "id": "puzzle-14",
+    "fen": "4Q1/6/6/1p1K2/5k/6 w - - 0 1",
+    "caption": "Puzzle 14. White to move."
+  },
+  {
+    "id": "puzzle-15",
+    "fen": "6/2N3/6/6/1R4/k1K3 w - - 0 1",
+    "caption": "Puzzle 15. White to move."
+  },
+  {
+    "id": "puzzle-16",
+    "fen": "2K3/k5/p1Q3/6/6/6 w - - 0 1",
+    "caption": "Puzzle 16. White to move."
+  },
+  {
+    "id": "puzzle-17",
+    "fen": "6/p5/k1K3/6/6/5Q w - - 0 1",
+    "caption": "Puzzle 17. White to move."
+  },
+  {
+    "id": "puzzle-18",
+    "fen": "R5/6/4N1/3K2/6/3k2 w - - 0 1",
+    "caption": "Puzzle 18. White to move."
+  },
+  {
+    "id": "puzzle-19",
+    "fen": "6/6/1N4/4K1/R5/4k1 w - - 0 1",
+    "caption": "Puzzle 19. White to move."
+  },
+  {
+    "id": "puzzle-20",
+    "fen": "6/Q5/p5/6/3K1k/6 w - - 0 1",
+    "caption": "Puzzle 20. White to move."
+  },
+  {
+    "id": "puzzle-21",
+    "fen": "6/N4R/6/3K2/6/3k2 w - - 0 1",
+    "caption": "Puzzle 21. White to move."
+  },
+  {
+    "id": "puzzle-22",
+    "fen": "4k1/5N/4K1/2R3/6/6 w - - 0 1",
+    "caption": "Puzzle 22. White to move."
+  },
+  {
+    "id": "puzzle-23",
+    "fen": "6/3Q2/p5/5K/6/5k w - - 0 1",
+    "caption": "Puzzle 23. White to move."
+  },
+  {
+    "id": "puzzle-24",
+    "fen": "k5/6/1KR2N/6/6/6 w - - 0 1",
+    "caption": "Puzzle 24. White to move."
+  },
+  {
+    "id": "puzzle-25",
+    "fen": "6/3K2/5k/6/2Q1p1/6 w - - 0 1",
+    "caption": "Puzzle 25. White to move."
+  },
+  {
+    "id": "puzzle-26",
+    "fen": "k5/1N2R1/1K4/6/6/6 w - - 0 1",
+    "caption": "Puzzle 26. White to move."
+  },
+  {
+    "id": "puzzle-27",
+    "fen": "6/6/4Q1/2p3/k5/2K3 w - - 0 1",
+    "caption": "Puzzle 27. White to move."
+  },
+  {
+    "id": "puzzle-28",
+    "fen": "6/k5/2K3/6/3p2/1Q4 w - - 0 1",
+    "caption": "Puzzle 28. White to move."
+  },
+  {
+    "id": "puzzle-29",
+    "fen": "1N4/6/1R4/6/3K2/5k w - - 0 1",
+    "caption": "Puzzle 29. White to move."
+  },
+  {
+    "id": "puzzle-30",
+    "fen": "4k1/2Q3/3pK1/6/6/6 w - - 0 1",
+    "caption": "Puzzle 30. White to move."
+  },
+  {
+    "id": "puzzle-31",
+    "fen": "4N1/6/2R3/2K3/6/1k4 w - - 0 1",
+    "caption": "Puzzle 31. White to move."
+  },
+  {
+    "id": "puzzle-32",
+    "fen": "kN4/6/2K3/6/6/1R4 w - - 0 1",
+    "caption": "Puzzle 32. White to move."
+  },
+  {
+    "id": "puzzle-33",
+    "fen": "4k1/6/6/4K1/2p1Q1/6 w - - 0 1",
+    "caption": "Puzzle 33. White to move."
+  },
+  {
+    "id": "puzzle-34",
+    "fen": "k5/6/3K2/6/2N3/1R4 w - - 0 1",
+    "caption": "Puzzle 34. White to move."
+  },
+  {
+    "id": "puzzle-35",
+    "fen": "4R1/6/6/6/2K2k/4N1 w - - 0 1",
+    "caption": "Puzzle 35. White to move."
+  },
+  {
+    "id": "puzzle-36",
+    "fen": "1k4/6/6/1K4/6/R1N3 w - - 0 1",
+    "caption": "Puzzle 36. White to move."
+  },
+  {
+    "id": "puzzle-37",
+    "fen": "6/6/KQ2p1/6/6/k5 w - - 0 1",
+    "caption": "Puzzle 37. White to move."
+  },
+  {
+    "id": "puzzle-38",
+    "fen": "k2KQ1/6/6/6/p5/6 w - - 0 1",
+    "caption": "Puzzle 38. White to move."
+  },
+  {
+    "id": "puzzle-39",
+    "fen": "6/2K2k/1R4/6/6/5N w - - 0 1",
+    "caption": "Puzzle 39. White to move."
+  },
+  {
+    "id": "puzzle-40",
+    "fen": "5k/6/6/2K2p/6/4Q1 w - - 0 1",
+    "caption": "Puzzle 40. White to move."
+  },
+  {
+    "id": "puzzle-41",
+    "fen": "1k4/6/2K3/Q1p3/6/6 w - - 0 1",
+    "caption": "Puzzle 41. White to move."
+  },
+  {
+    "id": "puzzle-42",
+    "fen": "6/6/5R/1NK3/k5/6 w - - 0 1",
+    "caption": "Puzzle 42. White to move."
+  },
+  {
+    "id": "puzzle-43",
+    "fen": "6/6/Q5/1p3k/3K2/6 w - - 0 1",
+    "caption": "Puzzle 43. White to move."
+  },
+  {
+    "id": "puzzle-44",
+    "fen": "6/6/RN4/1K4/6/1k4 w - - 0 1",
+    "caption": "Puzzle 44. White to move."
+  },
+  {
+    "id": "puzzle-45",
+    "fen": "6/4N1/4K1/5R/6/4k1 w - - 0 1",
+    "caption": "Puzzle 45. White to move."
+  },
+  {
+    "id": "puzzle-46",
+    "fen": "4R1/6/6/6/k3N1/2K3 w - - 0 1",
+    "caption": "Puzzle 46. White to move."
+  },
+  {
+    "id": "puzzle-47",
+    "fen": "3k2/6/3K2/4Q1/3p2/6 w - - 0 1",
+    "caption": "Puzzle 47. White to move."
+  },
+  {
+    "id": "puzzle-48",
+    "fen": "2k3/1p4/1QK3/6/6/6 w - - 0 1",
+    "caption": "Puzzle 48. White to move."
+  },
+  {
+    "id": "puzzle-49",
+    "fen": "2K3/5k/2R3/6/1N4/6 w - - 0 1",
+    "caption": "Puzzle 49. White to move."
+  },
+  {
+    "id": "puzzle-50",
+    "fen": "5k/3p2/2K3/1Q4/6/6 w - - 0 1",
+    "caption": "Puzzle 50. White to move."
+  },
+  {
+    "id": "puzzle-51",
+    "fen": "6/6/1p3Q/2K3/6/k5 w - - 0 1",
+    "caption": "Puzzle 51. White to move."
+  },
+  {
+    "id": "puzzle-52",
+    "fen": "6/4Q1/6/2K3/4p1/k5 w - - 0 1",
+    "caption": "Puzzle 52. White to move."
+  },
+  {
+    "id": "puzzle-53",
+    "fen": "6/Q5/K5/1p4/6/k5 w - - 0 1",
+    "caption": "Puzzle 53. White to move."
+  },
+  {
+    "id": "puzzle-54",
+    "fen": "6/6/k2p2/3K2/6/1Q4 w - - 0 1",
+    "caption": "Puzzle 54. White to move."
+  },
+  {
+    "id": "puzzle-55",
+    "fen": "2R3/6/6/2N3/6/2K2k w - - 0 1",
+    "caption": "Puzzle 55. White to move."
+  },
+  {
+    "id": "puzzle-56",
+    "fen": "6/5k/2K3/6/2p1Q1/6 w - - 0 1",
+    "caption": "Puzzle 56. White to move."
+  },
+  {
+    "id": "puzzle-57",
+    "fen": "2R3/6/6/6/2N3/2K2k w - - 0 1",
+    "caption": "Puzzle 57. White to move."
+  },
+  {
+    "id": "puzzle-58",
+    "fen": "1Q4/6/6/4K1/1p4/3k2 w - - 0 1",
+    "caption": "Puzzle 58. White to move."
+  },
+  {
+    "id": "puzzle-59",
+    "fen": "6/3NR1/6/6/k5/2K3 w - - 0 1",
+    "caption": "Puzzle 59. White to move."
+  },
+  {
+    "id": "puzzle-60",
+    "fen": "1N3k/6/5K/1R4/6/6 w - - 0 1",
+    "caption": "Puzzle 60. White to move."
+  },
+  {
+    "id": "puzzle-61",
+    "fen": "6/k2K2/5R/6/6/3N2 w - - 0 1",
+    "caption": "Puzzle 61. White to move."
+  },
+  {
+    "id": "puzzle-62",
+    "fen": "6/6/3p2/3Q2/3K2/k5 w - - 0 1",
+    "caption": "Puzzle 62. White to move."
+  },
+  {
+    "id": "puzzle-63",
+    "fen": "4k1/6/3K2/6/2R3/5N w - - 0 1",
+    "caption": "Puzzle 63. White to move."
+  },
+  {
+    "id": "puzzle-64",
+    "fen": "6/2K3/5k/p2Q2/6/6 w - - 0 1",
+    "caption": "Puzzle 64. White to move."
+  },
+  {
+    "id": "puzzle-65",
+    "fen": "6/6/5p/3K2/5k/1Q4 w - - 0 1",
+    "caption": "Puzzle 65. White to move."
+  },
+  {
+    "id": "puzzle-66",
+    "fen": "4k1/1Q4/5p/5K/6/6 w - - 0 1",
+    "caption": "Puzzle 66. White to move."
+  },
+  {
+    "id": "puzzle-67",
+    "fen": "2k3/6/1K2p1/6/6/Q5 w - - 0 1",
+    "caption": "Puzzle 67. White to move."
+  },
+  {
+    "id": "puzzle-68",
+    "fen": "6/3p1k/2K3/6/3Q2/6 w - - 0 1",
+    "caption": "Puzzle 68. White to move."
+  },
+  {
+    "id": "puzzle-69",
+    "fen": "2k3/6/2K3/1N4/1R4/6 w - - 0 1",
+    "caption": "Puzzle 69. White to move."
+  },
+  {
+    "id": "puzzle-70",
+    "fen": "6/2p3/5Q/2K3/6/1k4 w - - 0 1",
+    "caption": "Puzzle 70. White to move."
+  },
+  {
+    "id": "puzzle-71",
+    "fen": "5Q/6/6/3p2/1K4/3k2 w - - 0 1",
+    "caption": "Puzzle 71. White to move."
+  },
+  {
+    "id": "puzzle-72",
+    "fen": "k5/6/2K3/1R3N/6/6 w - - 0 1",
+    "caption": "Puzzle 72. White to move."
+  },
+  {
+    "id": "puzzle-73",
+    "fen": "6/Q2p2/5K/6/6/5k w - - 0 1",
+    "caption": "Puzzle 73. White to move."
+  },
+  {
+    "id": "puzzle-74",
+    "fen": "6/2K3/6/2p2k/6/4Q1 w - - 0 1",
+    "caption": "Puzzle 74. White to move."
+  },
+  {
+    "id": "puzzle-75",
+    "fen": "6/3R2/6/3K2/3N2/4k1 w - - 0 1",
+    "caption": "Puzzle 75. White to move."
+  },
+  {
+    "id": "puzzle-76",
+    "fen": "k3N1/6/2K3/6/6/1R4 w - - 0 1",
+    "caption": "Puzzle 76. White to move."
+  },
+  {
+    "id": "puzzle-77",
+    "fen": "5R/6/4N1/2K3/6/4k1 w - - 0 1",
+    "caption": "Puzzle 77. White to move."
+  },
+  {
+    "id": "puzzle-78",
+    "fen": "6/5N/2R3/k2K2/6/6 w - - 0 1",
+    "caption": "Puzzle 78. White to move."
+  },
+  {
+    "id": "puzzle-79",
+    "fen": "3R2/2N3/5K/6/6/4k1 w - - 0 1",
+    "caption": "Puzzle 79. White to move."
+  },
+  {
+    "id": "puzzle-80",
+    "fen": "2K3/6/k2N2/1R4/6/6 w - - 0 1",
+    "caption": "Puzzle 80. White to move."
+  },
+  {
+    "id": "puzzle-81",
+    "fen": "6/N1K3/5k/R5/6/6 w - - 0 1",
+    "caption": "Puzzle 81. White to move."
+  },
+  {
+    "id": "puzzle-82",
+    "fen": "k5/6/3Kp1/6/6/4Q1 w - - 0 1",
+    "caption": "Puzzle 82. White to move."
+  },
+  {
+    "id": "puzzle-83",
+    "fen": "2k1N1/6/6/1R2K1/6/6 w - - 0 1",
+    "caption": "Puzzle 83. White to move."
+  },
+  {
+    "id": "puzzle-84",
+    "fen": "6/6/1N4/6/2K2k/1R4 w - - 0 1",
+    "caption": "Puzzle 84. White to move."
+  },
+  {
+    "id": "puzzle-85",
+    "fen": "1k4/3Q2/6/2K3/p5/6 w - - 0 1",
+    "caption": "Puzzle 85. White to move."
+  },
+  {
+    "id": "puzzle-86",
+    "fen": "k2K2/6/p5/2Q3/6/6 w - - 0 1",
+    "caption": "Puzzle 86. White to move."
+  },
+  {
+    "id": "puzzle-87",
+    "fen": "2RK2/6/5k/6/5N/6 w - - 0 1",
+    "caption": "Puzzle 87. White to move."
+  },
+  {
+    "id": "puzzle-88",
+    "fen": "6/2K3/6/1p3k/6/4Q1 w - - 0 1",
+    "caption": "Puzzle 88. White to move."
+  },
+  {
+    "id": "puzzle-89",
+    "fen": "6/2R2N/k5/3K2/6/6 w - - 0 1",
+    "caption": "Puzzle 89. White to move."
+  },
+  {
+    "id": "puzzle-90",
+    "fen": "R5/6/2N3/6/4K1/1k4 w - - 0 1",
+    "caption": "Puzzle 90. White to move."
+  },
+  {
+    "id": "puzzle-91",
+    "fen": "4Q1/6/6/6/1K3k/6 w - - 0 1",
+    "caption": "Puzzle 91. White to move."
+  },
+  {
+    "id": "puzzle-92",
+    "fen": "6/3k2/6/1K2Q1/6/6 w - - 0 1",
+    "caption": "Puzzle 92. White to move."
+  },
+  {
+    "id": "puzzle-93",
+    "fen": "6/Q5/6/5K/6/2k3 w - - 0 1",
+    "caption": "Puzzle 93. White to move."
+  },
+  {
+    "id": "puzzle-94",
+    "fen": "6/2K1k1/6/6/6/1Q4 w - - 0 1",
+    "caption": "Puzzle 94. White to move."
+  },
+  {
+    "id": "puzzle-95",
+    "fen": "Q5/6/1k1K2/6/6/6 w - - 0 1",
+    "caption": "Puzzle 95. White to move."
+  },
+  {
+    "id": "puzzle-96",
+    "fen": "6/4Q1/K5/6/6/2k3 w - - 0 1",
+    "caption": "Puzzle 96. White to move."
+  },
+  {
+    "id": "puzzle-97",
+    "fen": "6/6/Q1K3/5k/6/6 w - - 0 1",
+    "caption": "Puzzle 97. White to move."
+  },
+  {
+    "id": "puzzle-98",
+    "fen": "6/K1k3/6/5Q/6/6 w - - 0 1",
+    "caption": "Puzzle 98. White to move."
+  },
+  {
+    "id": "puzzle-99",
+    "fen": "6/6/6/2KQ2/6/4k1 w - - 0 1",
+    "caption": "Puzzle 99. White to move."
+  },
+  {
+    "id": "puzzle-100",
+    "fen": "4Q1/6/1K4/6/6/5k w - - 0 1",
+    "caption": "Puzzle 100. White to move."
+  }
+]

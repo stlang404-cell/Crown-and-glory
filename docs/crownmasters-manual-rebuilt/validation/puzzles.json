@@ -1,0 +1,1726 @@
+[
+  {
+    "id": 1,
+    "fen": "5k/6/5K/2N3/R5/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a2a6"
+    ],
+    "san": [
+      "Ra6#"
+    ],
+    "line": [
+      "Ra6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 2,
+    "fen": "6/4N1/2R3/4K1/6/5k w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c4c1"
+    ],
+    "san": [
+      "Rc1#"
+    ],
+    "line": [
+      "Rc1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 3,
+    "fen": "6/6/1Q4/6/3p2/K1k3 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "b4b1"
+    ],
+    "san": [
+      "Qb1#"
+    ],
+    "line": [
+      "Qb1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 4,
+    "fen": "k1KQ2/6/6/4p1/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "d6a3"
+    ],
+    "san": [
+      "Qa3#"
+    ],
+    "line": [
+      "Qa3#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 5,
+    "fen": "6/p5/2K3/k5/6/4Q1 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "e1a1"
+    ],
+    "san": [
+      "Qa1#"
+    ],
+    "line": [
+      "Qa1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 6,
+    "fen": "6/4R1/6/6/2NK1k/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "e5f5"
+    ],
+    "san": [
+      "Rf5#"
+    ],
+    "line": [
+      "Rf5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 7,
+    "fen": "k5/6/K1N3/6/6/3R2 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "d1d6"
+    ],
+    "san": [
+      "Rd6#"
+    ],
+    "line": [
+      "Rd6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 8,
+    "fen": "5k/6/4K1/6/5p/1Q4 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "b1b6"
+    ],
+    "san": [
+      "Qb6#"
+    ],
+    "line": [
+      "Qb6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 9,
+    "fen": "5k/6/5K/6/Q4p/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a2a6"
+    ],
+    "san": [
+      "Qa6#"
+    ],
+    "line": [
+      "Qa6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 10,
+    "fen": "2k3/6/1K4/6/Q2p2/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a2e6"
+    ],
+    "san": [
+      "Qe6#"
+    ],
+    "line": [
+      "Qe6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 11,
+    "fen": "1k4/3p2/QK4/6/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a4b5"
+    ],
+    "san": [
+      "Qb5#"
+    ],
+    "line": [
+      "Qb5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 12,
+    "fen": "6/1N4/6/1R4/6/k1K3 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "b3a3"
+    ],
+    "san": [
+      "Ra3#"
+    ],
+    "line": [
+      "Ra3#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 13,
+    "fen": "6/6/2pQ2/4K1/6/4k1 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "d4a1"
+    ],
+    "san": [
+      "Qa1#"
+    ],
+    "line": [
+      "Qa1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 14,
+    "fen": "4Q1/6/6/1p1K2/5k/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "e6e2"
+    ],
+    "san": [
+      "Qe2#"
+    ],
+    "line": [
+      "Qe2#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 15,
+    "fen": "6/2N3/6/6/1R4/k1K3 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c5b3"
+    ],
+    "san": [
+      "Nb3#"
+    ],
+    "line": [
+      "Nb3#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 16,
+    "fen": "2K3/k5/p1Q3/6/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c4b5"
+    ],
+    "san": [
+      "Qb5#"
+    ],
+    "line": [
+      "Qb5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 17,
+    "fen": "6/p5/k1K3/6/6/5Q w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "f1a1"
+    ],
+    "san": [
+      "Qa1#"
+    ],
+    "line": [
+      "Qa1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 18,
+    "fen": "R5/6/4N1/3K2/6/3k2 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a6a1"
+    ],
+    "san": [
+      "Ra1#"
+    ],
+    "line": [
+      "Ra1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 19,
+    "fen": "6/6/1N4/4K1/R5/4k1 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a2a1"
+    ],
+    "san": [
+      "Ra1#"
+    ],
+    "line": [
+      "Ra1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 20,
+    "fen": "6/Q5/p5/6/3K1k/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "a5f5"
+    ],
+    "san": [
+      "Qf5#"
+    ],
+    "line": [
+      "Qf5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 21,
+    "fen": "6/N4R/6/3K2/6/3k2 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "f5f1"
+    ],
+    "san": [
+      "Rf1#"
+    ],
+    "line": [
+      "Rf1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 22,
+    "fen": "4k1/5N/4K1/2R3/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c3c6"
+    ],
+    "san": [
+      "Rc6#"
+    ],
+    "line": [
+      "Rc6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 23,
+    "fen": "6/3Q2/p5/5K/6/5k w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "d5d1"
+    ],
+    "san": [
+      "Qd1#"
+    ],
+    "line": [
+      "Qd1#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 24,
+    "fen": "k5/6/1KR2N/6/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c4c6"
+    ],
+    "san": [
+      "Rc6#"
+    ],
+    "line": [
+      "Rc6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 25,
+    "fen": "6/3K2/5k/6/2Q1p1/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c2e4"
+    ],
+    "san": [
+      "Qe4#"
+    ],
+    "line": [
+      "Qe4#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 26,
+    "fen": "k5/1N2R1/1K4/6/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "e5e6"
+    ],
+    "san": [
+      "Re6#"
+    ],
+    "line": [
+      "Re6#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 27,
+    "fen": "6/6/4Q1/2p3/k5/2K3 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "e4a4"
+    ],
+    "san": [
+      "Qa4#"
+    ],
+    "line": [
+      "Qa4#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 28,
+    "fen": "6/k5/2K3/6/3p2/1Q4 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "b1b5"
+    ],
+    "san": [
+      "Qb5#"
+    ],
+    "line": [
+      "Qb5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 29,
+    "fen": "1N4/6/1R4/6/3K2/5k w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "b4f4"
+    ],
+    "san": [
+      "Rf4#"
+    ],
+    "line": [
+      "Rf4#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 30,
+    "fen": "4k1/2Q3/3pK1/6/6/6 w - - 0 1",
+    "mateIn": 1,
+    "accepted": [
+      "c5e5",
+      "c5c6",
+      "c5b6"
+    ],
+    "san": [
+      "Qe5#",
+      "Qc6#",
+      "Qb6#"
+    ],
+    "line": [
+      "Qe5#"
+    ],
+    "difficulty": "Foundation"
+  },
+  {
+    "id": 31,
+    "fen": "4N1/6/2R3/2K3/6/1k4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3b3",
+      "c4a4"
+    ],
+    "san": [
+      "Kb3",
+      "Ra4"
+    ],
+    "line": [
+      "Kb3",
+      "Ka1",
+      "Rc1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 32,
+    "fen": "kN4/6/2K3/6/6/1R4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4c5",
+      "b6d5"
+    ],
+    "san": [
+      "Kc5",
+      "Nd5"
+    ],
+    "line": [
+      "Kc5",
+      "Ka5",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 33,
+    "fen": "4k1/6/6/4K1/2p1Q1/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e3d4"
+    ],
+    "san": [
+      "Kd4+"
+    ],
+    "line": [
+      "Kd4+",
+      "Kf6",
+      "Qe5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 34,
+    "fen": "k5/6/3K2/6/2N3/1R4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d4c5"
+    ],
+    "san": [
+      "Kc5"
+    ],
+    "line": [
+      "Kc5",
+      "Ka5",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 35,
+    "fen": "4R1/6/6/6/2K2k/4N1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c2d2",
+      "c2d1"
+    ],
+    "san": [
+      "Kd2",
+      "Kd1"
+    ],
+    "line": [
+      "Kd2",
+      "Kf1",
+      "Rf6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 36,
+    "fen": "1k4/6/6/1K4/6/R1N3 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b3c4"
+    ],
+    "san": [
+      "Kc4"
+    ],
+    "line": [
+      "Kc4",
+      "Kc6",
+      "Ra6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 37,
+    "fen": "6/6/KQ2p1/6/6/k5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "a4a3",
+      "a4b3"
+    ],
+    "san": [
+      "Ka3",
+      "Kb3"
+    ],
+    "line": [
+      "Ka3",
+      "e3",
+      "Qb2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 38,
+    "fen": "k2KQ1/6/6/6/p5/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d6c5"
+    ],
+    "san": [
+      "Kc5+"
+    ],
+    "line": [
+      "Kc5+",
+      "Ka5",
+      "Qxa2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 39,
+    "fen": "6/2K2k/1R4/6/6/5N w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c5d5",
+      "c5d6"
+    ],
+    "san": [
+      "Kd5",
+      "Kd6"
+    ],
+    "line": [
+      "Kd5",
+      "Kf6",
+      "Rf4#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 40,
+    "fen": "5k/6/6/2K2p/6/4Q1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3d4"
+    ],
+    "san": [
+      "Kd4"
+    ],
+    "line": [
+      "Kd4",
+      "f2",
+      "Qe5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 41,
+    "fen": "1k4/6/2K3/Q1p3/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "a3a4",
+      "a3b4",
+      "a3c5"
+    ],
+    "san": [
+      "Qa4",
+      "Qb4+",
+      "Qc5+"
+    ],
+    "line": [
+      "Qa4",
+      "c2",
+      "Qb5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 42,
+    "fen": "6/6/5R/1NK3/k5/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f4a4",
+      "f4f1"
+    ],
+    "san": [
+      "Ra4+",
+      "Rf1"
+    ],
+    "line": [
+      "Ra4+",
+      "Kb1",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 43,
+    "fen": "6/6/Q5/1p3k/3K2/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "a4d4"
+    ],
+    "san": [
+      "Qd4"
+    ],
+    "line": [
+      "Qd4",
+      "b2",
+      "Qe3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 44,
+    "fen": "6/6/RN4/1K4/6/1k4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b3c3",
+      "b4a2"
+    ],
+    "san": [
+      "Kc3",
+      "Na2"
+    ],
+    "line": [
+      "Kc3",
+      "Kc1",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 45,
+    "fen": "6/4N1/4K1/5R/6/4k1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e4d3"
+    ],
+    "san": [
+      "Kd3"
+    ],
+    "line": [
+      "Kd3",
+      "Kd1",
+      "Rf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 46,
+    "fen": "4R1/6/6/6/k3N1/2K3 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e6e3"
+    ],
+    "san": [
+      "Re3"
+    ],
+    "line": [
+      "Re3",
+      "Ka1",
+      "Ra3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 47,
+    "fen": "3k2/6/3K2/4Q1/3p2/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e3e5"
+    ],
+    "san": [
+      "Qe5+"
+    ],
+    "line": [
+      "Qe5+",
+      "Kc6",
+      "Qc5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 48,
+    "fen": "2k3/1p4/1QK3/6/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b4b5"
+    ],
+    "san": [
+      "Qxb5+"
+    ],
+    "line": [
+      "Qxb5+",
+      "Kd6",
+      "Qd5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 49,
+    "fen": "2K3/5k/2R3/6/1N4/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c6d6",
+      "c6d5"
+    ],
+    "san": [
+      "Kd6",
+      "Kd5"
+    ],
+    "line": [
+      "Kd6",
+      "Kf6",
+      "Rf4#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 50,
+    "fen": "5k/3p2/2K3/1Q4/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4d5"
+    ],
+    "san": [
+      "Kxd5"
+    ],
+    "line": [
+      "Kxd5",
+      "Kf5",
+      "Qf3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 51,
+    "fen": "6/6/1p3Q/2K3/6/k5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3b3",
+      "f4b4"
+    ],
+    "san": [
+      "Kb3",
+      "Qxb4"
+    ],
+    "line": [
+      "Kb3",
+      "Kb1",
+      "Qf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 52,
+    "fen": "6/4Q1/6/2K3/4p1/k5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3b3",
+      "c3c2",
+      "e5e2"
+    ],
+    "san": [
+      "Kb3+",
+      "Kc2+",
+      "Qxe2"
+    ],
+    "line": [
+      "Kb3+",
+      "Kb1",
+      "Qb2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 53,
+    "fen": "6/Q5/K5/1p4/6/k5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "a4b3"
+    ],
+    "san": [
+      "Kxb3+"
+    ],
+    "line": [
+      "Kxb3+",
+      "Kb1",
+      "Qe1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 54,
+    "fen": "6/6/k2p2/3K2/6/1Q4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d3c4"
+    ],
+    "san": [
+      "Kc4"
+    ],
+    "line": [
+      "Kc4",
+      "Ka5",
+      "Qb5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 55,
+    "fen": "2R3/6/6/2N3/6/2K2k w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c1d2"
+    ],
+    "san": [
+      "Kd2"
+    ],
+    "line": [
+      "Kd2",
+      "Kf2",
+      "Rf6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 56,
+    "fen": "6/5k/2K3/6/2p1Q1/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4d4",
+      "c4d5"
+    ],
+    "san": [
+      "Kd4",
+      "Kd5"
+    ],
+    "line": [
+      "Kd4",
+      "c1=Q",
+      "Qe5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 57,
+    "fen": "2R3/6/6/6/2N3/2K2k w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c1d1",
+      "c1d2"
+    ],
+    "san": [
+      "Kd1",
+      "Kd2"
+    ],
+    "line": [
+      "Kd1",
+      "Kf2",
+      "Rf6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 58,
+    "fen": "1Q4/6/6/4K1/1p4/3k2 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b6b2"
+    ],
+    "san": [
+      "Qxb2"
+    ],
+    "line": [
+      "Qxb2",
+      "Ke1",
+      "Qe2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 59,
+    "fen": "6/3NR1/6/6/k5/2K3 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e5e3"
+    ],
+    "san": [
+      "Re3"
+    ],
+    "line": [
+      "Re3",
+      "Ka1",
+      "Ra3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 60,
+    "fen": "1N3k/6/5K/1R4/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b3c3"
+    ],
+    "san": [
+      "Rc3"
+    ],
+    "line": [
+      "Rc3",
+      "Ke6",
+      "Rc6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 61,
+    "fen": "6/k2K2/5R/6/6/3N2 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d5c6",
+      "d5c5"
+    ],
+    "san": [
+      "Kc6",
+      "Kc5"
+    ],
+    "line": [
+      "Kc6",
+      "Ka6",
+      "Ra4#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 62,
+    "fen": "6/6/3p2/3Q2/3K2/k5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d2c2"
+    ],
+    "san": [
+      "Kc2"
+    ],
+    "line": [
+      "Kc2",
+      "Ka2",
+      "Qa6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 63,
+    "fen": "4k1/6/3K2/6/2R3/5N w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c2f2"
+    ],
+    "san": [
+      "Rf2"
+    ],
+    "line": [
+      "Rf2",
+      "Kd6",
+      "Rf6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 64,
+    "fen": "6/2K3/5k/p2Q2/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c5d5",
+      "c5d4"
+    ],
+    "san": [
+      "Kd5",
+      "Kd4"
+    ],
+    "line": [
+      "Kd5",
+      "a2",
+      "Qe4#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 65,
+    "fen": "6/6/5p/3K2/5k/1Q4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b1b2",
+      "b1c2",
+      "b1a2"
+    ],
+    "san": [
+      "Qb2+",
+      "Qc2+",
+      "Qa2+"
+    ],
+    "line": [
+      "Qb2+",
+      "Kf3",
+      "Qe2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 66,
+    "fen": "4k1/1Q4/5p/5K/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f3e4"
+    ],
+    "san": [
+      "Ke4"
+    ],
+    "line": [
+      "Ke4",
+      "f3",
+      "Qe5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 67,
+    "fen": "2k3/6/1K2p1/6/6/Q5 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "a1d4",
+      "a1e5"
+    ],
+    "san": [
+      "Qd4",
+      "Qe5"
+    ],
+    "line": [
+      "Qd4",
+      "e3",
+      "Qc5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 68,
+    "fen": "6/3p1k/2K3/6/3Q2/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4d5"
+    ],
+    "san": [
+      "Kxd5"
+    ],
+    "line": [
+      "Kxd5",
+      "Kf6",
+      "Qf2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 69,
+    "fen": "2k3/6/2K3/1N4/1R4/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "b2d2"
+    ],
+    "san": [
+      "Rd2"
+    ],
+    "line": [
+      "Rd2",
+      "Kb6",
+      "Rd6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 70,
+    "fen": "6/2p3/5Q/2K3/6/1k4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f4f2",
+      "f4d2"
+    ],
+    "san": [
+      "Qf2",
+      "Qd2"
+    ],
+    "line": [
+      "Qf2",
+      "Kc1",
+      "Qc2#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 71,
+    "fen": "5Q/6/6/3p2/1K4/3k2 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f6f2"
+    ],
+    "san": [
+      "Qf2"
+    ],
+    "line": [
+      "Qf2",
+      "d2",
+      "Qf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 72,
+    "fen": "k5/6/2K3/1R3N/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4c5"
+    ],
+    "san": [
+      "Kc5"
+    ],
+    "line": [
+      "Kc5",
+      "Ka5",
+      "Ra3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 73,
+    "fen": "6/Q2p2/5K/6/6/5k w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f4f3"
+    ],
+    "san": [
+      "Kf3"
+    ],
+    "line": [
+      "Kf3",
+      "d4",
+      "Qa1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 74,
+    "fen": "6/2K3/6/2p2k/6/4Q1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c5d4"
+    ],
+    "san": [
+      "Kd4"
+    ],
+    "line": [
+      "Kd4",
+      "c2",
+      "Qf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 75,
+    "fen": "6/3R2/6/3K2/3N2/4k1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d5f5"
+    ],
+    "san": [
+      "Rf5"
+    ],
+    "line": [
+      "Rf5",
+      "Kd1",
+      "Rf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 76,
+    "fen": "k3N1/6/2K3/6/6/1R4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c4c5",
+      "e6c5"
+    ],
+    "san": [
+      "Kc5",
+      "Nc5+"
+    ],
+    "line": [
+      "Kc5",
+      "Ka5",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 77,
+    "fen": "5R/6/4N1/2K3/6/4k1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3d3"
+    ],
+    "san": [
+      "Kd3"
+    ],
+    "line": [
+      "Kd3",
+      "Kd1",
+      "Rf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 78,
+    "fen": "6/5N/2R3/k2K2/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d3c2"
+    ],
+    "san": [
+      "Kc2"
+    ],
+    "line": [
+      "Kc2",
+      "Ka2",
+      "Ra4#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 79,
+    "fen": "3R2/2N3/5K/6/6/4k1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "f4e3",
+      "f4f3"
+    ],
+    "san": [
+      "Ke3",
+      "Kf3"
+    ],
+    "line": [
+      "Ke3",
+      "Kf1",
+      "Rd1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 80,
+    "fen": "2K3/6/k2N2/1R4/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c6c5"
+    ],
+    "san": [
+      "Kc5"
+    ],
+    "line": [
+      "Kc5",
+      "Ka5",
+      "Ra3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 81,
+    "fen": "6/N1K3/5k/R5/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c5d5"
+    ],
+    "san": [
+      "Kd5"
+    ],
+    "line": [
+      "Kd5",
+      "Kf5",
+      "Rf3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 82,
+    "fen": "k5/6/3Kp1/6/6/4Q1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d4c5"
+    ],
+    "san": [
+      "Kc5"
+    ],
+    "line": [
+      "Kc5",
+      "e3",
+      "Qa1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 83,
+    "fen": "2k1N1/6/6/1R2K1/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e3e4",
+      "e3d4"
+    ],
+    "san": [
+      "Ke4",
+      "Kd4"
+    ],
+    "line": [
+      "Ke4",
+      "Kd6",
+      "Rb6#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 84,
+    "fen": "6/6/1N4/6/2K2k/1R4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c2d3"
+    ],
+    "san": [
+      "Kd3"
+    ],
+    "line": [
+      "Kd3",
+      "Kf3",
+      "Rf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 85,
+    "fen": "1k4/3Q2/6/2K3/p5/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c3c4",
+      "c3b4"
+    ],
+    "san": [
+      "Kc4",
+      "Kb4"
+    ],
+    "line": [
+      "Kc4",
+      "a1=Q",
+      "Qb5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 86,
+    "fen": "k2K2/6/p5/2Q3/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d6c6",
+      "d6c5"
+    ],
+    "san": [
+      "Kc6",
+      "Kc5"
+    ],
+    "line": [
+      "Kc6",
+      "a3",
+      "Qxa3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 87,
+    "fen": "2RK2/6/5k/6/5N/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c6c3"
+    ],
+    "san": [
+      "Rc3"
+    ],
+    "line": [
+      "Rc3",
+      "Kf5",
+      "Rf3#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 88,
+    "fen": "6/2K3/6/1p3k/6/4Q1 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "c5d4"
+    ],
+    "san": [
+      "Kd4"
+    ],
+    "line": [
+      "Kd4",
+      "b2",
+      "Qf1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 89,
+    "fen": "6/2R2N/k5/3K2/6/6 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "d3c3"
+    ],
+    "san": [
+      "Kc3"
+    ],
+    "line": [
+      "Kc3",
+      "Ka3",
+      "Ra5#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 90,
+    "fen": "R5/6/2N3/6/4K1/1k4 w - - 0 1",
+    "mateIn": 2,
+    "accepted": [
+      "e2d3"
+    ],
+    "san": [
+      "Kd3"
+    ],
+    "line": [
+      "Kd3",
+      "Kc1",
+      "Ra1#"
+    ],
+    "difficulty": "Calculation"
+  },
+  {
+    "id": 91,
+    "fen": "4Q1/6/6/6/1K3k/6 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "b2c2",
+      "b2c3"
+    ],
+    "san": [
+      "Kc2",
+      "Kc3"
+    ],
+    "line": [
+      "Kc2",
+      "Kf3",
+      "Kd3",
+      "Kf4",
+      "Qf6#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 92,
+    "fen": "6/3k2/6/1K2Q1/6/6 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "b3b4"
+    ],
+    "san": [
+      "Kb4"
+    ],
+    "line": [
+      "Kb4",
+      "Kd6",
+      "Kc4",
+      "Kc6",
+      "Qe6#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 93,
+    "fen": "6/Q5/6/5K/6/2k3 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "a5a2"
+    ],
+    "san": [
+      "Qa2"
+    ],
+    "line": [
+      "Qa2",
+      "Kd1",
+      "Qb2",
+      "Ke1",
+      "Qe2#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 94,
+    "fen": "6/2K1k1/6/6/6/1Q4 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "b1e1"
+    ],
+    "san": [
+      "Qe1+"
+    ],
+    "line": [
+      "Qe1+",
+      "Kf5",
+      "Kd5",
+      "Kf6",
+      "Qf1#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 95,
+    "fen": "Q5/6/1k1K2/6/6/6 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "a6b6"
+    ],
+    "san": [
+      "Qb6+"
+    ],
+    "line": [
+      "Qb6+",
+      "Ka4",
+      "Kc4",
+      "Ka3",
+      "Qb3#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 96,
+    "fen": "6/4Q1/K5/6/6/2k3 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "e5e2"
+    ],
+    "san": [
+      "Qe2"
+    ],
+    "line": [
+      "Qe2",
+      "Kb1",
+      "Kb3",
+      "Kc1",
+      "Qc2#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 97,
+    "fen": "6/6/Q1K3/5k/6/6 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "c4d3"
+    ],
+    "san": [
+      "Kd3"
+    ],
+    "line": [
+      "Kd3",
+      "Kf2",
+      "Qe4",
+      "Kf1",
+      "Qe2#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 98,
+    "fen": "6/K1k3/6/5Q/6/6 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "f3d3"
+    ],
+    "san": [
+      "Qd3"
+    ],
+    "line": [
+      "Qd3",
+      "Kc6",
+      "Kb4",
+      "Kb6",
+      "Qd6#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 99,
+    "fen": "6/6/6/2KQ2/6/4k1 w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "d3e4",
+      "d3b5",
+      "d3c2"
+    ],
+    "san": [
+      "Qe4+",
+      "Qb5",
+      "Qc2"
+    ],
+    "line": [
+      "Qe4+",
+      "Kf1",
+      "Kd3",
+      "Kf2",
+      "Qe2#"
+    ],
+    "difficulty": "Expert calculation"
+  },
+  {
+    "id": 100,
+    "fen": "4Q1/6/1K4/6/6/5k w - - 0 1",
+    "mateIn": 3,
+    "accepted": [
+      "b4c4",
+      "b4c3"
+    ],
+    "san": [
+      "Kc4",
+      "Kc3"
+    ],
+    "line": [
+      "Kc4",
+      "Kf2",
+      "Kd3",
+      "Kf3",
+      "Qf6#"
+    ],
+    "difficulty": "Expert calculation"
+  }
+]
